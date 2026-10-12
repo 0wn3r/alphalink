@@ -1,6 +1,7 @@
 # AlphaLink CAM (GNOME): design
 
-Status: **design draft 1** (2026-10-12). No code yet.
+Status: **design draft 1** (2026-10-12). M0 in progress: `alphacam/model` (project, `.alcam` JSON), `alphacam/io/prg_parse.py`
+and `python -m alphacam dump FILE.PRG` exist; SDG import is still to do. Tests: `cd app && python3 -m unittest discover -s tests -t .`
 Working name: *AlphaLink CAM*. App ID: `io.github.0wn3r.AlphaLinkCAM`.
 Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.6+, pyserial. Target: a GNOME/Linux workshop laptop, packaged as a Flatpak.
 
