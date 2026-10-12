@@ -880,3 +880,5 @@ and appendix H.2 (p.240-243).
 * Parameters to check on the control if the link still fails: 0020 I/O CHANNEL (0), 0102 device = 0 (RS232C),
   0103 baud = 11 (9600), 0101 bit SB2 = 1 (2 stop bits), ASI = 0 (ISO/EIA auto), NFD = 1 (no feed). 0100 NCR selects
   the EOB output (0: LF CR CR, 1: LF only). Harrison's macros may drive these, so read them, don't change them.
+  User (2026-10-12): the Harrison setup exposes very few parameters, so these may not be visible at all; treat them as
+  background, not a test step.
