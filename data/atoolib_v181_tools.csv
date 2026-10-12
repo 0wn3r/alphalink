@@ -1,0 +1,24 @@
+tool,name,nose_radius_mm,front_clearance_deg,rear_clearance_deg
+1,80 Deg Rougher 0.8R,0.8,87,7
+2,60 Deg Rougher 0.8R,0.8,87,27
+3,55 Deg Finisher 0.4R,0.4,87,32
+4,35 Deg Finisher 0.4R,0.4,87,52
+5,80 L.H. Rougher 0.8R,0.8,93,173
+6,55 L.H.Finisher 0.4R,0.4,93,148
+7,35 L.H.Finisher 0.4R,0.4,93,128
+8,60 Deg Neutral Tool,0.8,60,120
+9,55 Deg Neutral tool,0.4,62,152
+10,35 Deg Neutral Tool,0.0,72,108
+11,80 Boring-Bar 0.8R,0.8,-87,-7
+12,55 Boring-Bar 0.4R,0.4,-87,-32
+13,35 Boring-Bar 0.4R,0.4,-72,-37
+14,2mm Internal Groove,0,-90,0
+15,3mm Internal Groove,0,-90,0
+16,2mm Groove/Parting,0,90,0
+17,4mm Groove/Parting,0,90,0
+18,5mm Groove/Parting,0,90,0
+19,55 Deg Face Neutral,0.4,28,-28
+20,35 Deg Face Neutral,0.4,18,-18
+21,3mm Face Grooving.,0,90,1
+22,5mm Ball-End Facing,2.5,2,1
+23,5mm Ball-End Profile,2.5,90,89

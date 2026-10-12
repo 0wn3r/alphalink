@@ -1,0 +1,108 @@
+{
+ "_note": "Measured in DOSBox-X serial log (New COM parameters) unless 'source' says otherwise. XON=0x11.",
+ "dos_alphacam_v181": {
+  "ALINK send .600": {
+   "baud": 9600,
+   "bits": 8,
+   "parity": "E",
+   "stop": 2,
+   "xon": "0x11",
+   "xoff": "0x93 (only)",
+   "transform": "LF dropped",
+   "source": "DOSBox 0.74 + DOSBox-X"
+  },
+  "AMANOPS LOAD (send .MOP)": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "xoff": "0x93 (only)",
+   "transform": "even parity in bit 7, >0x7F->0x00"
+  },
+  "AMANOPS SAVE (receive .MOP)": {
+   "baud": 9600,
+   "bits": 8,
+   "parity": "E",
+   "stop": 2,
+   "end": "second '%'"
+  }
+ },
+ "dos_alphalink_t_v12": {
+  "ATSEND send .PRG": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "xon": "0x11",
+   "xoff": "0x13",
+   "transform": "none (CR LF kept)"
+  },
+  "ATMANOP Save (receive .MOP)": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "end": "second '%'",
+   "transform": "raw"
+  },
+  "ATMANOP Load (send .MOP)": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "transform": "even parity in bit 7, LF kept"
+  },
+  "ATMACROS send MACROS\\MACROS.MOP": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "transform": "even parity in bit 7",
+   "warning": "sent without confirmation; macro reload procedure only"
+  }
+ },
+ "win_serioalpha_v11_and_alphautils": {
+  "CAM Progs Send001 (*.FAN)": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2,
+   "handshake": "XON/XOFF",
+   "wait_for_xon": false,
+   "source": "cfg decoded from SerioAlpha.exe code"
+  },
+  "Man Ops Send002 (*.MOP)": {
+   "baud": 9600,
+   "bits": 8,
+   "parity": "N",
+   "stop": 2,
+   "transform": "even-parity table (same frame as 7E2)"
+  },
+  "Man Ops Recv001/002 (*.MOP)": {
+   "baud": 9600,
+   "bits": 8,
+   "parity": "E",
+   "stop": 2,
+   "end": "%%"
+  },
+  "ISO Progs Send003/Recv003 (*.ISO)": {
+   "baud": 9600,
+   "bits": 7,
+   "parity": "E",
+   "stop": 2
+  }
+ },
+ "alphalink_py_modes": {
+  "send-alink": "8E2 LF dropped",
+  "send-load": "7E2 parity table",
+  "recv-save": "8E2",
+  "send-alphat": "7E2 raw, XOFF 0x13",
+  "recv-alphat": "7E2 until 2nd %",
+  "options": [
+   "--accept-dc3",
+   "--char-delay MS",
+   "--line-delay MS",
+   "--wait-xon"
+  ]
+ }
+}

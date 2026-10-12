@@ -1,0 +1,55 @@
+{
+ "alphacam_v181_600_registers": {
+  "#500": "Total Passes",
+  "#501": "Pass No.",
+  "#502": "Tool No. (always 1)",
+  "#503": "Tool Start X",
+  "#504": "Tool Start Z",
+  "#505": "Maximum X",
+  "#506": "Maximum Z",
+  "#507": "op kind 1 area/face 2 finish 3 groove",
+  "#508": "always 1",
+  "#509": "Op No. (restart GOTO #509*10)",
+  "#510": "feed (set on machine)",
+  "header": "AI = inch (values/25.4, 4 dec) | AZ = mm (3 dec), from ALPHACAM.MES record 0x0C"
+ },
+ "alphat_v12_prg_observed": {
+  "header": [
+   "%",
+   "O<n>",
+   "#132=<program number>",
+   "#140=0",
+   "IF[#1006EQ1]GOTO[[#129+1]*10]",
+   "IF[#1005EQ1]GOTO[#129*10]",
+   "#131=#131-1",
+   "IF[#1009EQ1]GOTO[#129*10]",
+   "#131=0",
+   "M71"
+  ],
+  "N10 block (tool change)": {
+   "#121": "1",
+   "#122": "tool number (3)",
+   "#123": "tool change X",
+   "#124": "tool change Z (x2!)",
+   "#127": "1",
+   "#129": "block no.",
+   "#130": "feed"
+  },
+  "N20 block (operation)": {
+   "#120": "?1",
+   "#121": "?1",
+   "#122": "tool",
+   "#123": "tool start X",
+   "#124": "tool start Z (x2)",
+   "#125": "limit X",
+   "#126": "limit Z (x2)",
+   "#127": "14 for finish pass (op kind?)",
+   "#128": "1",
+   "#129": "block no.",
+   "#130": "feed",
+   "#131": "#131+1 counter"
+  },
+  "moves": "M60 G0 X Z M61 (rapid) / M62 G1 X Z F (feed) / M64 end of feed group; M63 / M65 / M66 macro calls; IF[#140EQn] GOTO 50n restart",
+  "open": "every Z value (moves, #124, #126) is 2x the drawing value in both mm and inch drawings; SD1 is not scaled. Not yet explained - check on the control before cutting."
+ }
+}

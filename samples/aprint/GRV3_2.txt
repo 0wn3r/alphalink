@@ -1,0 +1,24 @@
+ 
+  TITLE : GRV3                                           DATE : 12 Oct 2026
+ 
+ ------------------------------------------------------------------------------
+  Operation  : GROOVING           Tool No  :   1    2mm Groove/Parting
+  Tool Start X : 120.000      Maximum X :  50.000       Offset X :   0.000
+  Tool Start Z :   5.000      Maximum Z : -26.000       Offset Z :   0.000
+  Op. No. :  1     Total Passes :  5     Depth Of Cut :   0.000
+ ------------------------------------------------------------------------------
+ 
+ ------------------------------------------------------------------------------
+  Operation  : GROOVING           Tool No  :   1    2mm Groove/Parting
+  Tool Start X : 120.000      Maximum X :  50.000       Offset X :   0.000
+  Tool Start Z :   5.000      Maximum Z : -26.000       Offset Z :   0.000
+  Op. No. :  2     Total Passes :  5     Depth Of Cut :   0.000
+ ------------------------------------------------------------------------------
+ 
+ ------------------------------------------------------------------------------
+  Operation  : GROOVING           Tool No  :   1    2mm Groove/Parting
+  Tool Start X : 120.000      Maximum X :  50.000       Offset X :   0.000
+  Tool Start Z :   5.000      Maximum Z : -26.000       Offset Z :   0.000
+  Op. No. :  3     Total Passes :  5     Depth Of Cut :   0.000
+ ------------------------------------------------------------------------------
+ 
