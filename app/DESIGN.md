@@ -1,9 +1,11 @@
 # AlphaLink CAM (GNOME): design
 
-Status: **design draft 1** (2026-10-12). M0 in progress: `alphacam/model` (project, `.alcam` JSON), `alphacam/io/prg_parse.py`
-and `python -m alphacam dump FILE.PRG` exist; SDG import is still to do. Tests: `cd app && python3 -m unittest discover -s tests -t .`
-Working name: *AlphaLink CAM*. App ID: `io.github.0wn3r.AlphaLinkCAM`.
-Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.6+, pyserial. Target: a GNOME/Linux workshop laptop, packaged as a Flatpak.
+Status: **design draft 1** (2026-10-12).
+- M0 done: `alphacam/model` (project, `.alcam` JSON), `alphacam/io/sdg.py` (SDG import), `alphacam/io/prg_parse.py`,
+  `python -m alphacam dump FILE.PRG`.
+- M1 done: `alphacam/post/alphat_prg.py` posts the tool block (plus move/rapid and dwell), finish pass and area clear;
+  MET2 (mm and inch), AREA1 and MOVE_RAPID are byte-identical to ALPHA-T. `python -m alphacam post PART.alcam -o P.PRG`.
+- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 ## 1. Purpose and scope
 

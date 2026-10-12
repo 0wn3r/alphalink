@@ -17,6 +17,7 @@ from pathlib import Path
 
 from ..model.operations import OP_KINDS
 from ..model.project import MachineProfile
+from ..toolpath.toolpath import MoveKind
 
 
 class PrgSyntaxError(ValueError):
@@ -106,13 +107,6 @@ def lex(data: bytes) -> tuple[list[Statement], str]:
 
 
 # --- structure -------------------------------------------------------------------------------------------
-
-
-class MoveKind(str, Enum):
-    RAPID = "rapid"  # G0
-    FEED = "feed"  # G1
-    THREAD = "thread"  # G32 (and its modal U/W retract)
-    DWELL = "dwell"  # G4
 
 
 MOTION_G = {0: MoveKind.RAPID, 1: MoveKind.FEED, 4: MoveKind.DWELL, 32: MoveKind.THREAD}
