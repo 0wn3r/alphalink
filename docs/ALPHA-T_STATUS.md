@@ -64,8 +64,8 @@ Alternative: compare with a known-good Alpha-T program from a real installation 
 Vendor files are NOT in this repo (copyright). Identify them by `docs/VENDOR_FILES_SHA256.txt`.
 Expected local layout (as on the original workstation, `~/alpha-work`):
 ```
-alpha-work/Alpha181/        DOS ALPHACAM V1.81 install (original, never modified)
-alpha-work/AlphaT/          ALPHA-T install set + unzipped ALPHTZIP.EXE / ALPHTMES.EXE
+alpha-work/vendor/Alpha181/ DOS ALPHACAM V1.81 install (original, never modified)
+alpha-work/vendor/AlphaT/   ALPHA-T install set + unzipped ALPHTZIP.EXE / ALPHTMES.EXE
 alpha-work/re-notes/        = this repo's docs/tools/samples (+ unpacked/, alphat_unpacked/, _shots/)
 alpha-work/tools-bin/dosbox-x   DOSBox-X 2026.10.01 full edition, heavy-debug build (dbgtr/dbgreg serial logs)
 ```

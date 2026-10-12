@@ -4,7 +4,7 @@
 W=$(cd "$(dirname "$0")/../.." && pwd); T=$W/re-notes/tools; S=$W/re-notes/_shots
 # Work on a scratch copy so the real Alpha181 folder is never modified.
 # KEEP=1 reuses the previous scratch state; RUN=name snapshots the scratch dir afterwards to ~/acruns/name.
-SC=$HOME/acwork; if [ "${KEEP:-0}" != 1 ]; then rm -rf $SC; mkdir -p $SC; cp -r "$W/Alpha181" $SC/ALPHACAM; fi
+SC=$HOME/acwork; if [ "${KEEP:-0}" != 1 ]; then rm -rf $SC; mkdir -p $SC; cp -r "$W/vendor/Alpha181" $SC/ALPHACAM; fi
 # EXTRACONF="[parallel]\nparallel1=...": extra dosbox-x config sections (literal newlines)
 # PRE="shell cmd": run in the scratch ALPHACAM dir before starting (e.g. to patch the post)
 [ -n "$PRE" ] && (cd $SC/ALPHACAM && sh -c "$PRE")
