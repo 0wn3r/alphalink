@@ -1,0 +1,9 @@
+sleep 3
+key Return
+sleep 2
+type MET2
+key Return
+sleep 2
+key Return
+sleep 8
+shot tp3

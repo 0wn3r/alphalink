@@ -1,0 +1,14 @@
+sleep 3
+key Down
+key Down
+key Down
+key Return
+sleep 2
+shot av1
+type 16
+key Return
+sleep 2
+shot av2
+key Return
+sleep 2
+shot av3

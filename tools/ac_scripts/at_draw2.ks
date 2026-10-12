@@ -1,0 +1,22 @@
+sleep 4
+key space
+sleep 3
+key space
+sleep 1
+key F1
+sleep 3
+click 580 119
+sleep 1
+shot tc0
+type 0,0
+key Return
+sleep 1
+shot tc1
+type 40,0
+key Return
+sleep 1
+shot tc2
+type 40,-25
+key Return
+sleep 1
+shot tc3

@@ -1,0 +1,10 @@
+ 
+  TITLE : MET3                                           DATE : 12 Oct 2026
+ 
+ ------------------------------------------------------------------------------
+  Operation  : FINISH PASS        Tool No. :   1    80 Deg Rougher 0.8R
+  Tool Start X : 120.000      Maximum X :  36.800       Offset X :   0.000
+  Tool Start Z :   5.000      Maximum Z : -51.600       Offset Z :   0.000
+  Op. No. :  1
+ ------------------------------------------------------------------------------
+ 

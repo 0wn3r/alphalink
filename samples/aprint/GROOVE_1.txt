@@ -1,0 +1,39 @@
+ 
+  TITLE : GROOVE                                         DATE : 12 Oct 2026
+ 
+ ------------------------------------------------------------------------------
+  Operation  : GROOVING           Tool No  :   1    2mm Groove/Parting
+  Tool Start X : 120.000      Maximum X :  50.000       Offset X :   0.000
+  Tool Start Z :   5.000      Maximum Z : -26.000       Offset Z :   0.000
+  Op. No. :  1     Total Passes :  5     Depth Of Cut :   0.000
+ ------------------------------------------------------------------------------
+  RAPID TO   : X 120.000, Z -22.000
+  FEED  TO   : X  50.000, Z -22.000
+  FEED  TO   : X  52.000, Z -22.000
+  RAPID TO   : X 120.000, Z -22.000
+  RAPID TO   : X 120.000, Z   5.000
+  Pass No. :  2
+  RAPID TO   : X 120.000, Z -23.000
+  FEED  TO   : X  50.000, Z -23.000
+  FEED  TO   : X  52.000, Z -23.000
+  RAPID TO   : X 120.000, Z -23.000
+  RAPID TO   : X 120.000, Z   5.000
+  Pass No. :  3
+  RAPID TO   : X 120.000, Z -24.000
+  FEED  TO   : X  50.000, Z -24.000
+  FEED  TO   : X  52.000, Z -24.000
+  RAPID TO   : X 120.000, Z -24.000
+  RAPID TO   : X 120.000, Z   5.000
+  Pass No. :  4
+  RAPID TO   : X 120.000, Z -25.000
+  FEED  TO   : X  50.000, Z -25.000
+  FEED  TO   : X  52.000, Z -25.000
+  RAPID TO   : X 120.000, Z -25.000
+  RAPID TO   : X 120.000, Z   5.000
+  Pass No. :  5
+  RAPID TO   : X 120.000, Z -26.000
+  FEED  TO   : X  50.000, Z -26.000
+  FEED  TO   : X  52.000, Z -26.000
+  RAPID TO   : X 120.000, Z -26.000
+  RAPID TO   : X 120.000, Z   5.000
+ 

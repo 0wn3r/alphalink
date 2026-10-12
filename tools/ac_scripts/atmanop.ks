@@ -1,0 +1,15 @@
+sleep 4
+shot mo0
+key Return
+sleep 2
+shot mo1
+type BIGTEST
+key Return
+sleep 2
+shot mo2
+key Return
+sleep 4
+shot mo3
+key Return
+sleep 3
+shot mo4

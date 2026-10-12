@@ -1,0 +1,11 @@
+sleep 4
+key Down
+key Return
+sleep 2
+type BIGTEST
+key Return
+sleep 2
+shot ml1
+key Return
+sleep 8
+shot ml2

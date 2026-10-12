@@ -1,0 +1,15 @@
+sleep 4
+shot as0
+type MET2
+key Return
+sleep 2
+shot as1
+key Return
+sleep 3
+shot as2
+key Return
+sleep 6
+shot as3
+key Return
+sleep 3
+shot as4

@@ -1,0 +1,14 @@
+sleep 3
+key Down
+key Return
+sleep 2
+type GROOVE
+key Return
+sleep 2
+shot pp2a
+key Return
+sleep 8
+shot pp2b
+key Return
+sleep 2
+shot pp2c

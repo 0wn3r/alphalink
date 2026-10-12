@@ -1,0 +1,13 @@
+sleep 4
+key Return
+sleep 2
+type SAVETEST
+key Return
+sleep 20
+shot ms1
+key Return
+sleep 2
+key Escape
+sleep 2
+key Escape
+sleep 3

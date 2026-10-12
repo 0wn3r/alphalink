@@ -1,0 +1,11 @@
+sleep 3
+shot at0
+key Return
+sleep 2
+shot at1
+key Down
+sleep 1
+shot at2
+key Return
+sleep 2
+shot at3
