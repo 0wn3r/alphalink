@@ -28,7 +28,7 @@
   ],
   "N10 block (tool change)": {
    "#121": "1",
-   "#122": "tool number (3)",
+   "#122": "tool number (as picked in CHANGE TOOL, e.g. 16)",
    "#123": "tool change X",
    "#124": "tool change Z (x2!)",
    "#127": "1",
@@ -36,20 +36,21 @@
    "#130": "feed"
   },
   "N20 block (operation)": {
-   "#120": "?1",
-   "#121": "?1",
+   "#120": "number of passes (finish 1, area clear 26)",
+   "#121": "pass number, re-set before every pass",
    "#122": "tool",
    "#123": "tool start X",
    "#124": "tool start Z (x2)",
    "#125": "limit X",
    "#126": "limit Z (x2)",
-   "#127": "14 for finish pass (op kind?)",
+   "#127": "operation kind: 6 = area clear, 14 = finish pass",
    "#128": "1",
    "#129": "block no.",
    "#130": "feed",
    "#131": "#131+1 counter"
   },
   "moves": "M60 G0 X Z M61 (rapid) / M62 G1 X Z F (feed) / M64 end of feed group; M63 / M65 / M66 macro calls; IF[#140EQn] GOTO 50n restart",
-  "open": "every Z value (moves, #124, #126) is 2x the drawing value in both mm and inch drawings; SD1 is not scaled. Not yet explained - check on the control before cutting."
+  "open": "every Z value (moves, #124, #126) is 2x the drawing value in both mm and inch drawings; SD1 is not scaled. Not yet explained - check on the control before cutting.",
+  "per pass": "N5nn label; #121=n; M66; IF[#140EQn] GOTO 5nn (restart at pass n); M63; M60 G0 ... M61 rapid; M62 G1 ... feed; M64 after the last pass"
  }
 }

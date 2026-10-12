@@ -37,8 +37,14 @@ Results so far (indices into the 59 float32 2.0 occurrences / 13 float64):
   0x60xxx-0x61xxx are inside overlay 17 at file offset 0x5FA00) is an X "/2" in the writer path.
 * f32 30..58 (overlay 17) -> geometry broken (CAM maths), not conclusive.
 * Post experiment: ALPHTCNC.PRG Z register field 9 (1 -> 0) only makes Z modal (omitted when unchanged).
-Next: bisect 15..29 to find the X constant, disassemble the writer around it (overlay 17), see how Z is formed.
+* f32 19/20 (0x60f2c / 0x60f5c = main load image 0x5d61c / 0x5d64c) are the X constants (contour X doubled when patched).
+Next: find the segment base of 0x5d61c via the relocation/`mov ds` that loads it, disassemble the writer around it (overlay 17), see how Z is formed.
 Alternative: compare with a known-good Alpha-T program from a real installation if one turns up.
+
+## Samples / operations
+* Finish pass and area clear generated and decoded (#120 passes, #121 pass, #122 tool, #127 = 14 finish / 6 area).
+* Grooving: automation fails with "Tool tip width is greater than the total length of groove" - fix contour selection.
+* Threading, drilling, dwell, move/rapid to cursor: not yet sampled. Use tools/mk_at_script.py.
 
 ## Other open items
 * Meaning of #120..#140 and M60-M71 (need the macro listing B703-0703 or more samples: area clear, groove,
