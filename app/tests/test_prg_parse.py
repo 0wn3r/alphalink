@@ -1,0 +1,257 @@
+"""PRG parser tests against every ALPHA-T sample in samples/alphat_v12."""
+
+import json
+import re
+import unittest
+from pathlib import Path
+
+from alphacam.io.prg_parse import Kind, MoveKind, PrgSyntaxError, parse, parse_file
+from alphacam.model import OP_KINDS, MachineProfile
+from alphacam.numfmt import DECIMALS, format_number
+
+REPO = Path(__file__).resolve().parents[2]
+SAMPLES = REPO / "samples" / "alphat_v12"
+PRGS = sorted(SAMPLES.glob("*.PRG"))
+
+# Expected op name of block N20 per sample (None: no op block).
+EXPECTED_OP = {
+    "AREA1_metric": "area_clear",
+    "DRILL_DWELL_metric": "drill",
+    "FACE_metric": "face_clear",
+    "GROOVE_metric": "groove",
+    "MET2_finish_inch": "finish",
+    "MET2_finish_metric": "finish",
+    "MOVE_RAPID_metric": None,
+    "THREAD_metric": "thread",
+}
+
+
+def sd1_words(path: Path) -> list[dict[str, str]]:
+    """Minimal SD1 reader for cross-checks: each line -> {letter: value}, with G codes collected under 'G'."""
+    rows = []
+    for line in path.read_text("ascii").splitlines():
+        row: dict = {"G": []}
+        for letter, value in re.findall(r"([A-Z])(-?[\d.]+)", line):
+            if letter == "G":
+                row["G"].append(int(value))
+            else:
+                row.setdefault(letter, value)
+        rows.append(row)
+    return rows
+
+
+class EverySample(unittest.TestCase):
+    def test_samples_present(self):
+        self.assertEqual({p.stem for p in PRGS}, set(EXPECTED_OP))
+
+    def test_parse_and_round_trip(self):
+        for path in PRGS:
+            with self.subTest(path.name):
+                data = path.read_bytes()
+                prog = parse(data)
+                self.assertEqual(prog.eol, "\r\n")
+                self.assertEqual(prog.to_bytes(), data)
+                self.assertEqual(prog.o_number, 2)
+                self.assertEqual(prog.program_number, 10)
+                self.assertEqual(prog.units, "inch" if "inch" in path.stem else "mm")
+                self.assertEqual(prog.blocks[0].op_name, "tool_change")
+                self.assertEqual(prog.blocks[-1].op_name, "end")
+                self.assertEqual([b.label for b in prog.blocks], [10 * (i + 1) for i in range(len(prog.blocks))])
+
+    def test_header_matches_spec(self):
+        spec = json.loads((REPO / "data" / "program_formats.json").read_text())["alphat_v12_prg_observed"]["header"]
+        for path in PRGS:
+            with self.subTest(path.name):
+                prog = parse_file(path)
+                lines = [s.text for s in prog.statements[: len(spec)]]
+                expected = [t.replace("<n>", "2").replace("<program number>", "10") for t in spec]
+                expected[-1] = "M70" if prog.units == "inch" else "M71"  # spec lists the metric M71
+                self.assertEqual(lines, expected)
+
+    def test_op_kind(self):
+        for path in PRGS:
+            with self.subTest(path.name):
+                prog = parse_file(path)
+                ops = prog.operations
+                if EXPECTED_OP[path.stem] is None:
+                    self.assertEqual(ops, [])
+                else:
+                    self.assertEqual([b.op_name for b in ops], [EXPECTED_OP[path.stem]])
+                    self.assertEqual(ops[0].label, 20)
+
+    def test_declared_passes_match(self):
+        expected = {"AREA1_metric": 26, "FACE_metric": 26, "THREAD_metric": 100}
+        for path in PRGS:
+            prog = parse_file(path)
+            for b in prog.operations:
+                with self.subTest(path.name):
+                    self.assertEqual(b.declared_passes, expected.get(path.stem, 1))
+                    self.assertEqual(len(b.passes), b.declared_passes)
+                    self.assertEqual([p.number for p in b.passes], list(range(1, b.declared_passes + 1)))
+                    self.assertTrue(b.passes[-1].moves, "last pass has moves")
+
+    def test_numbers_are_canonical(self):
+        """C6: every coordinate/feed is written exactly as format_number would write it."""
+        for path in PRGS:
+            prog = parse_file(path)
+            decimals = DECIMALS[prog.units]
+            with self.subTest(path.name):
+                for s in prog.statements:
+                    tokens = []
+                    if s.kind is Kind.MOTION:
+                        tokens = [v for k, v in s.words.items() if k != "P"]
+                    elif s.kind is Kind.ASSIGN and s.number in (123, 124, 125, 126, 130):
+                        tokens = [s.value]
+                    for tok in tokens:
+                        self.assertEqual(format_number(float(tok), decimals), tok, f"line {s.line}: {s.text}")
+
+    def test_registers_match_sd1(self):
+        """Unscaled #123/#124, #125/#126 and #130 agree with the SD1 listing (G5 tool change, G5 start, G115, F)."""
+        for path in PRGS:
+            prog = parse_file(path)
+            sd1 = sd1_words(path.with_suffix(".SD1"))
+            g5 = [r for r in sd1 if 5 in r["G"]]
+            g115 = [r for r in sd1 if 115 in r["G"]]
+            with self.subTest(path.name):
+                tc = prog.blocks[0]
+                self.assertEqual(tc.start, (float(g5[0]["X"]), float(g5[0]["Z"])))
+                self.assertAlmostEqual(tc.feed, float(sd1[0]["F"]))
+                for b in prog.operations:
+                    self.assertEqual(b.limit, (float(g115[0]["X"]), float(g115[0]["Z"])))
+                    if b.op_name == "thread":
+                        g76 = next(r for r in sd1 if 76 in r["G"])
+                        self.assertAlmostEqual(b.feed, float(g76["F"]))  # pitch
+                    else:
+                        self.assertAlmostEqual(b.feed, float(sd1[0]["F"]))
+
+    def test_moves_inside_limits(self):
+        for path in PRGS:
+            prog = parse_file(path)
+            for b in prog.operations:
+                with self.subTest(path.name):
+                    sx, sz = b.start
+                    for m in b.moves:
+                        self.assertIsNotNone(m.x)
+                        self.assertIsNotNone(m.z)
+                        self.assertLessEqual(m.z, sz + 1e-9, f"line {m.line}")
+
+    def test_profile_scaling(self):
+        path = SAMPLES / "MET2_finish_metric.PRG"
+        raw = parse_file(path, MachineProfile(z_scale=1, f_scale=1))
+        scaled = parse_file(path)
+        self.assertEqual(raw.blocks[1].start, (120.0, 10.0))
+        self.assertEqual(scaled.blocks[1].start, (120.0, 5.0))
+        self.assertEqual(raw.blocks[1].feed, 0.3)
+        self.assertEqual(scaled.blocks[1].feed, 0.15)
+
+
+class SampleDetails(unittest.TestCase):
+    def test_finish_contour(self):
+        b = parse_file(SAMPLES / "MET2_finish_metric.PRG").operations[0]
+        feeds = [(m.x, m.z) for m in b.moves if m.kind is MoveKind.FEED]
+        self.assertEqual(feeds, [(0, 0), (40, 0), (40, -25), (60, -25), (60, -50), (100, -50), (100.282, -49.859)])
+        self.assertEqual((b.moves[-1].kind, b.moves[-1].x, b.moves[-1].z), (MoveKind.RAPID, 120, 5))
+        self.assertTrue(all(m.feed == 0.15 for m in b.moves if m.kind is MoveKind.FEED))
+
+    def test_finish_inch(self):
+        prog = parse_file(SAMPLES / "MET2_finish_inch.PRG")
+        b = prog.operations[0]
+        feeds = [(m.x, m.z) for m in b.moves if m.kind is MoveKind.FEED]
+        self.assertEqual(feeds[:3], [(0, 0), (1.6, 0), (1.6, -1)])
+        self.assertEqual(prog.blocks[0].start, (3.937, 1.9685))
+
+    def test_area_passes(self):
+        b = parse_file(SAMPLES / "AREA1_metric.PRG").operations[0]
+        first_cut = [p.moves[1].x for p in b.passes]
+        self.assertEqual(first_cut[:3], [96, 92, 88])
+        self.assertEqual(first_cut[-1], -0.8)
+        # Restart: pass n jumps to label 50(n+2) when #140 == n+1.
+        self.assertEqual([p.restart for p in b.passes[:2]], [(2, 503), (3, 504)])
+        self.assertEqual(b.labels[:2], [503, 504])
+
+    def test_face_passes(self):
+        b = parse_file(SAMPLES / "FACE_metric.PRG").operations[0]
+        depths = [p.moves[0].z for p in b.passes]
+        self.assertEqual(depths[:3], [-2, -4, -6])
+        self.assertEqual(depths[-1], -50)
+
+    def test_groove_plunges(self):
+        b = parse_file(SAMPLES / "GROOVE_metric.PRG").operations[0]
+        plunges = [m for m in b.moves if m.kind is MoveKind.FEED]
+        self.assertEqual(len(plunges) % 2, 0)
+        bottoms = {m.x for m in plunges[::2]}
+        self.assertLessEqual(bottoms, {30.0, 40.0, 60.0})
+
+    def test_thread_passes(self):
+        b = parse_file(SAMPLES / "THREAD_metric.PRG").operations[0]
+        self.assertEqual(b.feed, 1.5)  # pitch, unscaled
+        cuts = [m for m in b.moves if m.kind is MoveKind.THREAD and not m.incremental]
+        self.assertEqual(len(cuts), 100)
+        self.assertEqual([c.x for c in cuts[:3]], [38, 37.172, 36.536])
+        self.assertEqual(cuts[-1].x, 20)
+        self.assertTrue(all(c.z == -23.5 and c.feed == 1.5 for c in cuts))
+        retracts = [m for m in b.moves if m.incremental]
+        self.assertEqual(len(retracts), 100)
+        self.assertTrue(all(r.kind is MoveKind.THREAD and r.z == -25 for r in retracts))
+        self.assertEqual((retracts[0].x, retracts[-1].x), (59, 41))
+
+    def test_drill_dwell(self):
+        prog = parse_file(SAMPLES / "DRILL_DWELL_metric.PRG")
+        tool_dwell = prog.blocks[0].moves
+        self.assertEqual([(m.kind, m.dwell_revs, m.x, m.z) for m in tool_dwell], [(MoveKind.DWELL, 3, 100, 50)])
+        drill = prog.operations[0]
+        self.assertEqual([m.z for m in drill.moves if m.kind is MoveKind.FEED], [-5, -3, -15, -13, -25, -23, -30, -28])
+        self.assertEqual([m.dwell_revs for m in drill.moves if m.kind is MoveKind.DWELL], [3])
+
+    def test_move_rapid(self):
+        prog = parse_file(SAMPLES / "MOVE_RAPID_metric.PRG")
+        self.assertEqual(len(prog.blocks), 2)
+        moves = [(m.kind, m.x, m.z) for m in prog.blocks[0].moves]
+        self.assertEqual(moves, [(MoveKind.FEED, 100, -50), (MoveKind.FEED, 60, -50), (MoveKind.RAPID, 60, -70)])
+
+
+class Strictness(unittest.TestCase):
+    def setUp(self):
+        self.data = (SAMPLES / "MET2_finish_metric.PRG").read_bytes()
+
+    def test_lf_line_endings(self):
+        prog = parse(self.data.replace(b"\r\n", b"\n"))
+        self.assertEqual(prog.eol, "\n")
+        self.assertEqual(prog.to_bytes(), self.data.replace(b"\r\n", b"\n"))
+
+    def test_unknown_statement(self):
+        bad = self.data.replace(b"G1X40.Z0.F0.3\r\n", b"G1X40.Z0.F0.3\r\nT0303\r\n")
+        with self.assertRaises(PrgSyntaxError) as cm:
+            parse(bad)
+        self.assertEqual(cm.exception.line, 45)
+
+    def test_missing_decimal_point(self):
+        with self.assertRaisesRegex(PrgSyntaxError, "decimal point"):
+            parse(self.data.replace(b"G1X40.Z0.F0.3", b"G1X40Z0.F0.3"))
+        with self.assertRaisesRegex(PrgSyntaxError, "decimal point"):
+            parse(self.data.replace(b"#123=120.", b"#123=120"))
+
+    def test_missing_end(self):
+        with self.assertRaisesRegex(PrgSyntaxError, "M65"):
+            parse(self.data.replace(b"M65\r\n", b""))
+
+    def test_missing_final_newline(self):
+        with self.assertRaisesRegex(PrgSyntaxError, "final line ending"):
+            parse(self.data[:-2])
+
+    def test_non_ascii(self):
+        with self.assertRaisesRegex(PrgSyntaxError, "non-ASCII"):
+            parse(self.data.replace(b"M71", b"M7\xb9"))
+
+    def test_block_label_order(self):
+        with self.assertRaisesRegex(PrgSyntaxError, "N30"):
+            parse(self.data.replace(b"N30\r\n", b"N35\r\n"))
+
+
+class OpKinds(unittest.TestCase):
+    def test_table_matches_program_formats(self):
+        spec = json.loads((REPO / "data" / "program_formats.json").read_text())
+        text = spec["alphat_v12_prg_observed"]["N20 block (operation)"]["#127"]
+        pairs = {int(n): name for n, name in re.findall(r"(\d+) ([a-z ]+?)(?:,|$| \()", text)}
+        self.assertIn("(1 = N10 tool block)", text)
+        self.assertEqual(set(pairs) | {1}, set(OP_KINDS))
