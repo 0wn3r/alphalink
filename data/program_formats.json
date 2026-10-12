@@ -33,7 +33,7 @@
    "#124": "tool change Z (x2!)",
    "#127": "1",
    "#129": "block no.",
-   "#130": "feed"
+   "#130": "feed (x2: drawing F0.15 -> 0.3)"
   },
   "N20 block (operation)": {
    "#120": "number of passes (finish 1, area clear 26)",
@@ -43,14 +43,18 @@
    "#124": "tool start Z (x2)",
    "#125": "limit X",
    "#126": "limit Z (x2)",
-   "#127": "operation kind: 6 = area clear, 14 = finish pass",
+   "#127": "operation kind: 6 = area clear, 14 = finish pass, 18 = drilling, 20 = threading (groove/face not yet confirmed)",
    "#128": "1",
    "#129": "block no.",
-   "#130": "feed",
+   "#130": "feed (x2); for threading = pitch x2 (pitch 1.5 -> #130=3.)",
    "#131": "#131+1 counter"
   },
   "moves": "M60 G0 X Z M61 (rapid) / M62 G1 X Z F (feed) / M64 end of feed group; M63 / M65 / M66 macro calls; IF[#140EQn] GOTO 50n restart",
-  "open": "every Z value (moves, #124, #126) is 2x the drawing value in both mm and inch drawings; SD1 is not scaled. Not yet explained - check on the control before cutting.",
-  "per pass": "N5nn label; #121=n; M66; IF[#140EQn] GOTO 5nn (restart at pass n); M63; M60 G0 ... M61 rapid; M62 G1 ... feed; M64 after the last pass"
+  "open": "Z, feed and thread pitch are all 2x the drawing value (mm and inch); X (diameter) is 1:1; SD1 is unscaled. Consistent pattern -> most likely by design for the T control/macros (Z axis half scale), but verify on the control before cutting.",
+  "per pass": "N5nn label; #121=n; M66; IF[#140EQn] GOTO 5nn (restart at pass n); M63; M60 G0 ... M61 rapid; M62 G1 ... feed; M64 after the last pass",
+  "drilling": "peck cycle written out as G1 moves (in/out per peck), Z x2; SD1 uses G74 ... G174",
+  "dwell": "G4P<revs*1000> (3 revs -> G4P3000); SD1 G4P3",
+  "threading": "per pass: M60 G0 to start M61; M62; #121=n; M66; G32 X<dia> Z<end> F<pitch x2>; U<dx> W<-pitch x2> (retract starts one pitch before the end, V1.21); G0 out; SD1 uses G76 ... G176",
+  "move/rapid to cursor": "no N20 header; moves appended to the current tool block: M62 G1 X Z F / M60 G0 X Z M61"
  }
 }
