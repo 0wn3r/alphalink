@@ -19,11 +19,13 @@ Then replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 | GNOME app | Design draft `app/DESIGN.md` (Python + PyGObject + libadwaita). No code. | M0: model + `.alcam` JSON + SDG import + PRG parser. M1: PRG writer byte-identical to the MET2/AREA1 samples. |
 
 ## Environment
-- The user's computer: `~/alpha-work/`. Contents:
-  - `Alpha181/` and `AlphaT/` (vendor, never modify)
-  - `re-notes/` (working notebook, samples, `_shots/`)
+- The user's computer: `~/alpha-work/` (cleaned up 2026-10-12, usable as a Cowork project folder). Layout:
+  - `alphalink/`: clone of this repo
+  - `re-notes/`: working notebook, samples, `_shots/` and working copies of `tools/`
+  - `vendor/`: Alpha181, AlphaT, Alpha-t, Alpha-w1 and the manuals (never modify)
   - `tools-bin/dosbox-x`
-  - bundles
+  - `_to_delete/`: old bundles, tgz, .deb packages and the dosbox-x source, for the user to remove
+  - `HANDOVER.md`
 - Automation: `tools/atsession.sh` (Xvfb + DOSBox-X + xkeys, scratch copy `~/atwork`), with scripts in `tools/ac_scripts/at_*.ks`.
 - Quirks:
   - xkeys drops 'A' in typed names.

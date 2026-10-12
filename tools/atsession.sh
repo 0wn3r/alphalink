@@ -4,7 +4,7 @@
 W=$(cd "$(dirname "$0")/../.." && pwd); T=$W/re-notes/tools; S=$W/re-notes/_shots
 # Work on a scratch copy so the real Alpha181 folder is never modified.
 # KEEP=1 reuses the previous scratch state; RUN=name snapshots the scratch dir afterwards to ~/acruns/name.
-SC=$HOME/atwork; if [ "${KEEP:-0}" != 1 ]; then rm -rf $SC; mkdir -p $SC; cp -r "$W/AlphaT" $SC/ALPHA-T; (cd $SC/ALPHA-T; rm -f ALPHTZIP.EXE ATSETUP.EXE; mkdir -p DRAWINGS MANOPS MACROS DXF; printf 1 > PORT.CFG); fi
+SC=$HOME/atwork; if [ "${KEEP:-0}" != 1 ]; then rm -rf $SC; mkdir -p $SC; cp -r "$W/vendor/AlphaT" $SC/ALPHA-T; (cd $SC/ALPHA-T; rm -f ALPHTZIP.EXE ATSETUP.EXE; mkdir -p DRAWINGS MANOPS MACROS DXF; printf 1 > PORT.CFG); fi
 # EXTRACONF="[parallel]\nparallel1=...": extra dosbox-x config sections (literal newlines)
 # PRE="shell cmd": run in the scratch ALPHACAM dir before starting (e.g. to patch the post)
 [ -n "$PRE" ] && (cd $SC/ALPHA-T && sh -c "$PRE")

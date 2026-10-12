@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Fake CNC: capture what ALINK (running in DOSBox-X) puts on the wire.
 
-  python3 cnc_capture.py socket://127.0.0.1:5001 --expect ../../Alpha181/PROGRAMS/LOOPTEST.600
+  python3 cnc_capture.py socket://127.0.0.1:5001 --expect ../../vendor/Alpha181/PROGRAMS/LOOPTEST.600
   python3 cnc_capture.py /tmp/alpha_cnc --stty /tmp/alpha_dos      (directserial/pty mode)
 
 Options let you inject XOFF after N bytes to check flow control:

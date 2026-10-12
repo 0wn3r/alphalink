@@ -6,8 +6,8 @@
 # Extra args are passed to cnc_capture.py, e.g.  ./run_capture.sh --xoff-after 200 --xoff-byte 0x93
 set -e
 T=$(cd "$(dirname "$0")" && pwd); W=$(cd "$T/../.." && pwd)
-DOSC="$W/dosc"; mkdir -p "$DOSC"; [ -e "$DOSC/ALPHACAM" ] || ln -s ../Alpha181 "$DOSC/ALPHACAM"
-P="$W/Alpha181/PROGRAMS/LOOPTEST.600"
+DOSC="$W/dosc"; mkdir -p "$DOSC"; [ -e "$DOSC/ALPHACAM" ] || ln -s ../vendor/Alpha181 "$DOSC/ALPHACAM"
+P="$W/vendor/Alpha181/PROGRAMS/LOOPTEST.600"
 [ -f "$P" ] || printf '%%\r\nO1000(LOOPTEST)\r\nG00 X100.0 Z5.0\r\nG01 X50.0 F0.2\r\nM30\r\n%%\r\n' > "$P"
 CONF=$(mktemp --suffix=.conf); sed "s#@DOSC@#$DOSC#" "$T/dosbox-alink.conf" > "$CONF"
 if [ "${MODE:-tcp}" = pty ]; then
