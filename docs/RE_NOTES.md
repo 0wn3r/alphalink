@@ -859,3 +859,24 @@ xkeys drops 'A' in typed names (FAC -> FC).
 Machine side (user measurements on the machine DB25, pin 7 = ground): pins 2 and 3 both -10 V (idle mark),
 pins 5 (CTS) and 6 (DSR) = 0 V -> the control sees "not ready" and neither sends nor accepts. Fix in progress:
 bridges 4-5 and 6-8-20 in the machine-side plug (manual p.61), so the control satisfies its own handshake.
+
+### Progress 26 - FANUC Power Mate 0 connection manual (B-63443EN/01), RS-232-C (2026-10-12)
+Source: user's copy `~/Documents/fanuc/583648381-FANUC-Power-Mate-0.pdf` (not in the repo), section 7.3 (p.62-70)
+and appendix H.2 (p.240-243).
+* Relay connector DBM-25S (the cabinet DB25): 1 FG, **2 SD (NC out)**, **3 RD (NC in)**, 4 RS, 5 CS, 6 DR, 7 SG, 8 CD,
+  20 ER, 25 +24 V. Same as our cable.json (DTE, so the PC needs a crossover).
+* The manual's own rule for a device without handshake: "When CS is not used, connect CS to RS" (4-5), "when DR is
+  not used, connect DR to ER" (6-20), and CD must always be tied to ER (8-20). This is exactly the planned bridge
+  4-5 + 6-8-20, so after it pins 5/6/8 should read positive (ON is +3 V or higher) once the NC raises ER/RS.
+  Note: RS (4) only turns on while the NC is outputting, so with 4-5 bridged CS is driven by the NC itself.
+* NC sending (punch, Manual Ops Save): needs CS and DR on; DR dropping mid-transfer = alarm 086. The NC sends DC2
+  first and DC4 at the end; it stops within 2 characters when CS goes off, or within 10 characters after a DC3.
+* NC reading (CAM load / Manual Ops Load): the NC sends **DC1** to start, **DC3** to pause; the device must stop within
+  **10 characters** of DC3 or the NC raises alarm 087, and resumes on the next DC1. Implication for USB adapters:
+  keep writes small (alphalink.py already writes 4-byte chunks, or 1 byte with --char-delay) and prefer
+  `--wait-xon` so nothing is sent before the first DC1.
+* Character frame: 1 start, 8 information bits including parity, 2 stop bits = our 7E2. ISO code has even parity in
+  bit 8. Baud rates 600-19200.
+* Parameters to check on the control if the link still fails: 0020 I/O CHANNEL (0), 0102 device = 0 (RS232C),
+  0103 baud = 11 (9600), 0101 bit SB2 = 1 (2 stop bits), ASI = 0 (ISO/EIA auto), NFD = 1 (no feed). 0100 NCR selects
+  the EOB output (0: LF CR CR, 1: LF only). Harrison's macros may drive these, so read them, don't change them.
