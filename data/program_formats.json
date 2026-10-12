@@ -43,7 +43,7 @@
    "#124": "tool start Z (x2)",
    "#125": "limit X",
    "#126": "limit Z (x2)",
-   "#127": "operation kind: 6 area clear, 9 grooving, 14 finish pass, 18 drilling, 20 threading (1 = tool block); face clear not yet sampled",
+   "#127": "operation kind: 6 area clear, 8 face clear, 9 grooving, 14 finish pass, 18 drilling, 20 threading (1 = N10 tool block)",
    "#128": "1",
    "#129": "block no.",
    "#130": "feed (x2); for threading = pitch x2 (pitch 1.5 -> #130=3.)",
@@ -56,6 +56,7 @@
   "dwell": "G4P<revs*1000> (3 revs -> G4P3000); SD1 G4P3",
   "threading": "per pass: M60 G0 to start M61; M62; #121=n; M66; G32 X<dia> Z<end> F<pitch x2>; U<dx> W<-pitch x2> (retract starts one pitch before the end, V1.21); G0 out; SD1 uses G76 ... G176",
   "move/rapid to cursor": "no N20 header; moves appended to the current tool block: M62 G1 X Z F / M60 G0 X Z M61",
-  "grooving": "plunges written as G1 in / G1 out (+2 on diameter) per stepover, Z x2; #125/#126 = groove limits; SD1 uses G75 ... G175 with the groove contour"
+  "grooving": "plunges written as G1 in / G1 out (+2 on diameter) per stepover, Z x2; #125/#126 = groove limits; SD1 uses G75 ... G175 with the groove contour",
+  "face clear": "passes along X at Z = -2*depth*n; each pass has its own N5nn restart label; #125/#126 = billet limits (Z x2); SD1 G71 ... G171"
  }
 }

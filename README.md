@@ -12,7 +12,7 @@ manuals and photos are not included; `docs/VENDOR_FILES_SHA256.txt` identifies t
 ## Layout
 | path | content |
 |---|---|
-| `docs/RE_NOTES.md` | full lab notebook (protocols, file formats, Progress 1-23) |
+| `docs/RE_NOTES.md` | full lab notebook (protocols, file formats, Progress 1-25) |
 | `docs/ALPHA-T_STATUS.md` | Alpha-T status, open questions, resume plan (placeholder for the Alpha-T rework) |
 | `data/` | structured facts: `line_settings.json`, `cable.json`, `program_formats.json`, `atoolib_v181_tools.csv` |
 | `tools/alphalink.py` | PC <-> lathe transfer (modes send-alink, send-load, recv-save, send-alphat, recv-alphat) |

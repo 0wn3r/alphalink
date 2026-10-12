@@ -12,7 +12,7 @@ State as of 2026-10-12. Target machine: Harrison Alpha 400T, control FANUC Power
 | Serial line, all T modules | 9600 7E2, XON 0x11 / XOFF 0x13 (measured in DOSBox-X) | `data/line_settings.json`, Progress 15, 22 |
 | Cable | DB9 2-2, 3-3, 5-7 + bridges; a plain 9-to-25 adapter does not work (no crossover) | `data/cable.json`, Progress 17, 20 |
 | PC tool | `tools/alphalink.py send-alphat` / `recv-alphat`, `--char-delay`, `--wait-xon`; `tools/serial_diag.py` | tools/ |
-| Real-machine test | All sends on 2026-10-12 went through the wrong adapter -> nothing reached the control. Loopback of the PL2303 adapter OK. | Progress 14, 20 |
+| Real-machine test | All sends on 2026-10-12 went through the wrong adapter -> nothing reached the control. Loopback of the PL2303 adapter OK. Measured on the machine DB25: pins 2/3 -10 V, pins 5 (CTS) / 6 (DSR) 0 V -> control not ready; fix = bridges 4-5 and 6-8-20 in the machine plug. | Progress 14, 20, 25 |
 | .PRG format | sample `samples/alphat_v12/MET2_finish_*`; structure in `data/program_formats.json` | Progress 15 |
 | Z x2 | every Z, every feed and the thread pitch in .PRG = 2 x drawing value (mm and inch); X (diameter) 1:1; SD1 not scaled. Consistent across finish/area/drill/thread/move samples -> most likely intended for the T control, still verify on the control | Progress 15/16 + below |
 | Windows transfer prog (SerioAlpha) | config format decoded; CAM channel = 7E2 XON/XOFF, no wait | Progress 13, 21 |
@@ -43,8 +43,8 @@ Alternative: compare with a known-good Alpha-T program from a real installation 
 
 ## Samples / operations
 * Samples (re-notes/alphat_samples, generated with the scripts in tools/ac_scripts/at_*.ks):
-  MET2_finish_{metric,inch}, AREA1_metric, DRILL_DWELL_metric, THREAD_metric, MOVE_RAPID_metric, GROOVE_metric.
-* #127 op kind: 1 tool block, 6 area clear, 9 grooving, 14 finish, 18 drilling, 20 threading.
+  MET2_finish_{metric,inch}, AREA1_metric, DRILL_DWELL_metric, THREAD_metric, MOVE_RAPID_metric, GROOVE_metric, FACE_metric.
+* #127 op kind: 1 tool block, 6 area clear, 8 face clear, 9 grooving, 14 finish, 18 drilling, 20 threading.
 * Drilling: pecks written out as G1 in/out moves; dwell G4P<revs*1000>.
 * Threading (pitch 1.5, OUTER X40 / INNER X20 identified): #120=passes, #130=3. (pitch x2), each pass
   G32 X Z F3. then U21. W-3. retract (starts one pitch before the end, as in the V1.21 update notes).
@@ -52,7 +52,7 @@ Alternative: compare with a known-good Alpha-T program from a real installation 
 * Grooving: is NOT contour-driven like area clear. Working key sequence (tools/ac_scripts/at_groove.ks):
   STEPOV/TIPWD -> stepover 2, tip width 3; EXECUTE; answer 1 (area clear) / 2 (finish); dwell revs Enter;
   "Input complete" Enter; wait ~25 s; EXIT DRAWING. Sample saved as GROOVE_metric (#127=9).
-* Face clear: not yet sampled.
+* Face clear: sampled (FACE_metric, #127=8). All CAM ops now have a sample.
 
 ## Other open items
 * Meaning of #120..#140 and M60-M71 (need the macro listing B703-0703 or more samples: area clear, groove,

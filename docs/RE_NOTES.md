@@ -831,3 +831,31 @@ not 8E2. `!` on the ATMANOP menu selects the port.
   "Tool tip width is greater than the total length of groove" even for a 20 mm groove - contour selection in the
   script is probably wrong for this geometry. Not resolved.
 * tools/mk_at_script.py generates ALPHA-T xkeys scripts (draw part, optional tool change, one CAM op, save).
+
+### Progress 25 - ALPHA-T: all CAM operations sampled; feed and pitch also x2; machine handshake (2026-10-12)
+Samples in alphat_samples/ (scripts tools/ac_scripts/at_*.ks, METRIC=1 MMETRIC=1):
+| sample | op | #127 | notes |
+|---|---|---|---|
+| MET2_finish_* | finish pass | 14 | |
+| AREA1_metric | area clear | 6 | 26 passes |
+| FACE_metric | face clear | 8 | depth 2 -> passes at Z-4, -8 ... (x2); #125/#126 = billet limit X-1.6 / Z-101.6 (= 2 x -50.8); every pass has its own N5nn restart label |
+| GROOVE_metric | grooving | 9 | stepover 2, tip 3, area (1); plunges G1 in / G1 out (+2 dia); SD1 G75 ... G175 |
+| DRILL_DWELL_metric | drilling + dwell | 18 | pecks written out as G1 moves; dwell G4P<revs*1000> (SD1 G4P<revs>); SD1 G74 ... G174 |
+| THREAD_metric | threading | 20 | pitch 1.5 -> F3. and #130=3.; G32 X Z F per pass; retract U21. W-3. one pitch before the end (V1.21 note); SD1 G76 ... G176 |
+| MOVE_RAPID_metric | move / rapid to cursor | - | appended to the tool block: M62 G1 X Z F / M60 G0 X Z M61, no N20 header |
+(#127=1 in every N10 tool block.)
+
+Scaling, now confirmed on every op: **Z, feed (F and #130) and thread pitch = 2 x drawing value; X (diameter) 1:1;
+SD1 unscaled** - in mm and inch drawings. Feed per rev scaled with Z means the whole Z axis is in half units on
+the T control/macros (e.g. Z axis in "diameter" units). Most likely intended; still verify on the control
+(CAM load, look at the graphic/Z display, no cycle start).
+
+Key sequences learnt: grooving is not contour-driven (STEPOV/TIPWD sets both values; after EXECUTE answer
+1/2 area/finish, Enter for dwell, Enter for "Input complete", wait ~25 s). Face clear: EXECUTE = Down x5,
+Enter "Input complete", Space = no pre-finish. Threading: Pitch, EXTERNAL toggle, then identify outer and
+inner diameter lines with the cursor. After any op go straight to EXIT DRAWING - an extra Enter re-enters the op.
+xkeys drops 'A' in typed names (FAC -> FC).
+
+Machine side (user measurements on the machine DB25, pin 7 = ground): pins 2 and 3 both -10 V (idle mark),
+pins 5 (CTS) and 6 (DSR) = 0 V -> the control sees "not ready" and neither sends nor accepts. Fix in progress:
+bridges 4-5 and 6-8-20 in the machine-side plug (manual p.61), so the control satisfies its own handshake.
