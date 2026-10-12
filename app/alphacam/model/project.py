@@ -57,6 +57,7 @@ class Project:
     reference: Reference = field(default_factory=Reference)
     tool_change: Point = field(default_factory=lambda: Point(100, 50))
     program_number: int = 10
+    first_tool: int = 1  # tool of the N10 block when no ToolChange op comes first (SDG settings[8])
     tools: list[Tool] = field(default_factory=list)
     geometry: list[Element] = field(default_factory=list)
     operations: list[Operation] = field(default_factory=list)
@@ -82,6 +83,7 @@ class Project:
             "reference": serde.to_json(self.reference),
             "tool_change": {"x": self.tool_change.x, "z": self.tool_change.z},
             "program_number": self.program_number,
+            "first_tool": self.first_tool,
             "tools": serde.to_json(self.tools),
             "geometry": serde.to_json(self.geometry),
             "operations": serde.to_json(self.operations),
@@ -99,6 +101,7 @@ class Project:
             reference=serde.from_json(Reference, data.get("reference", {})),
             tool_change=Point.from_json(data.get("tool_change", {"x": 100, "z": 50})),
             program_number=int(data.get("program_number", 10)),
+            first_tool=int(data.get("first_tool", 1)),
             tools=[serde.from_json(Tool, t) for t in data.get("tools", [])],
             geometry=[serde.from_json(None, g, ELEMENT_TYPES) for g in data.get("geometry", [])],
             operations=[serde.from_json(None, o, OPERATION_TYPES) for o in data.get("operations", [])],
