@@ -807,3 +807,27 @@ not 8E2. `!` on the ATMANOP menu selects the port.
   a line X80,Z0 -> X0,Z0.
 * DOS drawings can be opened in the Windows version (the datum must be moved); machining moves are not converted.
   The DOS ATOOLIB.TL1/TL2 can be copied over.
+
+### Progress 24 - Alpha-T work session 2 (unpacking, X/Z constant hunt, more samples)
+* Unpacked: alphat_unpacked/{ALPHA-T,ATPRINT,ATTOOLS,ATSETUP}.EXE (EXEPACK). ALPHA-T and ATTOOLS have MS-LINK
+  overlays (ALPHA-T: 17 overlays from file offset 0x3F200). `ALPHA-T_OVL.EXE` = unpacked main padded to 512 +
+  original overlays; runs normally in DOSBox-X.
+* 2.0-constant patching (tools/patch_consts.py, f32 occurrences in ALPHA-T_OVL.EXE): f32 #19/#20 (file 0x60f2c /
+  0x60f5c, i.e. main image, load-image offsets 0x5d61c / 0x5d64c) -> contour X doubled in the .PRG (X40 -> 80;
+  approach offsets not). No single constant found yet that removes the Z x2. Code xref by displacement is
+  ambiguous (many segments); next: find the segment base of 0x5d61c via the relocation that loads it.
+* Tool change in ALPHA-T: CAM -> CHANGE TOOL (580,100) -> tool picker 6 per page, Right/Left, Enter -> "MC
+  OPTIONS" (FEEDRATE ...) -> Down + Enter = EXECUTE. Tool numbers = ATTOOLS list (16 = 2mm Groove/Parting).
+  **The .PRG carries the tool number: `#122=16`** (unlike the V1.81 .600), and the feed `#130=0.2`.
+* AREA CLEAR sample (alphat_samples/AREA1_metric.*, 26 passes, 409 lines): N20 header `#120=26` (passes),
+  `#121=1` (pass no., re-set `#121=n` before every pass), `#122=3` tool, `#123/#124` tool start, `#125/#126`
+  limit, **`#127=6` (area clear; finish pass = 14)**, `#128=1`, `#129=2` (block), `#130` feed, `#131=#131+1`.
+  Every pass: `N5nn` label, `#121=n`, `M66`, `IF[#140EQn] GOTO 5nn`, `M63`, rapid `M60 G0 .. M61`, feed `M62 G1 ..`
+  (M64 closes the operation), so the control can restart at any pass via #140.
+  Area clear menu: DEPTH CUT / OFFSET X,Z / FEEDRATE / RETRACT DIST / EXTERNAL / TOWARDS / FRONT / FOLLOW NO /
+  EXECUTE (Down x8).
+* GROOVING (menu DATUM LEFT / OFFSET / PECK DEPTH / STEPOV/TIPWD / FEEDRATE / FULL RET / EXTERNAL / FRONT /
+  Z-SHF/REP / EXECUTE; then <1>Area <2>Finish, Dwell time [revs], "Input complete") failed in automation with
+  "Tool tip width is greater than the total length of groove" even for a 20 mm groove - contour selection in the
+  script is probably wrong for this geometry. Not resolved.
+* tools/mk_at_script.py generates ALPHA-T xkeys scripts (draw part, optional tool change, one CAM op, save).
