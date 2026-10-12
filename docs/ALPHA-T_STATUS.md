@@ -14,7 +14,7 @@ State as of 2026-10-12. Target machine: Harrison Alpha 400T, control FANUC Power
 | PC tool | `tools/alphalink.py send-alphat` / `recv-alphat`, `--char-delay`, `--wait-xon`; `tools/serial_diag.py` | tools/ |
 | Real-machine test | All sends on 2026-10-12 went through the wrong adapter -> nothing reached the control. Loopback of the PL2303 adapter OK. | Progress 14, 20 |
 | .PRG format | sample `samples/alphat_v12/MET2_finish_*`; structure in `data/program_formats.json` | Progress 15 |
-| Z x2 | every Z in .PRG = 2 x drawing value (mm and inch); SD1 not scaled; post file has no scale column for it | Progress 15/16 + below |
+| Z x2 | every Z, every feed and the thread pitch in .PRG = 2 x drawing value (mm and inch); X (diameter) 1:1; SD1 not scaled. Consistent across finish/area/drill/thread/move samples -> most likely intended for the T control, still verify on the control | Progress 15/16 + below |
 | Windows transfer prog (SerioAlpha) | config format decoded; CAM channel = 7E2 XON/XOFF, no wait | Progress 13, 21 |
 
 ## Next steps on the machine (safe order)
@@ -42,9 +42,18 @@ Next: find the segment base of 0x5d61c via the relocation/`mov ds` that loads it
 Alternative: compare with a known-good Alpha-T program from a real installation if one turns up.
 
 ## Samples / operations
-* Finish pass and area clear generated and decoded (#120 passes, #121 pass, #122 tool, #127 = 14 finish / 6 area).
-* Grooving: automation fails with "Tool tip width is greater than the total length of groove" - fix contour selection.
-* Threading, drilling, dwell, move/rapid to cursor: not yet sampled. Use tools/mk_at_script.py.
+* Samples (re-notes/alphat_samples, generated with the scripts in tools/ac_scripts/at_*.ks):
+  MET2_finish_{metric,inch}, AREA1_metric, DRILL_DWELL_metric, THREAD_metric, MOVE_RAPID_metric.
+* #127 op kind: 1 tool block, 6 area clear, 14 finish, 18 drilling, 20 threading.
+* Drilling: pecks written out as G1 in/out moves; dwell G4P<revs*1000>.
+* Threading (pitch 1.5, OUTER X40 / INNER X20 identified): #120=passes, #130=3. (pitch x2), each pass
+  G32 X Z F3. then U21. W-3. retract (starts one pitch before the end, as in the V1.21 update notes).
+* Move/rapid to cursor: appended to the current tool block, no N20 header.
+* Grooving: is NOT contour-driven like area clear. Working key sequence (tools/ac_scripts/at_groove.ks):
+  STEPOV/TIPWD -> stepover 2, tip width 3; EXECUTE; answer 1 (area clear) / 2 (finish); dwell revs Enter;
+  "Input complete" Enter; wait ~25 s; EXIT DRAWING. Groove executed in DOSBox-X; the saved GRV sample is
+  still to be collected (computer went offline during that run).
+* Face clear: not yet sampled.
 
 ## Other open items
 * Meaning of #120..#140 and M60-M71 (need the macro listing B703-0703 or more samples: area clear, groove,
