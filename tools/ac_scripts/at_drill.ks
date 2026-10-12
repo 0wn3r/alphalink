@@ -1,0 +1,65 @@
+sleep 4
+key space
+sleep 3
+key F1
+sleep 3
+click 580 119
+sleep 1
+type 0,0
+key Return
+sleep 0.5
+type 40,0
+key Return
+sleep 1
+click 580 461
+sleep 1.5
+click 580 271
+sleep 1.5
+type 3
+key Return
+sleep 2
+click 580 214
+sleep 1.5
+type 0,5
+key Return
+sleep 2
+key Return
+sleep 2
+type -30
+key Return
+sleep 2
+key Down
+key Return
+sleep 2
+shot dr2
+type 10
+key Return
+sleep 2
+key Down
+key Down
+key Down
+key Down
+key Down
+sleep 0.5
+shot dr3
+key Return
+sleep 2
+shot dr4
+key Return
+sleep 8
+shot dr5
+click 580 442
+sleep 2
+key Return
+sleep 4
+type DRL
+key Return
+sleep 3
+type 10
+key Return
+sleep 3
+key 0
+sleep 4
+key 1
+sleep 5
+shot dr6

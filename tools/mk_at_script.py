@@ -10,12 +10,15 @@ ap=argparse.ArgumentParser(); ap.add_argument('op'); ap.add_argument('name'); ap
 ap.add_argument('--exec',type=int,default=4); ap.add_argument('--pts',default='0,0 40,0 40,-25 60,-25 60,-50 100,-50')
 ap.add_argument('--start',default='120,5'); ap.add_argument('--prefinish',default='space'); ap.add_argument('--stop-at-menu',action='store_true')
 ap.add_argument('--tool',default='',help="keys after clicking CHANGE TOOL (';' separated); empty = no tool change")
+ap.add_argument('--extra',default='',help="extra separate lines 'x,z:x,z x,z:x,z' drawn after the contour")
 ap.add_argument('--post',default='',help="keys after EXECUTE (';' separated) before the pre-finish question")
 a=ap.parse_args()
 pts=[p for p in a.pts.split()]
 L=["sleep 4","key space","sleep 3","key F1","sleep 3"]
 for p,q in zip(pts,pts[1:]):
     L+=["click 580 119","sleep 1","type "+p,"key Return","sleep 0.5","type "+q,"key Return","sleep 1"]
+for seg in a.extra.split():
+    p,q=seg.split(':'); L+=["click 580 119","sleep 1","type "+p,"key Return","sleep 0.5","type "+q,"key Return","sleep 1"]
 L+=["shot g_"+a.name+"_draw","click 580 461","sleep 1.5"]
 if a.tool: L+=["click 580 100","sleep 2","shot g_"+a.name+"_tool1"]+a.tool.split(';')+["sleep 2","shot g_"+a.name+"_tool2"]
 if a.op!='none':

@@ -43,16 +43,15 @@ Alternative: compare with a known-good Alpha-T program from a real installation 
 
 ## Samples / operations
 * Samples (re-notes/alphat_samples, generated with the scripts in tools/ac_scripts/at_*.ks):
-  MET2_finish_{metric,inch}, AREA1_metric, DRILL_DWELL_metric, THREAD_metric, MOVE_RAPID_metric.
-* #127 op kind: 1 tool block, 6 area clear, 14 finish, 18 drilling, 20 threading.
+  MET2_finish_{metric,inch}, AREA1_metric, DRILL_DWELL_metric, THREAD_metric, MOVE_RAPID_metric, GROOVE_metric.
+* #127 op kind: 1 tool block, 6 area clear, 9 grooving, 14 finish, 18 drilling, 20 threading.
 * Drilling: pecks written out as G1 in/out moves; dwell G4P<revs*1000>.
 * Threading (pitch 1.5, OUTER X40 / INNER X20 identified): #120=passes, #130=3. (pitch x2), each pass
   G32 X Z F3. then U21. W-3. retract (starts one pitch before the end, as in the V1.21 update notes).
 * Move/rapid to cursor: appended to the current tool block, no N20 header.
 * Grooving: is NOT contour-driven like area clear. Working key sequence (tools/ac_scripts/at_groove.ks):
   STEPOV/TIPWD -> stepover 2, tip width 3; EXECUTE; answer 1 (area clear) / 2 (finish); dwell revs Enter;
-  "Input complete" Enter; wait ~25 s; EXIT DRAWING. Groove executed in DOSBox-X; the saved GRV sample is
-  still to be collected (computer went offline during that run).
+  "Input complete" Enter; wait ~25 s; EXIT DRAWING. Sample saved as GROOVE_metric (#127=9).
 * Face clear: not yet sampled.
 
 ## Other open items
