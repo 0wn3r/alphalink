@@ -25,3 +25,5 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`
 - After UI string changes: `python3 tools/update_translations.py` (Ukrainian strings in `app/po/uk_translations.py`).
 - Vendor binaries and manuals are not in the repo; see `docs/VENDOR_FILES_SHA256.txt`.
+- User manuals: Training Manual and Reference Manual (English and Ukrainian) are written as Claude Docs, exported
+  to PDF into `app/alphacam_gtk/manuals/` and opened from the main menu. Screenshots: `tools/manual_shots.py`.

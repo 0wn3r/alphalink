@@ -1,6 +1,8 @@
 """In-app help (F1): help/help.<lang>.md shown in a dialog. The help is plain Markdown so it also reads well on
 GitHub; this renders the small subset it uses (# headings, paragraphs, "- " lists two levels deep, **bold**,
-`code`) as Pango markup, so it works offline and inside the Flatpak without a browser."""
+`code`) as Pango markup, so it works offline and inside the Flatpak without a browser.
+
+The Training and Reference Manuals ship as PDFs (manuals/<kind>.<lang>.pdf) and open in the desktop's PDF viewer."""
 
 from __future__ import annotations
 
@@ -11,17 +13,37 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from .i18n import _, language  # noqa: E402
 
 HELP_DIR = Path(__file__).with_name("help")
+MANUAL_DIR = Path(__file__).with_name("manuals")
+MANUALS = ("training", "reference")
 
 
 def help_path(lang: str | None = None) -> Path:
     lang = (lang or language() or "en").split("_")[0]
     p = HELP_DIR / f"help.{lang}.md"
     return p if p.exists() else HELP_DIR / "help.en.md"
+
+
+def manual_path(kind: str, lang: str | None = None) -> Path:
+    lang = (lang or language() or "en").split("_")[0]
+    p = MANUAL_DIR / f"{kind}.{lang}.pdf"
+    return p if p.exists() else MANUAL_DIR / f"{kind}.en.pdf"
+
+
+def open_manual(window, kind: str) -> None:
+    """Open a manual in the PDF viewer (through the portal inside the Flatpak); failures become a toast."""
+    def done(launcher, result):
+        try:
+            launcher.launch_finish(result)
+        except GLib.Error as e:
+            if not e.matches(Gtk.dialog_error_quark(), Gtk.DialogError.DISMISSED):
+                window.toast(_("Could not open the manual: {error}").format(error=e.message))
+
+    Gtk.FileLauncher(file=Gio.File.new_for_path(str(manual_path(kind)))).launch(window, None, done)
 
 
 def inline(text: str) -> str:

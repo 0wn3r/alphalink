@@ -500,4 +500,7 @@ UK = {
 "Program number": "Номер програми",
 "shown on the control": "показується на системі керування",
 "Billet, chuck jaws, tailstock and program number of this part.": "Заготовка, кулачки патрона, задня бабка й номер програми цієї деталі.",
+"Training Manual": "Навчальний посібник",
+"Reference Manual": "Довідковий посібник",
+"Could not open the manual: {error}": "Не вдалося відкрити посібник: {error}",
 }

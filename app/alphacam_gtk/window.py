@@ -21,7 +21,7 @@ from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
-from .help import HelpDialog  # noqa: E402
+from .help import MANUALS, HelpDialog, open_manual  # noqa: E402
 from .tools_page import ToolsPage, load_library  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 from .settings import settings  # noqa: E402
@@ -241,6 +241,8 @@ class MainWindow(Adw.ApplicationWindow):
         about = Gio.Menu()
         about.append(_("Preferences"), "win.preferences")
         about.append(_("Help"), "win.help")
+        about.append(_("Training Manual"), "win.manual-training")
+        about.append(_("Reference Manual"), "win.manual-reference")
         about.append(_("About AlphaLink CAM"), "app.about")
         menu.append_section(None, about)
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
@@ -329,6 +331,8 @@ class MainWindow(Adw.ApplicationWindow):
         add("new", lambda *_: self.new_dialog(), ["<Control>n"])
         add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
         add("help", lambda *_: HelpDialog().present(self), ["F1"])
+        for kind in MANUALS:
+            add(f"manual-{kind}", lambda *_, kind=kind: open_manual(self, kind))
         add("part-settings", lambda *_: self.part_settings_dialog())
         grid = Gio.SimpleAction.new_stateful("show-grid", None, GLib.Variant.new_boolean(settings()["show_grid"]))
         grid.connect("change-state", self._show_grid)

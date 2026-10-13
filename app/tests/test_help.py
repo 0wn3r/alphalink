@@ -57,3 +57,20 @@ class CoreMessages(unittest.TestCase):
             from alphacam_gtk.i18n import _
 
             i18n.set_translator(_)
+
+
+class Manuals(unittest.TestCase):
+    def test_both_manuals_in_both_languages(self):
+        from alphacam_gtk.help import MANUALS, manual_path
+
+        for kind in MANUALS:
+            for lang in ("en", "uk"):
+                p = manual_path(kind, lang)
+                self.assertEqual(p.name, f"{kind}.{lang}.pdf")
+                self.assertEqual(p.read_bytes()[:5], b"%PDF-")
+            self.assertEqual(manual_path(kind, "de").name, f"{kind}.en.pdf")
+
+    def test_menu_actions(self):
+        src = (HELP_DIR.parent / "window.py").read_text()
+        self.assertIn('"win.manual-training"', src)
+        self.assertIn('"win.manual-reference"', src)

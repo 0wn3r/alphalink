@@ -140,6 +140,7 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - Esc finishes the line being drawn, cancels contour picking or a command, or deselects. It also takes the keyboard out of the X,Z entry, so the one-letter keys work again (after X, the entry has it).
 - Delete removes the selected drawing element.
 - Ctrl+, preferences, F1 this help, Ctrl+Q quit.
+- Main menu ▸ Training Manual and Reference Manual open the full manuals (PDF) in the PDF viewer.
 
 ### ALPHA-T keys
 

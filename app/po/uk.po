@@ -463,6 +463,9 @@ msgstr "Дуга сполучення"
 msgid "Blend Arc"
 msgstr "Дуга сполучення"
 
+msgid "Could not open the manual: {error}"
+msgstr "Не вдалося відкрити посібник: {error}"
+
 msgid "Help"
 msgstr "Довідка"
 
@@ -1278,6 +1281,12 @@ msgstr "Режим введення"
 
 msgid "Preferences"
 msgstr "Параметри"
+
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
 
 msgid "About AlphaLink CAM"
 msgstr "Про AlphaLink CAM"
