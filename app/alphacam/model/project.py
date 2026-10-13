@@ -110,7 +110,7 @@ class Project:
             first_tool=int(data.get("first_tool", 1)),
             tools=[serde.from_json(Tool, t) for t in data.get("tools", [])],
             geometry=[serde.from_json(None, g, ELEMENT_TYPES) for g in data.get("geometry", [])],
-            operations=[serde.from_json(None, o, OPERATION_TYPES) for o in data.get("operations", [])],
+            operations=[serde.from_json(None, _legacy_op(o), OPERATION_TYPES) for o in data.get("operations", [])],
             texts=[serde.from_json(Text, t) for t in data.get("texts", [])],
         )
 
@@ -130,3 +130,11 @@ class Project:
     @classmethod
     def load(cls, path: str | Path) -> "Project":
         return cls.loads(Path(path).read_text(encoding="utf-8"))
+
+
+def _legacy_op(o: dict) -> dict:
+    """Parts saved before 2026-10-13 have a thread "angle" of 60 (the profile angle, which the post never used); the
+    field is now ALPHA-T's infeed angle, where 0 is what those parts posted."""
+    if o.get("type") == "thread" and o.get("angle") == 60.0:
+        o = dict(o, angle=0.0)
+    return o

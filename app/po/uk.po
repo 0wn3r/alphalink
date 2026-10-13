@@ -157,6 +157,9 @@ msgstr "різьба AWAY: сама ALPHA-T у цьому режимі почи�
 msgid "thread lines must be parallel to Z"
 msgstr "лінії різьби мають бути паралельні Z"
 
+msgid "threading with a flank infeed angle (no sample); set the angle to 0"
+msgstr "різьба з урізанням по боковій стороні (немає зразка); задайте кут 0"
+
 msgid "thread: outer diameter must be above the inner one, first cut > 0"
 msgstr "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0"
 
@@ -622,11 +625,11 @@ msgstr "Вхід"
 msgid "Lead out"
 msgstr "Вихід"
 
-msgid "Thread angle"
-msgstr "Кут профілю різьби"
+msgid "Infeed angle"
+msgstr "Кут урізання"
 
-msgid "degrees"
-msgstr "градуси"
+msgid "degrees; 0 = straight in"
+msgstr "градуси; 0 = прямо"
 
 msgid "External"
 msgstr "Зовнішня"

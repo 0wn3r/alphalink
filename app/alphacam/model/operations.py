@@ -133,7 +133,7 @@ class Thread:
     cuts: int = 0  # NO. OF CUTS mode: > 0 sets the first cut to depth / sqrt(cuts) (THREAD_6cuts: 10 / sqrt 6 = 4.0825)
     lead_in: float = 5.0  # ALPHA-T default: passes start this far in front of the thread (+Z)
     lead_out: float = 0.0  # the thread runs this far past the drawn end
-    angle: float = 60.0
+    angle: float = 0.0  # ALPHA-T "Winkel": 0 = straight (radial) infeed, as in every sample; > 0 = flank infeed
     external: bool = True
     towards: bool = True
     spring_pass: bool = False

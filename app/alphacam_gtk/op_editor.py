@@ -39,7 +39,7 @@ NUMBERS = {
     "cuts": (N_("Number of cuts"), N_("0 = from the first cut depth"), 0, 500, 1, 0),
     "lead_in": (N_("Lead in"), None, 0, 50, 0.5, 3),
     "lead_out": (N_("Lead out"), None, 0, 50, 0.5, 3),
-    "angle": (N_("Thread angle"), N_("degrees"), 1, 120, 1, 1),
+    "angle": (N_("Infeed angle"), N_("degrees; 0 = straight in"), 0, 60, 1, 1),
     "revs": (N_("Dwell"), N_("revolutions"), 0.1, 100, 1, 1),
 }
 SWITCHES = {

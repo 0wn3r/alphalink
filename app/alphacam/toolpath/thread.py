@@ -39,6 +39,9 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     depth = (xo - xi) / 2
     # NO. OF CUTS mode: ALPHA-T stores the first cut rounded to 4 decimals (SD1 D4.0825)
     first = round(depth / math.sqrt(op.cuts), 4) if op.cuts > 0 else op.cut_depth
+    if op.angle:
+        # manual (German, p.50): an angle makes the control cut along the flank; no sample shows its passes yet
+        raise NotImplementedError(tr("threading with a flank infeed angle (no sample); set the angle to 0"))
     if depth <= 0 or first <= 0:
         raise ValueError(tr("thread: outer diameter must be above the inner one, first cut > 0"))
     n = math.ceil(round((depth / first) ** 2, 9))

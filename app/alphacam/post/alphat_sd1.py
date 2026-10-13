@@ -175,7 +175,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         # Q: the thread depth on radius (THREAD_depth6: Q6)
         depth = abs(outer.a.x - inner.a.x) / 2
         out.put(f"G76X{_n(plan.inner)}Z{_n(plan.z_end + op.lead_out)}Q{_n(depth)}D{_n(plan.first_cut)}"
-                f"I{_n(op.lead_in)}L{_n(op.lead_out)}B0A0E{1 if op.external else -1}K{1 if op.spring_pass else 0}"
+                f"I{_n(op.lead_in)}L{_n(op.lead_out)}B0A{_n(op.angle)}E{1 if op.external else -1}K{1 if op.spring_pass else 0}"
                 f"F{_n(op.pitch)}")
         out.put(f"G176F{_n(tc_feed)}")
         return

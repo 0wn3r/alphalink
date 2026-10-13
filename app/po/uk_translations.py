@@ -456,4 +456,7 @@ UK = {
 "thread lines must be parallel to Z": "лінії різьби мають бути паралельні Z",
 "thread: outer diameter must be above the inner one, first cut > 0": "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0",
 "Show Grid": "Показувати сітку",
+"Infeed angle": "Кут урізання",
+"degrees; 0 = straight in": "градуси; 0 = прямо",
+"threading with a flank infeed angle (no sample); set the angle to 0": "різьба з урізанням по боковій стороні (немає зразка); задайте кут 0",
 }

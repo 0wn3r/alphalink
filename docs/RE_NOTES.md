@@ -1032,3 +1032,38 @@ Samples in samples/alphat_v12 (second table of README_options_2026-10-13.md). By
   with "Invalid tip angle"), threading AWAY (E2: cuts start at Z-5 inside the thread, W+ pull-out), grooving from
   the BACK (L2xx: face grooving that plunges through the turned profile). A real face-groove drawing would be the
   sample to try BACK again.
+
+### Progress 37 - German ALPHALINK (ALPHA-T) manual, LNK/T-G1.2-JAN/2002 (scan from Eduard, 2026-10-13)
+88 scanned pages (~/alpha-work/vendor/Скановано_20261013-2132.pdf, not in the repo), OCR'd with tesseract (deu).
+What it adds to the samples, by chapter:
+* CAM menu: tool change, area clear, finish, grooving, face clear, drilling, threading, move/rapid to cursor, dwell,
+  delete last move, hide moves, single step, delete all moves (with a new tool change position), shaded animation,
+  print screen, exit (saves the drawing, asks a 4-digit program number, the output units, and can renumber tools).
+* Tool start: the macros only allow the program to start with the tool within about 5 mm of this point.
+* Contour identification: the cursor walks the contour point by point from the picked start; 1 skips a point, 3
+  ends; at a branch 0 switches. **The direction in which the contour is identified sets the cutting direction.**
+  For face clear: identified from the outside diameter in, the passes cut inwards, and the other way round outwards.
+  This likely explains the odd AWAY samples (Progress 36): they were identified from the front, i.e. the "wrong"
+  direction for AWAY. To check with AWAY samples identified from the chuck end.
+* Area clear options not in the app yet: **retract distance** (Rückzug-Weg; default 1 mm = SD1 G71 R) and **follow
+  the contour** yes/no (Der Kontur folgen; no = 45-degree retract after each pass, presumably SD1 A45; yes = the tool
+  follows the profile before retracting). It ignores pockets in arcs shallower than the depth of cut, and keeps clear
+  of the tool's rear clearance angle (collision avoidance).
+* Cutting direction options: EXTERN/INTERN (sets the retract direction and the side the allowance is on), ZUM/
+  ENTGEGEN (towards / away from the headstock), VORDERSEITIG/STIRNFLÄCHE (front / face). "Any combination" is
+  allowed; a wrong one for the geometry gives odd toolpaths rather than an error.
+* Finish pass: the same options, including STIRNFLÄCHE (face) - SD1 G70 E2, seen so far only as the face clear
+  pre-finish. Approach in rapid and retract by a fixed amount; nose radius and tool angles compensated.
+* Grooving: datum left/right becomes top/bottom and Z-shift becomes X-shift with STIRNFLÄCHE (face grooving).
+  Peck retract 1 mm (fixed) when full retract is NO. Finish mode (2) = one pass along the contour.
+* Drilling options not in the app yet: **full retract** yes/no (out to the start point after each peck) and the
+  **retract distance** when not full; 0 disables the retract. Drilling is always on the centre line.
+* Threading: number of cuts OR first cut depth (as implemented), lead in / lead out (added to the inner diameter
+  line's length), **crest height** (Spitzenhöhe, SD1 G76 B?), **angle**: 0 = straight (radial) infeed, > 0 = flank
+  infeed (SD1 G76 A; every sample has A0), **finishing passes** (Schlichtspäne, SD1 K, can be more than 1: the last
+  pass repeated to remove tool spring). Tapered threads by drawing the two lines at the taper. On the control,
+  "re-run operation" repeats only the spring passes (for size correction with the offset).
+* CAD commands the app does not have yet: circle, tangent (point to arc, arc to arc), tangent to an arc at an angle,
+  parallel line, split arc, mirror, blend between two points.
+* App changes from this: the thread "angle" field is now ALPHA-T's infeed angle (default 0, written to SD1 G76 A;
+  non-zero is refused until there is a sample); parts saved with the old 60 load as 0.

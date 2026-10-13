@@ -166,7 +166,7 @@ def read_sd1(text: str, project) -> list:
             outer, inner = (other, at_final) if external else (at_final, other)
             ops.append(Thread(tool, start, outer.id, inner.id, pitch=w["F"], cut_depth=w.get("D", 1.0),
                               external=external, lead_in=w.get("I", 5.0), lead_out=w.get("L", 0.0),
-                              spring_pass=w.get("K", 0) > 0, towards=abs(w.get("E", 1)) == 1))  # E2 = AWAY
+                              spring_pass=w.get("K", 0) > 0, angle=w.get("A", 0.0), towards=abs(w.get("E", 1)) == 1))  # E2 = AWAY
             continue
         if 74 in gs:
             peck, dwell = 0.0, 0.0

@@ -43,7 +43,7 @@
    "cut_depth": 1.0,
    "lead_in": 5.0,
    "lead_out": 0.0,
-   "angle": 60.0,
+   "angle": 0.0,
    "external": true,
    "towards": true,
    "spring_pass": false

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 21:19+0300\n"
+"POT-Creation-Date: 2026-10-13 21:39+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -246,7 +246,11 @@ msgstr ""
 msgid "thread lines must be parallel to Z"
 msgstr ""
 
-#: alphacam/toolpath/thread.py:43
+#: alphacam/toolpath/thread.py:44
+msgid "threading with a flank infeed angle (no sample); set the angle to 0"
+msgstr ""
+
+#: alphacam/toolpath/thread.py:46
 msgid "thread: outer diameter must be above the inner one, first cut > 0"
 msgstr ""
 
@@ -919,11 +923,11 @@ msgid "Lead out"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:42
-msgid "Thread angle"
+msgid "Infeed angle"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:42
-msgid "degrees"
+msgid "degrees; 0 = straight in"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:46
