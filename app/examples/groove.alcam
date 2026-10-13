@@ -75,7 +75,7 @@
    "stepover": 2.0,
    "tip_width": 3.0,
    "feed": 0.15,
-   "full_retract": true,
+   "full_retract": false,
    "external": true,
    "front": true,
    "z_shift": 0.0,

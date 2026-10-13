@@ -1042,6 +1042,9 @@ msgstr "Експорт програми Alpha-T"
 msgid "Export failed: {error}"
 msgstr "Помилка експорту: {error}"
 
+msgid "Exported {name} ({size} bytes) and {listing}"
+msgstr "Експортовано {name} ({size} байт) і {listing}"
+
 msgid "Exported {name} ({size} bytes)"
 msgstr "Експортовано {name} ({size} байт)"
 

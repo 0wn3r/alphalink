@@ -95,7 +95,7 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
                 moves.append(Move(MoveKind.DWELL, x, z, dwell_revs=op.dwell_revs))
             moves += [Move(MoveKind.FEED, bottom_back, z, op.feed), Move(MoveKind.RAPID, sx, z)]
         passes.append(Pass(moves))
-    return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)])
+    return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)], plunges=len(plunges))
 
 
 def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:

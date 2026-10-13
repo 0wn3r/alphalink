@@ -134,18 +134,45 @@ def _join(s1: Seg, s2: Seg, near: Point) -> Point:
     return _pt(ar + best * dr, az + best * dz)
 
 
+def _offset_path(path: list[Seg], d: float, side: int) -> tuple[list[Seg], list[Seg], list[Point]]:
+    """(path without zero-length elements, offset elements, corner points incl. both offset ends)."""
+    # a zero-length element (e.g. a diameter fully eaten by the fillets on both ends) has no direction
+    path = [s for s in path if not _same(s.a, s.b)] or path
+    off = [_offset(s, d, side) for s in path]
+    corners = [off[0].a]
+    for i in range(1, len(off)):
+        corners.append(_join(off[i - 1], off[i], path[i].a))
+    corners.append(off[-1].b)
+    return path, off, corners
+
+
+def centre_path(path: list[Seg], nose_radius: float, external: bool = True, extend_end: bool = True) -> list[Seg]:
+    """The nose-centre path as ALPHA-T lists it in the .SD1: the contour offset by r towards the tool, the first point
+    offset along its element's normal, the last one too and then (extend_end; not for face clear) carried r further
+    along the last element (MET2: (100,-50) -> X100.8 Z-49.6)."""
+    side = 1 if external else -1
+    path, off, corners = _offset_path(path, nose_radius, side)
+    if extend_end and nose_radius:
+        last = off[-1]
+        if last.is_arc:
+            nr, nz = _tool_normal(path[-1], False, side)
+            tr, tz = (nz, -nr) if side > 0 else (-nz, nr)  # tangent: the normal turned back to the path direction
+        else:
+            (ar, az), (br, bz) = _rz(last.a), _rz(last.b)
+            n = math.hypot(br - ar, bz - az)
+            tr, tz = (br - ar) / n, (bz - az) / n
+        er, ez = _rz(corners[-1])
+        corners[-1] = _pt(er + nose_radius * tr, ez + nose_radius * tz)
+    return [Seg(corners[i], corners[i + 1], s.centre, s.ccw) for i, s in enumerate(off)]
+
+
 def tip_path(path: list[Seg], nose_radius: float, external: bool = True) -> list[Seg]:
     """The imaginary tool-tip path that ALPHA-T writes for a drawn contour (see the module docstring)."""
     if nose_radius == 0:
         return [Seg(s.a, s.b, s.centre, s.ccw) for s in path]
     side = 1 if external else -1
-    # a zero-length element (e.g. a diameter fully eaten by the fillets on both ends) has no direction
-    path = [s for s in path if not _same(s.a, s.b)] or path
-    off = [_offset(s, nose_radius, side) for s in path]
-    corners = [path[0].a]
-    for i in range(1, len(off)):
-        corners.append(_join(off[i - 1], off[i], path[i].a))
-    corners.append(path[-1].b)
+    path, off, corners = _offset_path(path, nose_radius, side)
+    corners[0], corners[-1] = path[0].a, path[-1].b
     shift_r, shift_z = -side * nose_radius, -nose_radius
 
     def shifted(p: Point) -> Point:

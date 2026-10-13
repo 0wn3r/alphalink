@@ -167,6 +167,9 @@ rather than a hard-coded constant.
 
 ## 5. Alpha-T PRG post (spec, from samples)
 
+Export also writes ALPHA-T's `.SD1` listing next to the `.PRG` (`alphacam/post/alphat_sd1.py`, rules in
+docs/RE_NOTES.md Progress 34), so the files can go back into the DOS/Windows ALPHA-T tools.
+
 ```
 %                                   CRLF everywhere
 O2

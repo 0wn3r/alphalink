@@ -349,4 +349,5 @@ UK = {
 ("{n} picked — tap again to remove, then Done", "{n} picked — tap again to remove, then Done"): ["Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"] * 3,
 "{title} (finish)": "{title} (чистова)",
 "{title} (face direction)": "{title} (у напрямку торця)",
+"Exported {name} ({size} bytes) and {listing}": "Експортовано {name} ({size} байт) і {listing}",
 }

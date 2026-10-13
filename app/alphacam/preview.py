@@ -11,6 +11,7 @@ from .io.prg_parse import Block, Move, Program, parse
 from .model.operations import AreaClear, Dwell, MoveTo, ToolChange
 from .model.project import MachineProfile, Project
 from .post.alphat_prg import post
+from .post.alphat_sd1 import sd1
 
 
 @dataclass
@@ -30,6 +31,7 @@ class OpPreview:
 @dataclass
 class Preview:
     data: bytes | None = None  # the PRG, when the whole project posts
+    sd1: bytes | None = None  # ALPHA-T's .SD1 listing of the same program (None if the SD1 writer can't do it)
     program: Program | None = None
     ops: list[OpPreview] = field(default_factory=list)
     error: str | None = None
@@ -56,6 +58,10 @@ def preview(project: Project, profile: MachineProfile | None = None, library=Non
     try:
         data = post(project, profile, library)
         result.data = data
+        try:
+            result.sd1 = sd1(project, library)
+        except (NotImplementedError, ValueError, KeyError):
+            pass
     except (NotImplementedError, ValueError, KeyError) as e:
         # find the first operation that cannot be posted
         n_ok = 0

@@ -749,12 +749,21 @@ class MainWindow(Adw.ApplicationWindow):
             file = dlg.save_finish(res)
         except GLib.Error:
             return
+        prg = Path(file.get_path())
+        # ALPHA-T writes the .SD1 listing next to the .PRG; so do we (same name, same case of the extension)
+        listing = prg.with_suffix(".sd1" if prg.suffix.islower() else ".SD1") if self.pv.sd1 is not None else None
         try:
-            Path(file.get_path()).write_bytes(self.pv.data)
+            prg.write_bytes(self.pv.data)
+            if listing is not None:
+                listing.write_bytes(self.pv.sd1)
         except OSError as e:
             self.toast(_("Export failed: {error}").format(error=e))
             return
-        self.toast(_("Exported {name} ({size} bytes)").format(name=Path(file.get_path()).name, size=len(self.pv.data)))
+        if listing is not None:
+            self.toast(_("Exported {name} ({size} bytes) and {listing}").format(
+                name=prg.name, size=len(self.pv.data), listing=listing.name))
+        else:
+            self.toast(_("Exported {name} ({size} bytes)").format(name=prg.name, size=len(self.pv.data)))
 
     def toast(self, text: str) -> None:
         self.toasts.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4 if len(text) < 80 else 8))
