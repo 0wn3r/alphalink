@@ -22,7 +22,7 @@ from .settings import settings  # noqa: E402
 
 LOG_DIR = Path(GLib.get_user_state_dir()) / "alphalink-cam" / "logs"
 
-STEPS_SEND = _("On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold Send here.")
+STEPS_SEND = _("On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold “Send to the Lathe” here.")
 STEPS_BACKUP = _("Start the backup here first, then on the lathe: in Manual Ops touch the ops file icon, "
                  "1 “OP. SAVE/RESTORE”, then the → arrow.")
 STEPS_RESTORE = _("On the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the ← arrow. "
@@ -260,10 +260,10 @@ class MachinePage(Gtk.Box):
             def ui():
                 if total:
                     dlg.bar.set_fraction(done / total)
-                    dlg.bar.set_text(f"{done} / {total} bytes")
+                    dlg.bar.set_text(_("{done} / {total} bytes").format(done=done, total=total))
                 else:
                     dlg.bar.pulse()
-                    dlg.bar.set_text(f"{done} bytes")
+                    dlg.bar.set_text(_("{done} bytes").format(done=done))
                 dlg.state.set_label(text)
                 return False
             GLib.idle_add(ui)

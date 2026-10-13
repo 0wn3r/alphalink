@@ -8,7 +8,7 @@ from __future__ import annotations
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import GLib, Gtk  # noqa: E402
+from gi.repository import Pango, GLib, Gtk  # noqa: E402
 
 from .canvas.paths import pass_starts  # noqa: E402
 from .i18n import _, ngettext  # noqa: E402
@@ -40,7 +40,7 @@ class SimulationBar(Gtk.Box):
         self.scale = Gtk.Scale(hexpand=True, draw_value=False, adjustment=Gtk.Adjustment(upper=1, step_increment=1))
         self.scale.connect("value-changed", self._scrubbed)
         self.append(self.scale)
-        self.label = Gtk.Label(width_chars=26, xalign=0)
+        self.label = Gtk.Label(width_chars=12, max_width_chars=40, xalign=0, ellipsize=Pango.EllipsizeMode.END)
         self.label.add_css_class("caption")
         self.label.add_css_class("numeric")
         self.append(self.label)

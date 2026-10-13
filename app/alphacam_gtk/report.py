@@ -17,6 +17,9 @@ from alphacam.model.tools import standard_library  # noqa: E402
 
 from .i18n import N_, _  # noqa: E402
 
+MONTHS = [N_("Jan"), N_("Feb"), N_("Mar"), N_("Apr"), N_("May"), N_("Jun"), N_("Jul"), N_("Aug"), N_("Sep"), N_("Oct"),
+          N_("Nov"), N_("Dec")]
+
 KIND_NAMES = {
     "tool_change": N_("TOOL CHANGE"), "area_clear": N_("AREA CLEARANCE"), "area_clear_internal": N_("AREA CLEARANCE"),
     "face_clear": N_("FACE CLEAR"), "groove": N_("GROOVING"), "finish": N_("FINISH PASS"),
@@ -38,7 +41,9 @@ def _tool_name(project, number, library=None) -> str:
 
 def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
     """The setup sheet as monospaced text, laid out like ALPHA-T's print."""
-    out = [" ", f"  {_('TITLE')} : {title:<40} {_('DATE')} : {datetime.date.today():%d %b %Y}", " "]
+    today = datetime.date.today()
+    month = _(MONTHS[today.month - 1])  # strftime's %b is always English here (C locale)
+    out = [" ", f"  {_('TITLE')} : {title:<40} {_('DATE')} : {today.day:02d} {month} {today.year}", " "]
     prog = pv.program if pv is not None else None
     if prog is None:
         return "\n".join(out + [_("  (no program)")])
