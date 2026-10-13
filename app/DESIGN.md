@@ -1,45 +1,29 @@
 # AlphaLink CAM (GNOME): design
 
-Status: **design draft 1** (2026-10-12).
-- M0 done: `alphacam/model` (project, `.alcam` JSON), `alphacam/io/sdg.py` (SDG import), `alphacam/io/prg_parse.py`,
-  `python -m alphacam dump FILE.PRG`.
-- M1 done: `alphacam/post/alphat_prg.py` posts the tool block (plus move/rapid and dwell), finish pass and area clear;
-  MET2 (mm and inch), AREA1 and MOVE_RAPID are byte-identical to ALPHA-T. `python -m alphacam post PART.alcam -o P.PRG`.
-- M1+ (2026-10-13): arcs, sloped lines, offsets, internal finish/area (#127 15/7), several operations and mid-program
-  tool changes; 13 golden samples byte-identical. The PRG contour is the imaginary tool-tip path (RE_NOTES Progress 27).
-- M4 post part (2026-10-13): face clear, grooving, drilling, threading and area pre-finish; all 18 ALPHA-T samples
-  are byte-identical (RE_NOTES Progress 28). Drawing tools and the remaining options are still to do.
-- M2 shell (2026-10-13): `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG]` opens a part, previews every operation
-  on the lathe canvas (pinch/drag/fling/double-tap fit, wheel, Ctrl+wheel, tap or click a toolpath to select its
-  operation), shows the program with the selected operation highlighted (pinch changes the font size), and exports
-  the PRG. Touch density switches automatically (TOUCH.md 3). Examples in `app/examples/`. Not yet: editing operations,
-  op reorder and bottom-sheet editors (M4), simulation, machine page (M3).
-- M3 (2026-10-13): `alphacam/link/serial_link.py` (9600 7E2, wait for DC1, XON/XOFF within a 4-byte chunk, per-char
-  delay, receive to the 2nd %, Manual Ops load parity, loopback; pty tests) and the **Machine** page: port, live
-  modem lines, hold-to-send with confirmation, transfer dialog with cancel, Manual Ops backup / restore (hold +
-  warning), loopback test, transfer logs in ~/.local/state/alphalink-cam/logs, and a touch lock (also automatic
-  during transfers). Not yet tried against the lathe from the app.
-- M4 part 1 (2026-10-13): editing. `alphacam/commands.py` undo stack (JSON snapshots); operation editor pane with
-  rows generated per operation type; add (menu, sensible defaults), delete (Undo toast), move up/down; undo/redo
-  (Ctrl+Z / Ctrl+Shift+Z, header buttons); Save / Save As (.alcam) and an unsaved-changes prompt. Next: drawing tools.
-- M4 part 2 (2026-10-13): drawing. `alphacam/drawing.py` (snap to ends/axis/grid, Z/X/45° direction lock, lines,
-  fillet, chamfer, delete, contour pick ordering); Part page tools Select / Line / Fillet / Chamfer (Adw.ToggleGroup
-  bar), command entry `X,Z` / `@dX,dZ`, fillet/chamfer size chips in a popover at the corner, element select +
-  delete (Undo toast), "Pick Contour on the Drawing" with numbered badges, New Part dialog (units, billet).
-  A part drawn in the app (MET2 + R5/R3 fillets) posts byte-identical to the ALPHA-T ARC sample.
-- Simulation and keypad (2026-10-13): transport bar under the canvas (first / previous pass / play / next pass /
-  all, scrub), not-yet-cut moves faded, tool marker, label with operation, pass and PRG line, Program page follows;
-  on-screen keypad for X,Z (ABS/INC, big keys) shown in touch mode.
-- M5 packaging (2026-10-13): `app/pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file,
-  metainfo (validated), icon, Flatpak manifest `app/build-aux/flatpak/` (GNOME 51 runtime, pyserial pinned by
-  sha256, `--device=all` for the serial port). Built and installed on Ubuntu 26.04 with flatpak-builder 1.4.8:
-  `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install build-dir
-  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`; examples in /app/share/alphalink-cam/examples.
-- Translations (2026-10-13): gettext domain `alphalink-cam`; all UI strings marked; Ukrainian complete
-  (`app/po/uk.po`, sources of truth `app/po/uk_translations.py`). The language follows the desktop; `ALPHALINK_LANG=uk`
-  forces it. After changing UI strings run `python3 tools/update_translations.py` (needs gettext); a test fails if
-  a string has no Ukrainian translation. Messages from the core (post errors) are still English.
-- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
+Status (2026-10-13): **working app**; all milestones of section 10 are done. What exists:
+- Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, PRG parser, toolpaths for
+  every ALPHA-T operation (area, face, finish, groove incl. finish mode, thread, drill, dwell, moves, tool changes) and
+  their options with samples, the .PRG post and the .SD1 writer. Both are byte-identical to ALPHA-T on every metric
+  sample in `samples/alphat_v12` (tests `test_post`, `test_sd1_write`); known sub-micron differences: face clear ending
+  on slopes/arcs (0.001 on diameter) and two inch samples (0.0001-0.0002), listed in `tests/test_post.py`.
+  Options without a sample raise a clear error instead of guessing.
+- GTK app (`alphacam_gtk/`): Part page (canvas, drawing tools Select / Line / Arc / Fillet / Chamfer with angle /
+  Corner, `X,Z` / `@dX,dZ` entry, keypad, contour picking, axis indicator, simulation), operations sidebar with
+  editors, Program, Sheet (setup sheet), Tools (library), Machine (send with hold + confirmation, Manual Ops backup /
+  restore, loopback test, touch lock), preferences, undo/redo, in-app help (F1, `alphacam_gtk/help/`), Ukrainian
+  translation. Export writes the .PRG and the .SD1 next to it.
+- Serial link (`alphacam/link/serial_link.py`): 9600 7E2, wait for XON, XON/XOFF, per-char delay, receive to the 2nd
+  `%`, Manual Ops load parity, loopback. Programs from the app have been loaded and run on the lathe.
+- Packaging: `pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file, metainfo, icon, Flatpak
+  manifest `build-aux/flatpak/` (GNOME 51 runtime, `--device=all` for the serial port, home and removable media).
+- Commands: `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG|DRAWING.DXF]`; `python3 -m alphacam dump FILE.PRG`;
+  `python3 -m alphacam post PART.alcam -o P.PRG [--sd1 P.SD1]`.
+- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`). Translations: after changing
+  UI strings run `python3 tools/update_translations.py`; a test fails if a string has no Ukrainian translation.
+  Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
+  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`.
+
+The sections below are the original design; where the implementation differs, the code and the notes above win.
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
 digit, so `0wn3r` becomes `_0wn3r`, as Flatpak does).
@@ -70,8 +54,8 @@ Later, as optional post-processors: DOS ALPHACAM V1.81 `.600` and AlphaWin-S `#5
 | C1 | **Byte compatibility.** Output must match what ALPHA-T writes for the same input. Programs not made by Alphalink T corrupt the T macros (manual warning). Conformance is tested against golden samples (section 9). | RE_NOTES Progress 16 |
 | C2 | Line format of the CAM transfer: **9600 baud, 7E2, XON 0x11 / XOFF 0x13**, file sent unchanged (CRLF kept). | `data/line_settings.json` |
 | C3 | Manual Ops: Save = receive 7E2 until the 2nd `%`. Load = 7E2 with even parity in bit 7. | Progress 22 |
-| C4 | **Scaling.** In the PRG, Z, feed (`F`, `#130`) and thread pitch are written ×2; X (diameter) is 1:1. The SD1/ISO preview is unscaled. Default `z_scale = f_scale = 2`, kept in the machine profile, **unverified on the control**. | Progress 15, 16, 25 |
-| C5 | The PRG writes the **programmed contour**, not a tool-nose-compensated path (finish pass: PRG `X40.Z0.`; SD1 `X40.8 ... Z0.4`). Nose compensation is presumably done by the macros. Keep both paths in the model. | MET2 samples |
+| C4 | **Scaling.** In the PRG, Z, feed (`F`, `#130`) and thread pitch are written ×2; X (diameter) is 1:1. The SD1/ISO preview is unscaled. Default `z_scale = f_scale = 2`, kept in the machine profile. **Confirmed on the control** for Z and feed (the T macros halve them); pitch not yet seen. | Progress 15, 16, 25, 29 |
+| C5 | The PRG writes the **imaginary tool-tip path** (the nose-centre path shifted by the nose radius), the SD1 the **nose-centre path**; so the CAM does the nose compensation, not the macros. Lines along the axes stay on the drawing, arcs and slopes move (ARC/SLOPE samples). | Progress 27, 34 |
 | C6 | Numbers always carry a decimal point (`100.`, `0.3`), with trailing zeros stripped. mm: max 3 decimals; inch: max 4. Line endings are CRLF. | samples |
 | C8 | **Manual turret with tool memory.** A tool block is an operator tool change at the tool change point; `#122` selects the control's stored offsets, so the app's tool numbers must match the control's tool memory slots. The tool library page should say which slot each tool uses. | user, 2026-10-13 |
 | C7 | Handshake: the control needs CTS/DSR (and probably CD) active. The app should show the live modem lines and refuse to start a send while DSR is off, with an override. | Progress 25 |
@@ -208,7 +192,7 @@ gets a **fixture test** that pins it down against its sample before the generato
 
 ```
 ┌ AdwApplicationWindow ───────────────────────────────────────────────────────────────┐
-│ HeaderBar: [≡ ops sidebar]  Drawing | CAM | Program | Machine (AdwViewSwitcher)  [⋮]│
+│ HeaderBar: Part | Program | Sheet | Tools | Machine (AdwViewSwitcher)   [Export] [≡]│
 ├─────────────────────┬───────────────────────────────────────────────────────────────┤
 │ Operations          │                                                               │
 │  1 ⚙ Tool 3 55°  ⋮  │        lathe canvas: billet, chuck jaws, contour,             │
@@ -217,7 +201,7 @@ gets a **fixture test** that pins it down against its sample before the generato
 │  4 ⟂ Groove      ⋮  │                                                               │
 │ [+ Add operation ▾] │  ─── simulation: ◀ ▶ ▮▮ ──●────────── pass 3/26 ───          │
 ├─────────────────────┴───────────────────────────────────────────────────────────────┤
-│ AdwBanner: "Z and feed scaling ×2 not yet verified on the control"   [Details]      │
+│ AdwBanner: errors of the operation that cannot be posted             [Details]      │
 └─────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -245,7 +229,6 @@ gets a **fixture test** that pins it down against its sample before the generato
 - **Safety UX:**
   - Never auto-send.
   - A send needs an explicit confirmation showing the program number, tool list and run time estimate.
-  - The scaling banner stays until the user marks the profile "verified on machine".
 
 ## 7. Serial link
 
@@ -269,7 +252,7 @@ gets a **fixture test** that pins it down against its sample before the generato
 
 | Level | What |
 |---|---|
-| Golden | For each `samples/alphat_v12/*.SDG`: import SDG, rebuild the ops from metadata, post, and compare the PRG byte for byte (and the SD1). |
+| Golden | For each `samples/alphat_v12/*.SDG`: import the SDG, rebuild the ops from its .SD1, post, and compare the .PRG and the .SD1 byte for byte. |
 | Oracle | Optional CI job (local only, needs the vendor files): random small parts → ALPHA-T in DOSBox-X → diff against our output. |
 | Unit | Geometry offsets, number formatting (C6), scaling (C4), serial framing (7E2 parity table) using a pty pair. |
 | Hardware | Checklist in `docs/ALPHA-T_STATUS.md` (read-only Save first, CAM load without cycle start). |
@@ -289,7 +272,7 @@ gets a **fixture test** that pins it down against its sample before the generato
 
 1. ~~Is Z/feed ×2 real for the control (C4)?~~ Yes: the control shows tool start Z50 for `#124=100.` and feed 0.15 for
    `#130=0.3` (2026-10-13, RE_NOTES Progress 29). Thread pitch not yet seen on the control.
-2. Who applies tool-nose compensation: the macros (C5 suggests so) or the CAM?
+2. ~~Who applies tool-nose compensation?~~ The CAM: the PRG holds the imaginary tool-tip path (C5).
 3. Meaning of `#120..#140`, `M60..M71` and `#1005/#1006/#1009` (restart switches?). This needs the B703-0703 macro listing or
    a Manual Ops / macro dump from the control.
 4. Is `O2` constant, or does it depend on the program store slot?
