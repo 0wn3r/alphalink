@@ -5,7 +5,22 @@ from pathlib import Path
 
 from alphacam.io.prg_parse import parse
 from alphacam.io.sdg import load_sdg
-from alphacam.model import AreaClear, Arc, FinishPass, Line, MachineProfile, MoveTo, Point, Project, ToolChange
+from alphacam.model import (
+    AreaClear,
+    Arc,
+    Drill,
+    Dwell,
+    FaceClear,
+    FinishPass,
+    Groove,
+    Line,
+    MachineProfile,
+    MoveTo,
+    Point,
+    Project,
+    Thread,
+    ToolChange,
+)
 from alphacam.post.alphat_prg import post
 from alphacam.toolpath.area import area_clear
 from alphacam.toolpath.contour import chain, points, tip_path
@@ -39,6 +54,12 @@ GOLDEN = {
                         AreaClear(12, Point(15, 5), INT, feed=0.12, external=False)],
     "TOOLCHG_rough1_finish3_metric": [ToolChange(1, Point(100, 50), 0.2), AreaClear(1, S, MET2, feed=0.2),
                                       ToolChange(3, Point(100, 50), 0.15), FinishPass(3, S, MET2)],
+    "PREFINISH_area_metric": [AreaClear(3, S, MET2, pre_finish=True)],
+    # older samples, operations other than finish/area (scripts tools/ac_scripts/at_*.ks)
+    "FACE_metric": [FaceClear(3, S, MET2)],
+    "GROOVE_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3)],
+    "DRILL_DWELL_metric": [Dwell(3), Drill(3, Point(0, 5), depth=-30, peck=10, dwell_revs=3)],
+    "THREAD_metric": [Thread(3, S, "g0", "g1", pitch=1.5, cut_depth=1)],
 }
 
 
@@ -115,3 +136,30 @@ class Rules(unittest.TestCase):
         project.operations = [FinishPass(3, Point(120, 5), MET2), MoveTo(Point(0, 10))]
         with self.assertRaises(NotImplementedError):
             post(project)
+
+
+class OperationRules(unittest.TestCase):
+    def test_drill_pecks_without_peck(self):
+        from alphacam.toolpath.drill import drill
+
+        tp = drill(Drill(3, Point(0, 5), depth=-12), "mm", 3)
+        self.assertEqual([(m.kind, m.z) for m in tp.passes[0].moves],
+                         [(MoveKind.FEED, -12), (MoveKind.FEED, -10)])
+
+    def test_thread_cut_count(self):
+        from alphacam.toolpath.thread import plan_thread
+
+        op = Thread(3, Point(120, 5), "o", "i", pitch=1, cut_depth=0.3)
+        plan = plan_thread(op, Line(Point(20, 0), Point(20, -10)), Line(Point(18.4, 0), Point(18.4, -10)), 3)
+        self.assertEqual(len(plan.xs), 8)  # (0.8 / 0.3)^2 = 7.1 -> 8
+        self.assertEqual((plan.xs[0], plan.xs[-1]), (19.4, 18.4))
+
+    def test_groove_wall_insert(self):
+        from alphacam.toolpath.groove import groove
+
+        p = load_sdg(SAMPLES / "GROOVE_metric.SDG")
+        tp = groove(Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"]), chain(p.contour(
+            ["g0", "g1", "g2", "g3", "g4", "g5", "g6"])), 0.4, "mm", 3)
+        plunges = [m.z for m in tp.passes[0].moves if m.kind is MoveKind.FEED][::2]
+        self.assertIn(-30, plunges)
+        self.assertEqual(plunges[:2], [-3, -5])

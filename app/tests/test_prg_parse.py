@@ -33,6 +33,7 @@ EXPECTED_OPS = {
     "INT_finish_metric": [("finish_internal", 1)],
     "INT_area_metric": [("area_clear_internal", 8)],
     "TOOLCHG_rough1_finish3_metric": [("area_clear", 26), ("finish", 1)],
+    "PREFINISH_area_metric": [("area_clear", 26), ("area_prefinish", 1)],
 }
 
 
@@ -259,6 +260,6 @@ class OpKinds(unittest.TestCase):
     def test_table_matches_program_formats(self):
         spec = json.loads((REPO / "data" / "program_formats.json").read_text())
         text = spec["alphat_v12_prg_observed"]["N20 block (operation)"]["#127"]
-        pairs = {int(n): name for n, name in re.findall(r"(\d+) ([a-z ]+?)(?:,|$| \()", text)}
+        pairs = {int(n): name for n, name in re.findall(r"(\d+) ([a-z -]+?)(?:,|$| \()", text)}
         self.assertIn("(1 = N10 tool block)", text)
         self.assertEqual(set(pairs) | {1}, set(OP_KINDS))

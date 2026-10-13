@@ -900,3 +900,15 @@ OFFSET_finish/OFFSET_area (X0.5 Z0.2), INT_finish/INT_area (tool 12 boring bar),
   A later tool change is another tool block (#127=1, #129 = block no.).
 * Still without a sample: arc-to-arc corners, offsets on internal ops, away/pre-finish, moves after an operation,
   inch arcs.
+
+### Progress 28 - post for face, groove, drill, thread, pre-finish (2026-10-13)
+All 18 samples in samples/alphat_v12 now post byte-identical (app/tests/test_post.py). Rules (details in
+data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
+* Face clear: zones between the profile's faces, depth steps clamped onto each face; pull-off 0.2 at 45 deg, then
+  rapid to (start X - 0.8, Z + 0.6) - the 0.8/0.6 split between retract (0.2) and nose radius (0.4) is ambiguous.
+* Grooving: datum = tip's -Z corner; plunges from top Z - tip width every stepover, plus one on each left wall;
+  depth = highest **drawn** diameter under the tip (not the tip path).
+* Drilling: pecks measured from the previous peck, back-off 2, dwell at the bottom; limits = start X / bottom Z.
+* Threading: cut n at first * sqrt(n), depth rounded to 3 decimals before doubling; U = outer - inner + 1 assumed.
+* Area pre-finish (cloud sample PREFINISH_area_metric): extra block #127=10, finish path with a 1 mm pull-off.
+* "Away" area clear stays refused: the cloud AWAY sample (left-hand tool 5) gouges past the dia-100 shoulder.

@@ -6,6 +6,7 @@ Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOL
     internal: X = min(Xmin + 2*k*depth, Xmax), both from the boundary. Passes continue until that limit;
   * each pass: rapid to (X, start Z), feed along -Z to the boundary, feed a 45-degree retract (retract distance in
     X radius, outwards from the cut: -X internal, and in +Z), rapid back to start Z; after the last, rapid to start;
+  * pre-finish (op.pre_finish) is posted as a separate finish block, see post.alphat_prg;
   * the cut ends on the first boundary element met that spans X, with spans half-open on the side the passes come
     from (external: lo <= X < hi; internal: lo < X <= hi), so a pass exactly on a shoulder goes on to the next face."""
 
@@ -36,8 +37,8 @@ def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
 
 
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
-    if op.pre_finish or not op.towards:
-        raise NotImplementedError("area clear: only towards the chuck without pre-finish is supported yet")
+    if not op.towards:
+        raise NotImplementedError("area clear 'away' is not supported (the AWAY sample gouges the shoulder)")
     if not op.external and (op.offset_x or op.offset_z):
         raise NotImplementedError("internal area clear with offsets is not supported yet (no sample)")
     if op.depth_of_cut <= 0:
