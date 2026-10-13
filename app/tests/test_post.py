@@ -67,6 +67,9 @@ GOLDEN = {
     "THREAD_p2_len30_metric": [Thread(3, S, "g0", "g1", pitch=2)],
     "FACE_offset_metric": [FaceClear(3, S, MET2, offset_x=0.5, offset_z=0.2)],
     "FACE_depth3_start110_metric": [FaceClear(3, Point(110, 3), MET2, depth_of_cut=3)],
+    "PECK_groove_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], peck_depth=2)],
+    "PECK_fullret_groove_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], peck_depth=2,
+                                          full_retract=True)],
 }
 
 # Inch versions (samples/alphat_v12_inch, cloud run): drawing typed in inch, start X5 Z0.2, depth of cut 0.0787

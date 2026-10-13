@@ -38,6 +38,8 @@ EXPECTED_OPS = {
     "THREAD_p2_len30_metric": [("thread", 100)],
     "FACE_offset_metric": [("face_clear", 26)],
     "FACE_depth3_start110_metric": [("face_clear", 18)],
+    "PECK_groove_metric": [("groove", 1)],
+    "PECK_fullret_groove_metric": [("groove", 1)],
 }
 
 

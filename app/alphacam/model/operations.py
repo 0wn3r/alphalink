@@ -78,7 +78,7 @@ class Groove:
     stepover: float = 2.0
     tip_width: float = 3.0
     feed: float = 0.15
-    full_retract: bool = True
+    full_retract: bool = False  # ALPHA-T default FULL RET NO (SD1 L110; L111 = yes)
     external: bool = True
     front: bool = True
     z_shift: float = 0.0
