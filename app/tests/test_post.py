@@ -1,5 +1,6 @@
 """Alpha-T PRG post: golden tests (byte-identical to ALPHA-T output) and rule tests."""
 
+import copy
 import re
 import unittest
 from pathlib import Path
@@ -97,7 +98,7 @@ INCH_KNOWN_DIFF = {
 
 def sample_project(name: str) -> Project:
     project = load_sdg(SAMPLES / f"{name}.SDG")
-    project.operations = list(GOLDEN[name])
+    project.operations = copy.deepcopy(GOLDEN[name])  # tests may edit them
     return project
 
 

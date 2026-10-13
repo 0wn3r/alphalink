@@ -13,3 +13,5 @@ window.touch .canvas-zoom button { min-width: 56px; min-height: 56px; }
 .hold-button { padding: 8px 16px; }
 window.touch .hold-button { min-height: 96px; }
 .editor-pane { border-left: 1px solid alpha(currentColor, 0.15); }
+.command-entry { font-family: monospace; }
+window.touch .command-entry { min-height: 48px; }
