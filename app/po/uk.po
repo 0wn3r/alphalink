@@ -658,6 +658,24 @@ msgstr "Відкрити деталь"
 msgid "Could not open {name}: {error}"
 msgstr "Не вдалося відкрити {name}: {error}"
 
+msgid "{name}: drawing only (no .SD1 next to it, so no operations)"
+msgstr "{name}: лише креслення (поруч немає .SD1, тому операцій немає)"
+
+msgid "Operations not rebuilt from {name}: {error}"
+msgstr "Операції з {name} не відновлено: {error}"
+
+msgid "The program matches ALPHA-T's {name} byte for byte."
+msgstr "Програма побайтово збігається з {name} від ALPHA-T."
+
+msgid "The program differs from ALPHA-T's {name}: check before sending."
+msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
+
+msgid "Rebuilt {n} operation from {name}."
+msgid_plural "Rebuilt {n} operations from {name}."
+msgstr[0] "Відновлено {n} операцію з {name}."
+msgstr[1] "Відновлено {n} операції з {name}."
+msgstr[2] "Відновлено {n} операцій з {name}."
+
 msgid "Untitled"
 msgstr "Без назви"
 
