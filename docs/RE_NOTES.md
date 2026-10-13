@@ -912,3 +912,11 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
 * Threading: cut n at first * sqrt(n), depth rounded to 3 decimals before doubling; U = outer - inner + 1 assumed.
 * Area pre-finish (cloud sample PREFINISH_area_metric): extra block #127=10, finish path with a 1 mm pull-off.
 * "Away" area clear stays refused: the cloud AWAY sample (left-hand tool 5) gouges past the dia-100 shoulder.
+
+### Progress 29 - first real CAM load on the Alpha 400T (2026-10-13)
+* `alphalink.py -v --wait-xon --char-delay 2 send-alphat /dev/ttyUSB0 MET2_finish_metric.PRG`: the control sent
+  XON (0x11), all 636 bytes went out, and the control accepted the program (user report). The cable fix
+  (bridges 4-5, 6-8-20) works.
+* Re-sent with `#132=5` (MET2_finish_metric_P5.PRG, posted by app/alphacam): the control then showed program
+  number 5, so **#132 is the program number on the control**; `O2` stays constant.
+* Still open: Z x2 (C4) - check the control's graphics/program display, no cycle start.
