@@ -99,6 +99,23 @@ Connect the serial cable, then on the Machine page:
 
 The app never starts the machine. Always check the program on the control before Cycle Start, and run new programs with the feed override turned down.
 
+## The program file
+
+The .PRG sets variables for the lathe's Harrison macros and calls them with M-codes. In it every Z, feed and thread pitch is twice the real value; the macros halve them. Items marked (inferred) come from comparing ALPHA-T programs.
+
+- **#132** program number shown on the control. **O2** is always the same.
+- **#140** restart point: 0 runs from the start, n jumps to the restart of pass n (inferred).
+- **#1005, #1006, #1009** control inputs that restart or skip a block (inferred). **M71** metric, **M70** inch.
+- **#120** number of passes, **#121** pass number, **#122** tool memory slot.
+- **#123 / #124** tool start X and Z×2 (in a tool change block: the tool change point).
+- **#125 / #126** limits: lowest X minus 4× nose radius, lowest Z×2 minus 2× nose radius.
+- **#127** block kind: 1 tool change, 6/7 area clear (internal), 8 face clear, 9 grooving, 10/11/12 pre-finish, 14/15 finish (internal), 17 grooving finish mode, 18 drilling, 20 threading, 21 spring pass.
+- **#128** always 1, **#129** block number, **#130** feed×2 (threading: pitch×2), **#131** operation counter (inferred).
+- **M60 … M61** around each rapid **G0**, **M62** before feed moves **G1 / G2 / G3** (I as a diameter, K×2), **G32** thread cut with **U W** pull-out, **G4 P** dwell (revolutions×1000).
+- **M63** start of a pass, **M64** end of an operation, **M65** end of the program, **M66** start of a block or pass (inferred).
+- The moves are the imaginary tool tip path: the nose radius is already allowed for.
+- The .SD1 next to it is ALPHA-T's record of the operations in real units (G70 finish, G71 area/face, G75 grooving, G76 threading, G74 drilling, G99 tool change); opening an .SDG reads the operations back from it.
+
 ## Touch and pen
 
 - One finger drags the view, two fingers pinch to zoom, double tap fits the part (again returns).

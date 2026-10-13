@@ -560,7 +560,7 @@ class DrawingTools:
         if gid and self.w.apply_edit(_("Delete {what}").format(what=gid), lambda p: drawing.delete_element(p, gid)):
             self._select_element(None)
             self.w.refresh()
-            self.w.toasts.add_toast(Adw.Toast(title=_("Deleted {what}").format(what=gid), button_label=_("_Undo"),
+            self.w.add_toast(Adw.Toast(title=_("Deleted {what}").format(what=gid), button_label=_("_Undo"),
                                               action_name="win.undo", timeout=6))
 
     # --- fillet / chamfer ---------------------------------------------------------------------------------

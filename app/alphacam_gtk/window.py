@@ -169,7 +169,10 @@ class MainWindow(Adw.ApplicationWindow):
         self.drawing = DrawingTools(self, self.canvas)
         part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         part.append(self.drawing.pick_banner)
-        part.append(overlay)
+        # Part page messages show over the drawing, above the simulation and tool bars, so they never cover the
+        # tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
+        self.part_toasts = Adw.ToastOverlay(child=overlay, vexpand=True)
+        part.append(self.part_toasts)
         self.sim = SimulationBar(self.canvas, self._sim_line)
         part.append(self.sim)
         part.append(Gtk.Separator())
@@ -426,7 +429,7 @@ class MainWindow(Adw.ApplicationWindow):
             _("{name}: drawing only, no .SD1 found next to it, so no operations.").format(name=path.name)),
             button_label=_("_Choose .SD1…"), timeout=10)
         toast.connect("button-clicked", lambda *_a: self._choose_sd1(path))
-        self.toasts.add_toast(toast)
+        self.add_toast(toast)
         return False
 
     def _choose_sd1(self, sdg: Path) -> None:
@@ -587,7 +590,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.refresh()
             self._select_op(min(i, len(self.project.operations) - 1) if self.project.operations else None)
             toast = Adw.Toast(title=_("Deleted {what}").format(what=title), button_label=_("_Undo"), action_name="win.undo", timeout=6)
-            self.toasts.add_toast(toast)
+            self.add_toast(toast)
 
     def _move_selected(self, delta: int) -> None:
         i = self.selected_index()
@@ -775,7 +778,11 @@ class MainWindow(Adw.ApplicationWindow):
             self.toast(_("Exported {name} ({size} bytes)").format(name=prg.name, size=len(self.pv.data)))
 
     def toast(self, text: str) -> None:
-        self.toasts.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4 if len(text) < 80 else 8))
+        self.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4 if len(text) < 80 else 8))
+
+    def add_toast(self, toast: Adw.Toast) -> None:
+        on_part = self.root.get_visible_child_name() == "main" and self.stack.get_visible_child_name() == "part"
+        (self.part_toasts if on_part else self.toasts).add_toast(toast)
 
     # --- operations list --------------------------------------------------------------------------------
 
