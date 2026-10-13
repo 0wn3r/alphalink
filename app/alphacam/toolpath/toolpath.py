@@ -11,6 +11,8 @@ class MoveKind(str, Enum):
     FEED = "feed"  # G1
     THREAD = "thread"  # G32 (and its modal U/W retract)
     DWELL = "dwell"  # G4
+    ARC_CW = "arc_cw"  # G2
+    ARC_CCW = "arc_ccw"  # G3
 
 
 @dataclass
@@ -20,6 +22,8 @@ class Move:
     z: float | None = None
     feed: float | None = None
     dwell_revs: float | None = None
+    centre_x: float | None = None  # arcs: absolute centre (diameter, Z)
+    centre_z: float | None = None
 
 
 @dataclass

@@ -13,16 +13,26 @@ REPO = Path(__file__).resolve().parents[2]
 SAMPLES = REPO / "samples" / "alphat_v12"
 PRGS = sorted(SAMPLES.glob("*.PRG"))
 
-# Expected op name of block N20 per sample (None: no op block).
-EXPECTED_OP = {
-    "AREA1_metric": "area_clear",
-    "DRILL_DWELL_metric": "drill",
-    "FACE_metric": "face_clear",
-    "GROOVE_metric": "groove",
-    "MET2_finish_inch": "finish",
-    "MET2_finish_metric": "finish",
-    "MOVE_RAPID_metric": None,
-    "THREAD_metric": "thread",
+# Expected operations per sample: (op name, number of passes). Samples from 2026-10-12 cloud run: ARC_*, SLOPE_*,
+# TWOOP_*, OFFSET_*, INT_*, TOOLCHG_*.
+EXPECTED_OPS = {
+    "AREA1_metric": [("area_clear", 26)],
+    "DRILL_DWELL_metric": [("drill", 1)],
+    "FACE_metric": [("face_clear", 26)],
+    "GROOVE_metric": [("groove", 1)],
+    "MET2_finish_inch": [("finish", 1)],
+    "MET2_finish_metric": [("finish", 1)],
+    "MOVE_RAPID_metric": [],
+    "THREAD_metric": [("thread", 100)],
+    "ARC_finish_metric": [("finish", 1)],
+    "ARC_area_metric": [("area_clear", 26)],
+    "SLOPE_area_metric": [("area_clear", 26)],
+    "TWOOP_area_finish_metric": [("area_clear", 26), ("finish", 1)],
+    "OFFSET_finish_metric": [("finish", 1)],
+    "OFFSET_area_metric": [("area_clear", 26)],
+    "INT_finish_metric": [("finish_internal", 1)],
+    "INT_area_metric": [("area_clear_internal", 8)],
+    "TOOLCHG_rough1_finish3_metric": [("area_clear", 26), ("finish", 1)],
 }
 
 
@@ -42,7 +52,7 @@ def sd1_words(path: Path) -> list[dict[str, str]]:
 
 class EverySample(unittest.TestCase):
     def test_samples_present(self):
-        self.assertEqual({p.stem for p in PRGS}, set(EXPECTED_OP))
+        self.assertEqual({p.stem for p in PRGS}, set(EXPECTED_OPS))
 
     def test_parse_and_round_trip(self):
         for path in PRGS:
@@ -71,21 +81,15 @@ class EverySample(unittest.TestCase):
     def test_op_kind(self):
         for path in PRGS:
             with self.subTest(path.name):
-                prog = parse_file(path)
-                ops = prog.operations
-                if EXPECTED_OP[path.stem] is None:
-                    self.assertEqual(ops, [])
-                else:
-                    self.assertEqual([b.op_name for b in ops], [EXPECTED_OP[path.stem]])
-                    self.assertEqual(ops[0].label, 20)
+                ops = parse_file(path).operations
+                self.assertEqual([b.op_name for b in ops], [name for name, _ in EXPECTED_OPS[path.stem]])
 
     def test_declared_passes_match(self):
-        expected = {"AREA1_metric": 26, "FACE_metric": 26, "THREAD_metric": 100}
         for path in PRGS:
             prog = parse_file(path)
-            for b in prog.operations:
-                with self.subTest(path.name):
-                    self.assertEqual(b.declared_passes, expected.get(path.stem, 1))
+            for b, (_, passes) in zip(prog.operations, EXPECTED_OPS[path.stem]):
+                with self.subTest(path.name, block=b.label):
+                    self.assertEqual(b.declared_passes, passes)
                     self.assertEqual(len(b.passes), b.declared_passes)
                     self.assertEqual([p.number for p in b.passes], list(range(1, b.declared_passes + 1)))
                     self.assertTrue(b.passes[-1].moves, "last pass has moves")
@@ -112,17 +116,20 @@ class EverySample(unittest.TestCase):
             sd1 = sd1_words(path.with_suffix(".SD1"))
             g5 = [r for r in sd1 if 5 in r["G"]]
             g115 = [r for r in sd1 if 115 in r["G"]]
+            tool_feeds = [float(r["F"]) for r in sd1 if "T" in r and "F" in r]  # N10 F.. T.. / G99 F.. T..
             with self.subTest(path.name):
                 tc = prog.blocks[0]
                 self.assertEqual(tc.start, (float(g5[0]["X"]), float(g5[0]["Z"])))
-                self.assertAlmostEqual(tc.feed, float(sd1[0]["F"]))
-                for b in prog.operations:
-                    self.assertEqual(b.limit, (float(g115[0]["X"]), float(g115[0]["Z"])))
+                tools = [b for b in prog.blocks if b.op_kind == 1]
+                self.assertEqual([b.feed for b in tools], tool_feeds)
+                for i, b in enumerate(prog.operations):
+                    self.assertEqual(b.limit, (float(g115[i]["X"]), float(g115[i]["Z"])))
                     if b.op_name == "thread":
                         g76 = next(r for r in sd1 if 76 in r["G"])
                         self.assertAlmostEqual(b.feed, float(g76["F"]))  # pitch
                     else:
-                        self.assertAlmostEqual(b.feed, float(sd1[0]["F"]))
+                        current_tool = [t for t in tools if t.label < b.label][-1]
+                        self.assertAlmostEqual(b.feed, current_tool.feed)
 
     def test_moves_inside_limits(self):
         for path in PRGS:
