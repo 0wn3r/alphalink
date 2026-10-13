@@ -87,6 +87,53 @@ def delete_element(project, gid: str) -> None:
             op.contour = [c for c in op.contour if c != gid]
 
 
+def _refit_arc(arc: Arc, a: Point, b: Point, radius: float) -> Point:
+    """Centre for the arc a -> b with this radius, on the same side of the chord as the arc's centre was (so the
+    direction and the short/long sweep stay as drawn)."""
+    (ar, az), (br, bz) = _rz(a), _rz(b)
+    dr, dz = br - ar, bz - az
+    d = math.hypot(dr, dz)
+    if d < 1e-9 or d > 2 * radius + 1e-9:
+        raise ValueError(tr("an arc of radius {r} cannot join X{ax} Z{az} and X{bx} Z{bz}", r=f"{radius:g}",
+                            ax=f"{a.x:g}", az=f"{a.z:g}", bx=f"{b.x:g}", bz=f"{b.z:g}"))
+    h = math.sqrt(max(radius * radius - d * d / 4, 0.0))
+    mr, mz = (ar + br) / 2, (az + bz) / 2
+    nr, nz = -dz / d, dr / d  # unit normal to the chord
+    (oar, oaz), (obr, obz), (ocr, ocz) = _rz(arc.a), _rz(arc.b), _rz(arc.centre)
+    side = (obr - oar) * (ocz - oaz) - (obz - oaz) * (ocr - oar)
+    c1, c2 = (mr + nr * h, mz + nz * h), (mr - nr * h, mz - nz * h)
+    s1 = dr * (c1[1] - az) - dz * (c1[0] - ar)
+    return _pt(c1 if (s1 >= 0) == (side >= 0) else c2)
+
+
+def edit_element(project, gid: str, a: Point, b: Point, radius: float | None = None, follow: bool = True) -> None:
+    """Give element gid new end points (and, for an arc, a new radius). With follow, the ends of other elements
+    that met the moved ends move with them, so the profile stays joined; arcs among them keep their radius."""
+    g = next((e for e in project.geometry if e.id == gid), None)
+    if g is None:
+        raise KeyError(tr("no element {gid}", gid=gid))
+    moves = {g.a: a, g.b: b} if g.a != g.b else {g.a: a}
+    new_ends = {}
+    for e in project.geometry:
+        if isinstance(e, Text):
+            continue
+        if e is g:
+            new_ends[e.id] = (a, b)
+        elif follow and (e.a in moves or e.b in moves):
+            new_ends[e.id] = (moves.get(e.a, e.a), moves.get(e.b, e.b))
+    for e in project.geometry:
+        if e.id not in new_ends:
+            continue
+        na, nb = new_ends[e.id]
+        if isinstance(e, Line):
+            if na.distance(nb) < 1e-9:
+                raise ValueError(tr("{gid} would have no length", gid=e.id))
+        else:
+            r = radius if (e is g and radius) else e.radius()
+            e.centre = _refit_arc(e, na, nb, r)
+        e.a, e.b = na, nb
+
+
 def _corner(project, p: Point):
     lines = [g for g in project.geometry if isinstance(g, Line) and p in (g.a, g.b)]
     if len(lines) != 2:

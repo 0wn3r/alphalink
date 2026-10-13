@@ -69,6 +69,8 @@ class DrawingTools:
         self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del)"),
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
+        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element"), visible=False)
+        self.edit_el.connect("clicked", lambda *_: self.edit_selected_element())
 
         self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
         self.keypad_button.connect("clicked", lambda *_: self.open_keypad())
@@ -89,7 +91,8 @@ class DrawingTools:
         self.construct: dict | None = None
         self.construct_banner = Adw.Banner(button_label=_("_Cancel"))
         self.construct_banner.connect("button-clicked", lambda *_: self.cancel_construct())
-        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.delete_el):
+        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.edit_el,
+                    self.delete_el):
             self.bar.append(wdg)
 
         # contour picking banner
@@ -576,6 +579,7 @@ class DrawingTools:
         self.selected_element = gid
         self.c.highlight = {gid} if gid else set()
         self.delete_el.set_visible(gid is not None)
+        self.edit_el.set_visible(gid is not None)
         if gid:
             g = next(g for g in self.w.project.geometry if g.id == gid)
             kind = _("Line") if isinstance(g, Line) else _("Arc")
@@ -590,6 +594,53 @@ class DrawingTools:
             self.w.refresh()
             self.w.add_toast(Adw.Toast(title=_("Deleted {what}").format(what=gid), button_label=_("_Undo"),
                                               action_name="win.undo", timeout=6))
+
+    def edit_selected_element(self) -> None:
+        """Change the selected line's or arc's end points (and an arc's radius) by typed values. Ends of other
+        elements that met it move too unless switched off, so the profile stays joined."""
+        gid = self.selected_element
+        g = self._element(gid) if gid else None
+        if g is None:
+            return
+        dlg = Adw.AlertDialog(heading=_("Edit {what}").format(what=gid),
+                              body=_("End points as X (diameter), Z."))
+        group = Adw.PreferencesGroup()
+        rows = []
+        fields = [(_("Start X"), g.a.x), (_("Start Z"), g.a.z), (_("End X"), g.b.x), (_("End Z"), g.b.z)]
+        if isinstance(g, Arc):
+            fields.append((_("Radius"), g.radius()))
+        for label, value in fields:
+            r = Adw.SpinRow.new_with_range(-100000, 100000, 0.1)
+            r.set_title(label)
+            r.set_digits(3)
+            r.set_value(value)
+            group.add(r)
+            rows.append(r)
+        if isinstance(g, Arc):
+            rows[-1].get_adjustment().set_lower(0.001)
+        follow = Adw.SwitchRow(title=_("Move connected ends too"), subtitle=_("keeps the profile joined"),
+                               active=True)
+        group.add(follow)
+        dlg.set_extra_child(group)
+        dlg.add_response("cancel", _("_Cancel"))
+        dlg.add_response("ok", _("_Apply"))
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("ok")
+        dlg.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "ok":
+                return
+            v = [row.get_value() for row in rows]
+            a, b = Point(v[0], v[1]), Point(v[2], v[3])
+            radius = v[4] if len(v) > 4 else None
+            if self.w.apply_edit(_("Edit {what}").format(what=gid),
+                                 lambda p: drawing.edit_element(p, gid, a, b, radius, follow.get_active())):
+                self.w.refresh()
+                self._select_element(gid)
+
+        dlg.connect("response", response)
+        dlg.present(self.w)
 
     # --- fillet / chamfer ---------------------------------------------------------------------------------
 

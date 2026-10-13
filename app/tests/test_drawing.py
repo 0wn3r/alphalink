@@ -162,3 +162,49 @@ class Construction(unittest.TestCase):
         self.assertEqual(sorted(round(c.x, 3) for _a, c, _b in sols), [-22.361, 22.361])
         gid = drawing.add_blend(self.p, *sols[0])
         self.assertTrue(gid)
+
+
+class EditElement(unittest.TestCase):
+    def setUp(self):
+        self.p = Project()
+        for a, b in (((0, 0), (40, 0)), ((40, 0), (40, -25)), ((40, -25), (60, -25))):
+            drawing.add_line(self.p, Point(*a), Point(*b))
+        self.ids = [g.id for g in self.p.geometry]
+
+    def test_connected_ends_follow(self):
+        drawing.edit_element(self.p, self.ids[1], Point(42, 0), Point(42, -30))
+        g = self.p.geometry
+        self.assertEqual((g[0].b, g[1].a, g[1].b, g[2].a), (Point(42, 0), Point(42, 0), Point(42, -30), Point(42, -30)))
+        self.assertEqual(g[2].b, Point(60, -25))
+
+    def test_without_follow_only_that_element(self):
+        drawing.edit_element(self.p, self.ids[1], Point(42, 0), Point(42, -30), follow=False)
+        self.assertEqual(self.p.geometry[0].b, Point(40, 0))
+
+    def test_zero_length_refused(self):
+        with self.assertRaises(ValueError):
+            drawing.edit_element(self.p, self.ids[0], Point(5, 5), Point(5, 5))
+
+    def test_arc_keeps_side_and_follows(self):
+        p = Project()
+        drawing.add_line(p, Point(0, 0), Point(30, 0))
+        arc_id = drawing.add_arc_3p(p, Point(30, 0), Point(30 + 10 * (1 - math.cos(math.pi / 4)) * 2, -10 * math.sin(math.pi / 4)), Point(50, -10))
+        arc = next(g for g in p.geometry if g.id == arc_id)
+        r, ccw, side_before = arc.radius(), arc.ccw, arc.centre
+        line_id = p.geometry[0].id
+        drawing.edit_element(p, line_id, Point(0, 0), Point(32, 0))  # the arc start moves with the line end
+        arc = next(g for g in p.geometry if g.id == arc_id)
+        self.assertEqual(arc.a, Point(32, 0))
+        self.assertAlmostEqual(arc.radius(), r, places=5)
+        self.assertAlmostEqual(arc.a.distance(arc.centre), arc.b.distance(arc.centre), places=5)
+        self.assertEqual(arc.ccw, ccw)
+        self.assertLess(abs(arc.centre.z - side_before.z) + abs(arc.centre.x - side_before.x), 5)
+
+    def test_arc_new_radius_and_too_small(self):
+        p = Project()
+        arc_id = drawing.add_arc_3p(p, Point(30, 0), Point(30 + 20 * (1 - math.cos(math.pi / 4)), -10 * math.sin(math.pi / 4)), Point(50, -10))
+        arc = p.geometry[0]
+        drawing.edit_element(p, arc_id, arc.a, arc.b, radius=15)
+        self.assertAlmostEqual(p.geometry[0].radius(), 15, places=5)
+        with self.assertRaises(ValueError):
+            drawing.edit_element(p, arc_id, Point(30, 0), Point(50, -10), radius=2)

@@ -16,6 +16,12 @@ msgstr "для лінії потрібні дві різні точки"
 msgid "no element {gid}"
 msgstr "немає елемента {gid}"
 
+msgid "an arc of radius {r} cannot join X{ax} Z{az} and X{bx} Z{bz}"
+msgstr "дуга радіуса {r} не може з’єднати X{ax} Z{az} і X{bx} Z{bz}"
+
+msgid "{gid} would have no length"
+msgstr "{gid} мав би нульову довжину"
+
 msgid "X{x} Z{z} is not a corner between two lines"
 msgstr "X{x} Z{z} — не кут між двома лініями"
 
@@ -250,6 +256,9 @@ msgstr "Завершити лінію (Esc)"
 msgid "Delete Element (Del)"
 msgstr "Видалити елемент (Del)"
 
+msgid "Edit Element"
+msgstr "Редагувати елемент"
+
 msgid "Keypad"
 msgstr "Цифрова клавіатура"
 
@@ -361,6 +370,36 @@ msgstr "Видалено: {what}"
 msgid "_Undo"
 msgstr "_Скасувати"
 
+msgid "Edit {what}"
+msgstr "Редагувати {what}"
+
+msgid "End points as X (diameter), Z."
+msgstr "Кінцеві точки як X (діаметр), Z."
+
+msgid "End X"
+msgstr "Кінець X"
+
+msgid "End Z"
+msgstr "Кінець Z"
+
+msgid "Start X"
+msgstr "Початок X"
+
+msgid "Start Z"
+msgstr "Початок Z"
+
+msgid "Radius"
+msgstr "Радіус"
+
+msgid "Move connected ends too"
+msgstr "Переміщати й з’єднані кінці"
+
+msgid "keeps the profile joined"
+msgstr "профіль залишається з’єднаним"
+
+msgid "_Apply"
+msgstr "_Застосувати"
+
 msgid "Chamfer at {point}"
 msgstr "Фаска в {point}"
 
@@ -372,9 +411,6 @@ msgstr "Кут"
 
 msgid "Between the chamfer and the line along Z; the size is measured along that line"
 msgstr "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії"
-
-msgid "_Apply"
-msgstr "_Застосувати"
 
 msgid "Fillet R{size}"
 msgstr "Скруглення R{size}"
@@ -399,9 +435,6 @@ msgstr "Центр Z"
 
 msgid "Circle"
 msgstr "Коло"
-
-msgid "Radius"
-msgstr "Радіус"
 
 msgid "Mirror"
 msgstr "Дзеркало"

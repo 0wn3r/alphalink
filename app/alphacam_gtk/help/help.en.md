@@ -44,6 +44,7 @@ The operations list is on the left. Tap an operation to select it: its toolpath 
 The tools are in the bar under the drawing.
 
 - **Select**: tap an element to select it; **Delete** (or the bin button) removes it.
+- **Edit Element** (the pencil next to the bin, while an element is selected) changes a line's or arc's end points, and an arc's radius, by typed values. Ends of other elements that met it move too, so the profile stays joined; switch that off in the dialog to move only this element.
 - **Line**: tap points, or type coordinates in the entry and press Enter:
   - `X,Z` is an absolute point, for example `40,-25`;
   - `@dX,dZ` is relative to the last point, for example `@0,-25`.

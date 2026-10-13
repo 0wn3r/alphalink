@@ -547,3 +547,64 @@ class GtkConstruct(unittest.TestCase):
         self.assertEqual(out["previews"], 2)
         self.assertEqual((out["new"].a.x, out["new"].b.x), (42.0, 42.0))  # distance 1 (radius) = X+2
         self.assertFalse(out["banner"])
+
+
+class GtkEditElement(unittest.TestCase):
+    def test_edit_dialog_moves_line_and_neighbours(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        gi.require_version("Adw", "1")
+        from gi.repository import Adw, GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            for t in ["0,0", "40,0", "40,-25", "60,-25"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d.set_tool("select")
+            gid = w.project.geometry[1].id
+            d._select_element(gid)
+            out["button"] = d.edit_el.get_visible()
+            d.edit_selected_element()
+            dlg = w.get_visible_dialog()
+            rows = []
+            child = dlg.get_extra_child()
+            stack = [child]
+            while stack:  # every SpinRow in the dialog, in order
+                c = stack.pop(0)
+                if isinstance(c, Adw.SpinRow):
+                    rows.append(c)
+                    continue
+                k = c.get_first_child()
+                kids = []
+                while k:
+                    kids.append(k)
+                    k = k.get_next_sibling()
+                stack = kids + stack
+            out["rows"] = len(rows)
+            rows[0].set_value(44)
+            rows[2].set_value(44)
+            dlg.emit("response", "ok")
+            dlg.force_close()
+            out["geom"] = [(g.a, g.b) for g in w.project.geometry]
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertTrue(out["button"])
+        self.assertEqual(out["rows"], 4)
+        self.assertEqual(out["geom"][1], (Point(44, 0), Point(44, -25)))
+        self.assertEqual(out["geom"][0][1], Point(44, 0))
+        self.assertEqual(out["geom"][2][0], Point(44, -25))
