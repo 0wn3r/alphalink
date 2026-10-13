@@ -20,6 +20,7 @@ from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
+from .tools_page import ToolsPage, load_library  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
@@ -72,6 +73,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.undo: UndoStack | None = None
         self._refresh_id = 0
         self._editor_edit = False
+        self.library = load_library()
 
         self.toasts = Adw.ToastOverlay()
         self.root = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -87,6 +89,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._setup_lock()
         self._install_actions()
         self.editor.on_pick = self.drawing.start_pick
+        self.editor.tool_name = self._tool_name
 
         bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
         bp.add_setter(self.split, "collapsed", True)
@@ -190,11 +193,13 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
         self.stack.add_titled_with_icon(self.sheet, "sheet", _("Sheet"), "x-office-document-symbolic")
+        self.tools_page = ToolsPage(self)
+        self.stack.add_titled_with_icon(self.tools_page, "tools", _("Tools"), "applications-engineering-symbolic")
         self.machine = MachinePage(self)
         self.stack.add_titled_with_icon(self.machine, "machine", _("Machine"), "network-wired-symbolic")
 
         header = Adw.HeaderBar()
-        self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
+        self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.NARROW)  # 5 pages: icon over label fits
         header.set_title_widget(self.header_switcher)
         header.pack_start(Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
                                      tooltip_text=_("Open (Ctrl+O)")))
@@ -391,7 +396,7 @@ class MainWindow(Adw.ApplicationWindow):
         """Re-post and redraw after any change; keeps the view and the selected operation."""
         project = self.project
         selected = self.selected_index()
-        self.pv = preview(project)
+        self.pv = preview(project, library=self.library)
         name = self.path.name if self.path else _("Untitled")
         dirty = "• " if self.undo and self.undo.modified else ""
         self.set_title(f"{dirty}{name} – AlphaLink CAM")
@@ -422,6 +427,11 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self._select_op(None)
 
+    def _tool_name(self, number: int) -> str:
+        from .report import _tool_name
+
+        return _tool_name(self.project, number, self.library) if self.project else ""
+
     # --- editing ----------------------------------------------------------------------------------------
 
     def apply_edit(self, label: str, fn) -> bool:
@@ -438,6 +448,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.apply_edit(label, fn)
         self.refresh()
         self._editor_edit = False
+        self.library = load_library()
 
     def _undo(self) -> None:
         label = self.undo.undo() if self.undo else None

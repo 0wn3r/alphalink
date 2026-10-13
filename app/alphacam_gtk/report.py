@@ -26,8 +26,8 @@ KIND_NAMES = {
 RULE = " " + "-" * 78
 
 
-def _tool_name(project, number) -> str:
-    for t in project.tools:
+def _tool_name(project, number, library=None) -> str:
+    for t in list(project.tools) + (list(library.tools) if library is not None else []):
         if t.number == number:
             return t.name
     try:
@@ -36,7 +36,7 @@ def _tool_name(project, number) -> str:
         return ""
 
 
-def sheet_text(project, pv, title: str, moves: bool) -> str:
+def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
     """The setup sheet as monospaced text, laid out like ALPHA-T's print."""
     out = [" ", f"  {_('TITLE')} : {title:<40} {_('DATE')} : {datetime.date.today():%d %b %Y}", " "]
     prog = pv.program if pv is not None else None
@@ -51,7 +51,7 @@ def sheet_text(project, pv, title: str, moves: bool) -> str:
             if name == "tool_change":
                 sx, sz = block.start
                 out += [RULE, f"  {_('Operation')}  : {_(KIND_NAMES[name]):<18} {_('Tool No.')} : {block.tool:3d}    "
-                              f"{_tool_name(project, block.tool)}",
+                              f"{_tool_name(project, block.tool, library)}",
                         f"  {_('Tool change')} X : {sx:8.3f}      Z : {sz:8.3f}      {_('Feed')} : {block.feed:g}"]
             else:
                 op_no += 1
@@ -62,7 +62,7 @@ def sheet_text(project, pv, title: str, moves: bool) -> str:
                 depth = getattr(src, "depth_of_cut", None)
                 out += [RULE,
                         f"  {_('Operation')}  : {_(KIND_NAMES.get(name, name.upper())):<18} {_('Tool No.')} : "
-                        f"{block.tool:3d}    {_tool_name(project, block.tool)}",
+                        f"{block.tool:3d}    {_tool_name(project, block.tool, library)}",
                         f"  {_('Tool Start X')} : {sx:8.3f}      {_('Maximum X')} : {lx:8.3f}       {_('Offset X')} : {ox:7.3f}",
                         f"  {_('Tool Start Z')} : {sz:8.3f}      {_('Maximum Z')} : {lz:8.3f}       {_('Offset Z')} : {oz:7.3f}"]
                 line = f"  {_('Op. No.')} : {op_no:2d}     {_('Total Passes')} : {block.declared_passes or 0:2d}"
@@ -129,7 +129,7 @@ class SheetPage(Gtk.Box):
         if w.project is None:
             return
         title = w.path.stem.upper() if w.path else _("UNTITLED")
-        self.view.get_buffer().set_text(sheet_text(w.project, w.pv, title, self.moves_switch.get_active()))
+        self.view.get_buffer().set_text(sheet_text(w.project, w.pv, title, self.moves_switch.get_active(), w.library))
 
     def _save(self) -> None:
         w = self.window

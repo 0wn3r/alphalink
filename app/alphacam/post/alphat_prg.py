@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
 from ..model.project import MachineProfile, Project
-from ..model.tools import Tool, standard_library
+from ..model.tools import Tool, ToolLibrary, standard_library
 from ..numfmt import format_number
 from ..toolpath.area import area_clear
 from ..toolpath.contour import chain, limits, mm, points
@@ -88,10 +88,16 @@ class _Writer:
                 raise NotImplementedError(f"{m.kind.value} moves are not supported by the post yet")
 
 
-def _tool(project: Project, number: int) -> Tool:
+def _tool(project: Project, number: int, library: ToolLibrary | None = None) -> Tool:
+    """The part's own tools first, then the user's library, then ALPHA-T's standard ATOOLIB."""
     for t in project.tools:
         if t.number == number:
             return t
+    if library is not None:
+        try:
+            return library.get(number)
+        except KeyError:
+            pass
     return standard_library().get(number)
 
 
@@ -152,7 +158,7 @@ def _thread_block(w: _Writer, block: int, project: Project, op: Thread) -> None:
 def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
     """Emit the block(s) for one operation, each followed by its empty block (left open: the caller closes the
     last one). Returns the last block number used."""
-    tool = _tool(project, op.tool)
+    tool = _tool(project, op.tool, w.library)
     r_exact = mm(tool.nose_radius, project.units)
     # the toolpaths use the nose radius rounded to the output decimals (inch: 0.4 mm -> 0.0157, ARC_finish_inch),
     # the #125/#126 limits the exact one (-0.063 = -4 x 0.015748)
@@ -197,19 +203,20 @@ def _empty_block(w: _Writer, block: int, next_tool: ToolChange | None) -> None:
     w.emit(f"N{label}")
 
 
-def post(project: Project, profile: MachineProfile | None = None) -> bytes:
+def post(project: Project, profile: MachineProfile | None = None, library: ToolLibrary | None = None) -> bytes:
     """Layout (samples MET2, AREA1, TWOOP, TOOLCHG, MOVE_RAPID):
     header; tool block (N10) with any move/rapid/dwell that follows the tool change; then per operation an op block
     and an empty block (which holds the rapid to the tool change point when a tool change comes next); a later tool
     change is another tool block; finally an M65 block and %."""
     profile = profile or MachineProfile()
     w = _Writer(project, profile)
+    w.library = library
     w.emit("%", f"O{profile.o_number}", f"#132={project.program_number}", *HEADER_LOGIC, UNITS_MCODE[project.units])
 
     ops = list(project.operations)
     if not ops or not isinstance(ops[0], ToolChange):
         ops.insert(0, ToolChange(project.first_tool, project.tool_change,
-                                 _tool(project, project.first_tool).default_feed))
+                                 _tool(project, project.first_tool, w.library).default_feed))
     block = 0
     i = 0
     while i < len(ops):

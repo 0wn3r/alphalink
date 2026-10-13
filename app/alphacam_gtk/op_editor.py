@@ -62,6 +62,7 @@ class OpEditor(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._apply, self.index, self._building = apply, None, False
         self.on_pick = None  # set by the window: start contour picking for operation n
+        self.tool_name = lambda n: ""  # set by the window: name of tool n in the library
         self.title = Adw.WindowTitle(title=_("Operation"))
         header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
         header.set_title_widget(self.title)
@@ -100,7 +101,11 @@ class OpEditor(Gtk.Box):
                     group.add(row)
             elif name in NUMBERS:
                 lab, sub, lo, hi, step, digits = NUMBERS[name]
+                if name == "tool":
+                    sub = self.tool_name(int(value)) or sub
                 row = self._spin(_(lab), sub and _(sub), lo, hi, step, digits, value)
+                if name == "tool":
+                    row.connect("notify::value", lambda r, _p: r.set_subtitle(self.tool_name(int(r.get_value()))))
                 row.connect("notify::value", self._number_changed, name, hints[name] is int)
                 group.add(row)
             elif name in SWITCHES:
