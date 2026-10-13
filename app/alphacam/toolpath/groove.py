@@ -17,7 +17,7 @@ from ..i18n import tr
 from ..model.operations import Groove
 from ..model.geometry import Point
 from .contour import Seg, mm, points
-from .toolpath import Move, MoveKind, Pass, Toolpath
+from .toolpath import MAX_PASSES, Move, MoveKind, Pass, Toolpath, too_many
 
 RETRACT_DIA_MM = 2.0
 
@@ -116,7 +116,7 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
     side = 1 if op.external else -1
     if side < 0:
         boundary = _mirror(boundary)
-    zs = [p.z for p in points(boundary)]
+    zs = [round(p.z, 9) for p in points(boundary)]  # z is rounded below; unrounded ends could never be reached
     top, end = max(zs), min(zs)
     w, step = op.tip_width, op.stepover
     walls = _left_walls(boundary)
@@ -129,6 +129,8 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
     z = round(top - w, 9)
     while True:
         plunges.append((z, side * _depth(boundary, z, z + w)))
+        if len(plunges) > MAX_PASSES:
+            raise too_many(tr("grooving"))
         if z <= end:
             break
         nz = round(max(z - step, end), 9)
@@ -199,6 +201,8 @@ def face_groove(op: Groove, path: list[Seg], units: str, decimals: int) -> Toolp
     while True:
         r = round(min(r, hi - w), 9)
         plunges.append((r, _face_depth(path, r, r + w)))
+        if len(plunges) > MAX_PASSES:
+            raise too_many(tr("face grooving"))
         if r >= hi - w - 1e-9:
             break
         r = round(r + step, 9)

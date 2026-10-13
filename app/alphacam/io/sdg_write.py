@@ -53,6 +53,8 @@ def _layer(buf: bytearray, table: int, a_at: int, b_at: int, points: list[tuple[
            segs: list[tuple[int, int, int]], zref: float) -> None:
     if len(points) > MAX_POINTS:
         raise ValueError(tr("the drawing has too many points for ALPHA-T ({n} > {max})", n=len(points), max=MAX_POINTS))
+    if len(segs) > 0xFF:  # the count shares its word with the 0x3000 flag; ALPHA-T reads the low byte
+        raise ValueError(tr("the drawing has too many elements for ALPHA-T ({n} > 255)", n=len(segs)))
     words = [0x3000 | len(segs), len(points)] + [w for s in segs for w in s]
     offs = _table_offsets(table)
     if len(words) > len(offs):

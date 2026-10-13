@@ -36,7 +36,7 @@ class Settings:
         try:
             data = json.loads(self.path.read_text())
             self.values.update({k: v for k, v in data.items() if k in DEFAULTS})
-        except (OSError, ValueError):
+        except (OSError, ValueError, AttributeError):  # missing, damaged, or not an object: the defaults
             pass
 
     def __getitem__(self, key: str):

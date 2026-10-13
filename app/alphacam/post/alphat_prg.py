@@ -121,6 +121,9 @@ def _header(w: _Writer, block: int, op, passes: int, kind: int, limit: tuple[flo
 
 
 def _generic_block(w: _Writer, block: int, op, tp: Toolpath, kind: int, limit: tuple[float, float]) -> None:
+    if not tp.passes:
+        raise ValueError(tr("{op}: no cuts with this contour (nothing between the tool start and the profile)",
+                            op=tr(getattr(op, "type", "operation").replace("_", " "))))
     _header(w, block, op, len(tp.passes), kind, limit, w.f(op.feed))
     label = None
     for n, p in enumerate(tp.passes, 1):

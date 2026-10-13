@@ -17,6 +17,9 @@ from ..model.geometry import Line
 from ..model.operations import Thread
 
 
+MAX_CUTS = 999  # #121 counts the cuts; more than this is a typing error (first cut 0.01 over 10 mm = 1M cuts)
+
+
 @dataclass
 class ThreadPlan:
     xs: list[float]  # cut diameters
@@ -56,6 +59,9 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     if depth <= 0 or first <= 0:
         raise ValueError(tr("thread: outer diameter must be above the inner one, first cut > 0"))
     n = math.ceil(round((depth / first) ** 2, 9))
+    if n > MAX_CUTS:
+        raise ValueError(tr("threading: {n} cuts; make the first cut deeper or set fewer cuts (at most {max})",
+                            n=n, max=MAX_CUTS))
     steps = [2 * round(first * math.sqrt(k), decimals) for k in range(1, n + 1)]
     # THREAD_leadin2_leadout2: cuts start at the thread top + lead-in (default 5) and end at its end - lead-out
     z_end = round(min(outer.a.z, outer.b.z) - op.lead_out, 9)

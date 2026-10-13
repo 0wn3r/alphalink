@@ -131,7 +131,9 @@ class Project:
     def dumps(self) -> str:
         text = json.dumps(self.to_dict(), indent=1)
         # keep [x, z] pairs and id lists on one line
-        text = re.sub(r"\[\s+([^\[\]{}]*?)\s+\]", lambda m: "[" + re.sub(r",\s+", ", ", m[1]) + "]", text)
+        # only arrays of numbers or plain strings (a text like "Bore [ H7 ]" must stay as it is)
+        item = r'(?:-?[\d.eE+-]+|"[^"\[\]\\]*")'
+        text = re.sub(rf"\[\s+({item}(?:,\s+{item})*)\s+\]", lambda m: "[" + re.sub(r",\s+", ", ", m[1]) + "]", text)
         return text + "\n"
 
     @classmethod

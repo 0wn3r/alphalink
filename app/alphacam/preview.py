@@ -8,7 +8,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .io.prg_parse import Block, Move, Program, parse
-from .model.operations import AreaClear, Dwell, MoveTo, ToolChange
+from .model.operations import AreaClear, Dwell, FaceClear, MoveTo, Thread, ToolChange
 from .model.project import MachineProfile, Project
 from .post.alphat_prg import post
 from .post.alphat_sd1 import sd1
@@ -80,7 +80,15 @@ def preview(project: Project, profile: MachineProfile | None = None, library=Non
         shown = Project.from_dict(project.to_dict())
         shown.output_units = None
         data = _post_prefix(shown, n_ok, profile, library)
-    prog = parse(data, profile)
+    try:
+        prog = parse(data, profile)
+    except Exception as e:  # never leave the window half refreshed: report it like a post error
+        result.error = result.error or str(e) or type(e).__name__
+        result.data = None
+        if result.error_op is None:
+            result.error_op = 0
+        prog = parse(_post_prefix(project, 0, profile, library), profile)
+        n_ok = 0
     result.program = prog
 
     blocks = [b for b in prog.blocks if b.op_name not in ("empty", "end")]
@@ -95,7 +103,9 @@ def preview(project: Project, profile: MachineProfile | None = None, library=Non
                 result.ops.append(OpPreview(i, []))  # shown inside the tool block
             continue
         pv = OpPreview(i, [next(it)])
-        if isinstance(op, AreaClear) and op.pre_finish:
+        if isinstance(op, (AreaClear, FaceClear)) and op.pre_finish:  # its own finish block (#127=10/11/12)
+            pv.blocks.append(next(it))
+        if isinstance(op, Thread) and op.spring_passes > 0:  # the #127=21 spring pass block
             pv.blocks.append(next(it))
         if isinstance(op, ToolChange):
             current_tool = pv

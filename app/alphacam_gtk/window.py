@@ -388,10 +388,12 @@ class MainWindow(Adw.ApplicationWindow):
                 note = self._ops_from_sd1(path, project)
             else:
                 project = Project.load(path)
-        except (OSError, ValueError, KeyError) as e:
+        except Exception as e:  # a damaged file must give a message, whatever the reader trips over
+            if not isinstance(e, (OSError, ValueError, KeyError)):
+                e = _("the file is damaged or not this kind of file ({error})").format(error=type(e).__name__)
             self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
             return
-        self.path = path
+        self.path, self.import_name = path, None
         self.set_project(project)
         if note:
             self.toast(note)
@@ -426,7 +428,8 @@ class MainWindow(Adw.ApplicationWindow):
                 self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
                 return
             res.project.first_tool = int(st["first_tool"])
-            self.path = path.with_suffix(".alcam")
+            self.path = None  # an import is a new part: Save asks for a name (never overwrites NAME.alcam unasked)
+            self.import_name = path.stem
             self.set_project(res.project)
             self.undo.mark_unsaved()
             self.refresh()
@@ -464,7 +467,7 @@ class MainWindow(Adw.ApplicationWindow):
                 return
             try:
                 ops = load_sd1(sd1, self.project)
-            except (NotImplementedError, ValueError, KeyError, OSError) as e:
+            except Exception as e:  # NotImplementedError, ValueError, OSError, or a damaged listing
                 self.toast(_("Operations not rebuilt from {name}: {error}").format(name=sd1.name, error=e))
                 return
             if self.apply_edit(_("Operations from {name}").format(name=sd1.name),
@@ -491,8 +494,8 @@ class MainWindow(Adw.ApplicationWindow):
             return ""
         try:
             project.operations = load_sd1(sd1, project)
-        except (NotImplementedError, ValueError, KeyError) as e:
-            return _("Operations not rebuilt from {name}: {error}").format(name=sd1.name, error=e)
+        except Exception as e:  # NotImplementedError / ValueError, or a damaged listing
+            return _("Operations not rebuilt from {name}: {error}").format(name=sd1.name, error=str(e) or type(e).__name__)
         n = len(project.operations)
         prg = sibling(path, ".PRG")
         if prg is None:
@@ -565,7 +568,7 @@ class MainWindow(Adw.ApplicationWindow):
     def apply_edit(self, label: str, fn) -> bool:
         try:
             self.undo.apply(label, fn)
-        except (ValueError, KeyError, IndexError) as e:
+        except (ValueError, KeyError, IndexError, ZeroDivisionError) as e:
             self.toast(f"{label}: {e}")
             return False
         return True
@@ -573,19 +576,23 @@ class MainWindow(Adw.ApplicationWindow):
     def apply_edit_from_editor(self, label: str, fn) -> None:
         """Edits from the editor's own rows must not rebuild the editor (that would steal focus mid-typing)."""
         self._editor_edit = True
-        self.apply_edit(label, fn)
-        self.refresh()
-        self._editor_edit = False
+        try:
+            self.apply_edit(label, fn)
+            self.refresh()
+        finally:
+            self._editor_edit = False
         self.library = load_library()
 
     def _undo(self) -> None:
         label = self.undo.undo() if self.undo else None
         if label:
+            self.drawing.after_history()
             self.toast(_("Undid {action}").format(action=label))
 
     def _redo(self) -> None:
         label = self.undo.redo() if self.undo else None
         if label:
+            self.drawing.after_history()
             self.toast(_("Redid {action}").format(action=label))
 
     def add_op(self, kind: str) -> None:
@@ -661,18 +668,19 @@ class MainWindow(Adw.ApplicationWindow):
         dlg.add(page)
         dlg.present(self)
 
-    def _billet_rows(self, b) -> tuple[Adw.PreferencesGroup, dict]:
-        """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock."""
+    def _billet_rows(self, b, inch: bool = False) -> tuple[Adw.PreferencesGroup, dict]:
+        """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock. Inch parts get 4 decimals
+        (a 0.75 in bar must not be rounded or clamped to 1)."""
         group = Adw.PreferencesGroup()
         rows = {}
-        for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 1, 1000),
-                                       ("length", _("Billet length"), None, 1, 2000),
+        for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 0.01, 1000),
+                                       ("length", _("Billet length"), None, 0.01, 2000),
                                        ("bore", _("Bore"), _("tube billet; 0 = solid bar"), 0, 1000)):
             r = Adw.SpinRow.new_with_range(lo, hi, 1)
             r.set_title(title)
             if sub:
                 r.set_subtitle(sub)
-            r.set_digits(1)
+            r.set_digits(4 if inch else 1)
             r.set_value(getattr(b, key))
             rows[key] = r
             group.add(r)
@@ -700,7 +708,7 @@ class MainWindow(Adw.ApplicationWindow):
         units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
                              selected=1 if settings()["units"] == "inch" else 0)
         group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
-                                               length=settings()["billet_length"]))
+                                               length=settings()["billet_length"]), settings()["units"] == "inch")
         group.add(units)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
@@ -722,7 +730,7 @@ class MainWindow(Adw.ApplicationWindow):
             project = Project(units="inch" if inch else "mm", billet=self._billet_from(rows),
                               tool_change=Point(round(100 / k, 4), round(50 / k, 4)),
                               first_tool=int(settings()["first_tool"]))
-            self.path = None
+            self.path, self.import_name = None, None
             self.set_project(project)
             self.drawing.set_tool("line")
             self.toast(_("Draw the profile: tap points, or type X,Z and Enter"))
@@ -742,7 +750,7 @@ class MainWindow(Adw.ApplicationWindow):
             return
         alert = Adw.AlertDialog(heading=_("Part Settings"),
                                 body=_("Billet, chuck jaws, tailstock, program number and program units of this part."))
-        group, rows = self._billet_rows(self.project.billet)
+        group, rows = self._billet_rows(self.project.billet, self.project.units == "inch")
         # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
         number = Adw.SpinRow.new_with_range(1, 9999, 1)
         number.set_title(_("Program number"))
@@ -788,7 +796,7 @@ class MainWindow(Adw.ApplicationWindow):
         ALPHA-T drawing; Export PRG writes them to the .SD1."""
         if self.project is None:
             return
-        stem = (self.path.stem if self.path else "PART").upper()[:8]
+        stem = (self.path.stem if self.path else getattr(self, "import_name", None) or "PART").upper()[:8]
         dlg = Gtk.FileDialog(title=_("Save as ALPHA-T Drawing"), initial_name=f"{stem}.SDG")
 
         def done(d, res):
@@ -821,7 +829,7 @@ class MainWindow(Adw.ApplicationWindow):
     def save_dialog(self, then=None) -> None:
         if self.project is None:
             return
-        stem = self.path.stem if self.path else "part"
+        stem = self.path.stem if self.path else getattr(self, "import_name", None) or "part"
         dlg = Gtk.FileDialog(title=_("Save Part"), initial_name=f"{stem}.alcam")
 
         def done(d, res):
@@ -879,7 +887,7 @@ class MainWindow(Adw.ApplicationWindow):
     def export_dialog(self) -> None:
         if self.pv is None or self.pv.data is None:
             return
-        stem = self.path.stem if self.path else "PART"
+        stem = self.path.stem if self.path else getattr(self, "import_name", None) or "PART"
         dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{stem}.PRG")
         dlg.save(self, None, self._export_done)
 

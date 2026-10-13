@@ -152,6 +152,14 @@ def _set_end(line: Line, p: Point, new: Point) -> None:
         line.b = new
 
 
+def _drop_used_up(project, *lines) -> None:
+    """A fillet or chamfer as long as a whole line uses it up: remove the zero-length line that is left (and its id
+    from the contours), so the next corner edit does not divide by its length."""
+    for g in lines:
+        if g.a.distance(g.b) < 1e-9 and g in project.geometry:
+            delete_element(project, g.id)
+
+
 def fillet(project, p: Point, radius: float) -> str:
     """Round the corner at p between two lines with an arc tangent to both (ALPHA-T 'radius/chamfer F')."""
     if radius <= 0:
@@ -185,6 +193,7 @@ def fillet(project, p: Point, radius: float) -> str:
     _set_end(l2, p, T2)
     gid = next_id(project)
     project.geometry.append(Arc(start, end, C, ccw=ccw, id=gid))
+    _drop_used_up(project, l1, l2)
     return gid
 
 
@@ -220,6 +229,7 @@ def chamfer(project, p: Point, size: float, angle: float = 45.0) -> str:
     a, b = (T1, T2) if first is l1 else (T2, T1)
     gid = next_id(project)
     project.geometry.append(Line(a, b, id=gid))
+    _drop_used_up(project, l1, l2)
     return gid
 
 
@@ -656,6 +666,8 @@ def _contact(project, ref, cr: float, cz: float, radius: float) -> Point:
         return _pt((ar + t * dr, az + t * dz))
     r0, z0, rad = _circle_of(project, ref[1])
     d = math.hypot(cr - r0, cz - z0)
+    if d < 1e-9:  # a blend centred on the arc's own centre (radius = the arc's): it touches nowhere in particular
+        raise ValueError(tr("no blend arc touches this arc there"))
     return _pt((r0 + rad * (cr - r0) / d, z0 + rad * (cz - z0) / d))
 
 
@@ -685,8 +697,11 @@ def blends(project, ref1, ref2, radius: float) -> list[tuple[Point, Point, Point
             centres += pts
     out = []
     for cr, cz in centres:
-        a = _contact(project, ref1, cr, cz, radius)
-        b = _contact(project, ref2, cr, cz, radius)
+        try:
+            a = _contact(project, ref1, cr, cz, radius)
+            b = _contact(project, ref2, cr, cz, radius)
+        except ValueError:
+            continue
         if a != b:
             out.append((a, _pt((cr, cz)), b))
     return out

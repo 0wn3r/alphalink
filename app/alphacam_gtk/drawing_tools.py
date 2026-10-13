@@ -526,6 +526,22 @@ class DrawingTools:
         if self.w.apply_edit(_("Corner"), lambda p: drawing.corner(p, first, element)):
             self.w.refresh()
 
+    def after_history(self) -> None:
+        """After undo / redo: a line being drawn continues from a point that still exists (Ctrl+Z of the last line
+        goes back to its start), and a selected element that is gone is deselected."""
+        ends = set(drawing.endpoints(self.w.project))
+        while len(self.points) > 1 and self.points[-1] not in ends:
+            self.points.pop()
+        if self.points and self.points[-1] not in ends and len(self.w.project.geometry):
+            self.points.clear()
+        if self.points:
+            self.cursor = self.points[-1]
+            self.c.marker = (self.points[-1], "end")
+        self.done.set_sensitive(bool(self.points))
+        if self.selected_element and self._element(self.selected_element) is None:
+            self._select_element(None)
+        self.c.queue_draw()
+
     def finish_chain(self) -> None:
         self.arc_pts = []
         self.corner_first = None
@@ -568,7 +584,7 @@ class DrawingTools:
                 self.w.toast(_("@ needs a previous point"))
                 return
             prev = last
-            x, z = prev.x + x, prev.z + z
+            x, z = round(prev.x + x, 6), round(prev.z + z, 6)  # no float noise (-34.800000000000004)
         if self.c.tool == "arc":
             self._arc_point(Point(x, z))
             entry.set_text("")
@@ -645,7 +661,7 @@ class DrawingTools:
         for label, value in fields:
             r = Adw.SpinRow.new_with_range(-100000, 100000, 0.1)
             r.set_title(label)
-            r.set_digits(3)
+            r.set_digits(4 if self.w.project.units == "inch" else 3)
             r.set_value(value)
             group.add(r)
             rows.append(r)
@@ -957,6 +973,8 @@ class DrawingTools:
                     [("line", a, b) for a, b in drawing.tangents_at_angle(self.w.project, ref[1], v[0])],
                     lambda pv: self._edit(_("Tangent"), lambda pr: drawing.add_line(pr, pv[1], pv[2]))))
             elif kind == "tangent":
+                if not st["refs"] and ref[0] == "line":
+                    raise ValueError(_("Tap a point or an arc"))
                 st["refs"].append(ref)
                 if len(st["refs"]) == 1:
                     self._prompt(_("Tangent: now tap the arc"))
@@ -985,7 +1003,7 @@ class DrawingTools:
                         for b in r2:
                             try:
                                 sols += drawing.blends(self.w.project, a, b, v[0])
-                            except ValueError:
+                            except (ValueError, ZeroDivisionError):
                                 pass
                     self._choose([("arc", s, c, e) for s, c, e in sols],
                                  lambda pv: self._edit(_("Blend arc"), lambda pr: drawing.add_blend(pr, pv[1], pv[2], pv[3])))
@@ -993,4 +1011,7 @@ class DrawingTools:
                 self._numbers(_("Blend Arc"), [(_("Radius"), 5.0, 0.001, 1000)], solve)
         except ValueError as e:
             self.w.toast(str(e))
+        except Exception as e:  # never leave a command half done: say what happened and start over
+            self.w.toast(str(e) or type(e).__name__)
+            self.cancel_construct()
 

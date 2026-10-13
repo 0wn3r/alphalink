@@ -20,7 +20,7 @@ import math
 
 from ..model.operations import FaceClear
 from .contour import Seg, mm, tip_path, translate, x_at
-from .toolpath import Move, MoveKind, Pass, Toolpath
+from .toolpath import MAX_PASSES, Move, MoveKind, Pass, Toolpath, too_many
 
 RETRACT_MM = 0.2  # face clear default (SD1 R0.2)
 
@@ -53,6 +53,8 @@ def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, d
     sx, d = op.start.x, op.depth_of_cut
     passes = []
     for top, bottom in zip(levels, levels[1:]):
+        if len(passes) + (top - bottom) / d > MAX_PASSES:
+            raise too_many(tr("face clear"))
         for k in range(1, math.ceil(round((top - bottom) / d, 9)) + 1):
             z = round(max(top - k * d, bottom), 9)
             x = _end_x(boundary, z, external)

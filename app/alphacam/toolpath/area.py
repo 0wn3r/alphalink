@@ -20,7 +20,7 @@ import math
 from ..model.operations import AreaClear
 from ..model.geometry import Point
 from .contour import Seg, mm, points, tip_path, translate, z_at
-from .toolpath import Move, MoveKind, Pass, Toolpath
+from .toolpath import MAX_PASSES, Move, MoveKind, Pass, Toolpath, too_many
 
 RETRACT_MM = 1.0  # RETRACT DIST default
 
@@ -124,6 +124,8 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
         while True:
             x = round(max(x - step, stop) if op.external else min(x + step, stop), 9)
             xs.append(x)
+            if len(xs) > MAX_PASSES:
+                raise too_many(tr("area clear"))
             if x == stop:
                 break
         start = stop

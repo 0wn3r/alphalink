@@ -6,6 +6,16 @@ from dataclasses import dataclass, field
 from enum import Enum
 
 
+MAX_PASSES = 5000  # more passes or plunges than this is a typing error (depth of cut 0.001), not a part
+
+
+def too_many(what: str) -> ValueError:
+    from ..i18n import tr
+
+    return ValueError(tr("{what}: more than {max} passes; check the depth of cut / stepover", what=what,
+                         max=MAX_PASSES))
+
+
 class MoveKind(str, Enum):
     RAPID = "rapid"  # G0
     FEED = "feed"  # G1

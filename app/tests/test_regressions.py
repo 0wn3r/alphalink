@@ -1,0 +1,88 @@
+"""Bugs found by the bug hunt of 2026-10-14, kept from coming back."""
+
+import unittest
+
+from alphacam import drawing
+from alphacam.model import AreaClear, FaceClear, FinishPass, Groove, Line, Point, Project, Thread
+from alphacam.post.alphat_prg import post
+from alphacam.preview import preview
+from tests.test_post import MET2, S, sample_project
+
+
+def _profile(points):
+    p = Project()
+    for a, b in zip(points, points[1:]):
+        drawing.add_line(p, Point(*a), Point(*b))
+    return p
+
+
+class Regressions(unittest.TestCase):
+    def test_groove_on_unrounded_z_ends(self):
+        """-34.800000000000004 (from @dX,dZ sums) used to keep the plunge loop going for ever."""
+        p = _profile([(60, 0), (60, -29.6), (40, -29.6), (40, -34.800000000000004), (60, -34.800000000000004)])
+        p.operations = [Groove(3, S, [g.id for g in p.geometry])]
+        self.assertTrue(post(p))
+
+    def test_operation_without_passes_is_an_error_not_NNone(self):
+        p = sample_project("MET2_finish_metric")
+        p.operations = [FaceClear(3, S, ["g0"])]  # only the front face: nothing to cut
+        with self.assertRaises(ValueError):
+            post(p)
+        pv = preview(p)
+        self.assertIsNotNone(pv.error)
+        self.assertNotIn(b"NNone", pv.data or b"")
+
+    def test_preview_blocks_for_face_prefinish_and_spring_passes(self):
+        p = sample_project("MET2_finish_metric")
+        p.operations = [FaceClear(3, S, list(MET2), pre_finish=True), FinishPass(3, S, list(MET2))]
+        pv = preview(p)
+        self.assertEqual([b.op_name for b in pv.for_op(1).blocks], ["finish"])
+        t = sample_project("THREAD_spring2_metric")
+        t.operations = [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2), FinishPass(3, S, ["g0"])]
+        pv = preview(t)
+        self.assertEqual([b.op_name for b in pv.for_op(0).blocks], ["thread", "thread_spring"])
+
+    def test_fillet_using_up_a_line(self):
+        p = _profile([(0, 0), (40, 0), (40, -10), (60, -10)])
+        drawing.fillet(p, Point(40, -10), 10)  # uses up the 10 mm (radius) step X40 -> X60 completely
+        self.assertFalse([g for g in p.geometry if isinstance(g, Line) and g.a == g.b])
+
+    def test_blend_with_the_arcs_own_radius(self):
+        p = Project()
+        arc = drawing.add_circle(p, Point(100, -50), 5)[0]
+        self.assertIsInstance(drawing.blends(p, ("point", Point(110, -50)), ("arc", arc, False), 5), list)
+
+    def test_sdg_writer_refuses_more_than_255_elements(self):
+        from alphacam.io.sdg_write import write_sdg
+
+        p = _profile([(i % 2 * 10, -i) for i in range(300)])
+        with self.assertRaises(ValueError):
+            write_sdg(p)
+
+    def test_text_with_brackets_survives_saving(self):
+        from alphacam.model.geometry import Text
+
+        p = Project()
+        p.texts = [Text(Point(1, 2), "Bore [ H7 ]   ,   deburr")]
+        self.assertEqual(Project.loads(p.dumps()).texts[0].text, "Bore [ H7 ]   ,   deburr")
+
+    def test_typing_errors_do_not_freeze(self):
+        p = sample_project("THREAD_metric")
+        p.operations = [Thread(3, S, "g0", "g1", pitch=1.5, cut_depth=0.01)]  # a million cuts
+        with self.assertRaises(ValueError):
+            post(p)
+        q = sample_project("MET2_finish_metric")
+        q.operations = [AreaClear(3, S, list(MET2), depth_of_cut=0.001)]
+        with self.assertRaises(ValueError):
+            post(q)
+
+    def test_inch_defaults_for_new_operations(self):
+        from alphacam.model.project import Billet
+        from alphacam_gtk.op_factory import default_op
+
+        p = Project(units="inch", billet=Billet(diameter=1.5, length=2.0))
+        drawing.add_line(p, Point(0, 0), Point(1, 0))
+        area = default_op("area_clear", p, 0)
+        self.assertAlmostEqual(area.start.x, 1.5 + 20 / 25.4, places=3)
+        groove = default_op("groove", p, 0)
+        self.assertLess(groove.tip_width, 0.2)

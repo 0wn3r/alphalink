@@ -118,7 +118,8 @@ class OpEditor(Gtk.Box):
             name, value = f.name, getattr(op, f.name)
             if name in POINTS:
                 for axis, lab in (("x", "X (Ø)"), ("z", "Z")):
-                    row = self._spin(f"{_(POINTS[name])} {lab}", None, -2000, 2000, 1, 3, getattr(value, axis))
+                    row = self._spin(f"{_(POINTS[name])} {lab}", None, -2000, 2000, 1,
+                                     4 if project.units == "inch" else 3, getattr(value, axis))
                     row.connect("notify::value", self._point_changed, name, axis)
                     group.add(row)
             elif name in NUMBERS:
@@ -127,6 +128,8 @@ class OpEditor(Gtk.Box):
                     value = round((2.0 if isinstance(op, Drill) else 1.0) / (25.4 if project.units == "inch" else 1), 4)
                 if name == "tool":
                     sub = self.tool_name(int(value)) or sub
+                if project.units == "inch" and digits == 3:  # inch values have 4 decimals (0.0787)
+                    digits = 4
                 row = self._spin(_(lab), sub and _(sub), lo, hi, step, digits, value)
                 if name == "tool":
                     row.connect("notify::value", lambda r, _p: r.set_subtitle(self.tool_name(int(r.get_value()))))
@@ -173,6 +176,12 @@ class OpEditor(Gtk.Box):
     # --- rows -------------------------------------------------------------------------------------------
 
     @staticmethod
+    def _unchanged(row) -> bool:
+        """Only the display rounding moved the value (focus-out re-rounds to the digits shown): not an edit."""
+        orig = getattr(row, "_orig", None)
+        return orig is not None and abs(row.get_value() - orig) <= 0.5 * 10 ** -row.get_digits() + 1e-12
+
+    @staticmethod
     def _spin(title, subtitle, lo, hi, step, digits, value) -> Adw.SpinRow:
         row = Adw.SpinRow.new_with_range(lo, hi, step)
         row.set_title(title)
@@ -180,6 +189,7 @@ class OpEditor(Gtk.Box):
             row.set_subtitle(subtitle)
         row.set_digits(digits)
         row.set_value(value)
+        row._orig = value
         return fit_spin(row, lo, hi, digits)
 
     def _edit(self, label, fn):
@@ -188,10 +198,16 @@ class OpEditor(Gtk.Box):
             self._apply(label, lambda p: fn(p.operations[i]))
 
     def _number_changed(self, row, _pspec, name, is_int):
+        if self._unchanged(row):
+            return
+        row._orig = None
         v = row.get_value()
         self._edit(_("Change {what}").format(what=row.get_title()), lambda op: setattr(op, name, int(round(v)) if is_int else round(v, 4)))
 
     def _point_changed(self, row, _pspec, name, axis):
+        if self._unchanged(row):
+            return
+        row._orig = None
         v = round(row.get_value(), 4)
 
         def fn(op):
