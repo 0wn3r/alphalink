@@ -211,3 +211,43 @@ def pick_order(project, picked: list[str]) -> list[str]:
         remaining.remove(nxt)
         path = chain(order)
     return [e.id for e in order]
+
+
+def add_arc_3p(project, a: Point, m: Point, b: Point) -> str:
+    """Arc from a through m to b (radius / Z space). The direction follows the three points: counter-clockwise
+    with Z right and X up is G3 (ccw=True)."""
+    (az, ar), (mz, mr), (bz, br) = (a.z, a.x / 2), (m.z, m.x / 2), (b.z, b.x / 2)
+    d = 2 * (az * (mr - br) + mz * (br - ar) + bz * (ar - mr))
+    if abs(d) < 1e-9:
+        raise ValueError("the three points are on a line")
+    s_a, s_m, s_b = az * az + ar * ar, mz * mz + mr * mr, bz * bz + br * br
+    cz = (s_a * (mr - br) + s_m * (br - ar) + s_b * (ar - mr)) / d
+    cr = (s_a * (bz - mz) + s_m * (az - bz) + s_b * (mz - az)) / d
+    ccw = d > 0  # orientation of a -> m -> b in the (z, r) plane
+    gid = next_id(project)
+    project.geometry.append(Arc(a, b, _pt((cr, cz)), ccw=ccw, id=gid))
+    return gid
+
+
+def corner(project, id1: str, id2: str) -> Point:
+    """Trim or extend two lines so that they meet: the end of each line nearer the intersection moves onto it."""
+    by_id = {g.id: g for g in project.geometry}
+    l1, l2 = by_id.get(id1), by_id.get(id2)
+    if not isinstance(l1, Line) or not isinstance(l2, Line) or l1 is l2:
+        raise ValueError("pick two different lines")
+    (a1r, a1z), (b1r, b1z) = (l1.a.x / 2, l1.a.z), (l1.b.x / 2, l1.b.z)
+    (a2r, a2z), (b2r, b2z) = (l2.a.x / 2, l2.a.z), (l2.b.x / 2, l2.b.z)
+    d1r, d1z, d2r, d2z = b1r - a1r, b1z - a1z, b2r - a2r, b2z - a2z
+    den = d1r * d2z - d1z * d2r
+    if abs(den) < 1e-12:
+        raise ValueError("the lines are parallel")
+    t = ((a2r - a1r) * d2z - (a2z - a1z) * d2r) / den
+    p = _pt((a1r + t * d1r, a1z + t * d1z))
+    for line in (l1, l2):
+        if line.a.distance(p) < line.b.distance(p):
+            line.a = p
+        else:
+            line.b = p
+        if line.a == line.b:
+            raise ValueError("a line would shrink to a point")
+    return p

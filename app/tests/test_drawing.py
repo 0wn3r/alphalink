@@ -74,3 +74,30 @@ class Drawing(unittest.TestCase):
         self.assertEqual(drawing.pick_order(p, ["g2", "g3", "g1", "g4", "g0"]), ["g0", "g1", "g2", "g3", "g4"])
         with self.assertRaises(ValueError):
             drawing.pick_order(p, ["g0", "g3"])
+
+
+class MoreDrawing(unittest.TestCase):
+    def test_arc_3p_matches_fillet(self):
+        p = met2()
+        gid = drawing.fillet(p, Point(60, -25), 5)
+        fil = next(g for g in p.geometry if g.id == gid)
+        q = Project()
+        import math
+
+        mid = Point(2 * (25 + 5 * math.cos(math.radians(45))), -30 + 5 * math.sin(math.radians(45)))
+        new_id = drawing.add_arc_3p(q, fil.a, mid, fil.b)
+        a3 = next(g for g in q.geometry if g.id == new_id)
+        self.assertEqual((a3.a, a3.b, a3.centre, a3.ccw), (fil.a, fil.b, fil.centre, fil.ccw))
+        with self.assertRaises(ValueError):
+            drawing.add_arc_3p(q, Point(0, 0), Point(10, -5), Point(20, -10))
+
+    def test_corner_trims_and_extends(self):
+        p = Project()
+        a = drawing.add_line(p, Point(40, 2), Point(40, -20))   # overshoots Z0 and stops short of Z-25
+        b = drawing.add_line(p, Point(30, -25), Point(60, -25))  # starts inside X40
+        self.assertEqual(drawing.corner(p, a, b), Point(40, -25))
+        la, lb = p.geometry
+        self.assertEqual((la.a, la.b), (Point(40, 2), Point(40, -25)))
+        self.assertEqual((lb.a, lb.b), (Point(40, -25), Point(60, -25)))
+        with self.assertRaises(ValueError):
+            drawing.corner(p, a, a)

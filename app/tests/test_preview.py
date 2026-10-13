@@ -264,3 +264,52 @@ class Sheet(unittest.TestCase):
         moves = sheet_text(p, preview(p), "TOOLCHG", moves=True)
         self.assertIn("  Pass No. : 26", moves)
         self.assertIn("RAPID TO   : X   96.000, Z    5.000", moves)
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkArcCorner(unittest.TestCase):
+    def test_arc_by_typed_points_and_corner(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            d.set_tool("arc")
+            for t in ["50,-25", "57.071,-26.464", "60,-30"]:  # R5 corner by three points
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            arc = w.project.geometry[0]
+            out["arc"] = (arc.centre, arc.ccw)
+            d.set_tool("line")
+            for t in ["40,1", "40,-20"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            for t in ["35,-25", "50,-25"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d.set_tool("corner")
+            d._corner_pick("g1")
+            d._corner_pick("g2")
+            out["corner"] = (w.project.geometry[1].b, w.project.geometry[2].a)
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["arc"][1], True)
+        self.assertAlmostEqual(out["arc"][0].x, 50, places=2)
+        self.assertAlmostEqual(out["arc"][0].z, -30, places=2)
+        self.assertEqual(out["corner"], (Point(40, -25), Point(40, -25)))
