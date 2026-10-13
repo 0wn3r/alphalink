@@ -288,6 +288,62 @@ class GtkLineTool(unittest.TestCase):
         self.assertTrue(out["chamfer_done_hidden"])
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkHitKeys(unittest.TestCase):
+    def test_alpha_t_letters_draw_and_erase(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            d.hit_key("s")  # start point
+            out["tool"] = w.canvas.tool
+            d.hit_key("4")  # a number goes to the entry
+            out["typed"] = d.entry.get_text()
+            d.entry.set_text("0,0")
+            d._entry_activate(d.entry)
+            d.hit_key("h")  # incremental move
+            out["relative"] = d.entry.get_text()
+            d.entry.set_text("@40,0")
+            d._entry_activate(d.entry)
+            out["lines"] = len(w.project.geometry)
+            d.hit_key("f")
+            out["fillet"] = w.canvas.tool
+            d.set_tool("select")
+            d._select_element(w.project.geometry[0].id)
+            d.hit_key("l")  # erase line
+            out["after_erase"] = len(w.project.geometry)
+            w.add_op("finish")
+            d.start_pick(0)
+            out["pick_letter"] = d.hit_key("x")
+            d.hit_key("3")  # finish picking
+            out["picking"] = d.pick_op
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["tool"], "line")
+        self.assertEqual(out["typed"], "4")
+        self.assertEqual(out["relative"], "@")
+        self.assertEqual(out["lines"], 1)
+        self.assertEqual(out["fillet"], "fillet")
+        self.assertEqual(out["after_erase"], 0)
+        self.assertFalse(out["pick_letter"])
+        self.assertIsNone(out["picking"])
+
+
 class ShiftScroll(unittest.TestCase):
     def test_shift_wheel_scrolls_sideways(self):
         from alphacam_gtk.canvas.input import shift_scroll
