@@ -248,6 +248,46 @@ class GtkChamferAngle(unittest.TestCase):
         self.assertAlmostEqual(out["chamfer"].a.x, 40 - 4 * 0.57735, places=3)
 
 
+class GtkLineTool(unittest.TestCase):
+    def test_done_shown_and_esc_ends_line(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gdk, GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            d.set_tool("line")
+            out["done"] = (d.done.get_visible(), d.done.get_sensitive())
+            d.add_point(Point(0, 0))
+            out["after_point"] = d.done.get_sensitive()
+            out["esc"] = d._window_esc(None, Gdk.KEY_Escape, 0, 0)
+            out["points"] = list(d.points)
+            d._tapped(w.canvas, 0, 0, 1, -1, "")  # line tool tap
+            d.set_tool("chamfer")
+            d._tapped(w.canvas, 500, 500, 1, -1, "")  # no corner there: a toast, not a crash
+            out["chamfer_done_hidden"] = not d.done.get_visible()
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["done"], (True, False))
+        self.assertTrue(out["after_point"])
+        self.assertTrue(out["esc"])
+        self.assertEqual(out["points"], [])
+        self.assertTrue(out["chamfer_done_hidden"])
+
+
 class Simulation(unittest.TestCase):
     def test_pass_starts(self):
         from alphacam_gtk.canvas.paths import pass_starts

@@ -55,7 +55,7 @@ class TransferDialog(Adw.Dialog):
         self.set_child(view)
         self.finished = False
 
-    def _cancel_or_close(self, *_):
+    def _cancel_or_close(self, *_args):
         if self.finished:
             self.set_can_close(True)
             self.close()

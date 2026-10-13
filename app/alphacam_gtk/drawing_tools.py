@@ -44,7 +44,10 @@ class DrawingTools:
         self.entry = Gtk.Entry(hexpand=True, placeholder_text=_("X,Z  or  @dX,dZ  then Enter (line tool)"))
         self.entry.add_css_class("command-entry")
         self.entry.connect("activate", self._entry_activate)
-        self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False)
+        # shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
+        self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False, sensitive=False,
+                               tooltip_text=_("Finish the line (Esc)"))
+        self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
         self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del)"),
                                     visible=False)
@@ -67,6 +70,9 @@ class DrawingTools:
         keys = Gtk.EventControllerKey()
         keys.connect("key-pressed", self._key)
         canvas.add_controller(keys)
+        esc = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        esc.connect("key-pressed", self._window_esc)
+        window.add_controller(esc)
 
     # --- tools ------------------------------------------------------------------------------------------
 
@@ -76,6 +82,7 @@ class DrawingTools:
             return
         self.finish_chain()
         self.c.tool = name
+        self.done.set_visible(name in ("line", "arc"))
         self._select_element(None)
         if name != "select":
             self.w._select_op(None)
@@ -100,7 +107,7 @@ class DrawingTools:
                 self.w._select_op(None)
                 self._select_element(None)
         elif tool == "line":
-            pt, _ = drawing.snap(project, Point(x, z), tol, grid=1.0 if project.units == "mm" else 0.05)
+            pt, _k = drawing.snap(project, Point(x, z), tol, grid=1.0 if project.units == "mm" else 0.05)
             self.add_point(pt)
         elif tool == "arc":
             pt, _k = drawing.snap(project, Point(x, z), tol, grid=1.0 if project.units == "mm" else 0.05)
@@ -126,6 +133,18 @@ class DrawingTools:
         self.c.rubber = (self.points[-1], pt) if self.c.tool == "line" and self.points else None
         self.c.queue_draw()
 
+    def _window_esc(self, ctl, keyval, code, state) -> bool:
+        if keyval != Gdk.KEY_Escape or self.w.get_visible_dialog() is not None:
+            return False
+        if self.pick_op is not None:
+            self.cancel_pick()
+            return True
+        if self.points or self.arc_pts or self.corner_first:
+            self.finish_chain()
+            self.entry.set_text("")
+            return True
+        return False
+
     def _key(self, ctl, keyval, code, state) -> bool:
         if keyval == Gdk.KEY_Escape and (self.points or self.pick_op is not None):
             self.cancel_pick() if self.pick_op is not None else self.finish_chain()
@@ -148,7 +167,7 @@ class DrawingTools:
                 return
             self.w.refresh()
         self.points.append(pt)
-        self.done.set_visible(True)
+        self.done.set_sensitive(True)
         self.c.marker = (pt, "end")
         self.c.queue_draw()
 
@@ -185,7 +204,7 @@ class DrawingTools:
         self.arc_pts = []
         self.corner_first = None
         self.points.clear()
-        self.done.set_visible(False)
+        self.done.set_sensitive(False)
         self.c.rubber = None
         self.c.marker = None
         self.c.queue_draw()
@@ -222,7 +241,7 @@ class DrawingTools:
             self.points.append(pt)
         else:
             self.points.append(Point(x, z))
-        self.done.set_visible(True)
+        self.done.set_sensitive(True)
         self.c.marker = (self.points[-1], "end")
         self.c.queue_draw()
         entry.set_text("")

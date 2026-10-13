@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 18:36+0300\n"
+"POT-Creation-Date: 2026-10-13 18:41+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,7 +26,7 @@ msgstr ""
 msgid "translator-credits"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:251
+#: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:270
 #: alphacam_gtk/op_editor.py:201
 msgid "Arc"
 msgstr ""
@@ -35,7 +35,7 @@ msgstr ""
 msgid "Fillet"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:251
+#: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:270
 #: alphacam_gtk/op_editor.py:201
 msgid "Line"
 msgstr ""
@@ -48,7 +48,7 @@ msgstr ""
 msgid "Chamfer"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:181
+#: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:200
 msgid "Corner"
 msgstr ""
 
@@ -56,111 +56,115 @@ msgstr ""
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:47 alphacam_gtk/drawing_tools.py:60
+#: alphacam_gtk/drawing_tools.py:48 alphacam_gtk/drawing_tools.py:63
 msgid "_Done"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:49
+msgid "Finish the line (Esc)"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:52
 msgid "Delete Element (Del)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:53
+#: alphacam_gtk/drawing_tools.py:56
 msgid "Keypad"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:60 alphacam_gtk/drawing_tools.py:380
+#: alphacam_gtk/drawing_tools.py:63 alphacam_gtk/drawing_tools.py:399
 msgid "Tap the contour elements in cutting order"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:113
+#: alphacam_gtk/drawing_tools.py:120
 msgid "Tap a corner between two lines"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:147 alphacam_gtk/drawing_tools.py:219
+#: alphacam_gtk/drawing_tools.py:166 alphacam_gtk/drawing_tools.py:238
 msgid "Draw line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:159
+#: alphacam_gtk/drawing_tools.py:178
 msgid "Arc: now a point on the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:159
+#: alphacam_gtk/drawing_tools.py:178
 msgid "Arc: now the end point"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:166
+#: alphacam_gtk/drawing_tools.py:185
 msgid "Draw arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:176
+#: alphacam_gtk/drawing_tools.py:195
 msgid "Corner: now tap the second line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:196
+#: alphacam_gtk/drawing_tools.py:215
 msgid "Type X,Z (diameter, Z) or @dX,dZ"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:203
+#: alphacam_gtk/drawing_tools.py:222
 msgid "@ needs a previous point"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:237
+#: alphacam_gtk/drawing_tools.py:256
 msgid "Next Point"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:237
+#: alphacam_gtk/drawing_tools.py:256
 msgid "Start Point"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:258 alphacam_gtk/window.py:577
+#: alphacam_gtk/drawing_tools.py:277 alphacam_gtk/window.py:577
 #, python-brace-format
 msgid "Delete {what}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:261 alphacam_gtk/window.py:580
+#: alphacam_gtk/drawing_tools.py:280 alphacam_gtk/window.py:580
 #, python-brace-format
 msgid "Deleted {what}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:261 alphacam_gtk/window.py:580
+#: alphacam_gtk/drawing_tools.py:280 alphacam_gtk/window.py:580
 msgid "_Undo"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:282
+#: alphacam_gtk/drawing_tools.py:301
 #, python-brace-format
 msgid "Chamfer at {point}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:282
+#: alphacam_gtk/drawing_tools.py:301
 #, python-brace-format
 msgid "Radius at {point}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:290
+#: alphacam_gtk/drawing_tools.py:309
 msgid "Angle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:294
+#: alphacam_gtk/drawing_tools.py:313
 msgid ""
 "Between the chamfer and the line along Z; the size is measured along that "
 "line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:322
+#: alphacam_gtk/drawing_tools.py:341
 msgid "_Apply"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:334
+#: alphacam_gtk/drawing_tools.py:353
 #, python-brace-format
 msgid "Fillet R{size}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:337
+#: alphacam_gtk/drawing_tools.py:356
 #, python-brace-format
 msgid "Chamfer {size}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:372
+#: alphacam_gtk/drawing_tools.py:391
 msgid "Pick contour"
 msgstr ""
 
