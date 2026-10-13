@@ -33,8 +33,8 @@ class Reference:
 
 @dataclass
 class MachineProfile:
-    """Post settings for one machine. z_scale/f_scale are DESIGN.md C4: x2 as observed in every ALPHA-T sample,
-    unverified on the control."""
+    """Post settings for one machine. z_scale/f_scale are DESIGN.md C4: x2 as in every ALPHA-T sample; the T macros
+    halve Z and feed (confirmed on the control, RE_NOTES Progress 29)."""
 
     id: str = "harrison-alpha-400t"
     post: str = "alphat_prg"

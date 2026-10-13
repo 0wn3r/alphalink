@@ -701,7 +701,8 @@ the program files are in re-notes/serioalpha/.
   DB9 pin 2 = RxD and DB25 pin 2 = TxD, so this pin-to-pin wiring is a crossover (null modem). The shield must
   NOT be connected to the connector shell. With a USB adapter the same loopbacks are needed only if the adapter
   enforces handshake (pyserial with rtscts/dsrdtr off does not).
-* Control side: CAM menu -> "4. CAM-DATEN LADEN" -> ENTER / arrow key, then start the PC side ("Daten senden ...
+* Control side (German manual; the 400T's screens are English, Progress 35: 4 "LOAD CAM FILE", touch the arrow):
+  CAM menu -> "4. CAM-DATEN LADEN" -> ENTER / arrow key, then start the PC side ("Daten senden ...
   Bytes=" on the PC, "in Ausfuehrung" on the lathe). ESC aborts. The standard control has about **16 KB** of CAM
   memory; ATSEND warns if the file is larger (Enter overrides on machines with extra memory). Split big jobs.
   The port is COM1/COM2, chosen after typing the CAM name.
@@ -848,7 +849,7 @@ Samples in alphat_samples/ (scripts tools/ac_scripts/at_*.ks, METRIC=1 MMETRIC=1
 Scaling, now confirmed on every op: **Z, feed (F and #130) and thread pitch = 2 x drawing value; X (diameter) 1:1;
 SD1 unscaled** - in mm and inch drawings. Feed per rev scaled with Z means the whole Z axis is in half units on
 the T control/macros (e.g. Z axis in "diameter" units). Most likely intended; still verify on the control
-(CAM load, look at the graphic/Z display, no cycle start).
+(CAM load, look at the graphic/Z display, no cycle start). [Settled in Progress 29: confirmed for Z and feed.]
 
 Key sequences learnt: grooving is not contour-driven (STEPOV/TIPWD sets both values; after EXECUTE answer
 1/2 area/finish, Enter for dwell, Enter for "Input complete", wait ~25 s). Face clear: EXECUTE = Down x5,
@@ -859,6 +860,7 @@ xkeys drops 'A' in typed names (FAC -> FC).
 Machine side (user measurements on the machine DB25, pin 7 = ground): pins 2 and 3 both -10 V (idle mark),
 pins 5 (CTS) and 6 (DSR) = 0 V -> the control sees "not ready" and neither sends nor accepts. Fix in progress:
 bridges 4-5 and 6-8-20 in the machine-side plug (manual p.61), so the control satisfies its own handshake.
+[Settled in Progress 29: with the bridges the control sends XON and accepts programs.]
 
 ### Progress 26 - FANUC Power Mate 0 connection manual (B-63443EN/01), RS-232-C (2026-10-12)
 Source: user's copy `~/Documents/fanuc/583648381-FANUC-Power-Mate-0.pdf` (not in the repo), section 7.3 (p.62-70)
