@@ -1002,3 +1002,12 @@ app/alphacam/post/alphat_sd1.py writes ALPHA-T's .SD1 listing; all 41 samples wi
 * G76 Q = thread depth on radius from the drawing (THREAD_depth6: lines at 40 and 28 -> Q6). G76 D = first cut
   depth; with NO. OF CUTS n instead of CUT DEPTH it is depth / sqrt n rounded to 4 decimals (THREAD_6cuts: n 6 ->
   D4.0825, 6 passes, Q stays 10). The app has this as Thread.cuts.
+
+### Progress 35 - control screens in English (photos from Eduard, 2026-10-13)
+* CAM menu: 1 RUN EXISTING FILE SINGLE OP, 2 RUN EXISTING FILE AUTO CYCLE, 3 SELECT REQUIRED PASS (SET CORRECT
+  TOOL/CSS FIRST), 4 LOAD CAM FILE. LOAD CAM FILE: "TOUCH ARROW TO START DOWNLOAD", one ← arrow (PC -> lathe),
+  "WARNING: LOAD ONLY ALPHA-T PROGRAMS".
+* Manual Ops screen (X/Z, T, S, Op.No, X1 Z1 D U W T2 F2 fields) has a bottom row of icons: hand (manual), move,
+  taper, thread, ops file (list <- clipboard), coolant. The ops file icon opens 1 OP. SAVE/RESTORE, 2 DELETE
+  CURRENT OP., 3 DELETE ALL OP.S; OP. SAVE/RESTORE shows → (lathe -> PC, save) and ← (PC -> lathe, restore).
+* The app's machine page instructions now use these names.

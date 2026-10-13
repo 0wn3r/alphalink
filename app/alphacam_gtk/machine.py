@@ -22,9 +22,11 @@ from .settings import settings  # noqa: E402
 
 LOG_DIR = Path(GLib.get_user_state_dir()) / "alphalink-cam" / "logs"
 
-STEPS_SEND = _("On the lathe: CAM key, 4 “CAM-Datei laden”, then the arrow key. Then hold Send here.")
-STEPS_BACKUP = _("Start the backup here first, then on the lathe: Manual Ops, Edit, Save.")
-STEPS_RESTORE = _("Only Manual Ops files saved from this lathe. Programs not made for the Alpha-T can corrupt its "
+STEPS_SEND = _("On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold Send here.")
+STEPS_BACKUP = _("Start the backup here first, then on the lathe: in Manual Ops touch the ops file icon, "
+                 "1 “OP. SAVE/RESTORE”, then the → arrow.")
+STEPS_RESTORE = _("On the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the ← arrow. "
+                  "Only Manual Ops files saved from this lathe: programs not made for the Alpha-T can corrupt its "
                   "macros (Alphalink-T manual).")
 STEPS_LOOP = _("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test.")
 
@@ -293,7 +295,7 @@ class MachinePage(Gtk.Box):
 
     def _backup(self) -> None:
         def work(ser, dlg, log):
-            GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: Manual Ops, Edit, Save on the lathe")) and False)
+            GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”")) and False)
             return sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, 10.0, log)
 
         def done(dlg, data):
