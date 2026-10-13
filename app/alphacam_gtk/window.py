@@ -19,6 +19,7 @@ from alphacam.preview import preview  # noqa: E402
 from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
+from .report import SheetPage  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
@@ -187,6 +188,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack = Adw.ViewStack()
         self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
         self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
+        self.sheet = SheetPage(self)
+        self.stack.add_titled_with_icon(self.sheet, "sheet", _("Sheet"), "x-office-document-symbolic")
         self.machine = MachinePage(self)
         self.stack.add_titled_with_icon(self.machine, "machine", _("Machine"), "network-wired-symbolic")
 
@@ -395,6 +398,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.content_page.set_title(dirty + name)
         self._fill_ops()
         self._fill_program()
+        self.sheet.refresh()
         if fit:
             self.canvas.set_project(project, self.pv)
         else:

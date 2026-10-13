@@ -247,3 +247,20 @@ class Translations(unittest.TestCase):
         self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 21).format(n=21), "21 прохід")
         self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 24).format(n=24), "24 проходи")
         self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 11).format(n=11), "11 проходів")
+
+
+class Sheet(unittest.TestCase):
+    def test_setup_sheet_like_aprint(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from alphacam_gtk.report import sheet_text
+
+        p = sample_project("TOOLCHG_rough1_finish3_metric")
+        text = sheet_text(p, preview(p), "TOOLCHG", moves=False)
+        self.assertIn("Operation  : AREA CLEARANCE     Tool No. :   1    80 Deg Rougher 0.8R", text)
+        self.assertIn("Maximum X :   -3.200", text)  # = #125, as APRINT shows it
+        self.assertIn("Total Passes : 26     Depth Of Cut :   2.000", text)
+        moves = sheet_text(p, preview(p), "TOOLCHG", moves=True)
+        self.assertIn("  Pass No. : 26", moves)
+        self.assertIn("RAPID TO   : X   96.000, Z    5.000", moves)
