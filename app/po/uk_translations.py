@@ -497,4 +497,7 @@ UK = {
 'Blend arc: now the 2nd point, line or arc': 'Дуга сполучення: тепер 2-а точка, лінія або дуга',
 'Blend arc': 'Дуга сполучення',
 'Blend Arc': 'Дуга сполучення',
+"Program number": "Номер програми",
+"shown on the control": "показується на системі керування",
+"Billet, chuck jaws, tailstock and program number of this part.": "Заготовка, кулачки патрона, задня бабка й номер програми цієї деталі.",
 }

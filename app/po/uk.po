@@ -1447,11 +1447,17 @@ msgstr "_Створити"
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr "Накресліть профіль: торкайтеся точок або вводьте X,Z і Enter"
 
-msgid "Billet, chuck jaws and tailstock of this part."
-msgstr "Заготовка, кулачки патрона й задня бабка цієї деталі."
-
 msgid "Part Settings"
 msgstr "Параметри деталі"
+
+msgid "Billet, chuck jaws, tailstock and program number of this part."
+msgstr "Заготовка, кулачки патрона, задня бабка й номер програми цієї деталі."
+
+msgid "Program number"
+msgstr "Номер програми"
+
+msgid "shown on the control"
+msgstr "показується на системі керування"
 
 msgid "Part settings"
 msgstr "Параметри деталі"

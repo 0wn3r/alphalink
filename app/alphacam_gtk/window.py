@@ -724,8 +724,15 @@ class MainWindow(Adw.ApplicationWindow):
         """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""
         if self.project is None:
             return
-        alert = Adw.AlertDialog(heading=_("Part Settings"), body=_("Billet, chuck jaws and tailstock of this part."))
+        alert = Adw.AlertDialog(heading=_("Part Settings"),
+                                body=_("Billet, chuck jaws, tailstock and program number of this part."))
         group, rows = self._billet_rows(self.project.billet)
+        # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
+        number = Adw.SpinRow.new_with_range(1, 9999, 1)
+        number.set_title(_("Program number"))
+        number.set_subtitle(_("shown on the control"))
+        number.set_value(self.project.program_number)
+        group.add(number)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
         alert.add_response("apply", _("_Apply"))
@@ -737,7 +744,13 @@ class MainWindow(Adw.ApplicationWindow):
             if r == "apply":
                 billet = self._billet_from(rows)
                 billet.face_allowance = self.project.billet.face_allowance
-                if self.apply_edit(_("Part settings"), lambda p: setattr(p, "billet", billet)):
+                n = int(number.get_value())
+
+                def change(p):
+                    p.billet = billet
+                    p.program_number = n
+
+                if self.apply_edit(_("Part settings"), change):
                     self.refresh(fit=True)
 
         alert.connect("response", response)
