@@ -87,6 +87,8 @@ class MachinePage(Gtk.Box):
         self.port_row.add_suffix(refresh)
         conn.add(self.port_row)
         self.lines_row = Adw.ActionRow(title="Modem lines", subtitle="Shown while this page is open")
+        self.lines_row.set_tooltip_text("With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only "
+                                        "echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe.")
         self.line_labels = {}
         for name in ("CTS", "DSR", "CD", "RI"):
             lbl = Gtk.Label(label=name, valign=Gtk.Align.CENTER)
