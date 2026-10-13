@@ -6,7 +6,8 @@ Status (2026-10-13): **working app**; all milestones of section 10 are done. Wha
   their options with samples, the .PRG post and the .SD1 writer. Both are byte-identical to ALPHA-T on every metric
   sample in `samples/alphat_v12` (tests `test_post`, `test_sd1_write`); known sub-micron differences: face clear ending
   on slopes/arcs (0.001 on diameter) and two inch samples (0.0001-0.0002), listed in `tests/test_post.py`.
-  Options without a sample raise a clear error instead of guessing.
+  AWAY (area, face, thread) and grooving from the BACK are refused with the reason: ALPHA-T's own output for them is
+  unsafe (RE_NOTES Progress 36).
 - GTK app (`alphacam_gtk/`): Part page (canvas, drawing tools Select / Line / Arc / Fillet / Chamfer with angle /
   Corner, `X,Z` / `@dX,dZ` entry, keypad, contour picking, axis indicator, simulation), operations sidebar with
   editors, Program, Sheet (setup sheet), Tools (library), Machine (send with hold + confirmation, Manual Ops backup /

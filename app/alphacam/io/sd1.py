@@ -11,7 +11,7 @@ the .PRG) names every operation with its parameters as canned cycles:
   G5 X Z                                           tool start of the next operation
   G115 X Z                                         operation limits (drilling: the hole bottom)
   G70 R E U W                                      finish pass (E1 internal, U/W offsets; R1 = pre-finish of the area)
-  G71 ... D R E U W H                              area clear (E100, E-100 internal, E101 FACE direction) / face clear (E401), D depth
+  G71 ... D R E U W H                              area clear (E100, E-100 internal, E101/E-101 FACE direction) / face clear (E401), D depth
   G75 ... D I E L C                                grooving: D peck, I stepover, E tip width, L11x full retract
   G78 ... G178                                     grooving finish mode (path lines only)
   G117 X Z, G76 X Z ... D E F                      threading: start, final diameter and end, first cut, E1/-1, pitch
@@ -41,6 +41,29 @@ def _words(line: str) -> tuple[list[int], dict[str, float]]:
         elif k != "N":
             w.setdefault(k, float(v))
     return gs, w
+
+
+def _listed_contour(project, lines: list[str], i: int, end_g: int, fallback: list[str]) -> list[str]:
+    """The drawing elements a grooving cycle lists after its G75 (G0/G1 X/Z, modal, up to G175), in order; the
+    whole drawing when they do not all match (GROOVE_internal picks only the bore 0..-20 of the drawing)."""
+    pos, pts = {"X": None, "Z": None}, []
+    while i < len(lines):
+        gs, w = _words(lines[i])
+        i += 1
+        if end_g in gs:
+            break
+        if 0 in gs or 1 in gs:
+            pos.update({k: w[k] for k in ("X", "Z") if k in w})
+            if pos["X"] is not None and pos["Z"] is not None:
+                pts.append(Point(pos["X"], pos["Z"]))
+    ids = []
+    for a, b in zip(pts, pts[1:]):
+        g = next((g for g in project.geometry
+                  if {(g.a.x, g.a.z), (g.b.x, g.b.z)} == {(a.x, a.z), (b.x, b.z)}), None)
+        if g is None:
+            return fallback
+        ids.append(g.id)
+    return ids or fallback
 
 
 def read_sd1(text: str, project) -> list:
@@ -95,7 +118,7 @@ def read_sd1(text: str, project) -> list:
             state = "op"
             continue
         if 70 in gs:
-            if w.get("R") == 1 and ops and isinstance(ops[-1], AreaClear):
+            if w.get("R") == 1 and ops and isinstance(ops[-1], (AreaClear, FaceClear)):
                 ops[-1].pre_finish = True
             else:
                 ops.append(FinishPass(tool, start, list(contour), feed=feed, offset_x=w.get("U", 0.0),
@@ -104,19 +127,26 @@ def read_sd1(text: str, project) -> list:
         if 71 in gs:
             e = int(w.get("E", 100))
             common = dict(depth_of_cut=w.get("D", 2.0), offset_x=w.get("U", 0.0), offset_z=w.get("W", 0.0), feed=feed)
-            if e == 401:
-                ops.append(FaceClear(tool, start, list(contour), **common))
-            elif e in (100, -100, 101):
-                ops.append(AreaClear(tool, start, list(contour), external=e > 0, front=e != 101, **common))
+            if e in (401, 411):  # 411 = AWAY (FACE_away_*)
+                ops.append(FaceClear(tool, start, list(contour), towards=e == 401, **common))
+            elif abs(e) in (100, 101, 110):  # 110 = AWAY (AREA_away_tool5)
+                ops.append(AreaClear(tool, start, list(contour), external=e > 0, front=abs(e) != 101,
+                                     towards=abs(e) != 110, **common))
             else:
                 raise NotImplementedError(f"G71 E{e} (area clear option) is not supported yet")
             continue
         if 75 in gs:
-            flags = int(w.get("L", 110))  # L1<datum: 1 left, 0 right><full retract: 1 yes>
-            ops.append(Groove(tool, start, list(contour), peck_depth=w.get("D", 0.0), stepover=w.get("I", 2.0),
+            # L <front: 1, back: 2><datum: 1 left, 0 right><full retract: 1 yes>, negative for internal
+            # (GROOVE_back L210, GROOVE_internal L-110)
+            lval = int(w.get("L", 110))
+            flags = abs(lval)
+            ops.append(Groove(tool, start, _listed_contour(project, lines, i, 175, list(contour)),
+                              peck_depth=w.get("D", 0.0), stepover=w.get("I", 2.0),
                               tip_width=w.get("E", 3.0), full_retract=flags % 10 == 1,
                               datum="left" if flags // 10 % 10 == 1 else "right", z_shift=w.get("R", 0.0),
-                              repeat=max(int(w.get("C", 1)) - 1, 0), dwell_revs=w.get("A", 0.0), feed=feed))
+                              repeat=max(int(w.get("C", 1)) - 1, 0), dwell_revs=w.get("A", 0.0), feed=feed,
+                              external=lval > 0, front=flags // 100 != 2,
+                              finish_offset_x=w.get("U", 0.0), finish_offset_z=w.get("W", 0.0)))
             continue
         if 78 in gs:  # grooving FINISH mode: no parameters (the path lines up to G178 are its output)
             ops.append(Groove(tool, start, list(contour), mode="finish", feed=feed))
@@ -135,7 +165,7 @@ def read_sd1(text: str, project) -> list:
             outer, inner = (other, at_final) if external else (at_final, other)
             ops.append(Thread(tool, start, outer.id, inner.id, pitch=w["F"], cut_depth=w.get("D", 1.0),
                               external=external, lead_in=w.get("I", 5.0), lead_out=w.get("L", 0.0),
-                              spring_pass=w.get("K", 0) > 0))
+                              spring_pass=w.get("K", 0) > 0, towards=abs(w.get("E", 1)) == 1))  # E2 = AWAY
             continue
         if 74 in gs:
             peck, dwell = 0.0, 0.0

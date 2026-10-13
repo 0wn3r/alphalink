@@ -192,23 +192,29 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
     if isinstance(op, FinishPass):
         _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec), 14 if op.external else 15, limit)
     elif isinstance(op, AreaClear) and not op.front:
-        if op.pre_finish or not op.external:
-            raise NotImplementedError("area clear FACE: only external, without pre-finish (no sample)")
+        # FACE direction: face-clear passes; #127=8 external (AREA_front_face), 7 internal (AREA_face_internal)
+        if op.pre_finish:
+            raise NotImplementedError("area clear FACE with pre-finish (no sample)")
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec, AREA_RETRACT_MM, outward=True),
-                       8, limit)
+                       8 if op.external else 7, limit)
     elif isinstance(op, AreaClear):
-        if op.pre_finish and (not op.external or op.offset_x or op.offset_z):
-            raise NotImplementedError("pre-finish only for external area clear without offsets (no sample)")
         _generic_block(w, block, op, area_clear(op, path, r, project.units, w.dec), 6 if op.external else 7, limit)
         if op.pre_finish:
+            # its own block after an empty one: #127=10, internal 11 (AREA_prefinish_internal), with the area's
+            # offsets (AREA_prefinish_offset) and a 1 mm pull-off
             _empty_block(w, block + 1, None)
             block += 2
-            fp = FinishPass(op.tool, op.start, op.contour, op.feed)
+            fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, op.external)
             _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec,
                                                          round(mm(PREFINISH_LEAD_OUT_MM, project.units), w.dec)),
-                           10, limit)
+                           10 if op.external else 11, limit)
     elif isinstance(op, FaceClear):
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec), 8, limit)
+        if op.pre_finish:  # FACE_prefinish: #127=12, ends on the offset end, 0.2 mm pull-off inwards
+            _empty_block(w, block + 1, None)
+            block += 2
+            fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z)
+            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec, face_end=True), 12, limit)
     elif isinstance(op, Groove):
         _generic_block(w, block, op, groove(op, path, r, project.units, w.dec),
                        17 if op.mode == "finish" else 9, limit)

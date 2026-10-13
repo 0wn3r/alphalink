@@ -25,6 +25,7 @@ from __future__ import annotations
 import math
 
 from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
+from ..model.geometry import Point
 from ..model.project import Project
 from ..model.tools import ToolLibrary
 from ..numfmt import format_number
@@ -93,10 +94,18 @@ def _leg(units: str, dist_mm: float) -> float:
 
 
 def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool, cycle_line,
-                   lead_out_mm: float, lead_out_rapid: bool, extend_end: bool, inward: bool, end_g: int) -> None:
-    """G70/G71 body. `cycle_line(p, q)` gives the cycle's own line text (needs the P/Q line numbers)."""
+                   lead_out_mm: float, lead_out_rapid: bool, extend_end: bool, inward: bool, end_g: int,
+                   face_mode: bool = False) -> None:
+    """G70/G71 body. `cycle_line(p, q)` gives the cycle's own line text (needs the P/Q line numbers).
+    face_mode (face clear passes: E401 / E101 / E-101): the first point is carried r back along its element, not
+    below the axis (AREA_face_internal: X49.2 Z0.4; FACE_*: X0 Z0.4), and internal work lists G21 Q3."""
     side = 1 if external else -1
     cp = centre_path(path, r, external, extend_end)
+    if face_mode and r and not cp[0].is_arc:
+        s = cp[0]
+        dr, dz = (s.b.x - s.a.x) / 2, s.b.z - s.a.z
+        n = math.hypot(dr, dz)
+        cp[0] = type(s)(Point(max(s.a.x - 2 * r * dr / n, 0.0), s.a.z - r * dz / n), s.b, s.centre, s.ccw)
     if isinstance(op, FinishPass):
         # the finish pass lists its path moved by the offsets, the first point only across its element
         # (OFFSET_finish, INT_finish_offset); area and face clear list the path as drawn
@@ -106,7 +115,7 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
     out_leg = _leg(units, lead_out_mm)
     index = len(out.lines)
     out.lines.append(None)  # cycle line, filled in once P/Q are known
-    p = out.put(f"G21E{side}Q{2 if external else 1}C0")
+    p = out.put(f"G21E{side}Q{2 if external else 3 if face_mode else 1}C0")
     out.move(0, first.x + side * 2 * approach, first.z + approach)
     out.move(1, first.x, first.z)
     out.path(cp)
@@ -189,19 +198,21 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         if face:
             e, tp = 401, face_clear(op, path, r, units, DEC)
         elif not op.front:
-            e, tp = 101, face_clear(op, path, r, units, DEC, AREA_RETRACT_MM, outward=True)
+            e, tp = (101 if external else -101), face_clear(op, path, r, units, DEC, AREA_RETRACT_MM, outward=True)
         else:
             e, tp = (100 if external else -100), area_clear(op, path, r, units, DEC)
         retract = FACE_RETRACT_MM if face else AREA_RETRACT_MM
         _contour_cycle(out, op, path, r, units, external,
                        lambda p, q: f"G71P{p}Q{q}U{_n(op.offset_x)}W{_n(op.offset_z)}D{_n(op.depth_of_cut)}"
                                     f"R{_n(retract)}A45E{e}H{len(tp.passes)}",
-                       retract, True, e in (100, -100), face, 171)
-        if getattr(op, "pre_finish", False):
+                       retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100))
+        if getattr(op, "pre_finish", False):  # G70 R1, E0 / E1 internal / E2 face, with the op's offsets
             out.put(f"G115X{_n(lx)}Z{_n(lz)}")
-            fp = FinishPass(op.tool, op.start, op.contour, op.feed)
-            _contour_cycle(out, fp, path, r, units, True, lambda p, q: "G70R1E0U0W0",
-                           PREFINISH_LEAD_OUT_MM, False, True, False, 170)
+            fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, external)
+            pe = 2 if face else 0 if external else 1
+            _contour_cycle(out, fp, path, r, units, external,
+                           lambda p, q: f"G70R1E{pe}U{_n(op.offset_x)}W{_n(op.offset_z)}",
+                           FINISH_LEAD_OUT_MM if face else PREFINISH_LEAD_OUT_MM, False, not face, face, 170)
     elif isinstance(op, Groove) and op.mode == "finish":
         out.put("G78")
         tp = groove_finish(op, path)
@@ -214,7 +225,8 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         out.lines.append(None)
         p = out.move(0, path[0].a.x, path[0].a.z)
         q = out.path(path)
-        flags = f"1{1 if op.datum == 'left' else 0}{1 if op.full_retract else 0}"
+        flags = f"{'' if op.external else '-'}{1 if op.front else 2}{1 if op.datum == 'left' else 0}" \
+                f"{1 if op.full_retract else 0}"
         out.lines[index] = (f"N{5 * (index + 2)}G75P{p}Q{q}U{_n(op.finish_offset_x)}W{_n(op.finish_offset_z)}"
                             f"D{_n(op.peck_depth)}I{_n(op.stepover)}R{_n(op.z_shift)}E{_n(op.tip_width)}L{flags}"
                             f"H{plunges}C{op.repeat + 1}A{_n(op.dwell_revs)}")

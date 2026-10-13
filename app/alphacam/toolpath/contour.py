@@ -166,13 +166,17 @@ def centre_path(path: list[Seg], nose_radius: float, external: bool = True, exte
     return [Seg(corners[i], corners[i + 1], s.centre, s.ccw) for i, s in enumerate(off)]
 
 
-def tip_path(path: list[Seg], nose_radius: float, external: bool = True) -> list[Seg]:
-    """The imaginary tool-tip path that ALPHA-T writes for a drawn contour (see the module docstring)."""
+def tip_path(path: list[Seg], nose_radius: float, external: bool = True, end_on_drawing: bool = True) -> list[Seg]:
+    """The imaginary tool-tip path that ALPHA-T writes for a drawn contour (see the module docstring).
+    end_on_drawing=False ends on the shifted offset end instead of the drawn end point (face clear pre-finish,
+    FACE_prefinish: last point X99.2 for the drawn X100 with r 0.4)."""
     if nose_radius == 0:
         return [Seg(s.a, s.b, s.centre, s.ccw) for s in path]
     side = 1 if external else -1
     path, off, corners = _offset_path(path, nose_radius, side)
-    corners[0], corners[-1] = path[0].a, path[-1].b
+    corners[0] = path[0].a
+    if end_on_drawing:
+        corners[-1] = path[-1].b
     shift_r, shift_z = -side * nose_radius, -nose_radius
 
     def shifted(p: Point) -> Point:
@@ -182,7 +186,7 @@ def tip_path(path: list[Seg], nose_radius: float, external: bool = True) -> list
     out = []
     for i, s in enumerate(off):
         a = corners[i] if i == 0 else shifted(corners[i])
-        b = corners[i + 1] if i == len(off) - 1 else shifted(corners[i + 1])
+        b = corners[i + 1] if i == len(off) - 1 and end_on_drawing else shifted(corners[i + 1])
         out.append(Seg(a, b, shifted(s.centre) if s.is_arc else None, s.ccw))
     return out
 

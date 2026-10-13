@@ -13,6 +13,7 @@ Rules from GROOVE_metric (stepover 2, tip width 3, datum left):
 from __future__ import annotations
 
 from ..model.operations import Groove
+from ..model.geometry import Point
 from .contour import Seg, mm, points
 from .toolpath import Move, MoveKind, Pass, Toolpath
 
@@ -49,18 +50,79 @@ def _left_walls(boundary: list[Seg]) -> list[float]:
     return walls
 
 
+def _right_walls(boundary: list[Seg]) -> list[float]:
+    """Face Zs where the profile gets deeper (smaller X) just below than just above: a plunge is inserted at
+    wall - tip width when a step would jump over it (GROOVE_finishoffset: -22.8 -> -23.2 -> -25.2)."""
+    def band(z0: float, z1: float) -> float | None:
+        xs = [max(s.a.x, s.b.x) for s in boundary
+              if s.a.z != s.b.z and min(max(s.a.z, s.b.z), z1) - max(min(s.a.z, s.b.z), z0) > 1e-9]
+        return max(xs) if xs else None
+
+    walls = []
+    for s in boundary:
+        if s.a.z == s.b.z and not s.is_arc:
+            above, below = band(s.a.z, s.a.z + 1e-3), band(s.a.z - 1e-3, s.a.z)
+            if above is not None and below is not None and below < above:
+                walls.append(s.a.z)
+    return walls
+
+
+def _allowance(path: list[Seg], fx: float, fz: float) -> list[Seg]:
+    """FINISH OFFSET X/Z (GROOVE_finishoffset, U0.5 W0.2): leave material on every side of the drawn profile:
+    diameters move out by 2 fx, faces move by fz towards the open side (the front face and shoulders +Z, a groove's
+    +Z wall -Z), so the groove gets narrower and shallower. Corners are the crossings of the moved elements; the
+    two ends move only across their own element."""
+    if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in path):
+        raise NotImplementedError("grooving finish offsets: only faces and diameters (no sample with slopes/arcs)")
+    lines = []  # ("x", value) for a diameter, ("z", value) for a face
+    for s in path:
+        if s.a.z == s.b.z:  # face: going up (x grows) has the material on the -Z side, so it moves +Z
+            lines.append(("z", s.a.z + (fz if s.b.x > s.a.x else -fz)))
+        else:
+            lines.append(("x", s.a.x + 2 * fx))
+
+    def corner(l1, l2, fallback: Point) -> Point:
+        x = next((v for k, v in (l1, l2) if k == "x"), fallback.x)
+        z = next((v for k, v in (l1, l2) if k == "z"), fallback.z)
+        return Point(round(x, 9), round(z, 9))
+
+    pts = [corner(lines[0], lines[0], path[0].a)]
+    pts += [corner(lines[i], lines[i + 1], path[i].b) for i in range(len(path) - 1)]
+    pts.append(corner(lines[-1], lines[-1], path[-1].b))
+    return [Seg(a, b) for a, b in zip(pts, pts[1:])]
+
+
+def _mirror(path: list[Seg]) -> list[Seg]:
+    return [Seg(Point(-s.a.x, s.a.z), Point(-s.b.x, s.b.z)) for s in path]
+
+
 def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
-    if not op.external or not op.front or op.finish_offset_x or op.finish_offset_z:
-        raise NotImplementedError("grooving: only external, front, no finish offsets (no sample for the others)")
+    if not op.front:
+        # GROOVE_back: ALPHA-T turns it into face grooving (plunges along Z, stepping in X) and on a turned profile
+        # those plunges run through the part (X44..54 down to Z-50 inside the dia-60 shoulder). Needs a sample with a
+        # groove drawn into a face before the app does this.
+        raise NotImplementedError("grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
+                                  "profile; not supported until there is a face-groove sample")
     if op.mode == "finish":
+        if op.finish_offset_x or op.finish_offset_z or not op.external:
+            raise NotImplementedError("grooving finish mode: only external, no finish offsets (no sample)")
         return groove_finish(op, path)
+    if not op.external and op.peck_depth > 0:
+        raise NotImplementedError("internal grooving with pecking (no sample)")
     # The drawn profile, not the tip path: a groove's -Z-facing wall would move by 2r with the (-r, -r) tip shift,
     # and the sample (made with the 0.4R tool 3) plunges against the drawn walls. Grooving tools have r = 0 anyway.
-    boundary = path
+    boundary = _allowance(path, op.finish_offset_x, op.finish_offset_z) \
+        if op.finish_offset_x or op.finish_offset_z else path
+    # internal (GROOVE_internal, tool 14): the same rules with X mirrored: plunges go out from the start X to the
+    # nearest wall of the bore under the tip and back off 2 towards the axis
+    side = 1 if op.external else -1
+    if side < 0:
+        boundary = _mirror(boundary)
     zs = [p.z for p in points(boundary)]
     top, end = max(zs), min(zs)
     w, step = op.tip_width, op.stepover
     walls = _left_walls(boundary)
+    right = [round(e - w, 9) for e in _right_walls(boundary)]
     back = round(mm(RETRACT_DIA_MM, units), decimals)
     sx = op.start.x
     # plunge positions for the tip's -Z corner, then the reference corner: DATUM RIGHT is the +Z corner
@@ -68,11 +130,11 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
     plunges = []
     z = round(top - w, 9)
     while True:
-        plunges.append((z, _depth(boundary, z, z + w)))
+        plunges.append((z, side * _depth(boundary, z, z + w)))
         if z <= end:
             break
         nz = round(max(z - step, end), 9)
-        skipped = [e for e in walls if nz < e < z]
+        skipped = [e for e in walls + right if nz < e < z]
         z = max(skipped) if skipped else nz
     if op.datum == "right":
         plunges = [(round(z + w, 9), x) for z, x in plunges]
@@ -90,7 +152,7 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
                 bottom_back = x + 2 * op.peck_depth
             else:
                 moves.append(Move(MoveKind.FEED, x, z, op.feed))
-                bottom_back = x + back
+                bottom_back = x + side * back
             if op.dwell_revs:  # GROOVE_dwell2: G4 at the bottom of every plunge
                 moves.append(Move(MoveKind.DWELL, x, z, dwell_revs=op.dwell_revs))
             moves += [Move(MoveKind.FEED, bottom_back, z, op.feed), Move(MoveKind.RAPID, sx, z)]
@@ -103,13 +165,13 @@ def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:
     (datum left), so the vertices of a wall where the profile steps down (the groove's +Z wall) move by -tip width;
     datum right covers Z - tip width .. Z and moves the walls where it steps up by +tip width instead (assumed by
     symmetry, no sample). Rapid to (start X, first Z), feed along the profile, feed out to the start X."""
-    if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in path):
-        raise NotImplementedError("grooving finish: only faces and diameters (no sample with slopes/arcs)")
+    if any(s.is_arc for s in path):
+        raise NotImplementedError("grooving finish: lines only (no sample with arcs)")
     w = op.tip_width
     pts = points(path)
     shift = [0.0] * len(pts)
     for i, s in enumerate(path):
-        if s.a.z == s.b.z and s.a.x != s.b.x:
+        if s.a.x != s.b.x:  # faces and slopes (GROOVE_finishmode_slope: both ends of the 45-degree side move)
             down = s.b.x < s.a.x
             if op.datum == "left" and down:
                 shift[i] = shift[i + 1] = -w

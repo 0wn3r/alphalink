@@ -65,9 +65,10 @@ Each operation has a **tool** (the tool memory slot on the control), a **tool st
   - Front / face: with Front off the passes go across the face instead, like Face Clear.
   - Pre-finish pass: a finish pass along the contour after the roughing, in the same operation.
 - **Finish Pass**: one pass along the contour. Offset X / Z leaves an allowance; external or internal.
-- **Face Clear**: roughing with passes across the face, towards the axis. Depth of cut per pass along Z, offsets.
+- **Face Clear**: roughing with passes across the face, towards the axis. Depth of cut per pass along Z, offsets, and an optional pre-finish pass.
 - **Grooving**: plunges along the drawn groove profile.
   - Tip width, stepover, peck depth (0 = plunge in one go), full retract after each peck, dwell at the bottom.
+  - External, or internal for a groove in a bore. Finish offset X / Z leaves an allowance on every side of the groove.
   - Datum left or right: which corner of the tip is the tool reference.
   - Z shift and repeats: repeat the plunges shifted along Z.
   - Mode area (plunges) or finish (one pass along the profile).
@@ -78,6 +79,8 @@ Each operation has a **tool** (the tool memory slot on the control), a **tool st
 - **Tool Change**: the next operations use this tool; the tool goes to the tool change point for the change (the turret is manual).
 - **Dwell**: wait a number of spindle revolutions.
 - **Move / Rapid**: a feed or rapid move to a point.
+
+Keep **Towards the chuck** on, and grooving **Front** on. ALPHA-T's AWAY and back-grooving programs are unsafe (they cut past the shoulder, start inside the thread or plunge through the part), so the app refuses them and says why.
 
 Use the arrows in the editor header to move an operation up or down, and the bin to delete it (Undo brings it back). If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed.
 

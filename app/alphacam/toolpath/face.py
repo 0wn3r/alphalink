@@ -24,32 +24,41 @@ from .toolpath import Move, MoveKind, Pass, Toolpath
 RETRACT_MM = 0.2  # face clear default (SD1 R0.2)
 
 
-def _end_x(boundary: list[Seg], z: float) -> float:
+def _end_x(boundary: list[Seg], z: float, external: bool = True) -> float:
     hits = [x_at(s, z) for s in boundary if s.a.z != s.b.z and min(s.a.z, s.b.z) <= z < max(s.a.z, s.b.z)]
     if not hits:
         raise ValueError(f"face clear: no profile at Z{z:g}")
-    return max(hits)
+    return max(hits) if external else min(hits)
 
 
 def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, decimals: int,
                retract_mm: float = RETRACT_MM, outward: bool = False) -> Toolpath:
-    if op.pre_finish or not op.towards:
-        raise NotImplementedError("face clear: only towards, without pre-finish (no sample)")
+    """Internal work (area clear FACE on a bore, AREA_face_internal) mirrors X: passes feed outwards from the start X
+    to the bore wall, the pull-off and the rapid move towards the axis. A zone also starts at the top of the profile
+    when that is not a face (a bore starting at Z0)."""
+    if not op.towards:
+        # FACE_away_tool5 / _tool3_nocheck: ALPHA-T writes a single pass at Z0, still feeding towards the centre
+        raise NotImplementedError("face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app "
+                                  "does not offer it; use TOWARDS")
+    external = getattr(op, "external", True)
+    side = 1 if external else -1
     # offsets translate the profile like area clear (FACE_offset: X40 -> 41, faces Z0/-25/-50 -> 0.2/-24.8/-49.8)
-    boundary = translate(tip_path(path, nose_radius), op.offset_x, op.offset_z)
-    levels = sorted({s.a.z for s in boundary if s.a.z == s.b.z and not s.is_arc}, reverse=True)
+    boundary = translate(tip_path(path, nose_radius, external), op.offset_x, op.offset_z, external)
+    levels = {s.a.z for s in boundary if s.a.z == s.b.z and not s.is_arc}
+    levels.add(max(max(s.a.z, s.b.z) for s in boundary))
+    levels = sorted(levels, reverse=True)
     r = round(mm(retract_mm, units), decimals)
-    pull = 2 * r if outward else -2 * r
+    pull = side * (2 * r if outward else -2 * r)
     sx, d = op.start.x, op.depth_of_cut
     passes = []
     for top, bottom in zip(levels, levels[1:]):
         for k in range(1, math.ceil(round((top - bottom) / d, 9)) + 1):
             z = round(max(top - k * d, bottom), 9)
-            x = _end_x(boundary, z)
+            x = _end_x(boundary, z, external)
             passes.append(Pass([
                 Move(MoveKind.RAPID, sx, z),
                 Move(MoveKind.FEED, x, z, op.feed),
                 Move(MoveKind.FEED, x + pull, z + r, op.feed),
-                Move(MoveKind.RAPID, sx - 2 * nose_radius, z + r + nose_radius),
+                Move(MoveKind.RAPID, sx - side * 2 * nose_radius, z + r + nose_radius),
             ]))
     return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)])
