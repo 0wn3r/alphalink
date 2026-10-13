@@ -117,15 +117,24 @@ The app never starts the machine. Always check the program on the control before
 
 ### ALPHA-T keys
 
-On the Part page, while no text field has the focus, ALPHA-T's one-letter commands work as before:
+On the Part page, while no text field has the focus, ALPHA-T's one-letter commands work as in ALPHA-T. The cursor is where the mouse last was on the drawing, or where these keys put it (a cross).
 
-- **S** start point, **X** or **Y** draw line: the Line tool, ready for a typed point.
-- **G** absolute point (`X,Z`), **H** incremental point (`@dX,dZ`).
-- Typing a number starts a point in the entry; Enter draws to it.
-- **F** or **O** fillet, **C** chamfer, **B** trim two lines to a corner.
-- **L** or **A** erases the selected line or arc.
-- **Z** zooms in, **R** redraws the whole part.
+- **X** draw line X,Z: the Line tool, ready for a typed point. Typing a number does the same.
+- **D** draw line D,A: type length,angle. 0° points towards -Z (9 o'clock), 90° towards +X.
+- **+** the Line tool, for drawing with taps.
+- **S** starts a line at the cursor.
+- **G** moves the cursor to X,Z, **H** moves it by dX,dZ, **Y** by length,angle. With the Line tool the next line starts there.
+- **P** jumps to the nearest point (a line or arc end, an arc centre), **I** to the nearest intersection.
+- **L** or **A** finds the nearest line or arc; then **-** or Delete erases it.
+- **F** radius at the corner nearest the cursor, **O** the Fillet tool, **K** trim corner (the Corner tool).
+- **M** measures X and Z between two points, **N** length and angle. Tap the points, or move the cursor and press Enter; the nearest point is used.
+- **T** puts text at the cursor, **U** erases the nearest text.
+- **Q** erases all of the drawing after asking (Enter erases, Esc does not). Undo brings it back.
+- **Z** zooms in, **R** redraws the whole part, **V** goes back to the view before.
+- **C** opens the operations menu (ALPHA-T's CAM menu).
+- The arrow keys move the cursor, PgUp and PgDn make the step 10 times bigger or smaller, Home puts it in the middle of the view, End on X0 Z0, and Enter takes it as the next point.
 - Picking a contour, **3** or Enter finishes it.
+- Not mapped: E (exit) and Tab. F1 stays this help.
 
 ## Preferences
 

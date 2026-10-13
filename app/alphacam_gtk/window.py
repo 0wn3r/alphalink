@@ -140,8 +140,9 @@ class MainWindow(Adw.ApplicationWindow):
             item = Gio.MenuItem.new(label, None)
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
             add_menu.append_item(item)
-        side_header.pack_start(Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
-                                              tooltip_text=_("Add Operation")))
+        self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
+                                            tooltip_text=_("Add Operation (C)"))
+        side_header.pack_start(self.add_op_button)
         side.add_top_bar(side_header)
         side.set_content(side_scroll)
         side_page = Adw.NavigationPage(title=_("Operations"), child=side)

@@ -7,7 +7,7 @@ from __future__ import annotations
 
 import math
 
-from .model.geometry import Arc, Line, Point
+from .model.geometry import Arc, Line, Point, Text
 
 SNAP_LOCK_DEG = 8.0
 
@@ -266,3 +266,177 @@ def corner(project, id1: str, id2: str) -> Point:
         if line.a == line.b:
             raise ValueError("a line would shrink to a point")
     return p
+
+
+# --- ALPHA-T cursor commands (hit codes D, Y, M, N, P, I, L, A, T, U, Q) ---------------------------------------
+
+
+def polar(origin: Point, length: float, angle: float) -> Point:
+    """The point `length` away from origin at `angle` degrees, as ALPHA-T's D (draw line D,A) and Y (L,A move):
+    0 degrees is 9 o'clock (towards -Z), 90 is +X; the length is true (X is a diameter, so X moves 2 x radial)."""
+    a = math.radians(angle)
+    return Point(round(origin.x + 2 * length * math.sin(a), 6), round(origin.z - length * math.cos(a), 6))
+
+
+def measure_xz(a: Point, b: Point) -> tuple[float, float]:
+    """ALPHA-T M: X (diameter) and Z distance from a to b."""
+    return round(b.x - a.x, 6), round(b.z - a.z, 6)
+
+
+def measure_la(a: Point, b: Point) -> tuple[float, float]:
+    """ALPHA-T N: length and angle from a to b, in the convention of polar()."""
+    dr, dz = (b.x - a.x) / 2, b.z - a.z
+    return round(math.hypot(dr, dz), 6), round(math.degrees(math.atan2(dr, -dz)) % 360, 6)
+
+
+def key_points(project) -> list[Point]:
+    """Points ALPHA-T's Find Point (P) locks onto: line and arc ends and arc centres."""
+    pts = endpoints(project)
+    for g in project.geometry:
+        if isinstance(g, Arc) and g.centre not in pts:
+            pts.append(g.centre)
+    return pts
+
+
+def _nearest(points, p: Point) -> Point | None:
+    return min(points, key=p.distance, default=None)
+
+
+def nearest_point(project, p: Point) -> Point | None:
+    return _nearest(key_points(project), p)
+
+
+def _rz(p: Point) -> tuple[float, float]:
+    return p.x / 2, p.z
+
+
+def _on_arc(arc: Arc, q: Point) -> bool:
+    """Is q (on the arc's circle) within the arc's sweep?"""
+    cr, cz = _rz(arc.centre)
+
+    def ang(pt):
+        r, z = _rz(pt)
+        return math.atan2(r - cr, z - cz)
+
+    ta, tb, tq = ang(arc.a), ang(arc.b), ang(q)
+    if not arc.ccw:
+        ta, tb, tq = -ta, -tb, -tq
+    sweep = (tb - ta) % (2 * math.pi) or 2 * math.pi
+    return (tq - ta) % (2 * math.pi) <= sweep + 1e-9
+
+
+def distance_to(g, p: Point) -> float:
+    """Shortest distance from p to a line or arc element (radius / Z space)."""
+    pr, pz = _rz(p)
+    if isinstance(g, Arc):
+        cr, cz = _rz(g.centre)
+        d = math.hypot(pr - cr, pz - cz)
+        if d > 1e-12:
+            q = _pt((cr + (pr - cr) / d * g.radius(), cz + (pz - cz) / d * g.radius()))
+            if _on_arc(g, q):
+                return abs(d - g.radius())
+        return min(p.distance(g.a), p.distance(g.b))
+    (ar, az), (br, bz) = _rz(g.a), _rz(g.b)
+    dr, dz = br - ar, bz - az
+    L2 = dr * dr + dz * dz
+    t = 0.0 if L2 == 0 else max(0.0, min(1.0, ((pr - ar) * dr + (pz - az) * dz) / L2))
+    return math.hypot(pr - (ar + t * dr), pz - (az + t * dz))
+
+
+def nearest_element(project, p: Point, kind: type | None = None) -> str | None:
+    """Id of the line (kind=Line) or arc (kind=Arc) nearest p: ALPHA-T's Find Nearest Line / Arc (L, A)."""
+    cands = [g for g in project.geometry if kind is None or isinstance(g, kind)]
+    best = min(cands, key=lambda g: distance_to(g, p), default=None)
+    return best.id if best is not None else None
+
+
+def _circle(g):
+    cr, cz = _rz(g.centre)
+    return cr, cz, g.radius()
+
+
+def _line_line(l1: Line, l2: Line) -> list[tuple[float, float]]:
+    (a1r, a1z), (b1r, b1z) = _rz(l1.a), _rz(l1.b)
+    (a2r, a2z), (b2r, b2z) = _rz(l2.a), _rz(l2.b)
+    d1r, d1z, d2r, d2z = b1r - a1r, b1z - a1z, b2r - a2r, b2z - a2z
+    den = d1r * d2z - d1z * d2r
+    if abs(den) < 1e-12:
+        return []
+    t = ((a2r - a1r) * d2z - (a2z - a1z) * d2r) / den
+    u = ((a2r - a1r) * d1z - (a2z - a1z) * d1r) / den
+    eps = 1e-9
+    return [(a1r + t * d1r, a1z + t * d1z)] if -eps <= t <= 1 + eps and -eps <= u <= 1 + eps else []
+
+
+def _line_circle(line: Line, cr, cz, rad) -> list[tuple[float, float]]:
+    (ar, az), (br, bz) = _rz(line.a), _rz(line.b)
+    dr, dz = br - ar, bz - az
+    fr, fz = ar - cr, az - cz
+    a = dr * dr + dz * dz
+    b = 2 * (fr * dr + fz * dz)
+    c = fr * fr + fz * fz - rad * rad
+    disc = b * b - 4 * a * c
+    if a == 0 or disc < 0:
+        return []
+    out = []
+    for t in {(-b - math.sqrt(disc)) / (2 * a), (-b + math.sqrt(disc)) / (2 * a)}:
+        if -1e-9 <= t <= 1 + 1e-9:
+            out.append((ar + t * dr, az + t * dz))
+    return out
+
+
+def _circle_circle(c1, c2) -> list[tuple[float, float]]:
+    (r1, z1, a), (r2, z2, b) = c1, c2
+    d = math.hypot(r2 - r1, z2 - z1)
+    if d < 1e-12 or d > a + b + 1e-9 or d < abs(a - b) - 1e-9:
+        return []
+    m = (a * a - b * b + d * d) / (2 * d)
+    h = math.sqrt(max(a * a - m * m, 0.0))
+    pr, pz = r1 + m * (r2 - r1) / d, z1 + m * (z2 - z1) / d
+    return list({(pr + h * (z2 - z1) / d, pz - h * (r2 - r1) / d), (pr - h * (z2 - z1) / d, pz + h * (r2 - r1) / d)})
+
+
+def intersections(project) -> list[Point]:
+    """Every point where two drawing elements cross or meet (ALPHA-T's Find Nearest Intersection, I)."""
+    geo = project.geometry
+    out: list[Point] = []
+    for i, g in enumerate(geo):
+        for h in geo[i + 1:]:
+            if isinstance(g, Line) and isinstance(h, Line):
+                cand = _line_line(g, h)
+            elif isinstance(g, Line) or isinstance(h, Line):
+                line, arc = (g, h) if isinstance(g, Line) else (h, g)
+                cand = [q for q in _line_circle(line, *_circle(arc)) if _on_arc(arc, _pt(q))]
+            else:
+                cand = [q for q in _circle_circle(_circle(g), _circle(h)) if _on_arc(g, _pt(q)) and _on_arc(h, _pt(q))]
+            for q in cand:
+                pt = _pt(q)
+                if pt not in out:
+                    out.append(pt)
+    return out
+
+
+def nearest_intersection(project, p: Point) -> Point | None:
+    return _nearest(intersections(project), p)
+
+
+def erase_drawing(project) -> None:
+    """ALPHA-T Q: erase all the drawing (lines, arcs and text); contours that used it become empty."""
+    project.geometry.clear()
+    project.texts.clear()
+    for op in project.operations:
+        if hasattr(op, "contour"):
+            op.contour = []
+
+
+def add_text(project, p: Point, text: str, size: float = 5.0) -> None:
+    if not text.strip():
+        raise ValueError("no text")
+    project.texts.append(Text(p, text, size))
+
+
+def nearest_text(project, p: Point) -> int | None:
+    """Index of the text whose start point is nearest p (ALPHA-T U erases it)."""
+    if not project.texts:
+        return None
+    return min(range(len(project.texts)), key=lambda i: p.distance(project.texts[i].p))

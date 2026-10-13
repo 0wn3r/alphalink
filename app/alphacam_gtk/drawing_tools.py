@@ -15,14 +15,22 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gtk  # noqa: E402
 
 from alphacam import drawing  # noqa: E402
-from alphacam.model.geometry import Line, Point  # noqa: E402
-from .hit_keys import hit_action  # noqa: E402
+from alphacam.model.geometry import Arc, Line, Point  # noqa: E402
+from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
+# what Enter in the command entry does, after the ALPHA-T key that asked for the point (hit_keys.py)
+ENTRY_MODES = {
+    "point": N_("X,Z  or  @dX,dZ  then Enter (line tool)"),
+    "line-la": N_("Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"),
+    "move-abs": N_("Move the cursor to X,Z  then Enter"),
+    "move-inc": N_("Move the cursor by dX,dZ  then Enter"),
+    "move-la": N_("Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"),
+}
 RE_COORD = re.compile(r"\s*(@)?\s*(-?\d*\.?\d+)\s*[,; ]\s*(-?\d*\.?\d+)\s*$")
 
 
@@ -34,6 +42,11 @@ class DrawingTools:
         self.pick_op: int | None = None
         self.arc_pts: list[Point] = []  # arc tool: start, through, end
         self.corner_first: str | None = None  # corner tool: first line
+        self.cursor: Point | None = None  # ALPHA-T's cursor: the pointer's last place, or where the keys put it
+        self.step = 10.0  # cursor key step (radius / Z)
+        self.entry_mode = "point"
+        self.measure: tuple[str, Point | None] | None = None
+        self._prev_view = None
 
         # palette (a bottom bar: thumb reach in touch mode)
         self.palette = Adw.ToggleGroup()
@@ -42,7 +55,7 @@ class DrawingTools:
         self.palette.set_active_name("select")
         self.palette.connect("notify::active-name", lambda *_: self.set_tool(self.palette.get_active_name()))
 
-        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_("X,Z  or  @dX,dZ  then Enter (line tool)"))
+        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(ENTRY_MODES["point"]))
         self.entry.add_css_class("command-entry")
         self.entry.connect("activate", self._entry_activate)
         # shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
@@ -103,6 +116,10 @@ class DrawingTools:
         if self.pick_op is not None:
             self._toggle_pick(element)
             return
+        self.cursor, self.c.cursor = Point(x, z), None
+        if self.measure is not None:
+            self._measure_point(Point(x, z))
+            return
         tool = self.c.tool
         if tool == "select":
             if op_index >= 0:
@@ -130,9 +147,15 @@ class DrawingTools:
             self._size_popover(tool, corner)
 
     def _motion(self, ctl, sx, sy) -> None:
-        if self.c.tool not in ("line", "arc") or self.w.project is None:
+        if self.w.project is None:
             return
         x, z = self.c.view.to_world(sx, sy)
+        self.cursor = Point(x, z)  # the mouse is ALPHA-T's cursor too
+        if self.c.cursor is not None:
+            self.c.cursor = None
+            self.c.queue_draw()
+        if self.c.tool not in ("line", "arc"):
+            return
         tol = 10 / self.c.view.scale
         pt, kind = drawing.snap(self.w.project, Point(x, z), tol, grid=1.0 if self.w.project.units == "mm" else 0.05)
         if self.c.tool == "line" and self.points and kind != "end":
@@ -146,6 +169,12 @@ class DrawingTools:
             return False
         if self.pick_op is not None:
             self.cancel_pick()
+            return True
+        if self.measure is not None or self.entry_mode != "point":
+            self.measure = None
+            self._ask_done()
+            self.entry.set_text("")
+            self.w.readout.set_label(_("Command aborted"))
             return True
         if self.points or self.arc_pts or self.corner_first:
             self.finish_chain()
@@ -168,48 +197,223 @@ class DrawingTools:
                 or w.project is None or w.get_visible_dialog() is not None
                 or w.stack.get_visible_child_name() != "part" or isinstance(w.get_focus(), Gtk.Editable)):
             return False
-        if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
-            char = "\r"
-        else:
-            u = Gdk.keyval_to_unicode(keyval)
-            char = chr(u) if u else ""
-        return self.hit_key(char)
+        name = Gdk.keyval_name(keyval) or ""
+        on_canvas = w.get_focus() in (None, self.c)
+        if name in CURSOR_KEYS or name in STEP_KEYS or name in ("Home", "End", "Return", "KP_Enter"):
+            # the cursor keys and Enter keep their usual meaning on buttons and lists
+            if not on_canvas:
+                return False
+            return self.cursor_key(name)
+        u = Gdk.keyval_to_unicode(keyval)
+        return self.hit_key(chr(u) if u else "")
 
     def hit_key(self, char: str) -> bool:
         """Run ALPHA-T's command for a typed character; True when it was one."""
-        action = hit_action(char, picking=self.pick_op is not None)
+        action = hit_action(char, picking=self.pick_op is not None, selected=self.selected_element is not None)
         if action is None:
             return False
+        p, cur = self.w.project, self.cursor
         if action == "pick-done":
             self.finish_pick()
+        elif action == "accept":
+            return self.accept_cursor()
         elif action == "type":
-            if self.c.tool not in ("line", "arc"):
-                self.set_tool("line")
-            self._focus_entry(char)
-        elif action in ("start", "line", "absolute", "relative"):
-            if self.c.tool not in ("line", "arc"):
-                self.set_tool("line")
-            if action == "start":
-                self.finish_chain()
-            self._focus_entry("@" if action == "relative" else "")
-        elif action in ("fillet", "chamfer", "corner"):
-            self.set_tool(action)
-        elif action == "erase":
-            if self.selected_element:
-                self.delete_selected_element()
+            self._ask("point", char)
+        elif action in ("line", "freehand"):
+            self._ask("point") if action == "line" else self._line_tool()
+        elif action in ("line-la", "move-abs", "move-inc", "move-la"):
+            self._ask(action)
+        elif action == "start":
+            self.move_cursor(cur or Point(0, 0), start=True)
+        elif action in ("find-point", "find-intersection"):
+            pt = (drawing.nearest_point if action == "find-point" else drawing.nearest_intersection)(
+                p, cur or Point(0, 0))
+            if pt is None:
+                self.w.toast(_("No point to find") if action == "find-point" else _("No intersection to find"))
+            else:
+                self.move_cursor(pt, start=self.c.tool == "line" and not self.points)
+        elif action in ("find-line", "find-arc"):
+            gid = drawing.nearest_element(p, cur or Point(0, 0), Line if action == "find-line" else Arc)
+            if gid is None:
+                self.w.toast(_("No line to find") if action == "find-line" else _("No arc to find"))
             else:
                 self.set_tool("select")
-                self.w.toast(_("Tap the element to erase, then press the key again"))
-        elif action == "zoom-in":
-            self.c.zoom(1.25)
-        elif action == "fit":
-            self.c.fit()
+                self._select_element(gid)
+                self.w.toast(_("{what} found: - or Delete erases it").format(what=gid))
+        elif action == "erase":
+            self.delete_selected_element()
+        elif action == "radius":
+            corner = self._corner_near(cur, float("inf")) if cur is not None else None
+            if corner is None:
+                self.set_tool("fillet")
+            else:
+                self._size_popover("fillet", corner)
+        elif action in ("fillet", "corner"):
+            self.set_tool(action)
+        elif action in ("measure-xz", "measure-la"):
+            self.start_measure(action[-2:])
+        elif action == "text":
+            self.text_dialog(cur or Point(0, 0))
+        elif action == "erase-text":
+            i = drawing.nearest_text(p, cur or Point(0, 0))
+            if i is None:
+                self.w.toast(_("No text to erase"))
+            elif self.w.apply_edit(_("Erase text"), lambda q: q.texts.pop(i)):
+                self.w.refresh()
+        elif action == "erase-drawing":
+            self.erase_drawing_dialog()
+        elif action in ("zoom-in", "fit"):
+            self._prev_view = self.c.view.copy()
+            self.c.zoom(1.25) if action == "zoom-in" else self.c.fit()
+        elif action == "recall-view":
+            if self._prev_view is not None:
+                self._prev_view, self.c.view = self.c.view.copy(), self._prev_view
+                self.c._auto_fit = False
+                self.c.queue_draw()
+        elif action == "cam":
+            self.w.add_op_button.popup()
         return True
 
-    def _focus_entry(self, text: str) -> None:
+    # --- ALPHA-T cursor ---------------------------------------------------------------------------------
+
+    def cursor_key(self, name: str) -> bool:
+        """Cursor keys move the ALPHA-T cursor by the step (PgUp x10, PgDn :10), Home: middle of the view,
+        End: the reference point X0 Z0, Enter accepts the cursor (see accept_cursor)."""
+        if name in ("Return", "KP_Enter"):
+            return self.hit_key("\r")
+        cur = self.cursor or Point(0, 0)
+        if name in STEP_KEYS:
+            self.step = min(max(self.step * STEP_KEYS[name], 0.001), 1000.0)
+            self.w.readout.set_label(_("Cursor step {step}").format(step=f"{self.step:g}"))
+            return True
+        if name == "Home":
+            x, z = self.c.view.to_world(self.c.get_width() / 2, self.c.get_height() / 2)
+            pt = Point(round(x, 3), round(z, 3))
+        elif name == "End":
+            pt = Point(0, 0)
+        else:
+            dx, dz = CURSOR_KEYS[name]
+            pt = Point(round(cur.x + 2 * dx * self.step, 6), round(cur.z + dz * self.step, 6))
+        self.move_cursor(pt)
+        return True
+
+    def move_cursor(self, pt: Point, start: bool = False) -> None:
+        """Put the ALPHA-T cursor on pt; `start`: a line starts there (ALPHA-T S, or a move with the Line tool)."""
+        self.cursor = pt
+        self.c.cursor = pt
+        self.c.marker = (pt, "end")
+        self.w.readout.set_label(f"X {pt.x:9.3f}   Z {pt.z:9.3f}")
+        if start:
+            self._line_tool()
+            self.finish_chain()
+            self.points.append(pt)
+            self.done.set_sensitive(True)
+            self.c.marker = (pt, "end")
+        self.c.grab_focus()
+        self.c.queue_draw()
+
+    def accept_cursor(self) -> bool:
+        """Enter on the drawing: the cursor is the next measuring point or the next point of the line."""
+        if self.cursor is None:
+            return False
+        if self.measure is not None:
+            self._measure_point(self.cursor)
+        elif self.c.tool == "line":
+            self.add_point(self.cursor)
+        elif self.c.tool == "arc":
+            self._arc_point(self.cursor)
+        else:
+            return False
+        return True
+
+    def _line_tool(self) -> None:
+        if self.c.tool not in ("line", "arc"):
+            self.set_tool("line")
+
+    def _ask(self, mode: str, text: str = "") -> None:
+        """Focus the command entry for a typed point; `mode` says what Enter does with it (ENTRY_MODES)."""
+        if mode in ("point", "line-la"):
+            self._line_tool()
+        self.entry_mode = mode
+        self.entry.set_placeholder_text(_(ENTRY_MODES[mode]))
         self.entry.grab_focus()
         self.entry.set_text(text)
         self.entry.set_position(-1)
+
+    # --- measure (ALPHA-T M, N) -----------------------------------------------------------------------------
+
+    def start_measure(self, kind: str) -> None:
+        self.measure = (kind, None)
+        self.w.readout.set_label(_("Measure: tap the 1st point, or move the cursor and press Enter"))
+
+    def _measure_point(self, p: Point) -> None:
+        pt = drawing.nearest_point(self.w.project, p) or p  # ALPHA-T: the point nearest the cursor
+        kind, first = self.measure
+        self.c.marker = (pt, "end")
+        self.c.queue_draw()
+        if first is None:
+            self.measure = (kind, pt)
+            self.w.readout.set_label(_("Measure: now the 2nd point"))
+            return
+        self.measure = None
+        if kind == "xz":
+            dx, dz = drawing.measure_xz(first, pt)
+            text = f"X {dx:g}  Z {dz:g}"
+        else:
+            length, angle = drawing.measure_la(first, pt)
+            text = f"L {length:.4g}  A {angle:.4g}°"
+        self.w.readout.set_label(text)
+        self.w.toast(text)
+
+    # --- text (ALPHA-T T) and erase drawing (Q) -------------------------------------------------------------
+
+    def text_dialog(self, p: Point) -> None:
+        alert = Adw.AlertDialog(heading=_("Text"), body=_("At X{x} Z{z}").format(x=f"{p.x:g}", z=f"{p.z:g}"))
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        text = Gtk.Entry(activates_default=True)
+        size = Adw.SpinRow.new_with_range(0.1, 100, 0.5)
+        size.set_title(_("Height"))
+        size.set_value(5 if self.w.project.units == "mm" else 0.2)
+        size.set_digits(2)
+        group = Adw.PreferencesGroup()
+        group.add(size)
+        box.append(text)
+        box.append(group)
+        alert.set_extra_child(box)
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("add", _("_Add"))
+        alert.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("add")
+        alert.set_close_response("cancel")
+
+        def done(_d, response):
+            if response == "add" and text.get_text().strip():
+                t, h = text.get_text(), size.get_value()
+                if self.w.apply_edit(_("Text"), lambda q: drawing.add_text(q, p, t, h)):
+                    self.w.refresh()
+
+        alert.connect("response", done)
+        alert.present(self.w)
+        text.grab_focus()
+
+    def erase_drawing_dialog(self) -> None:
+        alert = Adw.AlertDialog(heading=_("Erase All of the Drawing?"),
+                                body=_("Lines, arcs and text are erased. Operations stay, without their contours. "
+                                       "Undo brings the drawing back."))
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("erase", _("_Erase"))
+        alert.set_response_appearance("erase", Adw.ResponseAppearance.DESTRUCTIVE)
+        alert.set_default_response("erase")  # ALPHA-T: Enter erases, Esc aborts
+        alert.set_close_response("cancel")
+
+        def done(_d, response):
+            if response == "erase" and self.w.apply_edit(_("Erase drawing"), drawing.erase_drawing):
+                self.finish_chain()
+                self._select_element(None)
+                self.w.refresh()
+
+        alert.connect("response", done)
+        alert.present(self.w)
 
     # --- line tool --------------------------------------------------------------------------------------
 
@@ -224,6 +428,7 @@ class DrawingTools:
                 return
             self.w.refresh()
         self.points.append(pt)
+        self.cursor = pt
         self.done.set_sensitive(True)
         self.c.marker = (pt, "end")
         self.c.queue_draw()
@@ -266,12 +471,32 @@ class DrawingTools:
         self.c.marker = None
         self.c.queue_draw()
 
+    def _ask_done(self) -> None:
+        self.entry_mode = "point"
+        self.entry.set_placeholder_text(_(ENTRY_MODES["point"]))
+
     def _entry_activate(self, entry) -> None:
+        mode = self.entry_mode
         m = RE_COORD.match(entry.get_text())
-        if not m:
-            self.w.toast(_("Type X,Z (diameter, Z) or @dX,dZ"))
+        if not m or (m[1] and mode != "point"):
+            self.w.toast(_("Type X,Z (diameter, Z) or @dX,dZ") if mode == "point" else _(ENTRY_MODES[mode]))
             return
         x, z = float(m[2]), float(m[3])
+        if mode != "point":
+            self._ask_done()
+            entry.set_text("")
+            if mode == "line-la":  # ALPHA-T D: a line of that length and angle from the last point (or the cursor)
+                here = self.points[-1] if self.points else (self.cursor or Point(0, 0))
+                self._line_tool()
+                if not self.points:
+                    self.points.append(here)
+                self.add_point_exact(drawing.polar(here, x, z))
+                return
+            cur = self.cursor or Point(0, 0)
+            target = {"move-abs": Point(x, z), "move-inc": Point(round(cur.x + x, 6), round(cur.z + z, 6)),
+                      "move-la": drawing.polar(cur, x, z)}[mode]
+            self.move_cursor(target, start=self.c.tool == "line")
+            return
         if m[1]:
             last = self.arc_pts[-1] if self.c.tool == "arc" and self.arc_pts else (self.points[-1] if self.points
                                                                                      else None)
@@ -286,22 +511,23 @@ class DrawingTools:
             return
         if self.c.tool != "line":
             self.set_tool("line")
-        # typed values are exact: no snapping, no direction lock
+        self.add_point_exact(Point(x, z))
+        entry.set_text("")
+
+    def add_point_exact(self, pt: Point) -> None:
+        """Next point of the line, typed: no snapping, no direction lock."""
         if self.points:
             prev = self.points[-1]
-            pt = Point(x, z)
             if pt == prev:
                 return
             if not self.w.apply_edit(_("Draw line"), lambda p: drawing.add_line(p, prev, pt)):
                 return
             self.w.refresh()
-            self.points.append(pt)
-        else:
-            self.points.append(Point(x, z))
+        self.points.append(pt)
+        self.cursor = pt
         self.done.set_sensitive(True)
-        self.c.marker = (self.points[-1], "end")
+        self.c.marker = (pt, "end")
         self.c.queue_draw()
-        entry.set_text("")
 
     def open_keypad(self) -> None:
         from .keypad import Keypad
