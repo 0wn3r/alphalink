@@ -18,6 +18,7 @@ from alphacam.link import serial_link as sl  # noqa: E402
 
 from .hold_button import HoldButton  # noqa: E402
 from .i18n import _  # noqa: E402
+from .settings import settings  # noqa: E402
 
 LOG_DIR = Path(GLib.get_user_state_dir()) / "alphalink-cam" / "logs"
 
@@ -100,10 +101,12 @@ class MachinePage(Gtk.Box):
         self.delay_row = Adw.SpinRow.new_with_range(0, 20, 0.5)
         self.delay_row.set_title(_("Delay per character (ms)"))
         self.delay_row.set_subtitle(_("2 ms works on the 400T; 0 sends at full speed"))
-        self.delay_row.set_value(2.0)
+        self.delay_row.set_value(settings()["char_delay_ms"])
+        self.delay_row.connect("notify::value", lambda r, _p: settings().set("char_delay_ms", r.get_value()))
         conn.add(self.delay_row)
-        self.wait_row = Adw.SwitchRow(title=_("Wait for the control (DC1)"), active=True,
+        self.wait_row = Adw.SwitchRow(title=_("Wait for the control (DC1)"), active=settings()["wait_xon"],
                                       subtitle=_("Nothing is sent until the lathe asks for data"))
+        self.wait_row.connect("notify::active", lambda r, _p: settings().set("wait_xon", r.get_active()))
         conn.add(self.wait_row)
         page.add(conn)
 
@@ -138,7 +141,7 @@ class MachinePage(Gtk.Box):
 
         self.append(page)
         self.refresh_ports()
-        self.port_row.connect("notify::selected", lambda *_: self._restart_poll())
+        self.port_row.connect("notify::selected", lambda *_: (self._restart_poll(), self._remember_port()))
         self.connect("map", lambda *_: self._restart_poll())
         self.connect("unmap", lambda *_: self._stop_poll())
 
@@ -159,9 +162,19 @@ class MachinePage(Gtk.Box):
         item = self.port_row.get_selected_item()
         return item.get_string().split("  ")[0] if item is not None else None
 
+    def _remember_port(self) -> None:
+        if not getattr(self, "_restoring", False) and self.port():
+            settings().set("serial_port", self.port())
+
     def refresh_ports(self) -> None:
-        self.port_model.splice(0, self.port_model.get_n_items(),
-                               [f"{dev}  {desc}" for dev, desc in sl.list_ports()] or ["/dev/ttyUSB0  " + _("(not present)")])
+        items = [f"{dev}  {desc}" for dev, desc in sl.list_ports()] or ["/dev/ttyUSB0  " + _("(not present)")]
+        self._restoring = True
+        self.port_model.splice(0, self.port_model.get_n_items(), items)
+        wanted = settings()["serial_port"]
+        for i, item in enumerate(items):
+            if wanted and item.split("  ")[0] == wanted:
+                self.port_row.set_selected(i)
+        self._restoring = False
 
     # --- modem lines (5 Hz while visible, not during transfers) ----------------------------------------
 

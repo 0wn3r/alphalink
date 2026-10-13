@@ -25,7 +25,7 @@ class InputMode(GObject.Object):
         super().__init__()
         self.window = window
         self.preference = preference  # auto | pointer | touch
-        self.mode = "pointer"
+        self.mode = preference if preference != "auto" else "pointer"
         self._last = None
         click = Gtk.GestureClick(button=0, propagation_phase=Gtk.PropagationPhase.CAPTURE)
         click.connect("pressed", self._pressed)

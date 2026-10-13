@@ -22,6 +22,7 @@ from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
 from .tools_page import ToolsPage, load_library  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
+from .settings import settings  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
@@ -83,7 +84,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.root.add_named(self._build_empty(), "empty")
         self.root.add_named(self._build_main(), "main")
         self.root.set_visible_child_name("empty")
-        self.input_mode = InputMode(self)
+        self.input_mode = InputMode(self, settings()["input_layout"])
         self.input_mode.connect("changed", lambda _m, mode: (self.zoom_box.set_visible(mode == "touch"),
                                                              self.drawing.set_touch(mode == "touch")))
         self._setup_lock()
@@ -220,6 +221,7 @@ class MainWindow(Adw.ApplicationWindow):
             layout.append_item(item)
         menu.append_section(_("Input Layout"), layout)
         about = Gio.Menu()
+        about.append(_("Preferences"), "win.preferences")
         about.append(_("About AlphaLink CAM"), "app.about")
         menu.append_section(None, about)
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
@@ -306,13 +308,14 @@ class MainWindow(Adw.ApplicationWindow):
         add("deselect", lambda *_: self._select_op(None), ["Escape"])
         add("save", lambda *_: self.save(), ["<Control>s"])
         add("new", lambda *_: self.new_dialog(), ["<Control>n"])
+        add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
         add("add-op", lambda a, v: self.add_op(v.get_string()), param=GLib.VariantType.new("s"))
         self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
-                                               GLib.Variant.new_string("auto"))
+                                               GLib.Variant.new_string(settings()["input_layout"]))
         layout.connect("change-state", self._input_layout)
         self.add_action(layout)
         self.export_action.set_enabled(False)
@@ -320,6 +323,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _input_layout(self, action, value) -> None:
         action.set_state(value)
         self.input_mode.set_preference(value.get_string())
+        settings().set("input_layout", value.get_string())
 
     # --- files ------------------------------------------------------------------------------------------
 
@@ -493,17 +497,51 @@ class MainWindow(Adw.ApplicationWindow):
             self.refresh()
             self._select_op(i + delta)
 
+    def preferences_dialog(self) -> None:
+        """ALPHA-T's ATSETUP: defaults for new parts and the language. The serial settings live on the Machine
+        page and are remembered there."""
+        st = settings()
+        dlg = Adw.PreferencesDialog(title=_("Preferences"))
+        page = Adw.PreferencesPage(title=_("General"), icon_name="preferences-system-symbolic")
+        new = Adw.PreferencesGroup(title=_("New parts"))
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+                             selected=1 if st["units"] == "inch" else 0)
+        units.connect("notify::selected", lambda r, _p: st.set("units", "inch" if r.get_selected() else "mm"))
+        new.add(units)
+        for key, title, lo, hi, step, digits in (("billet_diameter", _("Billet diameter"), 1, 1000, 1, 1),
+                                                 ("billet_length", _("Billet length"), 1, 2000, 1, 1),
+                                                 ("first_tool", _("First tool"), 1, 99, 1, 0)):
+            row = Adw.SpinRow.new_with_range(lo, hi, step)
+            row.set_title(title)
+            row.set_digits(digits)
+            row.set_value(st[key])
+            row.connect("notify::value", lambda r, _p, k=key, d=digits: st.set(k, int(r.get_value()) if d == 0
+                                                                              else r.get_value()))
+            new.add(row)
+        page.add(new)
+        lang = Adw.PreferencesGroup(title=_("Language"), description=_("Takes effect after restarting the app."))
+        codes = ["", "en", "uk"]
+        names = [_("Same as the desktop"), "English", "Українська"]
+        row = Adw.ComboRow(title=_("Language"), model=Gtk.StringList.new(names),
+                           selected=codes.index(st["language"]) if st["language"] in codes else 0)
+        row.connect("notify::selected", lambda r, _p: st.set("language", codes[r.get_selected()]))
+        lang.add(row)
+        page.add(lang)
+        dlg.add(page)
+        dlg.present(self)
+
     def new_dialog(self) -> None:
         """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
         alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
         group = Adw.PreferencesGroup()
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]))
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+                             selected=1 if settings()["units"] == "inch" else 0)
         dia = Adw.SpinRow.new_with_range(1, 1000, 1)
         dia.set_title(_("Billet diameter"))
-        dia.set_value(50)
+        dia.set_value(settings()["billet_diameter"])
         length = Adw.SpinRow.new_with_range(1, 2000, 1)
         length.set_title(_("Billet length"))
-        length.set_value(80)
+        length.set_value(settings()["billet_length"])
         for r in (units, dia, length):
             group.add(r)
         alert.set_extra_child(group)
@@ -520,10 +558,14 @@ class MainWindow(Adw.ApplicationWindow):
             from alphacam.model.project import Billet
 
             inch = units.get_selected() == 1
+            settings().set("units", "inch" if inch else "mm")
+            settings().set("billet_diameter", dia.get_value())
+            settings().set("billet_length", length.get_value())
             k = 25.4 if inch else 1.0
             project = Project(units="inch" if inch else "mm",
                               billet=Billet(diameter=dia.get_value(), length=length.get_value()),
-                              tool_change=Point(round(100 / k, 4), round(50 / k, 4)), first_tool=3)
+                              tool_change=Point(round(100 / k, 4), round(50 / k, 4)),
+                              first_tool=int(settings()["first_tool"]))
             self.path = None
             self.set_project(project)
             self.drawing.set_tool("line")
