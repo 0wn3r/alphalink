@@ -3,7 +3,9 @@ cut 1; THREAD_internal: X20 -> X40, U-21.; THREAD_p2_len30: pitch 2 over 30, W-4
 
 Cut n (n = 1..N) goes to radial depth first * sqrt(n) (constant chip area), N = (total depth / first)^2 rounded up,
 the last cut clamped to the inner diameter. Each cut ends one pitch before the thread end and pulls out over the
-last pitch (U = outer - inner + 1 on diameter: U21 for 40 -> 20, U13 for 40 -> 28 in THREAD_depth6, U-21 internal)."""
+last pitch (U = outer - inner + 1 on diameter: U21 for 40 -> 20, U13 for 40 -> 28 in THREAD_depth6, U-21 internal).
+An infeed angle moves each cut's start Z (ThreadPlan.cut_start_z, THREAD_angle30); spring passes repeat the last
+cut in a #127=21 block (THREAD_spring2: two)."""
 
 from __future__ import annotations
 

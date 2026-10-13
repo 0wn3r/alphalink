@@ -1045,7 +1045,7 @@ What it adds to the samples, by chapter:
   For face clear: identified from the outside diameter in, the passes cut inwards, and the other way round outwards.
   This likely explains the odd AWAY samples (Progress 36): they were identified from the front, i.e. the "wrong"
   direction for AWAY. To check with AWAY samples identified from the chuck end.
-* Area clear options not in the app yet: **retract distance** (Rückzug-Weg; default 1 mm = SD1 G71 R) and **follow
+* Area clear options not in the app yet (done since, Progress 38): **retract distance** (Rückzug-Weg; default 1 mm = SD1 G71 R) and **follow
   the contour** yes/no (Der Kontur folgen; no = 45-degree retract after each pass, presumably SD1 A45; yes = the tool
   follows the profile before retracting). It ignores pockets in arcs shallower than the depth of cut, and keeps clear
   of the tool's rear clearance angle (collision avoidance).
@@ -1056,7 +1056,7 @@ What it adds to the samples, by chapter:
   pre-finish. Approach in rapid and retract by a fixed amount; nose radius and tool angles compensated.
 * Grooving: datum left/right becomes top/bottom and Z-shift becomes X-shift with STIRNFLÄCHE (face grooving).
   Peck retract 1 mm (fixed) when full retract is NO. Finish mode (2) = one pass along the contour.
-* Drilling options not in the app yet: **full retract** yes/no (out to the start point after each peck) and the
+* Drilling options not in the app yet (done since, Progress 38): **full retract** yes/no (out to the start point after each peck) and the
   **retract distance** when not full; 0 disables the retract. Drilling is always on the centre line.
 * Threading: number of cuts OR first cut depth (as implemented), lead in / lead out (added to the inner diameter
   line's length), **crest height** (Spitzenhöhe, SD1 G76 B?), **angle**: 0 = straight (radial) infeed, > 0 = flank
@@ -1066,7 +1066,7 @@ What it adds to the samples, by chapter:
 * CAD commands added to the app from this (More menu): circle, tangent (point to arc, arc to arc), tangent to an arc at an angle,
   parallel line, split arc, mirror, blend between two points.
 * App changes from this: the thread "angle" field is now ALPHA-T's infeed angle (default 0, written to SD1 G76 A;
-  non-zero is refused until there is a sample); parts saved with the old 60 load as 0.
+  non-zero was refused until there was a sample; sampled and supported since Progress 38); parts saved with the old 60 load as 0.
 
 ## Progress 38 (2026-10-13 night): the German manual's options, sampled
 Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there with the exact menu values) are in

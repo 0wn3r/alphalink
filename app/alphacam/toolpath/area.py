@@ -5,8 +5,9 @@ Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOL
   * external: passes step down by 2*depth from the boundary's Xmax to Xmin - 2r (Xmin from the drawing);
     internal: up from the boundary's Xmin to its Xmax. Each Z-parallel boundary diameter in between gets a pass
     and restarts the stepping (zones, seen in the inch samples);
-  * each pass: rapid to (X, start Z), feed along -Z to the boundary, feed a 45-degree retract (retract distance in
-    X radius, outwards from the cut: -X internal, and in +Z), rapid back to start Z; after the last, rapid to start;
+  * each pass: rapid to (X, start Z), feed along -Z to the boundary, feed a 45-degree retract (RETRACT DIST, default
+    1 mm, in X radius, outwards from the cut: -X internal, and in +Z), rapid back to start Z; after the last, rapid
+    to start; FOLLOW (AREA_follow_contour) first feeds along the profile up to where the previous pass stopped;
   * pre-finish (op.pre_finish) is posted as a separate finish block, see post.alphat_prg;
   * the cut ends on the first boundary element met that spans X, with spans half-open on the side the passes come
     from (external: lo <= X < hi; internal: lo < X <= hi), so a pass exactly on a shoulder goes on to the next face."""

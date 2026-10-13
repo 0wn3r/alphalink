@@ -53,7 +53,7 @@ class AreaClear:
     towards: bool = True
     pre_finish: bool = False
     external: bool = True
-    front: bool = True  # ALPHA-T FRONT/FACE toggle; FACE (SD1 E101) cuts radial passes like face clear, #127=8
+    front: bool = True  # ALPHA-T FRONT/FACE toggle; FACE (SD1 E101) cuts radial passes like face clear, #127=8 (7 internal)
     retract: float | None = None  # RETRACT DIST in drawing units; None = ALPHA-T's default 1 mm (SD1 R)
     follow: bool = False  # FOLLOW: each pass also feeds up the shoulder it ends at (SD1 E300)
     type = "area_clear"
@@ -139,7 +139,7 @@ class Thread:
     cuts: int = 0  # NO. OF CUTS mode: > 0 sets the first cut to depth / sqrt(cuts) (THREAD_6cuts: 10 / sqrt 6 = 4.0825)
     lead_in: float = 5.0  # ALPHA-T default: passes start this far in front of the thread (+Z)
     lead_out: float = 0.0  # the thread runs this far past the drawn end
-    angle: float = 0.0  # ALPHA-T "Winkel": 0 = straight (radial) infeed, as in every sample; > 0 = flank infeed
+    angle: float = 0.0  # ALPHA-T "Winkel": 0 = straight (radial) infeed; > 0 moves each cut's start (THREAD_angle30)
     external: bool = True
     towards: bool = True
     spring_passes: int = 0  # SPRING PASS: extra cuts at the final diameter, each in the #127=21 block (THREAD_spring2)

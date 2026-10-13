@@ -1,4 +1,4 @@
-"""Finish pass (#127=14, internal 15): one pass along the imaginary tool-tip path (contour.tip_path)."""
+"""Finish pass (#127=14, internal 15, FACE 16 with the pull-off towards the axis): one pass along the imaginary tool-tip path (contour.tip_path)."""
 
 from __future__ import annotations
 

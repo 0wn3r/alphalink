@@ -8,7 +8,7 @@ State as of 2026-10-13. Target machine: Harrison Alpha 400T, control FANUC Power
 | Area | Status | Where |
 |---|---|---|
 | CAM software for the 400T | ALPHA-T (DOS, AlphaLink V1.2/1.21). NOT DOS ALPHACAM V1.81 (`.600`, old Alpha) and NOT AlphaLink for Windows / AlphaWin-S (Alpha-S/U). | RE_NOTES Progress 14-19, 23 |
-| Replacement | The GNOME app in `app/` (AlphaLink CAM) writes .PRG and .SD1 files byte-identical to ALPHA-T for every sample, and sends them. | `app/DESIGN.md`, Progress 27-35 |
+| Replacement | The GNOME app in `app/` (AlphaLink CAM) writes .PRG and .SD1 files byte-identical to ALPHA-T for every sample except the refused AWAY ones and three deliberate fixes (`app/tests/test_post.py`), and sends them. | `app/DESIGN.md`, Progress 27-39 |
 | Manual warning | Programs not created with Alphalink T corrupt the T macros; fix = reload B703-0703 (`MACROS.MOP`, ATMACROS). We do NOT have that file. | Progress 16 |
 | Serial line, all T modules | 9600 7E2, XON 0x11 / XOFF 0x13; the control sends XON when it is ready. | `data/line_settings.json`, Progress 15, 22, 29 |
 | Cable | DB9 2-2, 3-3, 5-7, with the manual's bridges in both plugs (machine DB25: 4-5 and 6-8-20). Without the bridges the control reports "not ready" (CTS/DSR off). | `data/cable.json`, Progress 17, 20, 25, 29 |
@@ -38,12 +38,13 @@ State as of 2026-10-13. Target machine: Harrison Alpha 400T, control FANUC Power
 Vendor files are NOT in this repo (copyright). Identify them by `docs/VENDOR_FILES_SHA256.txt`.
 Local layout (`~/alpha-work`):
 ```
-alpha-work/alphalink/       this repo
+~/alphalink/                this repo (outside alpha-work)
 alpha-work/vendor/          ALPHA-T, ALPHACAM V1.81, AlphaWin and the manuals (never modified)
 alpha-work/re-notes/        working notebook and scratch copies
 alpha-work/tools-bin/dosbox-x   DOSBox-X 2026.10.01, heavy-debug build
 alpha-work/_to_delete/      files for the user to remove (nothing is deleted directly)
 ```
-New ALPHA-T samples: `tools/atsession.sh` (Xvfb + DOSBox-X + `tools/xkeys`, scratch copy `~/atwork`) with key
+New ALPHA-T samples: `~/alpha-work/re-notes/tools/atsession.sh` (the repo copy `tools/atsession.sh` expects to sit in
+alpha-work/re-notes/tools next to the built `xkeys`; Xvfb + DOSBox-X, scratch copy `~/atwork`) with key
 scripts in `tools/ac_scripts/at_*.ks`. Known quirk: xkeys drops the letter 'A' in typed file names; after a CAM
 op go straight to EXIT DRAWING.

@@ -1,4 +1,4 @@
-"""python -m alphacam_gtk [PART.alcam | DRAWING.SDG] [--select N]"""
+"""python -m alphacam_gtk [PART.alcam | DRAWING.SDG | DRAWING.DXF] [--select N] [--page NAME] [--touch]"""
 
 import sys
 

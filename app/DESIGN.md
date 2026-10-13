@@ -1,18 +1,21 @@
 # AlphaLink CAM (GNOME): design
 
-Status (2026-10-13): **working app**; all milestones of section 10 are done. What exists:
-- Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, PRG parser, toolpaths for
+Status (2026-10-14): **working app**; all milestones of section 10 are done. What exists:
+- Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, the .SDG/.SDT writer, program units conversion (`model/units.py`), PRG parser, toolpaths for
   every ALPHA-T operation (area, face, finish, groove incl. finish mode, thread, drill, dwell, moves, tool changes) and
   their options with samples, the .PRG post and the .SD1 writer. Both are byte-identical to ALPHA-T on every metric
   sample in `samples/alphat_v12` (tests `test_post`, `test_sd1_write`); known sub-micron differences: face clear ending
   on slopes/arcs (0.001 on diameter) and two inch samples (0.0001-0.0002), listed in `tests/test_post.py`.
-  AWAY (area, face, thread) and grooving from the BACK are refused with the reason: ALPHA-T's own output for them is
-  unsafe (RE_NOTES Progress 36).
+  AWAY (area, face, thread) is refused with the reason: ALPHA-T's own output for it is unsafe (RE_NOTES Progress 36,
+  38). Grooving with FRONT off is face grooving; contours picked from the chuck end are cut as if picked from the
+  front (Progress 38).
 - GTK app (`alphacam_gtk/`): Part page (canvas, drawing tools Select / Line / Arc / Fillet / Chamfer with angle /
-  Corner, `X,Z` / `@dX,dZ` entry, keypad, contour picking, axis indicator, simulation), operations sidebar with
+  Corner, Edit Element, the More menu (circle, tangents, parallel, split arc, blend arc, Mirror Image), ALPHA-T's
+  one-letter keys (`hit_keys.py`), grid, `X,Z` / `@dX,dZ` entry, keypad, contour picking, axis indicator, simulation), operations sidebar with
   editors, Program, Sheet (setup sheet), Tools (library), Machine (send with hold + confirmation, Manual Ops backup /
-  restore, loopback test, touch lock), preferences, undo/redo, in-app help (F1, `alphacam_gtk/help/`), Ukrainian
-  translation. Export writes the .PRG and the .SD1 next to it.
+  restore, loopback test, touch lock), Part Settings (billet, program number, program units), preferences, undo/redo, in-app help (F1, `alphacam_gtk/help/`), Ukrainian
+  translation, Training and Reference Manuals (PDF) from the main menu. Export writes the .PRG and the .SD1 next to it
+  (and the .SDG/.SDT when Preferences ▸ Also save the ALPHA-T drawing is on); Save as ALPHA-T Drawing writes the .SDG.
 - Serial link (`alphacam/link/serial_link.py`): 9600 7E2, wait for XON, XON/XOFF, per-char delay, receive to the 2nd
   `%`, Manual Ops load parity, loopback. Programs from the app have been loaded and run on the lathe.
 - Packaging: `pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file, metainfo, icon, Flatpak
@@ -142,12 +145,12 @@ rather than a hard-coded constant.
 | Op | `#127` | Parameters (ALPHA-T menu) |
 |---|---|---|
 | Tool change | 1 | tool, tool change X/Z, feed |
-| Area clear | 6 (7 internal; 8 with FACE direction) | start, contour, depth of cut, offset X/Z, feed, towards/away, front/face, pre-finish yes/no |
-| Face clear | 8 | start, contour, depth of cut, offset X/Z, feed, towards, pre-finish |
-| Grooving | 9 (17 finish mode) | start, groove, datum left/right, finish offset X/Z, peck depth, stepover, tip width, feed, full retract, external/internal, front/back, Z shift/repeat, area/finish, dwell revs |
-| Finish pass | 14 | start, contour, feed, offset |
-| Drilling | 18 | start X/Z, depth, peck, feed, dwell |
-| Threading | 20 | start, outer/inner diameter lines, number of cuts, cut depth/data, lead in (default 5) / lead out (default 0), pitch (> 0, V1.21), angle, external/internal, towards, spring pass (own block, 21) |
+| Area clear | 6 (7 internal; FACE direction 8, internal 7; pre-finish 10 / 11 internal) | start, contour, depth of cut, offset X/Z, feed, towards/away, front/face, pre-finish yes/no, follow contour, retract distance |
+| Face clear | 8 (pre-finish 12) | start, contour, depth of cut, offset X/Z, feed, towards, pre-finish |
+| Grooving | 9 (17 finish mode) | start, groove, datum left/right, finish offset X/Z, peck depth, stepover, tip width, feed, full retract, external/internal, front/face (face grooving), Z shift/repeat, area/finish, dwell revs |
+| Finish pass | 14 (15 internal, 16 face) | start, contour, feed, offset, external/internal/face |
+| Drilling | 18 | start X/Z, depth, peck, feed, dwell, full retract, retract distance |
+| Threading | 20 | start, outer/inner diameter lines, number of cuts, cut depth/data, lead in (default 5) / lead out (default 0), pitch (> 0, V1.21), infeed angle (default 0), external/internal, towards, spring passes (count, #127=21 block) |
 | Dwell | - | revs (PRG `G4P<revs*1000>`) |
 | Move / rapid to point | - | X, Z (appended to the current tool block, or the empty block after an operation) |
 

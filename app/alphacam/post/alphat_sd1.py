@@ -8,13 +8,13 @@ lines a coordinate equal to the previous one is left out; the first motion line 
     G0 X Z, G99 F T M8M3G96                      later tool change (rapid to the change point first)
     G5 X Z                                       operation start
     G115 X Z                                     limits (= PRG #125/#126)
-    G70 R<1 = area pre-finish> E<0 ext, 1 int> U W                        finish pass
-    G71 P Q U W D R A45 E<100, -100 int, 401 face, 101 area FACE> H<passes>   area / face clear
-        P = the G21 line, Q = the G0 back to the start; R = retract (area 1, face 0.2)
+    G70 R<1 = area pre-finish> E<0 ext, 1 int, 2 face> U W                finish pass
+    G71 P Q U W D R A45 E<100, -100 int, 401 face, 101 area FACE; +200 FOLLOW> H<passes>   area / face clear
+        P = the G21 line, Q = the G0 back to the start; R = retract (area RETRACT DIST, default 1; face 0.2)
     G21 E<1, -1> Q<2, 1> C0, G0 approach, G1/G2/G3 nose-centre path, G0/G1 pull-off, G20, G0 start, G170/G171
     G75 P Q U W D I R E L H C A, G0/G1 drawn profile, G175                grooving (P/Q = first/last profile line)
     G78, the finish path, G178                                           grooving finish mode
-    G117 X Z(top + lead in), G76 X Z Q D I L B0 A0 E K F, G176 F           threading
+    G117 X Z(top + lead in), G76 X Z Q D I L B0 A<angle> E K<spring passes> F, G176 F   threading
     G74, the drill moves, G174                                           drilling
     G4 P<revs>, G0/G1                                                    dwell, moves
 

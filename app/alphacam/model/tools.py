@@ -40,7 +40,6 @@ class ToolLibrary:
         raise KeyError(tr("no tool {number}", number=number))
 
 
-# ALPHA-T / ALPHACAM standard library ATOOLIB (data/atoolib_v181_tools.csv): number, name, nose radius in mm.
 _ATOOLIB = [  # ALPHA-T's ATOOLIB.TL1 (vendor/AlphaT): number, name, nose radius (mm), front / rear clearance angles
     (1, "80 Deg Rougher 0.8R", 0.8, 87, 7), (2, "60 Deg Rougher 0.8R", 0.8, 87, 27),
     (3, "55 Deg Finisher 0.4R", 0.4, 87, 31), (4, "35 Deg Finisher 0.4R", 0.4, 87, 51),

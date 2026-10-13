@@ -122,7 +122,7 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - **#120** number of passes, **#121** pass number, **#122** tool memory slot.
 - **#123 / #124** tool start X and Z×2 (in a tool change block: the tool change point).
 - **#125 / #126** limits: lowest X minus 4× nose radius, lowest Z×2 minus 2× nose radius.
-- **#127** block kind: 1 tool change, 6/7 area clear (internal), 8 face clear, 9 grooving, 10/11/12 pre-finish, 14/15 finish (internal), 17 grooving finish mode, 18 drilling, 20 threading, 21 spring pass.
+- **#127** block kind: 1 tool change, 6/7 area clear (internal), 8 face clear, 9 grooving, 10/11/12 pre-finish, 14/15/16 finish (internal, face), 17 grooving finish mode, 18 drilling, 20 threading, 21 spring passes.
 - **#128** always 1, **#129** block number, **#130** feed×2 (threading: pitch×2), **#131** operation counter (inferred).
 - **M60 … M61** around each rapid **G0**, **M62** before feed moves **G1 / G2 / G3** (I as a diameter, K×2), **G32** thread cut with **U W** pull-out, **G4 P** dwell (revolutions×1000).
 - **M63** start of a pass, **M64** end of an operation, **M65** end of the program, **M66** start of a block or pass (inferred).
@@ -171,8 +171,8 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 ## Part settings
 
-Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same. They only change the picture, not the program. **Program units** writes the program (and the .SD1) in mm (M71) or inch (M70) whatever the drawing's units, like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
+Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program (and the .SD1) in mm (M71) or inch (M70) whatever the drawing's units, like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
 ## Preferences
 
-Main menu ▸ Preferences: units, billet size and first tool for new parts, and the language (after a restart).
+Main menu ▸ Preferences: units, billet size and first tool for new parts, the language (after a restart), and Export ▸ Also save the ALPHA-T drawing (.SDG) next to the program.

@@ -1,4 +1,5 @@
-"""Drawing tools on the Part canvas (TOUCH.md 5): Select, Line, Fillet, Chamfer, and contour picking.
+"""Drawing tools on the Part canvas (TOUCH.md 5): Select, Line, Arc, Fillet, Chamfer, Corner, Edit Element, the More
+commands (circle, tangents, parallel, split arc, blend arc, Mirror Image), ALPHA-T's one-letter keys, contour picking.
 
 Rough placement by tap or click is snapped (end points, axis, 1 mm grid) and direction-locked (Z, X, 45 degrees);
 exact values come from the command entry under the canvas: `X,Z` absolute or `@dX,dZ` relative to the last point,

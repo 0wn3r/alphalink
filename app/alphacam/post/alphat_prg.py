@@ -1,8 +1,9 @@
 """Alpha-T .PRG post (DESIGN.md section 5): project in, bytes out.
 
-Supported: tool blocks (with move/rapid and dwell appended), finish pass and area clear (external and internal,
-with offsets on external ops, lines and arcs, area pre-finish), face clear, grooving, drilling, threading, several
-operations and mid-program tool changes.
+Supported: tool blocks (with move/rapid and dwell appended), finish pass (external, internal, face) and area clear
+(external and internal, with offsets, lines and arcs, pre-finish, follow, retract distance), face clear, grooving
+(radial, internal, face), drilling (pecks, full retract, retract distance), threading (infeed angle, spring passes),
+several operations and mid-program tool changes; programs in other units than the drawing (Project.output_units).
 Everything is pinned by golden tests against the ALPHA-T samples in samples/alphat_v12."""
 
 from __future__ import annotations

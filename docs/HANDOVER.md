@@ -10,9 +10,9 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 | Track | Status |
 |---|---|
 | Lathe link | Works with the manual's cable and bridges. Programs load and run (Progress 29). Details in `docs/ALPHA-T_STATUS.md`. |
-| GNOME app | `app/` (AlphaLink CAM): drawing, all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, Ukrainian translation, in-app help, Flatpak. Status and design in `app/DESIGN.md`. |
-| Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample (`app/tests`); a few sub-micron known differences are listed in `app/tests/test_post.py`. |
-| Options | Every ALPHA-T option is sampled; AWAY and back grooving are refused on purpose (ALPHA-T's own output is unsafe). |
+| GNOME app | `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Status and design in `app/DESIGN.md`. |
+| Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample (`app/tests`) except the 7 refused AWAY samples and 3 that differ on purpose (chuck-end picks, GROOVE_back); sub-micron differences on FACE_slope/FACE_arcs and two inch samples. All listed in `app/tests/test_post.py`. |
+| Options | Every ALPHA-T option is sampled. AWAY (area, face, thread) is refused on purpose (ALPHA-T's own output is unsafe); contours picked from the chuck end are cut as if picked from the front. |
 
 ## Rules (from the user)
 - Use 8 build threads (`--jobs=8`).

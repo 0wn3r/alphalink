@@ -17,7 +17,7 @@ Base profile is MET2: X(dia) 0 -> 40 at Z0, 40 to Z-25, step to 60, 60 to Z-50, 
 | OFFSET_area_metric.* | area clear, OFFSET X0.5 Z0.2 | scripts/OFFSET_area.ks |
 | INT_finish_metric.* | internal finish, tool 12 (55 boring bar 0.4R), bore dia 50 to Z-20, 36 to Z-40, face to dia 20; tool start X15 Z5. #127=15 | scripts/INT_finish.ks |
 | INT_area_metric.* | internal area clear, same bore and tool (8 passes). #127=7 | scripts/INT_area.ks |
-| AWAY_area_tool5_metric.* | area clear, TOWARDS toggled to AWAY, tool 5 (80 deg L.H. rougher 0.8R; a right-hand tool gives "Invalid tip angle"). Suspicious: the passes still feed in -Z, to Z-103.2 (= -51.6 real), past the dia-100 shoulder at Z-50 | scripts/AWAY_area.ks |
+| AWAY_area_tool5_metric.* (kept as AREA_away_tool5_retry_metric, byte-identical) | area clear, TOWARDS toggled to AWAY, tool 5 (80 deg L.H. rougher 0.8R; a right-hand tool gives "Invalid tip angle"). Suspicious: the passes still feed in -Z, to Z-103.2 (= -51.6 real), past the dia-100 shoulder at Z-50 | scripts/AWAY_area.ks |
 | PREFINISH_area_metric.* | area clear with "Automatic Pre-Finish pass" = yes: an extra op after the roughing, #127=10, finish-style contour with a 45 deg 1 mm pull-off (X101.414 Z-98.586) | scripts/PREFINISH_area.ks |
 | TOOLCHG_rough1_finish3_metric.* | tool 1 (80 deg rougher 0.8R) area clear, then tool change to 3, finish pass | scripts/TOOLCHG.ks |
 
@@ -32,7 +32,7 @@ Learnt: the 2nd CHANGE TOOL first asks "Tool Change Position [X100 Z50]" (Enter)
 starts on the current tool. Contour pick needs one Enter per contour point, arc end points included.
 
 ## Inch versions (2026-10-13)
-`inch/*_inch.*`: the same 11 cases as an inch drawing with inch output (session METRIC=0 MMETRIC=0, save answer 1).
+`../alphat_v12_inch/*_inch.*`: 10 of the cases (MET2_finish_inch is in this folder) as an inch drawing with inch output (session METRIC=0 MMETRIC=0, save answer 1).
 Geometry is the metric part / 25 (dia 1.6/2.4/4, steps at Z-1/-2; radii 0.2 and 0.12; taper to (2.4,-1.6);
 offsets X0.02 Z0.008; bore dia 2/1.44/0.8 to Z-0.8/-1.6, tool start X0.6 Z0.2); tool start X5 Z0.2.
 Check: MET2 inch rebuilt with `gen_at.py --inch` is byte-identical to re-notes/alphat_samples/MET2_finish_inch.PRG.
@@ -77,7 +77,7 @@ groove/thread variants start from the original at_groove/at_thread scripts (groo
 ## Options the app still refused (2026-10-13 evening, metric, MET2, tool 3 unless noted)
 | # | Files | Exact menu values | Result / note |
 |---|---|---|---|
-| 1 | AREA_away_tool5_retry_metric.*, AREA_away_tool5_retry_preview.png | CHANGE TOOL 5, area clear TOWARDS->AWAY | Byte-identical to AWAY_area_tool5 (deterministic). The preview stops at the shoulder, but the PRG passes still end at Z-103.2 (-51.6 real), 1.6 past the Z-50 shoulder. SD1 E110, G21 E2 ... C1 |
+| 1 | AREA_away_tool5_retry_metric.* (preview screenshot in the cloud run folder only) | CHANGE TOOL 5, area clear TOWARDS->AWAY | Byte-identical to the first AWAY_area_tool5 run (deterministic; only this rerun is kept here). The preview stops at the shoulder, but the PRG passes still end at Z-103.2 (-51.6 real), 1.6 past the Z-50 shoulder. SD1 E110, G21 E2 ... C1 |
 | 2 | FACE_away_tool5_metric.* | CHANGE TOOL 5, face clear TOWARDS->AWAY | Tools 3, 9 and 19 are refused: "Invalid tip angle. Continue without collision check?". Tool 5: one pass only (H1, E411), still feeding X120 -> 36.8 at Z0 |
 | 2b | FACE_away_tool3_nocheck_metric.* | tool 3, AWAY, answered Enter (Yes) to "continue without collision check" | Same single pass as tool 5, with tool 3 values |
 | 3 | FACE_prefinish_metric.* | face clear, "Automatic Pre-Finish pass?" = Enter (Yes) | Extra op #127=12 after the face op (#127=8): finish contour, 45 deg pull-off X98.918 Z-99.718 |

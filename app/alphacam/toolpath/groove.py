@@ -1,4 +1,5 @@
-"""Grooving (#127=9), external, area mode: radial plunges along the profile (GROOVE sample).
+"""Grooving (#127=9, finish mode 17): radial plunges along the profile, external and internal, and face grooving
+(face_groove, FRONT off). The rules below are the external area mode (GROOVE sample).
 
 Rules from GROOVE_metric (stepover 2, tip width 3, datum left):
   * the tool reference is the tip's left (-Z) corner, so a plunge at Z covers Z .. Z + tip width;
