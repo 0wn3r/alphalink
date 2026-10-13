@@ -116,3 +116,39 @@ class GtkSmoke(unittest.TestCase):
         app.connect("activate", lambda *_: GLib.idle_add(run))
         app.run([])
         self.assertEqual(state, {"rows": 4, "export": True, "selected": 1, "text": 460})
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkEditing(unittest.TestCase):
+    def test_add_edit_delete_undo(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.load(EXAMPLES / "area_clear.alcam")
+            w._select_op(0)
+            w.add_op("finish")
+            out["ops"] = [o.type for o in w.project.operations]
+            w.apply_edit_from_editor("Change Feed", lambda p: setattr(p.operations[1], "feed", 0.1))
+            out["feed_in_prg"] = b"G1X40.Z0.F0.2\r\n" in w.pv.data
+            out["dirty"] = w.undo.modified
+            w._delete_selected()
+            out["after_delete"] = len(w.project.operations)
+            w._undo()
+            out["after_undo"] = len(w.project.operations)
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out, {"ops": ["area_clear", "finish"], "feed_in_prg": True, "dirty": True,
+                               "after_delete": 1, "after_undo": 2})

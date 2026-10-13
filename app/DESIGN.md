@@ -19,6 +19,9 @@ Status: **design draft 1** (2026-10-12).
   modem lines, hold-to-send with confirmation, transfer dialog with cancel, Manual Ops backup / restore (hold +
   warning), loopback test, transfer logs in ~/.local/state/alphalink-cam/logs, and a touch lock (also automatic
   during transfers). Not yet tried against the lathe from the app.
+- M4 part 1 (2026-10-13): editing. `alphacam/commands.py` undo stack (JSON snapshots); operation editor pane with
+  rows generated per operation type; add (menu, sensible defaults), delete (Undo toast), move up/down; undo/redo
+  (Ctrl+Z / Ctrl+Shift+Z, header buttons); Save / Save As (.alcam) and an unsaved-changes prompt. Next: drawing tools.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a

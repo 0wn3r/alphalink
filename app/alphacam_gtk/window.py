@@ -11,12 +11,15 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from alphacam.io.sdg import load_sdg  # noqa: E402
+from alphacam.commands import UndoStack  # noqa: E402
 from alphacam.model.project import Project  # noqa: E402
 from alphacam.preview import preview  # noqa: E402
 
 from .canvas.widget import LatheCanvas  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
+from .op_editor import OpEditor  # noqa: E402
+from .op_factory import OP_MENU, default_op  # noqa: E402
 
 OP_TITLES = {
     "tool_change": "Tool change", "area_clear": "Area clear", "face_clear": "Face clear", "groove": "Grooving",
@@ -59,6 +62,9 @@ class MainWindow(Adw.ApplicationWindow):
         self._block_lines: list[tuple[int, int, int | None]] = []  # (first line, last line, op index)
         self._font_pt = 11.0
         self._select_guard = False
+        self.undo: UndoStack | None = None
+        self._refresh_id = 0
+        self._editor_edit = False
 
         self.toasts = Adw.ToastOverlay()
         self.root = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
@@ -101,7 +107,15 @@ class MainWindow(Adw.ApplicationWindow):
         self.op_list.connect("row-selected", self._row_selected)
         side_scroll = Gtk.ScrolledWindow(child=self.op_list, vexpand=True)
         side = Adw.ToolbarView()
-        side.add_top_bar(Adw.HeaderBar())
+        side_header = Adw.HeaderBar()
+        add_menu = Gio.Menu()
+        for label, kind in OP_MENU:
+            item = Gio.MenuItem.new(label, None)
+            item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
+            add_menu.append_item(item)
+        side_header.pack_start(Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
+                                              tooltip_text="Add Operation"))
+        side.add_top_bar(side_header)
         side.set_content(side_scroll)
         side_page = Adw.NavigationPage(title="Operations", child=side)
 
@@ -164,6 +178,14 @@ class MainWindow(Adw.ApplicationWindow):
         header.set_title_widget(self.header_switcher)
         header.pack_start(Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
                                      tooltip_text="Open (Ctrl+O)"))
+        header.pack_start(Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
+                                     tooltip_text="Save (Ctrl+S)"))
+        undo_box = Gtk.Box()
+        undo_box.add_css_class("linked")
+        undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text="Undo (Ctrl+Z)"))
+        undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
+                                   tooltip_text="Redo (Ctrl+Shift+Z)"))
+        header.pack_start(undo_box)
         menu = Gio.Menu()
         menu.append("Fit Part", "win.fit")
         layout = Gio.Menu()
@@ -190,7 +212,19 @@ class MainWindow(Adw.ApplicationWindow):
         content = Adw.ToolbarView()
         content.add_top_bar(header)
         content.add_top_bar(self.banner)
-        content.set_content(self.stack)
+        self.editor = OpEditor(self.apply_edit_from_editor, self._move_selected, self._delete_selected,
+                               lambda: self._select_op(None))
+        # editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
+        # negative allocations during its slide animation here)
+        self.editor.set_size_request(340, -1)
+        self.editor.add_css_class("editor-pane")
+        self.editor_reveal = Gtk.Revealer(child=self.editor, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT,
+                                          reveal_child=False)
+        self.editor_split = Gtk.Box()
+        self.stack.set_hexpand(True)
+        self.editor_split.append(self.stack)
+        self.editor_split.append(self.editor_reveal)
+        content.set_content(self.editor_split)
         content.add_bottom_bar(self.switcher_bar)
         self.content_page = Adw.NavigationPage(title="Part", child=content)
 
@@ -244,7 +278,13 @@ class MainWindow(Adw.ApplicationWindow):
         add("fit", lambda *_: self.canvas.fit(), ["<Control>0"])
         add("zoom-in", lambda *_: self.canvas.zoom(1.25), ["<Control>plus", "<Control>equal"])
         add("zoom-out", lambda *_: self.canvas.zoom(0.8), ["<Control>minus"])
-        add("deselect", lambda *_: self.op_list.unselect_all(), ["Escape"])
+        add("deselect", lambda *_: self._select_op(None), ["Escape"])
+        add("save", lambda *_: self.save(), ["<Control>s"])
+        add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
+        self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
+        self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
+        add("add-op", lambda a, v: self.add_op(v.get_string()), param=GLib.VariantType.new("s"))
+        self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
                                                GLib.Variant.new_string("auto"))
         layout.connect("change-state", self._input_layout)
@@ -284,14 +324,35 @@ class MainWindow(Adw.ApplicationWindow):
 
     def set_project(self, project: Project) -> None:
         self.project = project
+        self.undo = UndoStack(project, lambda p: self._schedule_refresh())
+        self.root.set_visible_child_name("main")
+        self.editor_reveal.set_reveal_child(False)
+        self.refresh(fit=True)
+
+    def _schedule_refresh(self) -> None:
+        if not self._refresh_id:
+            self._refresh_id = GLib.idle_add(self._idle_refresh)
+
+    def _idle_refresh(self) -> bool:
+        self._refresh_id = 0
+        self.refresh()
+        return False
+
+    def refresh(self, fit: bool = False) -> None:
+        """Re-post and redraw after any change; keeps the view and the selected operation."""
+        project = self.project
+        selected = self.selected_index()
         self.pv = preview(project)
         name = self.path.name if self.path else "Untitled"
-        self.set_title(f"{name} – AlphaLink CAM")
-        self.content_page.set_title(name)
-        self.root.set_visible_child_name("main")
+        dirty = "• " if self.undo and self.undo.modified else ""
+        self.set_title(f"{dirty}{name} – AlphaLink CAM")
+        self.content_page.set_title(dirty + name)
         self._fill_ops()
         self._fill_program()
-        self.canvas.set_project(project, self.pv)
+        if fit:
+            self.canvas.set_project(project, self.pv)
+        else:
+            self.canvas.update(project, self.pv)
         if self.pv.error:
             n = "" if self.pv.error_op is None else f"Operation {self.pv.error_op + 1}: "
             self.banner.set_title(f"{n}{self.pv.error}. Export is disabled.")
@@ -299,10 +360,144 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self.banner.set_revealed(False)
         self.export_action.set_enabled(self.pv.data is not None)
+        self.undo_action.set_enabled(bool(self.undo and self.undo.can_undo))
+        self.redo_action.set_enabled(bool(self.undo and self.undo.can_redo))
         prog = self.pv.program
         tools = sorted({b.tool for b in prog.blocks if b.op_kind == 1}) if prog else []
         self.machine.set_program(self.pv.data, f"Program {project.program_number} · {name} · "
                                                f"tools {', '.join(f'T{t}' for t in tools)}")
+        if selected is not None and selected < len(project.operations):
+            self._select_op(selected, rebuild_editor=not self._editor_edit)
+        else:
+            self._select_op(None)
+
+    # --- editing ----------------------------------------------------------------------------------------
+
+    def apply_edit(self, label: str, fn) -> bool:
+        try:
+            self.undo.apply(label, fn)
+        except (ValueError, KeyError, IndexError) as e:
+            self.toast(f"{label}: {e}")
+            return False
+        return True
+
+    def apply_edit_from_editor(self, label: str, fn) -> None:
+        """Edits from the editor's own rows must not rebuild the editor (that would steal focus mid-typing)."""
+        self._editor_edit = True
+        self.apply_edit(label, fn)
+        self.refresh()
+        self._editor_edit = False
+
+    def _undo(self) -> None:
+        label = self.undo.undo() if self.undo else None
+        if label:
+            self.toast(f"Undid {label}")
+
+    def _redo(self) -> None:
+        label = self.undo.redo() if self.undo else None
+        if label:
+            self.toast(f"Redid {label}")
+
+    def add_op(self, kind: str) -> None:
+        if self.project is None:
+            return
+        at = self.selected_index()
+        at = len(self.project.operations) if at is None else at + 1
+        op = default_op(kind, self.project, at)
+        if self.apply_edit(f"Add {op_title(op)}", lambda p: p.operations.insert(at, op)):
+            self.refresh()
+            self._select_op(at)
+
+    def _delete_selected(self) -> None:
+        i = self.selected_index()
+        if i is None:
+            return
+        title = op_title(self.project.operations[i])
+        if self.apply_edit(f"Delete {title}", lambda p: p.operations.pop(i)):
+            self.refresh()
+            self._select_op(min(i, len(self.project.operations) - 1) if self.project.operations else None)
+            toast = Adw.Toast(title=f"Deleted {title}", button_label="_Undo", action_name="win.undo", timeout=6)
+            self.toasts.add_toast(toast)
+
+    def _move_selected(self, delta: int) -> None:
+        i = self.selected_index()
+        if i is None or not 0 <= i + delta < len(self.project.operations):
+            return
+
+        def move(p):
+            ops = p.operations
+            ops[i], ops[i + delta] = ops[i + delta], ops[i]
+        if self.apply_edit("Move operation", move):
+            self.refresh()
+            self._select_op(i + delta)
+
+    # --- saving -----------------------------------------------------------------------------------------
+
+    def save(self) -> None:
+        if self.project is None:
+            return
+        if self.path is None or self.path.suffix.lower() != ".alcam":
+            self.save_dialog()
+            return
+        self._write(self.path)
+
+    def save_dialog(self, then=None) -> None:
+        if self.project is None:
+            return
+        stem = self.path.stem if self.path else "part"
+        dlg = Gtk.FileDialog(title="Save Part", initial_name=f"{stem}.alcam")
+
+        def done(d, res):
+            try:
+                f = d.save_finish(res)
+            except GLib.Error:
+                return
+            path = Path(f.get_path())
+            if path.suffix.lower() != ".alcam":
+                path = path.with_suffix(".alcam")
+            if self._write(path) and then:
+                then()
+
+        dlg.save(self, None, done)
+
+    def _write(self, path: Path) -> bool:
+        try:
+            self.project.save(path)
+        except OSError as e:
+            self.toast(f"Could not save: {e}")
+            return False
+        self.path = path
+        self.undo.mark_saved()
+        self.refresh()
+        self.toast(f"Saved {path.name}")
+        return True
+
+    def _close_request(self, *_) -> bool:
+        if not (self.undo and self.undo.modified):
+            return False
+        alert = Adw.AlertDialog(heading="Save changes?",
+                                body="The part has changes that are not saved. They are lost if you close without saving.")
+        alert.add_response("cancel", "_Cancel")
+        alert.add_response("discard", "_Discard")
+        alert.add_response("save", "_Save")
+        alert.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
+        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("save")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r == "discard":
+                self.undo.mark_saved()
+                self.close()
+            elif r == "save":
+                if self.path is not None and self.path.suffix.lower() == ".alcam":
+                    self._write(self.path) and self.close()
+                else:
+                    self.save_dialog(then=self.close)
+
+        alert.connect("response", response)
+        alert.present(self)
+        return True
 
     def export_dialog(self) -> None:
         if self.pv is None or self.pv.data is None:
@@ -329,7 +524,9 @@ class MainWindow(Adw.ApplicationWindow):
     # --- operations list --------------------------------------------------------------------------------
 
     def _fill_ops(self) -> None:
+        self._select_guard = True
         self.op_list.remove_all()
+        self._select_guard = False
         for i, op in enumerate(self.project.operations):
             pv = self.pv.for_op(i)
             row = Adw.ActionRow(title=op_title(op), subtitle=op_summary(op, pv), activatable=True)
@@ -345,21 +542,43 @@ class MainWindow(Adw.ApplicationWindow):
                     row.set_subtitle(self.pv.error or "")
             self.op_list.append(row)
 
+    def selected_index(self) -> int | None:
+        row = self.op_list.get_selected_row()
+        return None if row is None else row.get_index()
+
     def _row_selected(self, listbox, row) -> None:
         if self._select_guard:
             return
         index = None if row is None else row.get_index()
         self.canvas.select(index)
         self._highlight_program(index)
-        if row is not None and self.split.get_collapsed():
-            self.split.set_show_content(True)
+        if index is None:
+            self.editor_reveal.set_reveal_child(False)
+        else:
+            self.editor.show_op(self.project, index, op_title(self.project.operations[index]))
+            self.editor_reveal.set_reveal_child(True)
+            if self.split.get_collapsed():
+                self.split.set_show_content(True)
 
-    def _select_op(self, index: int | None) -> None:
+    def _select_op(self, index: int | None, rebuild_editor: bool = True) -> None:
         if index is None:
             self.op_list.unselect_all()
+            self.canvas.select(None)
+            self.editor_reveal.set_reveal_child(False)
             return
         row = self.op_list.get_row_at_index(index)
-        if row is not None:
+        if row is None:
+            return
+        if not rebuild_editor:
+            self._select_guard = True
+            self.op_list.select_row(row)
+            self._select_guard = False
+            self.canvas.select(index)
+            self._highlight_program(index)
+            return
+        if self.op_list.get_selected_row() is row:
+            self._row_selected(self.op_list, row)
+        else:
             self.op_list.select_row(row)
 
     def _op_tapped(self, canvas, index: int) -> None:
@@ -403,7 +622,9 @@ class MainWindow(Adw.ApplicationWindow):
             buf.apply_tag(self._hl, it_a, it_b)
         if spans:
             ok, it = buf.get_iter_at_line(spans[0][0] - 1)
-            GLib.idle_add(lambda: self.program_view.scroll_to_iter(it, 0.1, True, 0, 0) and False)
+            mark = buf.get_mark("op-start") or buf.create_mark("op-start", it, True)
+            buf.move_mark(mark, it)
+            GLib.idle_add(lambda: self.program_view.scroll_to_mark(mark, 0.1, True, 0, 0) and False)
 
     def _program_tapped(self, gesture, n, x, y) -> None:
         bx, by = self.program_view.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, int(x), int(y))
