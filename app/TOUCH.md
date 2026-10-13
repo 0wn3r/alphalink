@@ -9,7 +9,7 @@ The app runs on two kinds of screen:
 | Where | Typical hardware | What the user does there |
 |---|---|---|
 | Desk / office | laptop, mouse, touchpad, maybe a 2-in-1 | draws parts, sets up operations, posts PRGs |
-| Next to the lathe | panel PC or tablet-style laptop on an arm, dirty or gloved hands, coolant nearby | checks the part and toolpaths, scrubs the simulation, reads the program, makes small edits, sends to the control |
+| Next to the lathe | **Microsoft Surface Pro on Ubuntu 26.04 / 26.10** (section 1.1), on an arm or stand, with fingers plus Type Cover and mouse, coolant nearby | checks the part and toolpaths, scrubs the simulation, reads the program, makes small edits, sends to the control |
 
 So the goal is: **touch-first for review, simulation and sending; fully touch-capable (but not touch-optimised at the
 cost of precision) for drawing.** Keyboard command entry (`40,-25` Enter, as in ALPHA-T) stays the fastest path and is
@@ -28,6 +28,26 @@ Design rules that follow from the shop floor:
   (overview, workspaces, on-screen keyboard). The app only uses one- and two-finger gestures, away from the edges.
 - **T5. Rotation means nothing on a lathe drawing.** X (diameter) is always up, Z always horizontal. Two-finger rotate is
   ignored on purpose.
+
+### 1.1 Target device: Surface Pro on Ubuntu
+
+The chosen device is a Microsoft Surface Pro running Ubuntu 26.04 LTS or 26.10. What that means for the app and the setup
+(source: the linux-surface project's
+[supported devices list](https://github.com/linux-surface/linux-surface/wiki/Supported-Devices-and-Features)):
+
+| Topic | Consequence |
+|---|---|
+| **Model** | Intel models only: Surface Pro 7, 7+, 8, 9 (Intel), 10 and the Intel Pro 11. The ARM models (Pro X, Pro 9 5G/SQ3, Pro 11 Snapdragon) are listed as unsupported. Pro 10 "with 5G" has no Type Cover or sensor support. |
+| **Kernel** | Touch and pen need the **linux-surface kernel** plus the `iptsd` touch daemon (Pro 8 and later say "requires linux-surface kernel"). Stock Ubuntu gives no touch. Install from the linux-surface apt repository and enrol its Secure Boot key (MOK). Prefer **26.04 LTS**: the linux-surface packages may lag a fresh 26.10 release. |
+| **Session** | Ubuntu has no GNOME X11 session any more, so it is GNOME on Wayland. That is the best case for GTK4 touch and pen. |
+| **Screen** | 13" 2880x1920 (Pro 8 and later), about 267 ppi, run at 200% scale, so about 1440x960 logical px. At 200%, 48 logical px is about 9 mm, a good finger target; the 24 px hit radius in section 3 is about a 9 mm wide circle. |
+| **Touch type** | Capacitive multi-touch, no glove mode: bare fingers. Gloves are out, so the rule "everything works with one finger" (T1) stays for robustness but no longer for gloves. |
+| **Inputs in use** | Fingers, the Type Cover keyboard and a mouse, often in the same session: touch for navigating and reviewing, mouse and keyboard for precise drawing and typed values. A pen is unlikely; it works if present (section 5.4) but nothing depends on it. |
+| **Orientation** | Auto-rotation (iio-sensor-proxy). Landscape with the Type Cover is the main layout; portrait must still work (an `AdwBreakpoint` on aspect ratio: canvas on top, ops and program in a bottom sheet). |
+| **Keyboard and mouse** | With the Type Cover attached, ALPHA-T style typed entry works and all shortcuts apply. Detached, GNOME's on-screen keyboard appears for text fields; numeric fields use our keypad (section 6). Because users switch between mouse and finger constantly, the Automatic input layout (section 3) must switch quickly and without reflowing the canvas: only control sizes change, never the view. |
+| **Serial** | USB-C only on Pro 8 and later (two ports): the PL2303 adapter and a wired mouse together need a USB-C hub or dock, or use a Bluetooth mouse. The `dialout` group rule from DESIGN.md section 7 is unchanged. |
+| **Power** | It is a tablet that suspends when idle. A transfer must inhibit suspend and idle (`Gtk.Application.inhibit` with `SUSPEND` and `IDLE`) for its duration, or the link drops mid-program. |
+| **Shop floor** | Not rugged: a rugged case, a VESA or clamp mount on an arm away from the coolant, and a screen protector. Coolant drops on a capacitive screen make phantom touches, which is why touch lock (7.4) matters. |
 
 ## 2. What GTK4 and libadwaita give us
 
@@ -150,6 +170,20 @@ The tool palette is an `AdwToggleGroup` in a bottom bar in touch mode (thumb rea
 If the stock gestures prove hard to coordinate in Python, the canvas switches to one `GtkEventControllerLegacy` and our
 own small recogniser that tracks touch sequences directly. The tool code does not change (section 8).
 
+### 5.4 Mouse, keyboard and fingers on one device
+
+On the Surface the same person uses all three, often within a minute:
+
+- **Mouse:** precise drawing (6 px hit radius, hover snap preview, no loupe), box select by dragging on empty space,
+  middle-drag or wheel to pan, Ctrl+wheel to zoom.
+- **Keyboard:** the ALPHA-T style command entry (`40,-25` Enter) and shortcuts.
+- **Fingers:** navigation, selecting, reviewing, the ops list, the simulation, and rough edits with snapping and the
+  keypad.
+- Each event uses its own source's rules (hit radius, drag on empty space = pan for touch but box select for mouse), so
+  mixing needs no mode switch. Only control sizes follow the Automatic input layout (section 3).
+- A pen, if one is ever used, behaves like a precise mouse: tip = click, hover = snap preview, side button = context
+  menu, and touches on the canvas are ignored while the pen is near the screen (palm rejection). This is not planned work.
+
 ## 6. Numeric keypad
 
 The system on-screen keyboard is a full QWERTY layout and covers half the screen. AlphaLink has its own keypad, shown
@@ -240,22 +274,25 @@ alphacam_gtk/widgets/keypad.py
 - **Recogniser:** feed recorded event sequences into the router.
 - **End to end:** a virtual multi-touch device through `uinput` (python-evdev) under a headless GNOME/mutter or weston
   session, or `libinput record` / `libinput replay` traces captured on the real shop screen.
-- **Hardware:** a checklist run on the actual panel: pinch, pan, fling, long press, gloves, a wet screen, and touch lock.
+- **Hardware:** a checklist run on the Surface: pinch, pan, fling, long press, switching between mouse and finger,
+  portrait rotation, a wet screen, touch lock, and a transfer with the screen idle (suspend inhibit).
 
 ## 10. Milestone placement
 
 | M | Touch work |
 |---|---|
 | M2 (GTK shell) | InputRouter + ViewTransform: pinch, two-finger pan, one-finger pan, fling, double-tap fit, on-canvas zoom buttons; source-aware tap selection; InputMode + `.touch` density; op list (tap, handle reorder, bottom sheet); program page (kinetic scroll, pinch font size, line ↔ canvas link) |
-| M3 (machine) | hold to send, touch lock, large transfer dialog |
+| M3 (machine) | hold to send, touch lock, large transfer dialog, suspend inhibit during transfers |
 | M4 (drawing tools, ops) | line/arc/chamfer touch tools, snapping with direction locks, loupe, fine drag, value chips, keypad, pick on drawing, simulation scrub strip |
 | M5 | hardware checklist on the shop screen, preference polish |
 
 ## 11. Open questions
 
-1. Which screen will be next to the lathe: a capacitive panel PC, a resistive one (single touch only), a 2-in-1
-   laptop, or a tablet? This decides how much of the multi-touch layer gets used there and how big the touch targets
-   must be.
-2. Gloves at the screen: yes or no? (Capacitive needs a glove-mode panel; resistive works with gloves.)
-3. Should the two-finger tap undo be on by default?
-4. Is libadwaita 1.7 acceptable (for `AdwToggleGroup`), or do we stay on 1.6 and build the palette from toggle buttons?
+1. Which Surface Pro model? It must be an Intel one (section 1.1), and the Pro 8 or later has the 13" 2880x1920 screen
+   the sizes above assume.
+2. Should the two-finger tap undo be on by default?
+3. Is libadwaita 1.7 acceptable (for `AdwToggleGroup`), or do we stay on 1.6 and build the palette from toggle buttons?
+   Ubuntu 26.04 ships a newer libadwaita than 1.7, so the system side is fine; this is only about the minimum we declare.
+
+Settled: the device is a Surface Pro on Ubuntu 26.04/26.10, used with fingers, the Type Cover keyboard and a mouse.
+No gloves; a pen is unlikely.
