@@ -115,6 +115,9 @@ msgstr "Фаска {size}"
 msgid "Pick contour"
 msgstr "Вибір контуру"
 
+msgid "Help"
+msgstr "Довідка"
+
 msgid "Hold to start"
 msgstr "Утримуйте, щоб почати"
 
