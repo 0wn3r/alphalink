@@ -927,3 +927,8 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
   `LIMITS X 0.000 Z 0.000` for the tool block (no #125/#126 there) and the turret on T01 while the program wants T03.
 * So C4 is settled for Z and feed on the control display: ALPHA-T's x2 is what the T macros expect. Thread pitch x2
   is assumed by the same logic but not yet seen on the control.
+* Machine fact (user, 2026-10-13): the turret is **manual** (indexed by hand), but the control has **tool memory**
+  (offsets stored per tool number). So `#122=<tool>` selects the stored offsets and a tool block means "operator
+  changes the tool at the tool change point" (X100 Z50 by default). The tool numbers in the CAM must match the
+  control's tool memory slots (e.g. T03 = the 55 deg finisher with its measured offsets). MET2 and MOVE_RAPID were
+  run on the machine; the user judged the result close, with any remaining differences easy to fix later.
