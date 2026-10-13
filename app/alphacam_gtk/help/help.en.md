@@ -153,6 +153,10 @@ On the Part page, while no text field has the focus, ALPHA-T's one-letter comman
 - Picking a contour, **3** or Enter finishes it.
 - Not mapped: E (exit) and Tab. F1 stays this help.
 
+## Part settings
+
+Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same. They only change the picture, not the program.
+
 ## Preferences
 
 Main menu ▸ Preferences: units, billet size and first tool for new parts, and the language (after a restart).

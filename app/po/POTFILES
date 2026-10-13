@@ -9,6 +9,7 @@ alphacam_gtk/canvas/view.py
 alphacam_gtk/canvas/widget.py
 alphacam_gtk/drawing_tools.py
 alphacam_gtk/help.py
+alphacam_gtk/hit_keys.py
 alphacam_gtk/hold_button.py
 alphacam_gtk/i18n.py
 alphacam_gtk/input_mode.py

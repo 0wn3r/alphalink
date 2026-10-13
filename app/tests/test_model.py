@@ -115,3 +115,17 @@ class NumberFormat(unittest.TestCase):
         for value, decimals, text in cases:
             with self.subTest(value=value, decimals=decimals):
                 self.assertEqual(format_number(value, decimals), text)
+
+
+class BilletOptions(unittest.TestCase):
+    def test_bore_jaws_tailstock_round_trip_and_old_files(self):
+        from alphacam.model.project import Billet, Project
+
+        p = Project(billet=Billet(120, 100, bore=20, jaws="internal", tailstock=True))
+        q = Project.from_dict(p.to_dict())
+        self.assertEqual((q.billet.bore, q.billet.jaws, q.billet.tailstock), (20, "internal", True))
+        old = p.to_dict()
+        for k in ("bore", "jaws", "tailstock"):
+            del old["billet"][k]
+        r = Project.from_dict(old)  # parts saved before these options open as before
+        self.assertEqual((r.billet.bore, r.billet.jaws, r.billet.tailstock), (0.0, "external", False))

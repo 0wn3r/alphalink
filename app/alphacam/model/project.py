@@ -21,6 +21,9 @@ class Billet:
     diameter: float = 100.0
     length: float = 100.0
     face_allowance: float = 0.8
+    bore: float = 0.0  # inner diameter of a tube billet; 0 = solid bar
+    jaws: str = "external"  # external (gripping the bar, as ALPHA-T draws) | internal (expanding in the bore)
+    tailstock: bool = False  # show the tailstock centre at the front face (ALPHA-T "Display tailstock")
 
 
 @dataclass

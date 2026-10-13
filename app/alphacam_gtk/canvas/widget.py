@@ -90,6 +90,8 @@ class LatheCanvas(Gtk.DrawingArea):
         if p is not None:
             zs += [-p.billet.length - 21]
             rs.append(p.billet.diameter / 2 + 16)
+            if getattr(p.billet, "tailstock", False):
+                zs.append(6 * 1.732 + 30)
             for g in p.geometry:
                 for pt in (g.a, g.b):
                     zs.append(pt.z)
@@ -164,21 +166,45 @@ class LatheCanvas(Gtk.DrawingArea):
         cr.line_to(width, y0)
         cr.stroke()
         cr.set_dash([])
-        # stepped chuck jaws behind the billet (20 mm, like the ALPHA-T drawing layer)
-        zc, rb = -p.billet.length, p.billet.diameter / 2
+        b = p.billet
+        zc, rb = -b.length, b.diameter / 2
         self._rgb(cr, "chuck")
-        for i, step in enumerate((5, 10, 15)):
-            x0, ytop = v.to_screen(2 * (rb + step), zc - 7 * i)
-            x1, ybot = v.to_screen(2 * (rb - 5 + step - 5 * (i > 0)), zc - 7 * (i + 1))
-            cr.rectangle(x1, ytop, x0 - x1, ybot - ytop)
+        if getattr(b, "jaws", "external") == "internal":
+            # expanding jaws gripping the bore: the first step inside the part, the next two behind it, each
+            # reaching further in towards the axis (mirror of the external jaws)
+            rg = b.bore / 2 if b.bore > 0 else rb * 0.4
+            for i in range(3):
+                z0 = zc + 7 if i == 0 else zc - 7 * (i - 1)
+                self._rect_rz(cr, max(rg - 5 * (i + 1), 0), rg + 5 * i, z0 - 7, z0)
+        else:
+            # stepped chuck jaws behind the billet (20 mm, like the ALPHA-T drawing layer)
+            for i, step in enumerate((5, 10, 15)):
+                x0, ytop = v.to_screen(2 * (rb + step), zc - 7 * i)
+                x1, ybot = v.to_screen(2 * (rb - 5 + step - 5 * (i > 0)), zc - 7 * (i + 1))
+                cr.rectangle(x1, ytop, x0 - x1, ybot - ytop)
+                cr.fill()
+        if getattr(b, "tailstock", False):
+            # live centre at the front face: a 60-degree point on the axis, then the quill
+            self._rgb(cr, "chuck")
+            pts = [v.to_screen(0, 0), v.to_screen(2 * 6, 6 * 1.732), v.to_screen(-2 * 6, 6 * 1.732)]
+            cr.move_to(*pts[0])
+            for q in pts[1:]:
+                cr.line_to(*q)
+            cr.close_path()
             cr.fill()
+            self._rect_rz(cr, -12, 12, 6 * 1.732, 6 * 1.732 + 30)
         # billet
         self._rgb(cr, "billet")
         cr.set_dash([6, 4])
-        xa, ya = v.to_screen(p.billet.diameter, 0)
-        xb, yb = v.to_screen(-p.billet.diameter, -p.billet.length)
+        xa, ya = v.to_screen(b.diameter, 0)
+        xb, yb = v.to_screen(-b.diameter, -b.length)
         cr.rectangle(xb, ya, xa - xb, yb - ya)
         cr.stroke()
+        if b.bore > 0:  # tube billet: its bore
+            for s in (1, -1):
+                cr.move_to(*v.to_screen(s * b.bore, 0))
+                cr.line_to(*v.to_screen(s * b.bore, -b.length))
+            cr.stroke()
         cr.set_dash([])
         # part profile: upper half bold, mirror faint
         for mirror, alpha, lw in ((-1, 0.25, 1.0), (1, 1.0, 2.2)):
@@ -242,6 +268,12 @@ class LatheCanvas(Gtk.DrawingArea):
         cr.move_to(sx, sy - 7)
         cr.line_to(sx, sy + 7)
         cr.stroke()
+
+    def _rect_rz(self, cr, r0: float, r1: float, z0: float, z1: float) -> None:
+        """Fill the rectangle between radii r0..r1 and Z z0..z1 (model units)."""
+        (ax, ay), (bx, by) = self.view.to_screen(2 * r0, z0), self.view.to_screen(2 * r1, z1)
+        cr.rectangle(min(ax, bx), min(ay, by), abs(bx - ax), abs(by - ay))
+        cr.fill()
 
     def _arc(self, cr, a, b, c, ccw: bool) -> None:
         """G3/ccw is counter-clockwise with Z right and X up: decreasing cairo angle on screen (y down)."""

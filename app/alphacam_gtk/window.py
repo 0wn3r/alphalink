@@ -229,6 +229,7 @@ class MainWindow(Adw.ApplicationWindow):
         header.pack_start(undo_box)
         menu = Gio.Menu()
         menu.append(_("Fit Part"), "win.fit")
+        menu.append(_("Part Settings…"), "win.part-settings")
         layout = Gio.Menu()
         for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
             item = Gio.MenuItem.new(label, None)
@@ -326,6 +327,7 @@ class MainWindow(Adw.ApplicationWindow):
         add("new", lambda *_: self.new_dialog(), ["<Control>n"])
         add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
         add("help", lambda *_: HelpDialog().present(self), ["F1"])
+        add("part-settings", lambda *_: self.part_settings_dialog())
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
@@ -637,20 +639,47 @@ class MainWindow(Adw.ApplicationWindow):
         dlg.add(page)
         dlg.present(self)
 
+    def _billet_rows(self, b) -> tuple[Adw.PreferencesGroup, dict]:
+        """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock."""
+        group = Adw.PreferencesGroup()
+        rows = {}
+        for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 1, 1000),
+                                       ("length", _("Billet length"), None, 1, 2000),
+                                       ("bore", _("Bore"), _("tube billet; 0 = solid bar"), 0, 1000)):
+            r = Adw.SpinRow.new_with_range(lo, hi, 1)
+            r.set_title(title)
+            if sub:
+                r.set_subtitle(sub)
+            r.set_digits(1)
+            r.set_value(getattr(b, key))
+            rows[key] = r
+            group.add(r)
+        rows["jaws"] = Adw.ComboRow(title=_("Chuck jaws"),
+                                    model=Gtk.StringList.new([_("On the outside"), _("In the bore")]),
+                                    selected=1 if b.jaws == "internal" else 0)
+        rows["tailstock"] = Adw.SwitchRow(title=_("Show tailstock"), active=b.tailstock)
+        group.add(rows["jaws"])
+        group.add(rows["tailstock"])
+        return group, rows
+
+    @staticmethod
+    def _billet_from(rows):
+        from alphacam.model.project import Billet
+
+        return Billet(diameter=rows["diameter"].get_value(), length=rows["length"].get_value(),
+                      bore=rows["bore"].get_value(), jaws="internal" if rows["jaws"].get_selected() == 1 else "external",
+                      tailstock=rows["tailstock"].get_active())
+
     def new_dialog(self) -> None:
         """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
+        from alphacam.model.project import Billet
+
         alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
-        group = Adw.PreferencesGroup()
         units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
                              selected=1 if settings()["units"] == "inch" else 0)
-        dia = Adw.SpinRow.new_with_range(1, 1000, 1)
-        dia.set_title(_("Billet diameter"))
-        dia.set_value(settings()["billet_diameter"])
-        length = Adw.SpinRow.new_with_range(1, 2000, 1)
-        length.set_title(_("Billet length"))
-        length.set_value(settings()["billet_length"])
-        for r in (units, dia, length):
-            group.add(r)
+        group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
+                                               length=settings()["billet_length"]))
+        group.add(units)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
         alert.add_response("create", _("_Create"))
@@ -662,21 +691,42 @@ class MainWindow(Adw.ApplicationWindow):
             if r != "create":
                 return
             from alphacam.model.geometry import Point
-            from alphacam.model.project import Billet
 
             inch = units.get_selected() == 1
             settings().set("units", "inch" if inch else "mm")
-            settings().set("billet_diameter", dia.get_value())
-            settings().set("billet_length", length.get_value())
+            settings().set("billet_diameter", rows["diameter"].get_value())
+            settings().set("billet_length", rows["length"].get_value())
             k = 25.4 if inch else 1.0
-            project = Project(units="inch" if inch else "mm",
-                              billet=Billet(diameter=dia.get_value(), length=length.get_value()),
+            project = Project(units="inch" if inch else "mm", billet=self._billet_from(rows),
                               tool_change=Point(round(100 / k, 4), round(50 / k, 4)),
                               first_tool=int(settings()["first_tool"]))
             self.path = None
             self.set_project(project)
             self.drawing.set_tool("line")
             self.toast(_("Draw the profile: tap points, or type X,Z and Enter"))
+
+        alert.connect("response", response)
+        alert.present(self)
+
+    def part_settings_dialog(self) -> None:
+        """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""
+        if self.project is None:
+            return
+        alert = Adw.AlertDialog(heading=_("Part Settings"), body=_("Billet, chuck jaws and tailstock of this part."))
+        group, rows = self._billet_rows(self.project.billet)
+        alert.set_extra_child(group)
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("apply", _("_Apply"))
+        alert.set_response_appearance("apply", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("apply")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r == "apply":
+                billet = self._billet_from(rows)
+                billet.face_allowance = self.project.billet.face_allowance
+                if self.apply_edit(_("Part settings"), lambda p: setattr(p, "billet", billet)):
+                    self.refresh(fit=True)
 
         alert.connect("response", response)
         alert.present(self)

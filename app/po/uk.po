@@ -37,6 +37,18 @@ msgstr "Кут"
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
 
+msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
+
+msgid "Move the cursor to X,Z  then Enter"
+msgstr "Перемістити курсор у X,Z  і Enter"
+
+msgid "Move the cursor by dX,dZ  then Enter"
+msgstr "Перемістити курсор на dX,dZ  і Enter"
+
+msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
+
 msgid "_Done"
 msgstr "_Готово"
 
@@ -55,32 +67,20 @@ msgstr "Торкніться елементів контуру в порядку
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
 
-msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
-msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
-
-msgid "Move the cursor to X,Z  then Enter"
-msgstr "Перемістити курсор у X,Z  і Enter"
-
-msgid "Move the cursor by dX,dZ  then Enter"
-msgstr "Перемістити курсор на dX,dZ  і Enter"
-
-msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
-msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
-
 msgid "Command aborted"
 msgstr "Команду скасовано"
-
-msgid "No point to find"
-msgstr "Немає точки, яку можна знайти"
 
 msgid "No intersection to find"
 msgstr "Немає перетину, який можна знайти"
 
-msgid "No line to find"
-msgstr "Немає лінії, яку можна знайти"
+msgid "No point to find"
+msgstr "Немає точки, яку можна знайти"
 
 msgid "No arc to find"
 msgstr "Немає дуги, яку можна знайти"
+
+msgid "No line to find"
+msgstr "Немає лінії, яку можна знайти"
 
 msgid "{what} found: - or Delete erases it"
 msgstr "Знайдено {what}: - або Delete стирає"
@@ -100,14 +100,17 @@ msgstr "Вимірювання: торкніться 1-ї точки або по
 msgid "Measure: now the 2nd point"
 msgstr "Вимірювання: тепер 2-га точка"
 
-msgid "Text"
-msgstr "Текст"
-
 msgid "At X{x} Z{z}"
 msgstr "У точці X{x} Z{z}"
 
+msgid "Text"
+msgstr "Текст"
+
 msgid "Height"
 msgstr "Висота"
+
+msgid "_Cancel"
+msgstr "_Скасувати"
 
 msgid "_Add"
 msgstr "_Додати"
@@ -123,9 +126,6 @@ msgstr "_Стерти"
 
 msgid "Erase drawing"
 msgstr "Стерти креслення"
-
-msgid "Add Operation (C)"
-msgstr "Додати операцію (C)"
 
 msgid "Draw line"
 msgstr "Накреслити лінію"
@@ -222,9 +222,6 @@ msgstr "Від’єднайте кабель від верстата й з’є�
 
 msgid "Opening port…"
 msgstr "Відкриття порту…"
-
-msgid "_Cancel"
-msgstr "_Скасувати"
 
 msgid "Cancelling…"
 msgstr "Скасування…"
@@ -946,8 +943,8 @@ msgstr "_Нова деталь…"
 msgid "_Open…"
 msgstr "_Відкрити…"
 
-msgid "Add Operation"
-msgstr "Додати операцію"
+msgid "Add Operation (C)"
+msgstr "Додати операцію (C)"
 
 msgid "Operations"
 msgstr "Операції"
@@ -987,6 +984,9 @@ msgstr "Скасувати (Ctrl+Z)"
 
 msgid "Redo (Ctrl+Shift+Z)"
 msgstr "Повторити (Ctrl+Shift+Z)"
+
+msgid "Part Settings…"
+msgstr "Параметри деталі…"
 
 msgid "Automatic"
 msgstr "Автоматично"
@@ -1144,6 +1144,24 @@ msgstr "Діє після перезапуску застосунку."
 msgid "Same as the desktop"
 msgstr "Як у системі"
 
+msgid "Bore"
+msgstr "Отвір"
+
+msgid "tube billet; 0 = solid bar"
+msgstr "заготовка-труба; 0 = суцільний пруток"
+
+msgid "Chuck jaws"
+msgstr "Кулачки патрона"
+
+msgid "In the bore"
+msgstr "В отворі"
+
+msgid "On the outside"
+msgstr "Зовні"
+
+msgid "Show tailstock"
+msgstr "Показувати задню бабку"
+
 msgid "Billet size and units. The drawing starts empty."
 msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
 
@@ -1155,6 +1173,15 @@ msgstr "_Створити"
 
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr "Накресліть профіль: торкайтеся точок або вводьте X,Z і Enter"
+
+msgid "Billet, chuck jaws and tailstock of this part."
+msgstr "Заготовка, кулачки патрона й задня бабка цієї деталі."
+
+msgid "Part Settings"
+msgstr "Параметри деталі"
+
+msgid "Part settings"
+msgstr "Параметри деталі"
 
 msgid "Save Part"
 msgstr "Зберегти деталь"
