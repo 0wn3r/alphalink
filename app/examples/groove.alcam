@@ -1,0 +1,87 @@
+{
+ "format": "alcam/1",
+ "units": "mm",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 120.0,
+  "length": 100.0,
+  "face_allowance": 0.8
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 120.0
+ },
+ "tool_change": {
+  "x": 100.0,
+  "z": 50.0
+ },
+ "program_number": 10,
+ "first_tool": 3,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [0.0, 0.0],
+   "b": [40.0, 0.0],
+   "id": "g0"
+  },
+  {
+   "type": "line",
+   "a": [40.0, 0.0],
+   "b": [40.0, -20.0],
+   "id": "g1"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -20.0],
+   "b": [30.0, -20.0],
+   "id": "g2"
+  },
+  {
+   "type": "line",
+   "a": [30.0, -20.0],
+   "b": [30.0, -30.0],
+   "id": "g3"
+  },
+  {
+   "type": "line",
+   "a": [30.0, -30.0],
+   "b": [40.0, -30.0],
+   "id": "g4"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -30.0],
+   "b": [40.0, -50.0],
+   "id": "g5"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -50.0],
+   "b": [60.0, -50.0],
+   "id": "g6"
+  }
+ ],
+ "operations": [
+  {
+   "type": "groove",
+   "tool": 3,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g1", "g2", "g3", "g4", "g5", "g6"],
+   "datum": "left",
+   "finish_offset_x": 0.0,
+   "finish_offset_z": 0.0,
+   "peck_depth": 0.0,
+   "stepover": 2.0,
+   "tip_width": 3.0,
+   "feed": 0.15,
+   "full_retract": true,
+   "external": true,
+   "front": true,
+   "z_shift": 0.0,
+   "repeat": 0,
+   "mode": "area",
+   "dwell_revs": 0.0
+  }
+ ]
+}

@@ -9,7 +9,18 @@ Status: **design draft 1** (2026-10-12).
   tool changes; 13 golden samples byte-identical. The PRG contour is the imaginary tool-tip path (RE_NOTES Progress 27).
 - M4 post part (2026-10-13): face clear, grooving, drilling, threading and area pre-finish; all 18 ALPHA-T samples
   are byte-identical (RE_NOTES Progress 28). Drawing tools and the remaining options are still to do.
+- M2 shell (2026-10-13): `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG]` opens a part, previews every operation
+  on the lathe canvas (pinch/drag/fling/double-tap fit, wheel, Ctrl+wheel, tap or click a toolpath to select its
+  operation), shows the program with the selected operation highlighted (pinch changes the font size), and exports
+  the PRG. Touch density switches automatically (TOUCH.md 3). Examples in `app/examples/`. Not yet: editing operations,
+  op reorder and bottom-sheet editors (M4), simulation, machine page (M3).
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
+
+Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
+digit, so `0wn3r` becomes `_0wn3r`, as Flatpak does).
+Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.6+, pyserial. Target: a Microsoft Surface Pro tablet running
+Ubuntu 26.04 / 26.10 (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
+`app/TOUCH.md`); packaged as a Flatpak.
 
 ## 1. Purpose and scope
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -108,7 +109,10 @@ class Project:
         )
 
     def dumps(self) -> str:
-        return json.dumps(self.to_dict(), indent=1) + "\n"
+        text = json.dumps(self.to_dict(), indent=1)
+        # keep [x, z] pairs and id lists on one line
+        text = re.sub(r"\[\s+([^\[\]{}]*?)\s+\]", lambda m: "[" + re.sub(r",\s+", ", ", m[1]) + "]", text)
+        return text + "\n"
 
     @classmethod
     def loads(cls, text: str) -> "Project":
