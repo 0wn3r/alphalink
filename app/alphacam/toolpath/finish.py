@@ -1,23 +1,30 @@
-"""Finish pass (#127=14): one pass along the programmed contour (C5: not nose-compensated)."""
+"""Finish pass (#127=14, internal 15): one pass along the imaginary tool-tip path (contour.tip_path)."""
 
 from __future__ import annotations
 
-from ..model.geometry import Point
 from ..model.operations import FinishPass
-from .contour import leg45, mm
+from .contour import Seg, leg45, mm, tip_path, translate
 from .toolpath import Move, MoveKind, Pass, Toolpath
 
-LEAD_IN_MM = 2.0  # 45-degree approach, +X +Z of the first point (MET2; also V1.81)
-LEAD_OUT_MM = 0.2  # 45-degree pull-off, +X +Z of the last point (ALPHA-T MET2; V1.81 uses 2)
+LEAD_IN_MM = 2.0  # 45-degree approach to the first point, from +Z and outside in X (-X internal)
+LEAD_OUT_MM = 0.2  # 45-degree pull-off from the last point, same directions (ALPHA-T; V1.81 uses 2)
 
 
-def finish_pass(op: FinishPass, points: list[Point], units: str, decimals: int) -> Toolpath:
-    if op.offset:
-        raise NotImplementedError("finish offset is not supported yet")
+def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
+    side = 1 if op.external else -1
+    if not op.external and (op.offset_x or op.offset_z):
+        raise NotImplementedError("internal finish with offsets is not supported yet (no sample)")
+    tip = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z)
     lead_in = leg45(mm(LEAD_IN_MM, units), decimals)
     lead_out = leg45(mm(LEAD_OUT_MM, units), decimals)
-    first, last = points[0], points[-1]
-    moves = [Move(MoveKind.RAPID, first.x + 2 * lead_in, first.z + lead_in)]
-    moves += [Move(MoveKind.FEED, p.x, p.z, op.feed) for p in points]
-    moves.append(Move(MoveKind.FEED, last.x + 2 * lead_out, last.z + lead_out, op.feed))
+    first, last = tip[0].a, tip[-1].b
+    moves = [Move(MoveKind.RAPID, first.x + side * 2 * lead_in, first.z + lead_in),
+             Move(MoveKind.FEED, first.x, first.z, op.feed)]
+    for s in tip:
+        if s.is_arc:
+            kind = MoveKind.ARC_CCW if s.ccw else MoveKind.ARC_CW
+            moves.append(Move(kind, s.b.x, s.b.z, op.feed, centre_x=s.centre.x, centre_z=s.centre.z))
+        else:
+            moves.append(Move(MoveKind.FEED, s.b.x, s.b.z, op.feed))
+    moves.append(Move(MoveKind.FEED, last.x + side * 2 * lead_out, last.z + lead_out, op.feed))
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, op.start.x, op.start.z)])

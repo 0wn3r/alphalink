@@ -36,8 +36,8 @@ RE_RESTART = re.compile(r"IF\[#140EQ(\d+)\] GOTO (\d+)")
 RE_IF = re.compile(r"IF\[.+\]GOTO\[.+\]")
 RE_MCODE = re.compile(r"M(\d+)")
 RE_LABEL = re.compile(r"N(\d+)")
-RE_MOTION = re.compile(rf"(?:G(\d+))?((?:[XZUWFP]{NUM})*)")
-RE_WORD = re.compile(rf"([XZUWFP])({NUM})")
+RE_MOTION = re.compile(rf"(?:G(\d+))?((?:[XZUWIKFP]{NUM})*)")
+RE_WORD = re.compile(rf"([XZUWIKFP])({NUM})")
 
 
 class Kind(str, Enum):
@@ -48,7 +48,7 @@ class Kind(str, Enum):
     IF = "if"  # header restart logic, kept verbatim
     MCODE = "mcode"
     LABEL = "label"  # N<n>
-    MOTION = "motion"  # G0/G1/G4/G32 words, or modal words only (U21.W-3.)
+    MOTION = "motion"  # G0/G1/G2/G3/G4/G32 words, or modal words only (U21.W-3.)
 
 
 @dataclass
@@ -109,7 +109,8 @@ def lex(data: bytes) -> tuple[list[Statement], str]:
 # --- structure -------------------------------------------------------------------------------------------
 
 
-MOTION_G = {0: MoveKind.RAPID, 1: MoveKind.FEED, 4: MoveKind.DWELL, 32: MoveKind.THREAD}
+MOTION_G = {0: MoveKind.RAPID, 1: MoveKind.FEED, 2: MoveKind.ARC_CW, 3: MoveKind.ARC_CCW, 4: MoveKind.DWELL,
+            32: MoveKind.THREAD}
 
 FLOAT_REGISTERS = {123, 124, 125, 126, 130}  # written with a decimal point
 INT_REGISTERS = {120, 121, 122, 127, 128, 129, 132, 140}
@@ -127,6 +128,8 @@ class Move:
     feed: float | None = None  # mm/rev (or inch), unscaled; thread pitch for THREAD
     dwell_revs: float | None = None
     incremental: bool = False
+    centre_x: float | None = None  # arcs: absolute centre. I is a diameter increment, K a (scaled) Z increment
+    centre_z: float | None = None
 
 
 @dataclass
@@ -315,7 +318,9 @@ def parse(data: bytes, profile: MachineProfile | None = None) -> Program:
                 current.restart = (s.number, s.target)
         elif s.kind is Kind.MOTION:
             if current is None:
-                raise PrgSyntaxError(s.line, s.text, "motion outside a pass (no #121)")
+                # e.g. the rapid to the tool change point in the block before a mid-program tool change
+                current = Pass(number=0, line=s.line)
+                block.passes.append(current)
             g = s.number if s.number is not None else modal_g
             if g not in MOTION_G:
                 raise PrgSyntaxError(s.line, s.text, f"unsupported motion G{g}")
@@ -345,7 +350,7 @@ def _check_register(s: Statement) -> None:
 def _make_move(s: Statement, kind: MoveKind, x, z, zs, fs) -> tuple[Move, float | None, float | None]:
     w = {k: float(v) for k, v in s.words.items()}
     for k, v in s.words.items():
-        if k in "XZUWF" and "." not in v:
+        if k in "XZUWIKF" and "." not in v:
             raise PrgSyntaxError(s.line, s.text, f"{k} value without a decimal point")
     if kind is MoveKind.DWELL:
         if set(w) != {"P"}:
@@ -353,6 +358,13 @@ def _make_move(s: Statement, kind: MoveKind, x, z, zs, fs) -> tuple[Move, float 
         return Move(kind, s.line, x, z, dwell_revs=w["P"] / 1000), x, z
     if "P" in w:
         raise PrgSyntaxError(s.line, s.text, "P word on a motion")
+    arc = kind in (MoveKind.ARC_CW, MoveKind.ARC_CCW)
+    if arc != ("I" in w or "K" in w):
+        raise PrgSyntaxError(s.line, s.text, "I/K only (and always) on G2/G3")
+    if arc:
+        if x is None or z is None or "U" in w or "W" in w:
+            raise PrgSyntaxError(s.line, s.text, "arc needs a known start and absolute end")
+        cx, cz = x + w.get("I", 0.0), z + w.get("K", 0.0) / zs
     absolute = "X" in w or "Z" in w
     incremental = "U" in w or "W" in w
     if absolute and incremental:
@@ -366,7 +378,10 @@ def _make_move(s: Statement, kind: MoveKind, x, z, zs, fs) -> tuple[Move, float 
         x = None if x is None else x + w.get("U", 0.0)
         z = None if z is None else z + w.get("W", 0.0) / zs
     feed = w["F"] / fs if "F" in w else None
-    return Move(kind, s.line, x, z, feed=feed, incremental=incremental), x, z
+    move = Move(kind, s.line, x, z, feed=feed, incremental=incremental)
+    if arc:
+        move.centre_x, move.centre_z = cx, cz
+    return move, x, z
 
 
 def parse_file(path: str | Path, profile: MachineProfile | None = None) -> Program:

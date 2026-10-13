@@ -882,3 +882,21 @@ and appendix H.2 (p.240-243).
   the EOB output (0: LF CR CR, 1: LF only). Harrison's macros may drive these, so read them, don't change them.
   User (2026-10-12): the Harrison setup exposes very few parameters, so these may not be visible at all; treat them as
   background, not a test step.
+
+### Progress 27 - ALPHA-T post rules from the cloud samples; app post byte-identical on 13 samples (2026-10-13)
+New samples (generated in a cloud DOSBox-X run, copied to samples/alphat_v12; scripts in alpha-work/cloud-run/samples):
+ARC_finish/ARC_area (R5 convex, R3 concave corners), SLOPE_area (taper X40 Z-25 -> X60 Z-40), TWOOP_area_finish,
+OFFSET_finish/OFFSET_area (X0.5 Z0.2), INT_finish/INT_area (tool 12 boring bar), TOOLCHG_rough1_finish3.
+* **The PRG contour is the imaginary tool-tip path**: the SD1 nose-centre path shifted by (-r, -r) in (radius, Z),
+  (+r, -r) internal. Axis-parallel lines stay on the drawing (why MET2 looked "uncompensated"); arcs become
+  R+r (convex) / R-r (concave) with the centre shifted; slopes move (SLOPE pass ends -37.279 = shifted slope).
+  First and last points stay the drawing's end points (lead-in/out start there).
+* Arcs: `G2/G3 X Z I K F`, I = centre - start in **diameter**, K = centre - start in Z (x2). G3 = SDG "CCW".
+* Area clear: passes stop on the tip path with half-open spans on the approach side; internal (#127=7) steps up
+  from Xmin by 2*depth to Xmax (no 2r overshoot, unlike external Xmin - 2r), retract -X.
+* Internal finish (#127=15): lead-in/out go -X (X47.172 from X50).
+* Offsets translate the path (X + 2*ox, Z + oz; axis points stay at X0); #125/#126 and the area floor do not move.
+* Every operation is followed by an empty block; before a tool change that block holds `M60 G0 X<tc> Z<tc> M61`.
+  A later tool change is another tool block (#127=1, #129 = block no.).
+* Still without a sample: arc-to-arc corners, offsets on internal ops, away/pre-finish, moves after an operation,
+  inch arcs.

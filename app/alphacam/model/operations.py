@@ -13,9 +13,11 @@ OP_KIND_TOOL_CHANGE = 1
 OP_KINDS: dict[int, str] = {
     1: "tool_change",
     6: "area_clear",
+    7: "area_clear_internal",
     8: "face_clear",
     9: "groove",
     14: "finish",
+    15: "finish_internal",
     18: "drill",
     20: "thread",
 }
@@ -32,6 +34,8 @@ class ToolChange:
 
 @dataclass
 class AreaClear:
+    """offset_x is a radius (per side) allowance, like FinishPass."""
+
     tool: int
     start: Point
     contour: list[str]
@@ -41,8 +45,9 @@ class AreaClear:
     feed: float = 0.15
     towards: bool = True
     pre_finish: bool = False
+    external: bool = True
     type = "area_clear"
-    op_kind = 6
+    op_kind = 6  # 7 when internal
 
 
 @dataclass
@@ -89,9 +94,11 @@ class FinishPass:
     start: Point
     contour: list[str]
     feed: float = 0.15
-    offset: float = 0.0
+    offset_x: float = 0.0  # radius (per side): X moves by 2 * offset_x
+    offset_z: float = 0.0
+    external: bool = True
     type = "finish"
-    op_kind = 14
+    op_kind = 14  # 15 when internal
 
 
 @dataclass
