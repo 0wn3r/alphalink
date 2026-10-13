@@ -140,17 +140,32 @@ def fillet(project, p: Point, radius: float) -> str:
     return gid
 
 
-def chamfer(project, p: Point, size: float) -> str:
-    """Cut the corner at p back by `size` along both lines and join with a line."""
+def chamfer(project, p: Point, size: float, angle: float = 45.0) -> str:
+    """Cut the corner at p with a straight chamfer: `size` along the more axial (Z-parallel) of the two lines and
+    `angle` degrees between the chamfer and that line (lathe drawing style "2 x 30 deg", angle from the axis). The leg
+    on the other line follows from the corner angle (law of sines; 45 deg on a square corner = size on both)."""
     if size <= 0:
         raise ValueError("chamfer size must be > 0")
+    if not 0 < angle < 90:
+        raise ValueError("chamfer angle must be between 0 and 90 degrees")
     l1, l2 = _corner(project, p)
-    if size > min(_len(l1), _len(l2)) + 1e-9:
-        raise ValueError(f"chamfer {size:g} is too large for these lines")
     pr, pz = p.x / 2, p.z
     u1, u2 = _unit(_away(l1, p), p), _unit(_away(l2, p), p)
-    T1 = _pt((pr + u1[0] * size, pz + u1[1] * size))
-    T2 = _pt((pr + u2[0] * size, pz + u2[1] * size))
+    # reference line: the one closer to Z-parallel (|dz| component larger); the other gets the computed leg
+    ref_first = abs(u1[1]) >= abs(u2[1])
+    ua, ub = (u1, u2) if ref_first else (u2, u1)
+    corner = math.acos(max(-1.0, min(1.0, ua[0] * ub[0] + ua[1] * ub[1])))
+    theta = math.radians(angle)
+    if theta + corner >= math.pi - 1e-9:
+        raise ValueError(f"a {angle:g} degree chamfer does not fit this corner")
+    other = size * math.sin(theta) / math.sin(theta + corner)
+    s1, s2 = (size, other) if ref_first else (other, size)
+    for line, s in ((l1, s1), (l2, s2)):
+        a, b = line.a, line.b
+        if s > math.hypot((a.x - b.x) / 2, a.z - b.z) + 1e-9:
+            raise ValueError(f"chamfer {size:g} x {angle:g} deg is too large for these lines")
+    T1 = _pt((pr + u1[0] * s1, pz + u1[1] * s1))
+    T2 = _pt((pr + u2[0] * s2, pz + u2[1] * s2))
     first = l1 if _is_before(project, l1, l2, p) else l2
     _set_end(l1, p, T1)
     _set_end(l2, p, T2)

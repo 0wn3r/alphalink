@@ -1,3 +1,4 @@
+import math
 import unittest
 
 from alphacam import drawing
@@ -43,6 +44,16 @@ class Drawing(unittest.TestCase):
         self.assertEqual((ch.a, ch.b), (Point(38, 0), Point(40, -1)))
         self.assertEqual(p.geometry[0].b, Point(38, 0))
         self.assertEqual(p.geometry[1].a, Point(40, -1))
+
+    def test_chamfer_angle(self):
+        """2 x 30 deg on the X40 Z0 corner: 2 along the diameter (Z), 2 tan 30 = 1.1547 down the face (radius)."""
+        p = met2()
+        gid = drawing.chamfer(p, Point(40, 0), 2, 30)
+        ch = next(g for g in p.geometry if g.id == gid)
+        self.assertAlmostEqual(ch.a.x, 40 - 2 * 2 * math.tan(math.radians(30)), places=5)
+        self.assertEqual((ch.a.z, ch.b), (0, Point(40, -2)))
+        with self.assertRaises(ValueError):
+            drawing.chamfer(met2(), Point(40, 0), 1, 90)
 
     def test_errors(self):
         p = met2()

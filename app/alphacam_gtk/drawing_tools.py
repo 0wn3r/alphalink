@@ -283,13 +283,37 @@ class DrawingTools:
             point=f"X{corner.x:g} Z{corner.z:g}"))
         title.add_css_class("heading")
         box.append(title)
+        angle = None
+        if tool == "chamfer":
+            # angle between the chamfer and the more axial line (lathe drawings: "2 × 30°", angle from the axis)
+            arow = Gtk.Box(spacing=6)
+            arow.append(Gtk.Label(label=_("Angle"), xalign=0, hexpand=True))
+            angle = Gtk.SpinButton.new_with_range(1, 89, 1)
+            angle.set_digits(1)
+            angle.set_value(45)
+            angle.set_tooltip_text(_("Between the chamfer and the line along Z; the size is measured along that line"))
+            for a in (30, 45, 60):
+                ab = Gtk.Button(label=f"{a}°")
+                ab.connect("clicked", lambda _b, a=a: angle.set_value(a))
+                arow.append(ab)
+            arow.append(angle)
+            box.append(arow)
+
+        def ang() -> float:
+            return angle.get_value() if angle is not None else 45.0
+
         chips = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=5, column_spacing=6,
                             row_spacing=6)
+        chip_buttons = []
         for v in (FILLET_CHIPS if tool == "fillet" else CHAMFER_CHIPS):
             b = Gtk.Button(label=f"R{v:g}" if tool == "fillet" else f"{v:g}×45°")
             b.add_css_class("pill")
-            b.connect("clicked", lambda _b, v=v: (pop.popdown(), self._apply_corner(tool, corner, v)))
+            b.connect("clicked", lambda _b, v=v: (pop.popdown(), self._apply_corner(tool, corner, v, ang())))
             chips.append(b)
+            chip_buttons.append((b, v))
+        if angle is not None:
+            angle.connect("value-changed", lambda s: [b.set_label(f"{v:g}×{s.get_value():g}°")
+                                                      for b, v in chip_buttons])
         box.append(chips)
         other = Gtk.Box(spacing=6)
         spin = Gtk.SpinButton.new_with_range(0.01, 100, 0.1)
@@ -297,7 +321,7 @@ class DrawingTools:
         spin.set_value(1)
         ok = Gtk.Button(label=_("_Apply"), use_underline=True)
         ok.add_css_class("suggested-action")
-        ok.connect("clicked", lambda *_: (pop.popdown(), self._apply_corner(tool, corner, spin.get_value())))
+        ok.connect("clicked", lambda *_: (pop.popdown(), self._apply_corner(tool, corner, spin.get_value(), ang())))
         other.append(spin)
         other.append(ok)
         box.append(other)
@@ -305,10 +329,14 @@ class DrawingTools:
         pop.connect("closed", lambda p: p.unparent())
         pop.popup()
 
-    def _apply_corner(self, tool: str, corner: Point, size: float) -> None:
-        fn = drawing.fillet if tool == "fillet" else drawing.chamfer
-        label = (_("Fillet R{size}") if tool == "fillet" else _("Chamfer {size}")).format(size=f"{size:g}")
-        if self.w.apply_edit(label, lambda p: fn(p, corner, size)):
+    def _apply_corner(self, tool: str, corner: Point, size: float, angle: float = 45.0) -> None:
+        if tool == "fillet":
+            label = _("Fillet R{size}").format(size=f"{size:g}")
+            edit = lambda p: drawing.fillet(p, corner, size)  # noqa: E731
+        else:
+            label = _("Chamfer {size}").format(size=f"{size:g}×{angle:g}°")
+            edit = lambda p: drawing.chamfer(p, corner, size, angle)  # noqa: E731
+        if self.w.apply_edit(label, edit):
             self.w.refresh()
 
     # --- pick contour (TOUCH.md 7.1) -----------------------------------------------------------------------
