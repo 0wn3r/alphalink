@@ -194,6 +194,44 @@ class LatheCanvas(Gtk.DrawingArea):
         if self.tool == "select" or not self.picked:
             self._paths(cr)
         self._overlay(cr)
+        self._axes(cr, height)
+
+    def _axes(self, cr, height) -> None:
+        """Axis directions in the bottom-left corner (+Z right, +X up, like the lathe from the front) and a
+        small cross on the part origin X0 Z0."""
+        ox, oy = 28, height - 28
+        length = 46
+        self._rgb(cr, "part", 0.8)
+        cr.set_line_width(2)
+        cr.set_font_size(13)
+        for dx, dy, label in ((length, 0, "+Z"), (0, -length, "+X")):
+            ex, ey = ox + dx, oy + dy
+            cr.move_to(ox, oy)
+            cr.line_to(ex, ey)
+            cr.stroke()
+            ux, uy = (1, 0) if dx else (0, -1)  # arrowhead
+            cr.move_to(ex + 4 * ux, ey + 4 * uy)
+            cr.line_to(ex - 7 * ux - 5 * uy, ey - 7 * uy + 5 * ux)
+            cr.line_to(ex - 7 * ux + 5 * uy, ey - 7 * uy - 5 * ux)
+            cr.close_path()
+            cr.fill()
+            ext = cr.text_extents(label)
+            if dx:
+                cr.move_to(ex + 8, ey - ext.height / 2 - ext.y_bearing)
+            else:
+                cr.move_to(ex - ext.width / 2 - ext.x_bearing, ey - 9)
+            cr.show_text(label)
+        cr.arc(ox, oy, 3, 0, 2 * math.pi)
+        cr.fill()
+        # part origin
+        sx, sy = self.view.to_screen(0, 0)
+        self._rgb(cr, "axis")
+        cr.set_line_width(1.5)
+        cr.move_to(sx - 7, sy)
+        cr.line_to(sx + 7, sy)
+        cr.move_to(sx, sy - 7)
+        cr.line_to(sx, sy + 7)
+        cr.stroke()
 
     def _arc(self, cr, a, b, c, ccw: bool) -> None:
         """G3/ccw is counter-clockwise with Z right and X up: decreasing cairo angle on screen (y down)."""
