@@ -75,6 +75,11 @@ def preview(project: Project, profile: MachineProfile | None = None, library=Non
         else:
             result.error = str(e) or type(e).__name__
         data = _post_prefix(project, n_ok, profile, library)
+    if project.output_units not in (None, project.units):
+        # the program is written in other units than the drawing: draw the drawing-units version of it
+        shown = Project.from_dict(project.to_dict())
+        shown.output_units = None
+        data = _post_prefix(shown, n_ok, profile, library)
     prog = parse(data, profile)
     result.program = prog
 

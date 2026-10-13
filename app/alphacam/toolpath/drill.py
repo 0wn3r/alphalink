@@ -19,7 +19,7 @@ PECK_RETRACT_MM = 2.0  # RETRACT DIST default
 
 
 def drill(op: Drill, units: str, decimals: int) -> Toolpath:
-    x, z, bottom = op.start.x, op.start.z, op.depth
+    x, z, bottom = op.start.x, op.start.z, round(op.depth, 9)  # z is rounded below; so is the bottom it must reach
     if bottom >= z:
         raise ValueError(tr("drill depth must be below the start Z"))
     retract = mm(PECK_RETRACT_MM, units) if op.retract is None else op.retract

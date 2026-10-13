@@ -233,6 +233,7 @@ class MainWindow(Adw.ApplicationWindow):
         menu.append(_("Fit Part"), "win.fit")
         menu.append(_("Show Grid"), "win.show-grid")
         menu.append(_("Part Settings…"), "win.part-settings")
+        menu.append(_("Save as ALPHA-T Drawing…"), "win.save-sdg")
         menu.append(_("Clear Messages"), "win.clear-messages")
         layout = Gio.Menu()
         for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
@@ -336,6 +337,7 @@ class MainWindow(Adw.ApplicationWindow):
         for kind in MANUALS:
             add(f"manual-{kind}", lambda *_, kind=kind: open_manual(self, kind))
         add("part-settings", lambda *_: self.part_settings_dialog())
+        add("save-sdg", lambda *_: self.save_sdg_dialog())
         add("clear-messages", lambda *_: self.dismiss_toasts())
         grid = Gio.SimpleAction.new_stateful("show-grid", None, GLib.Variant.new_boolean(settings()["show_grid"]))
         grid.connect("change-state", self._show_grid)
@@ -641,6 +643,13 @@ class MainWindow(Adw.ApplicationWindow):
                                                                               else r.get_value()))
             new.add(row)
         page.add(new)
+        export = Adw.PreferencesGroup(title=_("Export"))
+        sdg = Adw.SwitchRow(title=_("Also save the ALPHA-T drawing (.SDG)"),
+                            subtitle=_("next to the program, so DOS ALPHA-T can open the part"),
+                            active=bool(st["export_sdg"]))
+        sdg.connect("notify::active", lambda r, _p: st.set("export_sdg", r.get_active()))
+        export.add(sdg)
+        page.add(export)
         lang = Adw.PreferencesGroup(title=_("Language"), description=_("Takes effect after restarting the app."))
         codes = ["", "en", "uk"]
         names = [_("Same as the desktop"), "English", "Українська"]
@@ -732,7 +741,7 @@ class MainWindow(Adw.ApplicationWindow):
         if self.project is None:
             return
         alert = Adw.AlertDialog(heading=_("Part Settings"),
-                                body=_("Billet, chuck jaws, tailstock and program number of this part."))
+                                body=_("Billet, chuck jaws, tailstock, program number and program units of this part."))
         group, rows = self._billet_rows(self.project.billet)
         # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
         number = Adw.SpinRow.new_with_range(1, 9999, 1)
@@ -740,6 +749,13 @@ class MainWindow(Adw.ApplicationWindow):
         number.set_subtitle(_("shown on the control"))
         number.set_value(self.project.program_number)
         group.add(number)
+        # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
+        unit_keys = [None, "mm", "inch"]
+        out_units = Adw.ComboRow(title=_("Program units"), subtitle=_("M71 mm / M70 inch on the control"),
+                                 model=Gtk.StringList.new([_("As the drawing"), "mm", "inch"]))
+        current = self.project.output_units if self.project.output_units != self.project.units else None
+        out_units.set_selected(unit_keys.index(current))
+        group.add(out_units)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
         alert.add_response("apply", _("_Apply"))
@@ -752,10 +768,12 @@ class MainWindow(Adw.ApplicationWindow):
                 billet = self._billet_from(rows)
                 billet.face_allowance = self.project.billet.face_allowance
                 n = int(number.get_value())
+                out = unit_keys[out_units.get_selected()]
 
                 def change(p):
                     p.billet = billet
                     p.program_number = n
+                    p.output_units = None if out == p.units else out
 
                 if self.apply_edit(_("Part settings"), change):
                     self.refresh(fit=True)
@@ -764,6 +782,33 @@ class MainWindow(Adw.ApplicationWindow):
         alert.present(self)
 
     # --- saving -----------------------------------------------------------------------------------------
+
+    def save_sdg_dialog(self) -> None:
+        """Write the drawing as an ALPHA-T .SDG (+ .SDT), so DOS ALPHA-T can open it. Operations are not part of an
+        ALPHA-T drawing; Export PRG writes them to the .SD1."""
+        if self.project is None:
+            return
+        stem = (self.path.stem if self.path else "PART").upper()[:8]
+        dlg = Gtk.FileDialog(title=_("Save as ALPHA-T Drawing"), initial_name=f"{stem}.SDG")
+
+        def done(d, res):
+            try:
+                path = Path(d.save_finish(res).get_path())
+            except GLib.Error:
+                return
+            from alphacam.io.sdg_write import save_sdg
+
+            try:
+                files = save_sdg(self.project, path)
+            except (OSError, ValueError) as e:
+                self.toast(_("Saving the drawing failed: {error}").format(error=e))
+                return
+            note = _("Saved {files}.").format(files=", ".join(f.name for f in files))
+            if len(files[0].stem) > 8:
+                note += " " + _("ALPHA-T needs a name of at most 8 characters.")
+            self.toast(note)
+
+        dlg.save(self, None, done)
 
     def save(self) -> None:
         if self.project is None:
@@ -846,14 +891,23 @@ class MainWindow(Adw.ApplicationWindow):
         prg = Path(file.get_path())
         # ALPHA-T writes the .SD1 listing next to the .PRG; so do we (same name, same case of the extension)
         listing = prg.with_suffix(".sd1" if prg.suffix.islower() else ".SD1") if self.pv.sd1 is not None else None
+        drawing = []
         try:
             prg.write_bytes(self.pv.data)
             if listing is not None:
                 listing.write_bytes(self.pv.sd1)
-        except OSError as e:
+            if settings()["export_sdg"]:  # Preferences: also the drawing, as ALPHA-T saves it with the program
+                from alphacam.io.sdg_write import save_sdg
+
+                drawing = save_sdg(self.project, prg.with_suffix(".sdg" if prg.suffix.islower() else ".SDG"))
+        except (OSError, ValueError) as e:
             self.toast(_("Export failed: {error}").format(error=e))
             return
-        if listing is not None:
+        if drawing:
+            self.toast(_("Exported {name} ({size} bytes), {listing} and the drawing {drawing}").format(
+                name=prg.name, size=len(self.pv.data), listing=listing.name if listing else "-",
+                drawing=drawing[0].name))
+        elif listing is not None:
             self.toast(_("Exported {name} ({size} bytes) and {listing}").format(
                 name=prg.name, size=len(self.pv.data), listing=listing.name))
         else:
@@ -962,7 +1016,8 @@ class MainWindow(Adw.ApplicationWindow):
             size = len(self.pv.data) if self.pv.data else 0
             self.program_info.set_label(
                 _("Program {number} · {units} · {lines} lines · {size} bytes").format(
-                    number=prog.program_number, units=prog.units, lines=len(prog.statements), size=size)
+                    number=prog.program_number, units=self.project.output_units or prog.units,
+                    lines=len(prog.statements), size=size)
                 + ("" if self.pv.data else " · " + _("incomplete (see banner)")))
 
     def _highlight_program(self, index: int | None) -> None:

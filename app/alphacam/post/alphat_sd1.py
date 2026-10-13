@@ -129,6 +129,7 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
 
 
 def sd1(project: Project, library: ToolLibrary | None = None) -> bytes:
+    project = project.for_output()
     units = project.units
     out = _Listing()
     ops = list(project.operations)

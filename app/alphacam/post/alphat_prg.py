@@ -261,6 +261,7 @@ def post(project: Project, profile: MachineProfile | None = None, library: ToolL
     and an empty block (which holds the rapid to the tool change point when a tool change comes next); a later tool
     change is another tool block; finally an M65 block and %."""
     profile = profile or MachineProfile()
+    project = project.for_output()  # ALPHA-T's "Select Units To Store Output In"
     w = _Writer(project, profile)
     w.library = library
     w.emit("%", f"O{profile.o_number}", f"#132={project.program_number}", *HEADER_LOGIC, UNITS_MCODE[project.units])

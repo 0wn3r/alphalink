@@ -55,7 +55,7 @@ def read_sdg(data: bytes) -> Project:
 
     return Project(
         units=units,
-        billet=Billet(diameter=st[7], length=st[6]),
+        billet=Billet(diameter=round(st[7] / scale, 6), length=round(st[6] / scale, 6)),  # stored in mm
         reference=Reference(g92_x=round(2 * xr2, 4), g92_z=round(zref, 4)),
         first_tool=int(st[8]),
         # ALPHA-T's tool change point X100 Z50 (mm) is not in the SDG; it is the same in every sample.

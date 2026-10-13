@@ -94,6 +94,12 @@ msgstr "різьба: ліній різьби немає на кресленні
 msgid "SDG too short ({len_data} bytes)"
 msgstr "файл SDG закороткий ({len_data} байт)"
 
+msgid "the drawing has too many points for ALPHA-T ({n} > {max})"
+msgstr "у кресленні забагато точок для ALPHA-T ({n} > {max})"
+
+msgid "the drawing has too many elements for ALPHA-T"
+msgstr "у кресленні забагато елементів для ALPHA-T"
+
 msgid "not a TL1 tool library ({len_data} bytes)"
 msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
 
@@ -1357,6 +1363,9 @@ msgstr "Показувати сітку"
 msgid "Part Settings…"
 msgstr "Параметри деталі…"
 
+msgid "Save as ALPHA-T Drawing…"
+msgstr "Зберегти як креслення ALPHA-T…"
+
 msgid "Clear Messages"
 msgstr "Прибрати повідомлення"
 
@@ -1510,6 +1519,15 @@ msgstr "Довжина заготовки"
 msgid "First tool"
 msgstr "Перший інструмент"
 
+msgid "Export"
+msgstr "Експорт"
+
+msgid "Also save the ALPHA-T drawing (.SDG)"
+msgstr "Також зберігати креслення ALPHA-T (.SDG)"
+
+msgid "next to the program, so DOS ALPHA-T can open the part"
+msgstr "поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
+
 msgid "Language"
 msgstr "Мова"
 
@@ -1552,8 +1570,8 @@ msgstr "Накресліть профіль: торкайтеся точок а�
 msgid "Part Settings"
 msgstr "Параметри деталі"
 
-msgid "Billet, chuck jaws, tailstock and program number of this part."
-msgstr "Заготовка, кулачки патрона, задня бабка й номер програми цієї деталі."
+msgid "Billet, chuck jaws, tailstock, program number and program units of this part."
+msgstr "Заготовка, кулачки патрона, задня бабка, номер програми й одиниці програми цієї деталі."
 
 msgid "Program number"
 msgstr "Номер програми"
@@ -1561,8 +1579,29 @@ msgstr "Номер програми"
 msgid "shown on the control"
 msgstr "показується на системі керування"
 
+msgid "M71 mm / M70 inch on the control"
+msgstr "M71 мм / M70 дюйми на системі керування"
+
+msgid "Program units"
+msgstr "Одиниці програми"
+
+msgid "As the drawing"
+msgstr "Як у кресленні"
+
 msgid "Part settings"
 msgstr "Параметри деталі"
+
+msgid "Save as ALPHA-T Drawing"
+msgstr "Зберегти як креслення ALPHA-T"
+
+msgid "Saving the drawing failed: {error}"
+msgstr "Не вдалося зберегти креслення: {error}"
+
+msgid "Saved {files}."
+msgstr "Збережено: {files}."
+
+msgid "ALPHA-T needs a name of at most 8 characters."
+msgstr "ALPHA-T потребує назви щонайбільше з 8 символів."
 
 msgid "Save Part"
 msgstr "Зберегти деталь"
@@ -1587,6 +1626,9 @@ msgstr "Експорт програми Alpha-T"
 
 msgid "Export failed: {error}"
 msgstr "Помилка експорту: {error}"
+
+msgid "Exported {name} ({size} bytes), {listing} and the drawing {drawing}"
+msgstr "Експортовано {name} ({size} байт), {listing} і креслення {drawing}"
 
 msgid "Exported {name} ({size} bytes) and {listing}"
 msgstr "Експортовано {name} ({size} байт) і {listing}"

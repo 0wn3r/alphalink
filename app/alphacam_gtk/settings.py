@@ -20,6 +20,7 @@ DEFAULTS = {
     "first_tool": 3,
     "language": "",  # "" = follow the desktop; "en"; "uk"
     "show_grid": True,
+    "export_sdg": False,  # Export PRG also writes the ALPHA-T drawing (.SDG + .SDT) next to the program
 }
 
 

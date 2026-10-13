@@ -118,6 +118,7 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
                     and min(start, limit) < s.a.x < max(start, limit)}, reverse=op.external)
     xs = []
     for stop in walls + [limit]:
+        stop = round(stop, 9)  # x is rounded below; an unrounded stop would never be reached
         x = start
         while True:
             x = round(max(x - step, stop) if op.external else min(x + step, stop), 9)

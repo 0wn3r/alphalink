@@ -284,3 +284,30 @@ class FromSD1(unittest.TestCase):
                                              0.0011, (x, y))
                     continue
                 self.assertTrue(verify(project, sdg.with_suffix(".PRG")))
+
+
+class OutputUnits(unittest.TestCase):
+    """ALPHA-T's "Select Units To Store Output In": a program in other units than the drawing."""
+
+    def test_metric_drawing_inch_program(self):
+        from alphacam.model.units import convert_units
+        from alphacam.post.alphat_sd1 import sd1
+
+        project = sample_project("TOOLCHG_rough1_finish3_metric")
+        project.output_units = "inch"
+        out = post(project)
+        self.assertIn(b"\r\nM70\r\n", out)
+        self.assertEqual(out, post(convert_units(project, "inch")))
+        self.assertEqual(sd1(project), sd1(convert_units(project, "inch")))
+        self.assertIn(b"G31", sd1(project))
+        self.assertIn(b"#123=4.7244\r\n", out)  # tool start X120 mm
+
+    def test_back_to_mm_and_saved(self):
+        project = sample_project("MET2_finish_inch")
+        project.output_units = "mm"
+        self.assertIn(b"\r\nM71\r\n", post(project))
+        again = Project.loads(project.dumps())
+        self.assertEqual(again.output_units, "mm")
+        self.assertEqual(post(again), post(project))
+        project.output_units = "inch"  # the drawing's own units: nothing changes
+        self.assertEqual(post(project), (SAMPLES / "MET2_finish_inch.PRG").read_bytes())

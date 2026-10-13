@@ -62,6 +62,7 @@ class Project:
     reference: Reference = field(default_factory=Reference)
     tool_change: Point = field(default_factory=lambda: Point(100, 50))
     program_number: int = 10
+    output_units: str | None = None  # units the program is written in; None = the drawing's (ALPHA-T asks on save)
     first_tool: int = 1  # tool of the N10 block when no ToolChange op comes first (SDG settings[8])
     tools: list[Tool] = field(default_factory=list)
     geometry: list[Element] = field(default_factory=list)
@@ -71,9 +72,20 @@ class Project:
     def __post_init__(self):
         if self.units not in UNITS:
             raise ValueError(tr("units must be one of {units}, not {units2}", units=repr(UNITS), units2=repr(self.units)))
+        if self.output_units is not None and self.output_units not in UNITS:
+            raise ValueError(tr("units must be one of {units}, not {units2}", units=repr(UNITS),
+                                units2=repr(self.output_units)))
         for i, g in enumerate(self.geometry):
             if not g.id:
                 g.id = f"g{i}"
+
+    def for_output(self) -> "Project":
+        """The project in its output units (itself when they are the drawing's)."""
+        if self.output_units in (None, self.units):
+            return self
+        from .units import convert_units
+
+        return convert_units(self, self.output_units)
 
     def contour(self, ids: list[str]) -> list[Element]:
         return Contour(ids).resolve(self.geometry)
@@ -93,7 +105,8 @@ class Project:
             "tools": serde.to_json(self.tools),
             "geometry": serde.to_json(self.geometry),
             "operations": serde.to_json(self.operations),
-        } | ({"texts": serde.to_json(self.texts)} if self.texts else {})
+        } | ({"texts": serde.to_json(self.texts)} if self.texts else {}) \
+            | ({"output_units": self.output_units} if self.output_units not in (None, self.units) else {})
 
     @classmethod
     def from_dict(cls, data: dict) -> "Project":
@@ -107,6 +120,7 @@ class Project:
             reference=serde.from_json(Reference, data.get("reference", {})),
             tool_change=Point.from_json(data.get("tool_change", {"x": 100, "z": 50})),
             program_number=int(data.get("program_number", 10)),
+            output_units=data.get("output_units"),
             first_tool=int(data.get("first_tool", 1)),
             tools=[serde.from_json(Tool, t) for t in data.get("tools", [])],
             geometry=[serde.from_json(None, g, ELEMENT_TYPES) for g in data.get("geometry", [])],

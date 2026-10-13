@@ -8,6 +8,7 @@ alphacam/io/dxf.py
 alphacam/io/prg_parse.py
 alphacam/io/sd1.py
 alphacam/io/sdg.py
+alphacam/io/sdg_write.py
 alphacam/io/toollib.py
 alphacam/link/__init__.py
 alphacam/link/serial_link.py
@@ -17,6 +18,7 @@ alphacam/model/operations.py
 alphacam/model/project.py
 alphacam/model/serde.py
 alphacam/model/tools.py
+alphacam/model/units.py
 alphacam/numfmt.py
 alphacam/post/__init__.py
 alphacam/post/alphat_prg.py

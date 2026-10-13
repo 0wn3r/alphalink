@@ -1097,3 +1097,18 @@ Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there
   as if picked from the front (contour.front_first) and still refuses AWAY.
 * No crest height item on this ALPHA-T's threading menu. MIRROR IMAGE asks nothing: it mirrors the whole drawing
   about the spindle axis (X100 Z-50 -> X-100 Z-50) and asks "Is this correct?"; the app now does the same.
+
+## Progress 39 (2026-10-14): writing .SDG drawings, program units
+* .SDG writer (`app/alphacam/io/sdg_write.py`): every sample's segment table, point arrays, billet + jaws layer and
+  settings come back byte for byte (inch drawings: float32 last-bit differences only). Point numbering: a new
+  element's end point is numbered before its start point (AREA1: line 0 = P1 -> P0), shared points are reused.
+  The billet layer is 18 lines in a fixed order (outline, then each side's three jaw steps). Settings view:
+  scale = 425 / max(dia + 30, length + 30), [1] = -(534 / scale - (length + 30)) / 2, [2] = [13] - 5 / scale,
+  [13]/[15] = Xref/2 -/+ (dia + 30) / 2, [14] = length + 30. The rest of the 0x2700 table after its 18 entries and
+  of the 0x4B00 table (an empty third layer, header 0x3000) is leftover screen memory with ALPHA-T's menu texts,
+  identical in every sample; written as zeros. The .SDT of a drawing without text: word 0 = element count, word 1
+  = 18, words 112, 40, 76 at 0x80, 12 at 0xCC. The reader now divides the billet by 25.4 in inch drawings (it is
+  stored in mm).
+* Program units: ALPHA-T's "Select Units To Store Output In". The app converts the part (geometry, billet,
+  every length, feed and pitch) to the output units before posting; whether ALPHA-T converts the feed is not
+  sampled yet.

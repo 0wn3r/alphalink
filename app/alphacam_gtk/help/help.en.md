@@ -37,7 +37,8 @@ The operations list is on the left. Tap an operation to select it: its toolpath 
   - ALPHA-T drawings (.SDG). ALPHA-T keeps the operations only in the .SD1 file next to the drawing, so the app rebuilds them from there and tells you whether the result matches the .PRG next to it. If the .SD1 is not found, use Choose .SD1… in the message;
   - DXF drawings: lines, arcs and polylines, drawn with the spindle axis along the DXF X axis.
 - **Save** (Ctrl+S) / **Save As** (Ctrl+Shift+S) write the .alcam part.
-- **Export PRG** (Ctrl+E) writes the .PRG program and, next to it, the .SD1 listing with the same name, as ALPHA-T does.
+- **Export PRG** (Ctrl+E) writes the .PRG program and, next to it, the .SD1 listing with the same name, as ALPHA-T does. With Preferences ▸ Also save the ALPHA-T drawing, it writes the .SDG drawing (and .SDT) too.
+- **Save as ALPHA-T Drawing…** (main menu) writes the drawing as an .SDG that DOS ALPHA-T can open (names of up to 8 characters). Operations are not part of an ALPHA-T drawing.
 
 ## Drawing
 
@@ -170,7 +171,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 ## Part settings
 
-Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same. They only change the picture, not the program.
+Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same. They only change the picture, not the program. **Program units** writes the program (and the .SD1) in mm (M71) or inch (M70) whatever the drawing's units, like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
 ## Preferences
 
