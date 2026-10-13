@@ -634,6 +634,111 @@ msgstr "прохід {n}"
 msgid "{i}/{total} · {op}{pass_} · line {line}"
 msgstr "{i}/{total} · {op}{pass_} · рядок {line}"
 
+msgid "Grooving / parting"
+msgstr "Канавки / відрізання"
+
+msgid "Turning"
+msgstr "Точіння"
+
+msgid "Boring bar"
+msgstr "Розточний різець"
+
+msgid "Drill"
+msgstr "Свердло"
+
+msgid "Left hand"
+msgstr "Лівий"
+
+msgid "Neutral"
+msgstr "Нейтральний"
+
+msgid "Right hand"
+msgstr "Правий"
+
+msgid "_Add Tool"
+msgstr "_Додати інструмент"
+
+msgid "_Delete Tool"
+msgstr "_Видалити інструмент"
+
+msgid "_Import ATOOLIB.TL1…"
+msgstr "_Імпорт ATOOLIB.TL1…"
+
+msgid "_Reset to ALPHA-T Tools"
+msgstr "_Скинути до інструментів ALPHA-T"
+
+msgid "Tool numbers are the lathe's tool memory slots."
+msgstr "Номери інструментів — це комірки пам’яті інструментів верстата."
+
+msgid "Name"
+msgstr "Назва"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "Hand"
+msgstr "Виконання"
+
+msgid "Nose radius"
+msgstr "Радіус при вершині"
+
+msgid "mm; changes the toolpath"
+msgstr "мм; змінює траєкторію"
+
+msgid "Front clearance angle"
+msgstr "Передній кут у плані"
+
+msgid "degrees from Z; negative = internal"
+msgstr "градуси від Z; від’ємний = внутрішній"
+
+msgid "Rear clearance angle"
+msgstr "Задній кут у плані"
+
+msgid "degrees from Z"
+msgstr "градуси від Z"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "grooving tip or drill diameter, mm"
+msgstr "ширина канавкового різця або діаметр свердла, мм"
+
+msgid "Default feed"
+msgstr "Подача за замовчуванням"
+
+msgid "per revolution, for new operations"
+msgstr "на оберт, для нових операцій"
+
+msgid "Description"
+msgstr "Опис"
+
+msgid "New tool"
+msgstr "Новий інструмент"
+
+msgid "Delete T{n}?"
+msgstr "Видалити T{n}?"
+
+msgid "{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard tool with that number."
+msgstr "{name} буде вилучено з вашої бібліотеки інструментів. Деталі, що його використовують, отримають стандартний інструмент ALPHA-T з тим самим номером."
+
+msgid "_Delete"
+msgstr "_Видалити"
+
+msgid "ALPHA-T tool library"
+msgstr "Бібліотека інструментів ALPHA-T"
+
+msgid "Import Tool Library"
+msgstr "Імпорт бібліотеки інструментів"
+
+msgid "Could not import {name}: {error}"
+msgstr "Не вдалося імпортувати {name}: {error}"
+
+msgid "Imported {n} tools from {name}"
+msgstr "Імпортовано інструментів: {n} з {name}"
+
+msgid "Tool library reset to ALPHA-T's 32 standard tools"
+msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"
+
 msgid "Area clear"
 msgstr "Чорнова обробка"
 
@@ -705,6 +810,9 @@ msgstr "Програма"
 
 msgid "Sheet"
 msgstr "Карта наладки"
+
+msgid "Tools"
+msgstr "Інструменти"
 
 msgid "Machine"
 msgstr "Верстат"

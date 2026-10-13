@@ -42,33 +42,33 @@ class Preview:
         return None
 
 
-def _post_prefix(project: Project, n: int, profile: MachineProfile) -> bytes:
+def _post_prefix(project: Project, n: int, profile: MachineProfile, library=None) -> bytes:
     trial = Project.from_dict(project.to_dict())
     trial.operations = trial.operations[:n]
-    return post(trial, profile)
+    return post(trial, profile, library)
 
 
-def preview(project: Project, profile: MachineProfile | None = None) -> Preview:
+def preview(project: Project, profile: MachineProfile | None = None, library=None) -> Preview:
     profile = profile or MachineProfile()
     result = Preview()
     ops = project.operations
     n_ok = len(ops)
     try:
-        data = post(project, profile)
+        data = post(project, profile, library)
         result.data = data
     except (NotImplementedError, ValueError, KeyError) as e:
         # find the first operation that cannot be posted
         n_ok = 0
         while n_ok < len(ops):
             try:
-                _post_prefix(project, n_ok + 1, profile)
+                _post_prefix(project, n_ok + 1, profile, library)
             except (NotImplementedError, ValueError, KeyError) as e2:
                 result.error, result.error_op = str(e2) or type(e2).__name__, n_ok
                 break
             n_ok += 1
         else:
             result.error = str(e) or type(e).__name__
-        data = _post_prefix(project, n_ok, profile)
+        data = _post_prefix(project, n_ok, profile, library)
     prog = parse(data, profile)
     result.program = prog
 

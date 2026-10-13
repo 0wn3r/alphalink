@@ -17,4 +17,5 @@ alphacam_gtk/op_editor.py
 alphacam_gtk/op_factory.py
 alphacam_gtk/report.py
 alphacam_gtk/simulation.py
+alphacam_gtk/tools_page.py
 alphacam_gtk/window.py
