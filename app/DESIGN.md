@@ -247,7 +247,8 @@ gets a **fixture test** that pins it down against its sample before the generato
 
 ## 11. Open questions
 
-1. Is Z/feed ×2 real for the control (C4)? Verify with the CAM load test, and keep it as a profile setting either way.
+1. ~~Is Z/feed ×2 real for the control (C4)?~~ Yes: the control shows tool start Z50 for `#124=100.` and feed 0.15 for
+   `#130=0.3` (2026-10-13, RE_NOTES Progress 29). Thread pitch not yet seen on the control.
 2. Who applies tool-nose compensation: the macros (C5 suggests so) or the CAM?
 3. Meaning of `#120..#140`, `M60..M71` and `#1005/#1006/#1009` (restart switches?). This needs the B703-0703 macro listing or
    a Manual Ops / macro dump from the control.
