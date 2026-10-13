@@ -947,3 +947,13 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
   ends on arcs 0.0001 shallower) and TOOLCHG_inch (finish Z +0.0002 after a tool change). The machine runs metric
   (M71), so these are parked; REA on ALPHA-T's arc code would settle them.
 * PECK_groove / PECK_fullret_groove arrived truncated at 12288 bytes with empty SDGs - regenerate before use.
+
+### Progress 31 - peck grooving (2026-10-13)
+Regenerated cloud samples PECK_groove_metric (PECK DEPTH 2, FULL RET NO, SD1 L110) and PECK_fullret_groove_metric
+(FULL RET YES, L111) are byte-identical with the post:
+* pecks at start X - 4k (peck 2 on radius) while not below the plunge depth, then the normal final plunge (so a
+  peck landing exactly on the bottom is followed by the same plunge again: G1X40 G1X42 G1X40 G1X42);
+* FULL RET NO: after each peck G1 back 2 on diameter, continue;
+* FULL RET YES: G1 back one peck, rapid out to the start X, rapid in to one peck above the last peck (x + 8),
+  G1 to the next peck; the final plunge goes in from the last peck + 4 and backs off 4.
+* ALPHA-T's default is FULL RET NO; the app model default was changed to match.

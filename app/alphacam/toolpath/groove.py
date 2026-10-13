@@ -6,7 +6,9 @@ Rules from GROOVE_metric (stepover 2, tip width 3, datum left):
     left wall (where the profile gets shallower going -Z, e.g. Z-30) when a step would jump over it, and the last
     one is clamped to the profile end;
   * each plunge goes to the highest profile diameter under the tip (elements touching only at the tip's edges do
-    not count), backs off 2 mm on diameter, and rapids out to the start X; after the last, rapid to the start."""
+    not count), backs off 2 mm on diameter, and rapids out to the start X; after the last, rapid to the start;
+  * with a peck depth the plunge is preceded by pecks every peck depth (see _pecks); FULL RET YES retracts out
+    to the start X after each peck."""
 
 from __future__ import annotations
 
@@ -48,8 +50,8 @@ def _left_walls(boundary: list[Seg]) -> list[float]:
 
 
 def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
-    if (op.datum != "left" or op.peck_depth or not op.external or not op.front or op.z_shift or op.repeat
-            or op.mode != "area" or op.dwell_revs or op.finish_offset_x or op.finish_offset_z or not op.full_retract):
+    if (op.datum != "left" or not op.external or not op.front or op.z_shift or op.repeat
+            or op.mode != "area" or op.dwell_revs or op.finish_offset_x or op.finish_offset_z):
         raise NotImplementedError("grooving: only external area grooving with default options (no sample)")
     # The drawn profile, not the tip path: a groove's -Z-facing wall would move by 2r with the (-r, -r) tip shift,
     # and the sample (made with the 0.4R tool 3) plunges against the drawn walls. Grooving tools have r = 0 anyway.
@@ -64,11 +66,44 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
     z = round(top - w, 9)
     while True:
         x = _depth(boundary, z, z + w)
-        moves += [Move(MoveKind.RAPID, sx, z), Move(MoveKind.FEED, x, z, op.feed),
-                  Move(MoveKind.FEED, x + back, z, op.feed), Move(MoveKind.RAPID, sx, z)]
+        moves.append(Move(MoveKind.RAPID, sx, z))
+        moves += _pecks(op, sx, x, z, back) if op.peck_depth > 0 else []
+        if op.peck_depth > 0 and op.full_retract:
+            last = _peck_xs(op, sx, x)[-1] if _peck_xs(op, sx, x) else sx
+            moves += [Move(MoveKind.RAPID, last + 2 * op.peck_depth, z), Move(MoveKind.FEED, x, z, op.feed),
+                      Move(MoveKind.FEED, x + 2 * op.peck_depth, z, op.feed)]
+        else:
+            moves += [Move(MoveKind.FEED, x, z, op.feed), Move(MoveKind.FEED, x + back, z, op.feed)]
+        moves.append(Move(MoveKind.RAPID, sx, z))
         if z <= end:
             break
         nz = round(max(z - step, end), 9)
         skipped = [e for e in walls if nz < e < z]
         z = max(skipped) if skipped else nz
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, sx, op.start.z)])
+
+
+def _peck_xs(op: Groove, sx: float, depth: float) -> list[float]:
+    """Peck diameters: one peck (radius) deeper each time, while not below the bottom (PECK_groove: 116 ... 40)."""
+    step = 2 * op.peck_depth
+    xs, k = [], 1
+    while round(sx - k * step, 9) >= depth - 1e-9:
+        xs.append(round(sx - k * step, 9))
+        k += 1
+    return xs
+
+
+def _pecks(op: Groove, sx: float, depth: float, z: float, back: float) -> list[Move]:
+    """Pecks before the final plunge. FULL RET NO: back off `back` (2 mm dia) after each peck. FULL RET YES
+    (PECK_fullret_groove): back off one peck, rapid out to the start X, rapid in to one peck above the last."""
+    step = 2 * op.peck_depth
+    moves = []
+    for n, x in enumerate(_peck_xs(op, sx, depth), 1):
+        if not op.full_retract:
+            moves += [Move(MoveKind.FEED, x, z, op.feed), Move(MoveKind.FEED, x + back, z, op.feed)]
+            continue
+        if n > 1:
+            moves.append(Move(MoveKind.RAPID, x + 2 * step, z))
+        moves += [Move(MoveKind.FEED, x, z, op.feed), Move(MoveKind.FEED, x + step, z, op.feed),
+                  Move(MoveKind.RAPID, sx, z)]
+    return moves
