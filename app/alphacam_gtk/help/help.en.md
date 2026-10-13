@@ -102,7 +102,7 @@ The app never starts the machine. Always check the program on the control before
 ## Touch and pen
 
 - One finger drags the view, two fingers pinch to zoom, double tap fits the part (again returns).
-- Mouse: wheel pans, Ctrl+wheel zooms, Ctrl+0 fits.
+- Mouse: wheel pans up and down, Shift+wheel pans sideways, Ctrl+wheel zooms, Ctrl+0 fits.
 - **Touch Lock** (padlock in the header) ignores touches, for example while coolant is running; hold it to unlock by touch. Mouse and keyboard keep working.
 - Main menu ▸ Input Layout switches between Automatic, Pointer and Touch layouts.
 
