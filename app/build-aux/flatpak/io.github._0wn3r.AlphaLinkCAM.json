@@ -8,9 +8,16 @@
     "--share=ipc",
     "--socket=wayland",
     "--socket=fallback-x11",
-    "--device=all"
+    "--device=all",
+    "--filesystem=home",
+    "--filesystem=/media",
+    "--filesystem=/run/media"
   ],
-  "cleanup": ["/include", "/lib/pkgconfig", "*.la"],
+  "cleanup": [
+    "/include",
+    "/lib/pkgconfig",
+    "*.la"
+  ],
   "modules": [
     {
       "name": "python3-pyserial",
@@ -37,7 +44,10 @@
         "install -Dm644 examples/*.alcam -t ${FLATPAK_DEST}/share/alphalink-cam/examples"
       ],
       "sources": [
-        {"type": "dir", "path": "../.."}
+        {
+          "type": "dir",
+          "path": "../.."
+        }
       ]
     }
   ]

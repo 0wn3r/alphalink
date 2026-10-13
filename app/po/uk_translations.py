@@ -213,6 +213,12 @@ UK = {
 "Open Part": "Відкрити деталь",
 "Could not open {name}: {error}": "Не вдалося відкрити {name}: {error}",
 "Untitled": "Без назви",
+"{name}: drawing only, no .SD1 found next to it, so no operations.": "{name}: лише креслення, поруч не знайдено .SD1, тому операцій немає.",
+"_Choose .SD1…": "_Вибрати .SD1…",
+"ALPHA-T program listing (.SD1)": "Лістинг програми ALPHA-T (.SD1)",
+"Choose the .SD1 for {name}": "Виберіть .SD1 для {name}",
+"Operations from {name}": "Операції з {name}",
+
 "Arc": "Дуга",
 "Corner": "Кут",
 "Arc: now a point on the arc": "Дуга: тепер точка на дузі",
@@ -310,7 +316,6 @@ UK = {
 "Save Setup Sheet": "Зберегти карту наладки",
 "Sheet": "Карта наладки",
 
-"{name}: drawing only (no .SD1 next to it, so no operations)": "{name}: лише креслення (поруч немає .SD1, тому операцій немає)",
 "Operations not rebuilt from {name}: {error}": "Операції з {name} не відновлено: {error}",
 "The program matches ALPHA-T's {name} byte for byte.": "Програма побайтово збігається з {name} від ALPHA-T.",
 "The program differs from ALPHA-T's {name}: check before sending.": "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням.",

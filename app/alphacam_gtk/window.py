@@ -407,12 +407,55 @@ class MainWindow(Adw.ApplicationWindow):
         alert.connect("response", response)
         alert.present(self)
 
+    def _ask_for_sd1(self, path: Path) -> bool:
+        """No .SD1 visible next to the drawing (missing, or hidden by a sandbox): offer to pick it."""
+        toast = Adw.Toast(title=GLib.markup_escape_text(
+            _("{name}: drawing only, no .SD1 found next to it, so no operations.").format(name=path.name)),
+            button_label=_("_Choose .SD1…"), timeout=10)
+        toast.connect("button-clicked", lambda *_a: self._choose_sd1(path))
+        self.toasts.add_toast(toast)
+        return False
+
+    def _choose_sd1(self, sdg: Path) -> None:
+        filters = Gio.ListStore.new(Gtk.FileFilter)
+        f = Gtk.FileFilter(name=_("ALPHA-T program listing (.SD1)"))
+        for pat in ("*.SD1", "*.sd1"):
+            f.add_pattern(pat)
+        filters.append(f)
+        dlg = Gtk.FileDialog(title=_("Choose the .SD1 for {name}").format(name=sdg.name), filters=filters)
+
+        def done(d, res):
+            try:
+                sd1 = Path(d.open_finish(res).get_path())
+            except GLib.Error:
+                return
+            try:
+                ops = load_sd1(sd1, self.project)
+            except (NotImplementedError, ValueError, KeyError, OSError) as e:
+                self.toast(_("Operations not rebuilt from {name}: {error}").format(name=sd1.name, error=e))
+                return
+            if self.apply_edit(_("Operations from {name}").format(name=sd1.name),
+                               lambda p: setattr(p, "operations", ops)):
+                self.refresh()
+                msg = ngettext("Rebuilt {n} operation from {name}.", "Rebuilt {n} operations from {name}.",
+                               len(ops)).format(n=len(ops), name=sd1.name)
+                prg = sibling(sd1, ".PRG")
+                if prg is not None:
+                    ok = verify(self.project, prg)
+                    msg += " " + (_("The program matches ALPHA-T's {name} byte for byte.") if ok else
+                                  _("The program differs from ALPHA-T's {name}: check before sending.")).format(
+                                      name=prg.name)
+                self.toast(msg)
+
+        dlg.open(self, None, done)
+
     def _ops_from_sd1(self, path: Path, project: Project) -> str:
         """ALPHA-T keeps the operations only in the programs it writes: rebuild them from the .SD1 next to the
         drawing, and check the result against its .PRG when that is there too."""
         sd1 = sibling(path, ".SD1")
         if sd1 is None:
-            return _("{name}: drawing only (no .SD1 next to it, so no operations)").format(name=path.name)
+            GLib.idle_add(self._ask_for_sd1, path)
+            return ""
         try:
             project.operations = load_sd1(sd1, project)
         except (NotImplementedError, ValueError, KeyError) as e:
