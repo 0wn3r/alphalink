@@ -17,10 +17,68 @@ from ..i18n import tr
 import math
 
 from ..model.operations import AreaClear
+from ..model.geometry import Point
 from .contour import Seg, mm, points, tip_path, translate, z_at
 from .toolpath import Move, MoveKind, Pass, Toolpath
 
 RETRACT_MM = 1.0  # RETRACT DIST default
+
+
+def retract_mm(op, units: str, default_mm: float = RETRACT_MM) -> float:
+    """An operation's RETRACT DIST in mm (it is entered in drawing units; None = ALPHA-T's default)."""
+    if getattr(op, "retract", None) is None:
+        return default_mm
+    return op.retract * 25.4 if units == "inch" else op.retract
+
+
+def _end_hit(boundary: list[Seg], x: float, external: bool) -> tuple[int, float]:
+    """(index of the boundary element the pass at X ends on, its Z)."""
+    pts = points(boundary)
+    xq = max(x, min(p.x for p in pts)) if external else min(x, max(p.x for p in pts))
+    best = None
+    for k, s in enumerate(boundary):
+        lo, hi = sorted((s.a.x, s.b.x))
+        if lo == hi:
+            continue
+        if (lo <= xq < hi) if external else (lo < xq <= hi):
+            z = z_at(s, xq)
+            if best is None or z > best[1]:
+                best = (k, z)
+    if best is None:
+        raise ValueError(tr("area clear: no contour below X{x}", x=f"{x:g}"))
+    return best
+
+
+def _on(seg: Seg, p: Point) -> bool:
+    """Is p on the element (between its ends)?"""
+    if abs(p.x - seg.a.x) < 1e-6 and abs(p.z - seg.a.z) < 1e-6 or abs(p.x - seg.b.x) < 1e-6 and abs(p.z - seg.b.z) < 1e-6:
+        return True
+    if seg.is_arc:
+        return False  # targets on arcs are their end points (pass ends land on the arc ends or a straight element)
+    (ar, az), (br, bz), (pr, pz) = (seg.a.x / 2, seg.a.z), (seg.b.x / 2, seg.b.z), (p.x / 2, p.z)
+    cross = (br - ar) * (pz - az) - (bz - az) * (pr - ar)
+    dot = (pr - ar) * (br - ar) + (pz - az) * (bz - az)
+    return abs(cross) < 1e-6 and 0 <= dot <= (br - ar) ** 2 + (bz - az) ** 2 + 1e-9
+
+
+def _follow(boundary: list[Seg], k: int, end: Point, target: Point, feed: float, decimals: int) -> list[Move]:
+    """FOLLOW (AREA_follow_contour): from where the pass stops, feed along the profile towards the chuck to where
+    the previous pass stopped, cleaning the step it left (pass X56 ends at Z-25: up to X60 Z-25, along X60 to
+    Z-50)."""
+    moves, here = [], end
+    for s in boundary[k:]:
+        stop = target if _on(s, target) and not (abs(target.x - here.x) < 1e-6 and abs(target.z - here.z) < 1e-6) \
+            else s.b
+        q = Point(round(stop.x, decimals), round(stop.z, decimals))
+        if s.is_arc:
+            kind = MoveKind.ARC_CCW if s.ccw else MoveKind.ARC_CW
+            moves.append(Move(kind, q.x, q.z, feed, centre_x=s.centre.x, centre_z=s.centre.z))
+        elif (q.x, q.z) != (round(here.x, decimals), round(here.z, decimals)):
+            moves.append(Move(MoveKind.FEED, q.x, q.z, feed))
+        here = q
+        if stop is target:
+            break
+    return moves
 
 
 def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
@@ -52,6 +110,7 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
         start, limit = max(bx), min(p.x for p in points(path)) - 2 * nose_radius
     else:
         start, limit = min(bx), max(bx)
+    first_x = start
     # Zones: every diameter of a Z-parallel boundary line between start and limit is a pass of its own, and the
     # stepping restarts from it (inch samples: ... 2.426, 2.4, 2.2426 ...; in the metric samples the steps happened
     # to land on the shoulders, so this was invisible there).
@@ -67,16 +126,24 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
                 break
         start = stop
     side = 1 if op.external else -1
-    retract = round(mm(RETRACT_MM, units), decimals)
+    retract = round(mm(retract_mm(op, units), units), decimals)
     zs = op.start.z
     passes = []
+    prev = None  # where the previous pass stopped (FOLLOW goes back up to it)
     for x in xs:
-        z = round(_end_z(boundary, x, op.external), decimals)
-        xr = x + side * 2 * retract
-        passes.append(Pass([
-            Move(MoveKind.RAPID, x, zs),
-            Move(MoveKind.FEED, x, z, op.feed),
-            Move(MoveKind.FEED, xr, z + retract, op.feed),
-            Move(MoveKind.RAPID, xr, zs),
-        ]))
+        k, z = _end_hit(boundary, x, op.external)
+        z = round(z, decimals)
+        moves = [Move(MoveKind.RAPID, x, zs), Move(MoveKind.FEED, x, z, op.feed)]
+        ex, ez = x, z
+        if op.follow:
+            if prev is None:  # the first pass goes back up to where the stepping started (the top of the profile)
+                prev = max((p for p in points(boundary) if abs(p.x - first_x) < 1e-9), key=lambda p: p.z)
+            path = _follow(boundary, k, Point(x, z), prev, op.feed, decimals)
+            moves += path
+            if path:
+                ex, ez = path[-1].x, path[-1].z
+            prev = Point(x, z)
+        xr = ex + side * 2 * retract
+        moves += [Move(MoveKind.FEED, xr, ez + retract, op.feed), Move(MoveKind.RAPID, xr, zs)]
+        passes.append(Pass(moves))
     return Toolpath(passes, retract=[Move(MoveKind.RAPID, op.start.x, op.start.z)])

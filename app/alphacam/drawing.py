@@ -604,20 +604,25 @@ def split_arc(project, arc_id: str, p: Point) -> list[str]:
     return [first.id, second.id]
 
 
-def mirror_z(project, z0: float) -> list[str]:
-    """ALPHA-T SPIEGELN: add the mirror image of every line and arc about the plane Z = z0 (a symmetric part drawn
-    once). Returns the new ids."""
+def mirror_axis(project) -> list[str]:
+    """ALPHA-T MIRROR IMAGE (CAD page 2): add the mirror image of the whole drawing about the spindle axis (X0), so
+    the lower half appears too (a point X100 Z-50 gets a copy at X-100 Z-50). It asks for nothing. Elements lying
+    on the axis are their own image and are not copied. Returns the new ids."""
     def m(p: Point) -> Point:
-        return Point(p.x, round(2 * z0 - p.z, 6))
+        return Point(-p.x if p.x else 0.0, p.z)
 
     new = []
     for g in list(project.geometry):
+        if isinstance(g, Text) or (g.a.x == 0 and g.b.x == 0 and not isinstance(g, Arc)):
+            continue
         gid = next_id(project)
         if isinstance(g, Arc):
             project.geometry.append(Arc(m(g.a), m(g.b), m(g.centre), not g.ccw, id=gid))
         else:
             project.geometry.append(Line(m(g.a), m(g.b), id=gid))
         new.append(gid)
+    if not new:
+        raise ValueError(tr("nothing to mirror"))
     return new
 
 

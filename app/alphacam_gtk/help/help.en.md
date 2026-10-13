@@ -62,7 +62,7 @@ The tools are in the bar under the drawing.
   - **Parallel Line…**: tap a line, give the distance (1.5 × as long, as in ALPHA-T).
   - **Split Arc**: tap an arc where it should be split.
   - **Blend Arc…**: tap two points, lines or arcs, give the radius, tap the arc you want.
-  - **Mirror…**: copies the whole drawing mirrored about a Z position.
+  - **Mirror Image**: as in ALPHA-T, copies the whole drawing mirrored about the spindle axis (the lower half), then asks whether it is correct; No takes it back.
 
 ## Operations
 
@@ -73,7 +73,8 @@ Each operation has a **tool** (the tool memory slot on the control), a **tool st
   - External or internal (boring), towards the chuck.
   - Front / face: with Front off the passes go across the face instead, like Face Clear.
   - Pre-finish pass: a finish pass along the contour after the roughing, in the same operation.
-- **Finish Pass**: one pass along the contour. Offset X / Z leaves an allowance; external or internal.
+  - Follow contour: each pass also feeds up the step it ends at, back to where the previous pass stopped. Retract distance: how far each pass pulls off (default 1 mm).
+- **Finish Pass**: one pass along the contour. Offset X / Z leaves an allowance; external, internal, or Face (finishing a face: the pull-off goes towards the axis).
 - **Face Clear**: roughing with passes across the face, towards the axis. Depth of cut per pass along Z, offsets, and an optional pre-finish pass.
 - **Grooving**: plunges along the drawn groove profile.
   - Tip width, stepover, peck depth (0 = plunge in one go), full retract after each peck, dwell at the bottom.
@@ -81,15 +82,17 @@ Each operation has a **tool** (the tool memory slot on the control), a **tool st
   - Datum left or right: which corner of the tip is the tool reference.
   - Z shift and repeats: repeat the plunges shifted along Z.
   - Mode area (plunges) or finish (one pass along the profile).
+  - Front off: face grooving, for a groove drawn into a face: plunges along -Z, stepping outwards from the smallest diameter.
 - **Threading**: pick the outer and inner diameter lines of the thread.
   - Pitch, first cut depth (cut n goes to first × √n), or Number of cuts instead.
-  - Lead in (default 5 mm in front of the thread), lead out (past the end), external or internal, spring pass (one more cut at the final diameter).
-- **Drilling**: on the axis, from the start Z to the hole bottom Z, with peck depth (0 = no pecking) and dwell at the bottom.
+  - Lead in (default 5 mm in front of the thread), lead out (past the end), external or internal, spring passes (more cuts at the final diameter).
+  - Infeed angle: 0 cuts straight in; with an angle (e.g. 30) each cut starts further towards the chuck so the tool cuts on one flank.
+- **Drilling**: on the axis, from the start Z to the hole bottom Z, with peck depth (0 = no pecking) and dwell at the bottom. Retract distance: how far it backs off after each peck (default 2 mm). Full retract: out to the start Z after every peck.
 - **Tool Change**: the next operations use this tool; the tool goes to the tool change point for the change (the turret is manual).
 - **Dwell**: wait a number of spindle revolutions.
 - **Move / Rapid**: a feed or rapid move to a point.
 
-Keep **Towards the chuck** on, and grooving **Front** on. ALPHA-T's AWAY and back-grooving programs are unsafe (they cut past the shoulder, start inside the thread or plunge through the part), so the app refuses them and says why.
+Keep **Towards the chuck** on. ALPHA-T's AWAY programs are unsafe (they cut past the shoulder, into the diameter or start inside the thread), so the app refuses them and says why. A contour picked from the chuck end is cut as if picked from the front: ALPHA-T's own programs for that only skim the face or make one cut.
 
 Use the arrows in the editor header to move an operation up or down, and the bin to delete it (Undo brings it back). If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed.
 

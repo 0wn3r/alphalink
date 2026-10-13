@@ -21,7 +21,7 @@ from .i18n import N_, _, ngettext  # noqa: E402
 
 CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
                   (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc… (O)"), "blend"),
-                  (N_("Mirror…"), "mirror")]
+                  (N_("Mirror Image"), "mirror")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 # tooltips with the one-letter keys (hit_keys.py)
@@ -812,15 +812,37 @@ class DrawingTools:
                           lambda v: self._edit(_("Circle"), lambda p: drawing.add_circle(p, Point(v[0], v[1]), v[2])))
             return
         if kind == "mirror":
-            z = self.cursor.z if self.cursor else 0.0
-            self._numbers(_("Mirror"), [(_("Mirror about Z"), z, -2000, 2000)],
-                          lambda v: self._edit(_("Mirror"), lambda p: drawing.mirror_z(p, v[0])))
+            self.mirror_image()
             return
         first = {"tangent": _("Tangent: tap a point, or an arc"), "tangent-angle": _("Tangent at an angle: tap the arc"),
                  "parallel": _("Parallel line: tap the line"), "split": _("Split arc: tap the arc where to split it"),
                  "blend": _("Blend arc: tap the 1st point, line or arc")}[kind]
         self.construct = {"kind": kind, "step": 0, "refs": []}
         self._prompt(first)
+
+    def mirror_image(self) -> None:
+        """ALPHA-T MIRROR IMAGE: mirror the whole drawing about the axis at once, show it, then ask whether it is
+        correct; No takes it back."""
+        if not self.w.apply_edit(_("Mirror Image"), drawing.mirror_axis):
+            return
+        self.w.refresh()
+        self.c.fit()
+        dlg = Adw.AlertDialog(heading=_("Is this correct?"),
+                              body=_("The drawing is mirrored about the spindle axis."))
+        dlg.add_response("no", _("_No"))
+        dlg.add_response("yes", _("_Yes"))
+        dlg.set_response_appearance("yes", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("yes")
+        dlg.set_close_response("no")
+
+        def response(_d, r):
+            if r != "yes":
+                self.w.undo.undo()
+                self.w.refresh()
+                self.c.fit()
+
+        dlg.connect("response", response)
+        dlg.present(self.w)
 
     def _prompt(self, text: str) -> None:
         self.construct_banner.set_title(text)

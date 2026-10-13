@@ -9,7 +9,7 @@ from pathlib import Path
 from alphacam.io.sd1 import load_sd1
 from alphacam.io.sdg import load_sdg
 from alphacam.post.alphat_sd1 import sd1
-from tests.test_post import GOLDEN, REFUSED, SAMPLES, sample_project
+from tests.test_post import DIFFERS_ON_PURPOSE, GOLDEN, REFUSED, SAMPLES, sample_project
 
 APP = Path(__file__).resolve().parents[1]
 
@@ -17,7 +17,7 @@ APP = Path(__file__).resolve().parents[1]
 class Sd1Writer(unittest.TestCase):
     def test_every_sample_listing_byte_identical(self):
         """SDG + SD1 import -> SD1 writer gives ALPHA-T's bytes back, for every sample with an .SD1."""
-        sdgs = [p for p in sorted(SAMPLES.glob("*.SDG")) if p.with_suffix(".SD1").exists() and p.stem not in REFUSED]
+        sdgs = [p for p in sorted(SAMPLES.glob("*.SDG")) if p.with_suffix(".SD1").exists() and p.stem not in REFUSED | DIFFERS_ON_PURPOSE]
         self.assertGreaterEqual(len(sdgs), 40)
         for sdg in sdgs:
             with self.subTest(sdg.stem):

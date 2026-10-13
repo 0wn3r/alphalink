@@ -134,7 +134,11 @@ class Project:
 
 def _legacy_op(o: dict) -> dict:
     """Parts saved before 2026-10-13 have a thread "angle" of 60 (the profile angle, which the post never used); the
-    field is now ALPHA-T's infeed angle, where 0 is what those parts posted."""
+    field is now ALPHA-T's infeed angle, where 0 is what those parts posted. Their "spring_pass" yes/no is now a
+    count."""
     if o.get("type") == "thread" and o.get("angle") == 60.0:
         o = dict(o, angle=0.0)
+    if o.get("type") == "thread" and "spring_pass" in o:  # before 2026-10-13: one spring pass or none
+        o = dict(o)
+        o["spring_passes"] = int(bool(o.pop("spring_pass")))
     return o

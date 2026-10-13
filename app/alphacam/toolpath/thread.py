@@ -23,6 +23,18 @@ class ThreadPlan:
     inner: float  # final diameter of the last cut (#125): inner line external, outer line internal
     z_start: float = 0.0  # where every cut starts: top of the thread + lead-in
     first_cut: float = 0.0  # radial depth of the first cut (SD1 G76 D)
+    angle: float = 0.0  # ANGLE (flank infeed, degrees)
+    depth: float = 0.0  # radial thread depth
+    decimals: int = 3
+
+    def cut_start_z(self, n: int) -> float:
+        """THREAD_angle30: with an infeed angle cut n starts depth_n * tan(angle / 2) further towards the chuck
+        (cut 1, depth 1 at 30 degrees: Z5 -> 4.732), so the tool follows one flank. depth_n is the exact
+        first * sqrt(n), not the rounded diameter (cut 51: 7.14143, Z3.086, not 3.087); the real Z is rounded."""
+        if not self.angle:
+            return self.z_start
+        depth = min(self.first_cut * math.sqrt(n), self.depth)
+        return round(self.z_start - depth * math.tan(math.radians(self.angle / 2)), self.decimals)
 
 
 def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPlan:
@@ -39,9 +51,6 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     depth = (xo - xi) / 2
     # NO. OF CUTS mode: ALPHA-T stores the first cut rounded to 4 decimals (SD1 D4.0825)
     first = round(depth / math.sqrt(op.cuts), 4) if op.cuts > 0 else op.cut_depth
-    if op.angle:
-        # manual (German, p.50): an angle makes the control cut along the flank; no sample shows its passes yet
-        raise NotImplementedError(tr("threading with a flank infeed angle (no sample); set the angle to 0"))
     if depth <= 0 or first <= 0:
         raise ValueError(tr("thread: outer diameter must be above the inner one, first cut > 0"))
     n = math.ceil(round((depth / first) ** 2, 9))
@@ -50,6 +59,8 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     z_end = round(min(outer.a.z, outer.b.z) - op.lead_out, 9)
     z_start = round(max(outer.a.z, outer.b.z) + op.lead_in, 9)
     if op.external:  # from the outer diameter in towards the inner one
-        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi, z_start, first)
+        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi, z_start, first,
+                          op.angle, depth, decimals)
     # internal (THREAD_internal): from the inner (bore) diameter out to the outer one, pull-out inwards
-    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo, z_start, first)
+    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo, z_start, first,
+                      op.angle, depth, decimals)

@@ -30,8 +30,8 @@ from ..model.geometry import Point
 from ..model.project import Project
 from ..model.tools import ToolLibrary
 from ..numfmt import format_number
-from ..toolpath.area import area_clear
-from ..toolpath.contour import centre_path, chain, limits, mm, points, translate
+from ..toolpath.area import area_clear, retract_mm
+from ..toolpath.contour import front_first, centre_path, chain, limits, mm, points, translate
 from ..toolpath.drill import drill
 from ..toolpath.face import face_clear
 from ..toolpath.groove import groove, groove_finish
@@ -175,7 +175,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         # Q: the thread depth on radius (THREAD_depth6: Q6)
         depth = abs(outer.a.x - inner.a.x) / 2
         out.put(f"G76X{_n(plan.inner)}Z{_n(plan.z_end + op.lead_out)}Q{_n(depth)}D{_n(plan.first_cut)}"
-                f"I{_n(op.lead_in)}L{_n(op.lead_out)}B0A{_n(op.angle)}E{1 if op.external else -1}K{1 if op.spring_pass else 0}"
+                f"I{_n(op.lead_in)}L{_n(op.lead_out)}B0A{_n(op.angle)}E{1 if op.external else -1}K{op.spring_passes}"
                 f"F{_n(op.pitch)}")
         out.put(f"G176F{_n(tc_feed)}")
         return
@@ -187,25 +187,29 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         out.put("G174")
         return
     path = chain(project.contour(op.contour))
+    if isinstance(op, (AreaClear, FaceClear)):
+        path = front_first(path)
     lx, lz = limits(points(path), r_exact)
     out.put(f"G115X{_n(lx)}Z{_n(lz)}")
     if isinstance(op, FinishPass):
         _contour_cycle(out, op, path, r, units, op.external,
-                       lambda p, q: f"G70R0E{0 if op.external else 1}U{_n(op.offset_x)}W{_n(op.offset_z)}",
-                       FINISH_LEAD_OUT_MM, False, True, False, 170)
+                       lambda p, q: f"G70R0E{2 if op.face else 0 if op.external else 1}U{_n(op.offset_x)}"
+                                    f"W{_n(op.offset_z)}",
+                       FINISH_LEAD_OUT_MM, False, True, op.face, 170)
     elif isinstance(op, (AreaClear, FaceClear)):
         face = isinstance(op, FaceClear)
         external = getattr(op, "external", True)
         if face:
             e, tp = 401, face_clear(op, path, r, units, DEC)
         elif not op.front:
-            e, tp = (101 if external else -101), face_clear(op, path, r, units, DEC, AREA_RETRACT_MM, outward=True)
+            e, tp = (101 if external else -101), face_clear(op, path, r, units, DEC, retract_mm(op, units), outward=True)
         else:
             e, tp = (100 if external else -100), area_clear(op, path, r, units, DEC)
-        retract = FACE_RETRACT_MM if face else AREA_RETRACT_MM
+        retract = FACE_RETRACT_MM if face else retract_mm(op, units)
         _contour_cycle(out, op, path, r, units, external,
                        lambda p, q: f"G71P{p}Q{q}U{_n(op.offset_x)}W{_n(op.offset_z)}D{_n(op.depth_of_cut)}"
-                                    f"R{_n(retract)}A45E{e}H{len(tp.passes)}",
+                                    f"R{_n(retract)}A45E{e + 200 if getattr(op, "follow", False) else e}"
+                                    f"H{len(tp.passes)}",
                        retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100))
         if getattr(op, "pre_finish", False):  # G70 R1, E0 / E1 internal / E2 face, with the op's offsets
             out.put(f"G115X{_n(lx)}Z{_n(lz)}")
@@ -213,7 +217,8 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
             pe = 2 if face else 0 if external else 1
             _contour_cycle(out, fp, path, r, units, external,
                            lambda p, q: f"G70R1E{pe}U{_n(op.offset_x)}W{_n(op.offset_z)}",
-                           FINISH_LEAD_OUT_MM if face else PREFINISH_LEAD_OUT_MM, False, not face, face, 170)
+                           FINISH_LEAD_OUT_MM if face else retract_mm(op, units, PREFINISH_LEAD_OUT_MM), False,
+                           not face, face, 170)
     elif isinstance(op, Groove) and op.mode == "finish":
         out.put("G78")
         tp = groove_finish(op, path)

@@ -12,8 +12,8 @@ from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, G
 from ..model.project import MachineProfile, Project
 from ..model.tools import Tool, ToolLibrary, standard_library
 from ..numfmt import format_number
-from ..toolpath.area import area_clear
-from ..toolpath.contour import chain, limits, mm, points
+from ..toolpath.area import area_clear, retract_mm
+from ..toolpath.contour import front_first, chain, limits, mm, points
 from ..toolpath.drill import drill
 from ..toolpath.face import face_clear
 from ..toolpath.finish import finish_pass
@@ -145,7 +145,7 @@ def _thread_block(w: _Writer, block: int, project: Project, op: Thread) -> int:
     sx, sz = op.start.x, plan.z_start
 
     def cut(n: int, x: float) -> None:
-        w.moves([Move(MoveKind.RAPID, x, sz)])
+        w.moves([Move(MoveKind.RAPID, x, plan.cut_start_z(len(plan.xs) if x == plan.xs[-1] else n))])
         w.emit("M62", f"#121={n}", "M66", f"G32X{w.x(x)}Z{w.z(plan.z_end + op.pitch)}F{pitch}",
                f"U{format_number(plan.pullout_u, w.dec)}W{format_number(-op.pitch * w.zs, w.dec)}",
                f"G0X{w.x(sx)}Z{w.z(plan.z_end)}")
@@ -160,17 +160,18 @@ def _thread_block(w: _Writer, block: int, project: Project, op: Thread) -> int:
     w.moves([Move(MoveKind.RAPID, sx, sz)])
     for n, x in enumerate(plan.xs, 1):
         cut(n, x)
-    if not op.spring_pass:
+    if op.spring_passes <= 0:
         w.emit("M64", f"N{label}")
         return block
     w.emit(f"N{label}")
     block += 1
-    _header(w, block, op, 1, 21, (plan.inner, plan.z_end), pitch)
+    _header(w, block, op, op.spring_passes, 21, (plan.inner, plan.z_end), pitch)
     w.emit("M66")
     label = w.restart_jump()
     w.emit("M63")
     w.feeding = False
-    cut(1, plan.xs[-1])
+    for n in range(1, op.spring_passes + 1):
+        cut(n, plan.xs[-1])
     w.emit("M64", f"N{label}")
     return block
 
@@ -189,14 +190,18 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
         _generic_block(w, block, op, drill(op, project.units, w.dec), 18, (op.start.x, op.depth))
         return block
     path = chain(project.contour(op.contour))
+    if isinstance(op, (AreaClear, FaceClear)):
+        path = front_first(path)
     limit = limits(points(path), r_exact)
     if isinstance(op, FinishPass):
-        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec), 14 if op.external else 15, limit)
+        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec),
+                       16 if op.face else 14 if op.external else 15, limit)
     elif isinstance(op, AreaClear) and not op.front:
         # FACE direction: face-clear passes; #127=8 external (AREA_front_face), 7 internal (AREA_face_internal)
         if op.pre_finish:
             raise NotImplementedError(tr("area clear FACE with pre-finish (no sample)"))
-        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec, AREA_RETRACT_MM, outward=True),
+        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec, retract_mm(op, project.units),
+                                                     outward=True),
                        8 if op.external else 7, limit)
     elif isinstance(op, AreaClear):
         _generic_block(w, block, op, area_clear(op, path, r, project.units, w.dec), 6 if op.external else 7, limit)
@@ -207,7 +212,8 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
             block += 2
             fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, op.external)
             _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec,
-                                                         round(mm(PREFINISH_LEAD_OUT_MM, project.units), w.dec)),
+                                                         round(mm(retract_mm(op, project.units, PREFINISH_LEAD_OUT_MM),
+                                                                  project.units), w.dec)),
                            10 if op.external else 11, limit)
     elif isinstance(op, FaceClear):
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec), 8, limit)

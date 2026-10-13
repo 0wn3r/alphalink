@@ -99,11 +99,7 @@ def _mirror(path: list[Seg]) -> list[Seg]:
 
 def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
     if not op.front:
-        # GROOVE_back: ALPHA-T turns it into face grooving (plunges along Z, stepping in X) and on a turned profile
-        # those plunges run through the part (X44..54 down to Z-50 inside the dia-60 shoulder). Needs a sample with a
-        # groove drawn into a face before the app does this.
-        raise NotImplementedError(tr("grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
-                                  "profile; not supported until there is a face-groove sample"))
+        return face_groove(op, path, units, decimals)
     if op.mode == "finish":
         if op.finish_offset_x or op.finish_offset_z or not op.external:
             raise NotImplementedError(tr("grooving finish mode: only external, no finish offsets (no sample)"))
@@ -159,6 +155,61 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
             moves += [Move(MoveKind.FEED, bottom_back, z, op.feed), Move(MoveKind.RAPID, sx, z)]
         passes.append(Pass(moves))
     return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)], plunges=len(plunges))
+
+
+def _face_depth(boundary: list[Seg], r0: float, r1: float) -> float:
+    """The shallowest (largest) Z of the profile under the tip's radial band r0..r1 (radius); elements touching
+    the band only at its edges do not count."""
+    zs = []
+    for s in boundary:
+        lo, hi = sorted((s.a.x / 2, s.b.x / 2))
+        if lo == hi:
+            if r0 < lo < r1:
+                zs.append(max(s.a.z, s.b.z))
+        elif min(hi, r1) - max(lo, r0) > 1e-9:
+            zs.append(max(s.a.z, s.b.z))
+    if not zs:
+        raise ValueError(tr("face grooving: no profile under X{x0}..{x1}", x0=f"{2 * r0:g}", x1=f"{2 * r1:g}"))
+    return max(zs)
+
+
+def face_groove(op: Groove, path: list[Seg], units: str, decimals: int) -> Toolpath:
+    """FACE grooving (ALPHA-T's FRONT -> FACE toggle, SD1 L210; GROOVE_face: a groove X30..36 drawn 5 deep into the
+    front face, tip width 2, stepover 1): plunges along -Z, stepping outwards in X.
+      * DATUM BTM (the default; stored as datum "left"): the reference is the tip's corner nearest the axis, so a
+        plunge at X covers X .. X + 2 * tip width on diameter;
+      * plunges start at the profile's smallest diameter and step out by the stepover (radius), the last one clamped
+        to the largest diameter - 2 * tip width;
+      * each plunge feeds from the start Z to the shallowest profile Z under the tip, backs off 1 mm in +Z (the
+        radial 2 mm on diameter), and rapids out to the start Z; after the last, rapid to the start X.
+    GROOVE_back (an older build's FRONT -> BACK, the whole turned profile picked) is the same cycle with the
+    whole profile as the groove. DATUM TOP shifts the reference to the outer corner (by symmetry, no sample)."""
+    if not op.external or op.peck_depth > 0 or op.z_shift or op.repeat or op.mode == "finish" \
+            or op.finish_offset_x or op.finish_offset_z:
+        raise NotImplementedError(tr("face grooving: only external, area mode, without pecks, X shift or finish "
+                                  "offsets (no sample)"))
+    rs = [p.x / 2 for p in points(path)]
+    lo, hi = min(rs), max(rs)
+    w, step = op.tip_width, op.stepover
+    back = round(mm(RETRACT_DIA_MM, units) / 2, decimals)
+    sz = op.start.z
+    plunges = []
+    r = lo
+    while True:
+        r = round(min(r, hi - w), 9)
+        plunges.append((r, _face_depth(path, r, r + w)))
+        if r >= hi - w - 1e-9:
+            break
+        r = round(r + step, 9)
+    moves = []
+    for r, z in plunges:
+        x = round(2 * (r + w if op.datum == "right" else r), 9)
+        moves.append(Move(MoveKind.RAPID, x, sz))
+        moves.append(Move(MoveKind.FEED, x, z, op.feed))
+        if op.dwell_revs:
+            moves.append(Move(MoveKind.DWELL, x, z, dwell_revs=op.dwell_revs))
+        moves += [Move(MoveKind.FEED, x, round(z + back, 9), op.feed), Move(MoveKind.RAPID, x, sz)]
+    return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, op.start.x, sz)], plunges=len(plunges))
 
 
 def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:

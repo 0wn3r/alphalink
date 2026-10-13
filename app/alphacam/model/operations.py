@@ -22,6 +22,7 @@ OP_KINDS: dict[int, str] = {
     12: "face_prefinish",
     14: "finish",
     15: "finish_internal",
+    16: "finish_face",
     17: "groove_finish",
     18: "drill",
     20: "thread",
@@ -53,6 +54,8 @@ class AreaClear:
     pre_finish: bool = False
     external: bool = True
     front: bool = True  # ALPHA-T FRONT/FACE toggle; FACE (SD1 E101) cuts radial passes like face clear, #127=8
+    retract: float | None = None  # RETRACT DIST in drawing units; None = ALPHA-T's default 1 mm (SD1 R)
+    follow: bool = False  # FOLLOW: each pass also feeds up the shoulder it ends at (SD1 E300)
     type = "area_clear"
     op_kind = 6  # 7 when internal
 
@@ -104,8 +107,9 @@ class FinishPass:
     offset_x: float = 0.0  # radius (per side): X moves by 2 * offset_x
     offset_z: float = 0.0
     external: bool = True
+    face: bool = False  # ALPHA-T's third EXTERNAL/INTERNAL/FACE choice: #127=16, SD1 G70 E2, pull-off inwards (-X)
     type = "finish"
-    op_kind = 14  # 15 when internal
+    op_kind = 14  # 15 when internal, 16 face
 
 
 @dataclass
@@ -118,6 +122,8 @@ class Drill:
     peck: float = 0.0
     feed: float = 0.15
     dwell_revs: float = 0.0
+    full_retract: bool = False  # FULL RET: out to the start Z after every peck (DRILL_fullret)
+    retract: float | None = None  # RETRACT DIST in drawing units; None = ALPHA-T's default 2 mm (DRILL_retract1: 1)
     type = "drill"
     op_kind = 18
 
@@ -136,7 +142,7 @@ class Thread:
     angle: float = 0.0  # ALPHA-T "Winkel": 0 = straight (radial) infeed, as in every sample; > 0 = flank infeed
     external: bool = True
     towards: bool = True
-    spring_pass: bool = False
+    spring_passes: int = 0  # SPRING PASS: extra cuts at the final diameter, each in the #127=21 block (THREAD_spring2)
     type = "thread"
     op_kind = 20
 

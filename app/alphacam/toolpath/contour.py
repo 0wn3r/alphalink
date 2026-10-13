@@ -59,6 +59,16 @@ def chain(elements: list[Element]) -> list[Seg]:
     return path
 
 
+def front_first(path: list[Seg]) -> list[Seg]:
+    """The path running from the front (the end with the larger Z) towards the chuck. Area and face clear are
+    computed for that direction: ALPHA-T's own programs for a contour picked from the chuck end are not usable
+    (AREA_towards_from_chuck_end only skims the front face; FACE_towards_from_chuck_end makes one cut), so the
+    app cuts such a contour as if it had been picked from the front."""
+    if path and path[-1].b.z > path[0].a.z + EPS:
+        return [Seg(s.b, s.a, s.centre, not s.ccw if s.is_arc else False) for s in reversed(path)]
+    return path
+
+
 def points(path: list[Seg]) -> list[Point]:
     return [path[0].a] + [s.b for s in path]
 

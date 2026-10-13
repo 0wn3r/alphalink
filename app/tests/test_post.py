@@ -70,6 +70,15 @@ GOLDEN = {
     "PECK_groove_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], peck_depth=2)],
     "PECK_fullret_groove_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], peck_depth=2,
                                           full_retract=True)],
+    # German manual list (2026-10-13 night)
+    "AREA_follow_contour_metric": [AreaClear(3, S, MET2, follow=True)],
+    "AREA_retract2_metric": [AreaClear(3, S, MET2, retract=2)],
+    "FINISH_face_metric": [FinishPass(3, S, MET2, face=True)],
+    "DRILL_fullret_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, full_retract=True)],
+    "DRILL_retract1_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, retract=1)],
+    "THREAD_angle30_metric": [Thread(3, S, "g0", "g1", pitch=1.5, angle=30)],
+    "THREAD_spring2_metric": [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2)],
+    "GROOVE_face_metric": [Groove(3, S, ["g1", "g2", "g3"], stepover=1, tip_width=2, front=False)],
 }
 
 # Inch versions (samples/alphat_v12_inch, cloud run): drawing typed in inch, start X5 Z0.2, depth of cut 0.0787
@@ -232,9 +241,16 @@ class OperationRules(unittest.TestCase):
 # (FACE_slope +0.0006, FACE_arcs -0.0007/+0.0008; a numeric search with a tolerance, presumably)
 SD1_KNOWN_DIFF = {"FACE_slope_metric", "FACE_arcs_metric"}
 # options whose ALPHA-T output is unsafe on these parts (cuts past the shoulder, one pass only, cuts starting inside the
-# thread, face grooving through a turned part): the app refuses them with a reason instead of copying them
+# thread, face passes cutting into the dia-60 shoulder): the app refuses AWAY with a reason instead of copying it
 REFUSED = {"AREA_away_tool5_retry_metric", "FACE_away_tool5_metric", "FACE_away_tool3_nocheck_metric",
-           "THREAD_away_metric", "GROOVE_back_metric"}
+           "THREAD_away_metric", "AREA_away_from_chuck_end_metric", "FACE_away_from_chuck_end_metric",
+           "THREAD_away_from_chuck_end_metric"}
+# ALPHA-T's output here is wrong, so the app posts a usable program instead of copying it:
+# - a contour picked from the chuck end: ALPHA-T's area clear only skims the front face and its face clear makes one
+#   cut at the shoulder; the app cuts it as if picked from the front (contour.front_first);
+# - GROOVE_back (face grooving with the whole turned profile picked): ALPHA-T plunges X32..38 to Z-30 through the
+#   dia-40 part; the app's face plunges stop on the first face under the tip.
+DIFFERS_ON_PURPOSE = {"AREA_towards_from_chuck_end_metric", "FACE_towards_from_chuck_end_metric", "GROOVE_back_metric"}
 
 
 class FromSD1(unittest.TestCase):
@@ -253,6 +269,9 @@ class FromSD1(unittest.TestCase):
                 if sdg.stem in REFUSED:
                     with self.assertRaises(NotImplementedError):
                         post(project)
+                    continue
+                if sdg.stem in DIFFERS_ON_PURPOSE:
+                    self.assertNotEqual(post(project), sdg.with_suffix(".PRG").read_bytes())
                     continue
                 if sdg.stem in SD1_KNOWN_DIFF:
                     a = post(project).decode().splitlines()

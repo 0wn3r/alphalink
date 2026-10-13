@@ -82,6 +82,9 @@ msgstr "відстань має бути > 0"
 msgid "the point is not inside the arc"
 msgstr "точка не лежить на дузі"
 
+msgid "nothing to mirror"
+msgstr "немає чого відображати"
+
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
 
@@ -151,6 +154,9 @@ msgstr "кути між двома дугами поки не підтримую
 msgid "drill depth must be below the start Z"
 msgstr "дно отвору має бути нижче початкового Z"
 
+msgid "retract distance must be > 0"
+msgstr "відстань відведення має бути > 0"
+
 msgid "face clear: no profile at Z{z}"
 msgstr "обробка торця: немає профілю на Z{z}"
 
@@ -163,14 +169,17 @@ msgstr "канавка: немає профілю під Z{z0}..{z1}"
 msgid "grooving finish offsets: only faces and diameters (no sample with slopes/arcs)"
 msgstr "чистовий припуск канавки: лише торці й діаметри (немає зразка з похилими лініями чи дугами)"
 
-msgid "grooving from the back (face grooving): ALPHA-T's own output gouges a turned profile; not supported until there is a face-groove sample"
-msgstr "канавка ззаду (торцева канавка): програма самої ALPHA-T врізається в точену деталь; не підтримується, доки немає зразка з торцевою канавкою"
-
 msgid "grooving finish mode: only external, no finish offsets (no sample)"
 msgstr "чистовий режим канавки: лише зовнішня, без чистового припуску (немає зразка)"
 
 msgid "internal grooving with pecking (no sample)"
 msgstr "внутрішня канавка з врізанням кроками (немає зразка)"
+
+msgid "face grooving: no profile under X{x0}..{x1}"
+msgstr "торцеві канавки: немає профілю під X{x0}..{x1}"
+
+msgid "face grooving: only external, area mode, without pecks, X shift or finish offsets (no sample)"
+msgstr "торцеві канавки: лише зовнішні, режим area, без кроків врізання, зсуву X і чистових припусків (немає зразка)"
 
 msgid "grooving finish: lines only (no sample with arcs)"
 msgstr "чистовий режим канавки: лише лінії (немає зразка з дугами)"
@@ -180,9 +189,6 @@ msgstr "різьба AWAY: сама ALPHA-T у цьому режимі почи�
 
 msgid "thread lines must be parallel to Z"
 msgstr "лінії різьби мають бути паралельні Z"
-
-msgid "threading with a flank infeed angle (no sample); set the angle to 0"
-msgstr "різьба з урізанням по боковій стороні (немає зразка); задайте кут 0"
 
 msgid "thread: outer diameter must be above the inner one, first cut > 0"
 msgstr "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0"
@@ -211,8 +217,8 @@ msgstr "Паралельна лінія…"
 msgid "Split Arc"
 msgstr "Розділити дугу"
 
-msgid "Mirror…"
-msgstr "Дзеркало…"
+msgid "Mirror Image"
+msgstr "Дзеркальне відображення"
 
 msgid "Arc"
 msgstr "Дуга"
@@ -457,12 +463,6 @@ msgstr "Центр Z"
 msgid "Circle"
 msgstr "Коло"
 
-msgid "Mirror"
-msgstr "Дзеркало"
-
-msgid "Mirror about Z"
-msgstr "Дзеркально відносно Z"
-
 msgid "Tangent at an angle: tap the arc"
 msgstr "Дотична під кутом: торкніться дуги"
 
@@ -477,6 +477,18 @@ msgstr "Розділити дугу: торкніться дуги там, де 
 
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
+
+msgid "Is this correct?"
+msgstr "Чи це правильно?"
+
+msgid "The drawing is mirrored about the spindle axis."
+msgstr "Креслення дзеркально відображено відносно осі шпинделя."
+
+msgid "_No"
+msgstr "_Ні"
+
+msgid "_Yes"
+msgstr "_Так"
 
 msgid "No solution for these elements"
 msgstr "Для цих елементів розв’язку немає"
@@ -796,8 +808,17 @@ msgstr "Кількість проходів"
 msgid "Lead in"
 msgstr "Вхід"
 
+msgid "Retract distance"
+msgstr "Відстань відведення"
+
 msgid "Lead out"
 msgstr "Вихід"
+
+msgid "Spring passes"
+msgstr "Зачисні проходи"
+
+msgid "extra cuts at the final diameter"
+msgstr "додаткові проходи на кінцевому діаметрі"
 
 msgid "Infeed angle"
 msgstr "Кут урізання"
@@ -826,8 +847,20 @@ msgstr "Повне відведення"
 msgid "Front"
 msgstr "Спереду"
 
-msgid "Spring pass"
-msgstr "Зачисний прохід"
+msgid "off = FACE: across the front face"
+msgstr "вимкнено = FACE: упоперек торця"
+
+msgid "Follow contour"
+msgstr "Йти по контуру"
+
+msgid "each pass also cleans up the step it leaves"
+msgstr "кожен прохід також зачищає залишений уступ"
+
+msgid "Face"
+msgstr "Торець"
+
+msgid "finish a face: pulls off towards the axis"
+msgstr "чистовий прохід торця: відведення до осі"
 
 msgid "Rapid"
 msgstr "Прискорений хід"
@@ -894,6 +927,9 @@ msgstr "Контур (ідентифікатори елементів у пор�
 
 msgid "Pick Contour on the Drawing"
 msgstr "Вибрати контур на кресленні"
+
+msgid "Face grooving: plunges along -Z, stepping outwards; the tool reference is the tip's corner nearest the axis."
+msgstr "Торцеві канавки: врізання вздовж -Z із кроком назовні; базова точка інструмента — кут різця, найближчий до осі."
 
 msgid "Grooving follows the drawn profile; the tool reference is the tip's -Z corner."
 msgstr "Точіння канавок іде за накресленим профілем; базова точка інструмента — кут різця з боку -Z."

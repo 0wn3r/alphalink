@@ -29,6 +29,6 @@ def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str,
             moves.append(Move(kind, s.b.x, s.b.z, op.feed, centre_x=s.centre.x, centre_z=s.centre.z))
         else:
             moves.append(Move(MoveKind.FEED, s.b.x, s.b.z, op.feed))
-    out_side = -side if face_end else side
+    out_side = -side if face_end or op.face else side  # FINISH_face: X99.718, not 100.282
     moves.append(Move(MoveKind.FEED, last.x + out_side * 2 * lead_out, last.z + lead_out, op.feed))
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, op.start.x, op.start.z)])

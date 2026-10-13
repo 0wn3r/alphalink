@@ -68,6 +68,21 @@ EXPECTED_OPS = {
     "FACE_away_tool5_metric": [("face_clear", 1)],
     "FACE_prefinish_metric": [("face_clear", 26), ("face_prefinish", 1)],
     "GROOVE_back_metric": [("groove", 1)],
+    # German manual list (2026-10-13 night)
+    "AREA_follow_contour_metric": [("area_clear", 26)],
+    "AREA_retract2_metric": [("area_clear", 26)],
+    "AREA_away_from_chuck_end_metric": [("area_clear", 11)],
+    "AREA_towards_from_chuck_end_metric": [("area_clear", 10)],
+    "FACE_away_from_chuck_end_metric": [("face_clear", 26)],
+    "FACE_identified_inside_out_metric": [("face_clear", 26)],
+    "FACE_towards_from_chuck_end_metric": [("face_clear", 1)],
+    "FINISH_face_metric": [("finish_face", 1)],
+    "DRILL_fullret_metric": [("drill", 1)],
+    "DRILL_retract1_metric": [("drill", 1)],
+    "THREAD_angle30_metric": [("thread", 100)],
+    "THREAD_spring2_metric": [("thread", 100), ("thread_spring", 2)],
+    "THREAD_away_from_chuck_end_metric": [("thread", 100)],
+    "GROOVE_face_metric": [("groove", 1)],
     "GROOVE_finishmode_slope_metric": [("groove_finish", 1)],
     "GROOVE_finishoffset_metric": [("groove", 1)],
     "GROOVE_internal_metric": [("groove", 1)],
@@ -176,7 +191,7 @@ class EverySample(unittest.TestCase):
         for path in PRGS:
             if any(75 in r["G"] and float(r.get("R", 0)) > 0 for r in sd1_words(path.with_suffix(".SD1"))):
                 continue  # a +Z grooving Z-SHIFT repeats the plunges above the start Z (GROOVE_zshift10_rep1)
-            if path.stem == "THREAD_away_metric":
+            if path.stem in ("THREAD_away_metric", "THREAD_away_from_chuck_end_metric"):
                 continue  # ALPHA-T's AWAY thread rapids out to Z15 after each cut (the app refuses AWAY)
             prog = parse_file(path)
             for b in prog.operations:

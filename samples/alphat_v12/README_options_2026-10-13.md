@@ -89,3 +89,29 @@ groove/thread variants start from the original at_groove/at_thread scripts (groo
 | 9 | AREA_prefinish_internal_metric.* | INT_area setup + pre-finish Yes | extra op #127=11 (internal pre-finish; external is 10) |
 | 10 | AREA_prefinish_offset_metric.* | area clear, OFFSET 0.5,0.2, pre-finish Yes | roughing + #127=10 with the offset applied |
 | 11 | GROOVE_finishmode_slope_metric.* | GROOVE_metric profile with the groove side 40,-20 -> 30,-25 (45 deg), finish mode (2) | #127=17, SD1 G78 |
+
+## German manual list (2026-10-13 night, metric, MET2, tool 3 unless noted)
+Scripts in scripts/manual_de/ (lib.py + mk1/mk2/mk3.py write the .ks; runall.sh NAME... runs them). Raw ALPHA-T
+names in brackets. "Chuck-end pick" = from tool start X120 Z5, cursor Down 1 + Left 5 (X100 Z-45), Enter snaps to
+100,-50 and confirms it as start, then Enter x6 walks the profile to 0,0. Default pick = Down 6 (near 0,0).
+| # | Files | Exact menu values | Result |
+|---|---|---|---|
+| 1 | AREA_follow_contour_metric.* (FOLLOW) | area clear, FOLLOW NO -> YES (Enter on item 8) | SD1 E300 (was E100); each pass also feeds up the shoulder it stops at (e.g. G1X100.Z-100. then G1X102.Z-98.) before retracting |
+| 2 | AREA_retract2_metric.* (RETR) | area clear, RETRACT DIST 2 (prompt "Retract Distance [1.000 mm]") | SD1 R2; retract moves 2 mm instead of 1; pull-off X103.6284 Z-48.1858 |
+| 3 | AREA_away_from_chuck_end_metric.* (WYCH) | CHANGE TOOL 5, area, chuck-end pick, TOWARDS -> AWAY | SD1 E110 H11, G21 E2 ... C1, start G0X102.8284Z-47.7858; differs from the front-picked AWAY_area_tool5 (H26) |
+| 3b | AREA_towards_from_chuck_end_metric.* (RTCH) | tool 3, area TOWARDS, chuck-end pick (extra, for comparison) | SD1 E100 H10: only short passes at the face (X18.4..36.4, Z0.4 to -1.6) |
+| 4 | FACE_away_from_chuck_end_metric.* (FWYCH) | CHANGE TOOL 5, face, chuck-end pick, TOWARDS -> AWAY | SD1 E411 H26, start G0X97.1716Z-52.2142 (front-picked FACE_away_tool5 gave H1) |
+| 4b | FACE_identified_inside_out_metric.* (FCIO) | tool 3, face TOWARDS, picked from the axis (the default pick) | byte-identical to re-notes FACE_metric (PRG and SD1): the default pick already runs from the axis outwards |
+| 4c | FACE_towards_from_chuck_end_metric.* (FTCH) | tool 3, face TOWARDS, chuck-end pick (extra) | SD1 E401 H1: a single cut X120 -> X60 at Z-50 |
+| 5 | THREAD_away_from_chuck_end_metric.* (TWCH) | threading as THREAD_away, both lines picked at Z-25 (Down 4, Left 3) instead of Z-15 | byte-identical to THREAD_away_metric: thread lines are picked as whole lines, the pick end does not matter. ALPHA-T allows it |
+| 6 | FINISH_face_metric.* (FINFCE) | finish pass, EXTERNAL -> INTERNAL -> FACE (Enter twice; the item cycles 3 states) | SD1 G70 E2, #127=16 |
+| 7 | DRILL_fullret_metric.* (DRLFR) | drill from X0 Z5, depth -30, PECK 10, FULL RET NO -> YES | after each peck: back 2 (default RETRACT DIST 2), then G0 to Z10 (5 real) and rapid back in |
+| 7b | DRILL_retract1_metric.* (DRLR1) | same, FULL RET NO, RETRACT DIST 1 (prompt default 2.000) | back 1 after each peck, no full retract |
+| 8 | THREAD_angle30_metric.* (TNG) | threading as THREAD_spring1 setup, ANGLE 30 (prompt "Thread Angle [0.000]"), spring 0 | SD1 G76 ... A30 |
+| 8b | THREAD_spring2_metric.* (TSP2) | same with SPRING PASS 2 | SD1 K2 |
+| 8c | (none) THREAD_crest | not possible: this ALPHA-T's threading menu has no crest height item (CUT DEPTH, CUT DATA, LEAD IN, LEAD OUT, PITCH, ANGLE, EXTERNAL, TOWARDS, SPRING PASS, EXECUTE) | - |
+| 9 | GROOVE_face_metric.* (GFCE) | profile 0,0 30,0 30,-5 36,-5 36,0 60,0 60,-30 100,-30; grooving, pick: Down 5, Enter (start 30,0), Enter, key 0 (next point goes into the groove, not to 0,0), Enter x3, key 3; FRONT -> FACE (2-state toggle; DATUM becomes DATUM BTM, Z-SHF/REP becomes X-SHF/REP); STEPOV 1, TIPWD 2; area mode (1), dwell 0 | SD1 G75 ... E2 L210 H2; plunges along Z at X30 and X32 to Z-10 (-5 real), back 2 |
+
+Mirror check (CAD PAGE 2 > MIRROR IMAGE, screenshots in mirror/): it asks nothing. It mirrors the whole drawing
+about the spindle axis (X0), shows the result and asks "Is this correct ? <Enter>=Yes <Space Bar>=No". After Yes,
+Find Point near the lower copy lands on X-100 Z-50.

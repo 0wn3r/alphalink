@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 22:29+0300\n"
+"POT-Creation-Date: 2026-10-13 22:55+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -42,7 +42,7 @@ msgstr ""
 msgid "X{x} Z{z} is not a corner between two lines"
 msgstr ""
 
-#: alphacam/drawing.py:158 alphacam/drawing.py:502 alphacam/drawing.py:661
+#: alphacam/drawing.py:158 alphacam/drawing.py:502 alphacam/drawing.py:666
 msgid "radius must be > 0"
 msgstr ""
 
@@ -122,12 +122,16 @@ msgstr ""
 msgid "the point is not inside the arc"
 msgstr ""
 
-#: alphacam/io/sd1.py:137
+#: alphacam/drawing.py:625
+msgid "nothing to mirror"
+msgstr ""
+
+#: alphacam/io/sd1.py:141
 #, python-brace-format
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr ""
 
-#: alphacam/io/sd1.py:165
+#: alphacam/io/sd1.py:169
 msgid "threading: the thread lines are not in the drawing"
 msgstr ""
 
@@ -146,7 +150,7 @@ msgstr ""
 msgid "contour references unknown geometry: {join_missing}"
 msgstr ""
 
-#: alphacam/model/operations.py:145
+#: alphacam/model/operations.py:151
 msgid "thread pitch must be > 0"
 msgstr ""
 
@@ -180,36 +184,36 @@ msgstr ""
 msgid "{value} moves are not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:198
+#: alphacam/post/alphat_prg.py:202
 msgid "area clear FACE with pre-finish (no sample)"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:223
+#: alphacam/post/alphat_prg.py:229
 #, python-brace-format
 msgid "{type} is not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:287
+#: alphacam/post/alphat_prg.py:293
 msgid "move/dwell before the first tool change is not supported"
 msgstr ""
 
-#: alphacam/post/alphat_sd1.py:236
+#: alphacam/post/alphat_sd1.py:241
 #, python-brace-format
 msgid "{type} is not supported by the SD1 writer yet"
 msgstr ""
 
-#: alphacam/toolpath/area.py:37
+#: alphacam/toolpath/area.py:48 alphacam/toolpath/area.py:95
 #, python-brace-format
 msgid "area clear: no contour below X{x}"
 msgstr ""
 
-#: alphacam/toolpath/area.py:44
+#: alphacam/toolpath/area.py:102
 msgid ""
 "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the "
 "app does not offer it; use TOWARDS"
 msgstr ""
 
-#: alphacam/toolpath/area.py:47
+#: alphacam/toolpath/area.py:105
 msgid "depth of cut must be > 0"
 msgstr ""
 
@@ -222,12 +226,16 @@ msgstr ""
 msgid "contour is not connected at X{x} Z{z} ({id})"
 msgstr ""
 
-#: alphacam/toolpath/contour.py:125
+#: alphacam/toolpath/contour.py:135
 msgid "arc-to-arc corners are not supported yet"
 msgstr ""
 
-#: alphacam/toolpath/drill.py:19
+#: alphacam/toolpath/drill.py:24
 msgid "drill depth must be below the start Z"
+msgstr ""
+
+#: alphacam/toolpath/drill.py:27
+msgid "retract distance must be > 0"
 msgstr ""
 
 #: alphacam/toolpath/face.py:31
@@ -253,38 +261,39 @@ msgid ""
 msgstr ""
 
 #: alphacam/toolpath/groove.py:105
-msgid ""
-"grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
-"profile; not supported until there is a face-groove sample"
-msgstr ""
-
-#: alphacam/toolpath/groove.py:109
 msgid "grooving finish mode: only external, no finish offsets (no sample)"
 msgstr ""
 
-#: alphacam/toolpath/groove.py:112
+#: alphacam/toolpath/groove.py:108
 msgid "internal grooving with pecking (no sample)"
 msgstr ""
 
-#: alphacam/toolpath/groove.py:170
+#: alphacam/toolpath/groove.py:172
+#, python-brace-format
+msgid "face grooving: no profile under X{x0}..{x1}"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:189
+msgid ""
+"face grooving: only external, area mode, without pecks, X shift or finish "
+"offsets (no sample)"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:221
 msgid "grooving finish: lines only (no sample with arcs)"
 msgstr ""
 
-#: alphacam/toolpath/thread.py:34
+#: alphacam/toolpath/thread.py:46
 msgid ""
 "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so "
 "the app does not offer it; use TOWARDS"
 msgstr ""
 
-#: alphacam/toolpath/thread.py:37
+#: alphacam/toolpath/thread.py:49
 msgid "thread lines must be parallel to Z"
 msgstr ""
 
-#: alphacam/toolpath/thread.py:44
-msgid "threading with a flank infeed angle (no sample); set the angle to 0"
-msgstr ""
-
-#: alphacam/toolpath/thread.py:46
+#: alphacam/toolpath/thread.py:55
 msgid "thread: outer diameter must be above the inner one, first cut > 0"
 msgstr ""
 
@@ -300,8 +309,8 @@ msgstr ""
 msgid "Circle…"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:935
-#: alphacam_gtk/drawing_tools.py:948
+#: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:957
+#: alphacam_gtk/drawing_tools.py:970
 msgid "Tangent"
 msgstr ""
 
@@ -321,12 +330,12 @@ msgstr ""
 msgid "Split Arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:24
-msgid "Mirror…"
+#: alphacam_gtk/drawing_tools.py:24 alphacam_gtk/drawing_tools.py:826
+msgid "Mirror Image"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:617
-#: alphacam_gtk/op_editor.py:232 alphacam_gtk/op_editor.py:249
+#: alphacam_gtk/op_editor.py:240 alphacam_gtk/op_editor.py:257
 msgid "Arc"
 msgstr ""
 
@@ -335,7 +344,7 @@ msgid "Fillet"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:617
-#: alphacam_gtk/op_editor.py:232 alphacam_gtk/op_editor.py:249
+#: alphacam_gtk/op_editor.py:240 alphacam_gtk/op_editor.py:257
 msgid "Line"
 msgstr ""
 
@@ -427,7 +436,7 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:104 alphacam_gtk/drawing_tools.py:446
 #: alphacam_gtk/drawing_tools.py:466 alphacam_gtk/drawing_tools.py:657
-#: alphacam_gtk/drawing_tools.py:854 alphacam_gtk/machine.py:47
+#: alphacam_gtk/drawing_tools.py:876 alphacam_gtk/machine.py:47
 #: alphacam_gtk/machine.py:278 alphacam_gtk/machine.py:332
 #: alphacam_gtk/tools_page.py:176 alphacam_gtk/window.py:411
 #: alphacam_gtk/window.py:697 alphacam_gtk/window.py:744
@@ -604,7 +613,7 @@ msgid "Start Z"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:643 alphacam_gtk/drawing_tools.py:811
-#: alphacam_gtk/drawing_tools.py:970 alphacam_gtk/window.py:403
+#: alphacam_gtk/drawing_tools.py:992 alphacam_gtk/window.py:403
 msgid "Radius"
 msgstr ""
 
@@ -617,7 +626,7 @@ msgid "keeps the profile joined"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:658 alphacam_gtk/drawing_tools.py:735
-#: alphacam_gtk/drawing_tools.py:855 alphacam_gtk/window.py:745
+#: alphacam_gtk/drawing_tools.py:877 alphacam_gtk/window.py:745
 msgid "_Apply"
 msgstr ""
 
@@ -631,7 +640,7 @@ msgstr ""
 msgid "Radius at {point}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:703 alphacam_gtk/drawing_tools.py:933
+#: alphacam_gtk/drawing_tools.py:703 alphacam_gtk/drawing_tools.py:955
 msgid "Angle"
 msgstr ""
 
@@ -674,84 +683,92 @@ msgstr ""
 msgid "Circle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:816 alphacam_gtk/drawing_tools.py:817
-msgid "Mirror"
-msgstr ""
-
-#: alphacam_gtk/drawing_tools.py:816
-msgid "Mirror about Z"
-msgstr ""
-
-#: alphacam_gtk/drawing_tools.py:819
+#: alphacam_gtk/drawing_tools.py:817
 msgid "Tangent at an angle: tap the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:819
+#: alphacam_gtk/drawing_tools.py:817
 msgid "Tangent: tap a point, or an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:820
+#: alphacam_gtk/drawing_tools.py:818
 msgid "Parallel line: tap the line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:820
+#: alphacam_gtk/drawing_tools.py:818
 msgid "Split arc: tap the arc where to split it"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:821
+#: alphacam_gtk/drawing_tools.py:819
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:889
+#: alphacam_gtk/drawing_tools.py:830
+msgid "Is this correct?"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:831
+msgid "The drawing is mirrored about the spindle axis."
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:832
+msgid "_No"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:833
+msgid "_Yes"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:911
 msgid "No solution for these elements"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:897
+#: alphacam_gtk/drawing_tools.py:919
 msgid "Tap the one you want (dashed)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:920 alphacam_gtk/drawing_tools.py:932
-#: alphacam_gtk/drawing_tools.py:944
+#: alphacam_gtk/drawing_tools.py:942 alphacam_gtk/drawing_tools.py:954
+#: alphacam_gtk/drawing_tools.py:966
 msgid "Tap an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:921
+#: alphacam_gtk/drawing_tools.py:943
 msgid "Split arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:926
+#: alphacam_gtk/drawing_tools.py:948
 msgid "Tap a line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:927
+#: alphacam_gtk/drawing_tools.py:949
 msgid "Distance"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:927
+#: alphacam_gtk/drawing_tools.py:949
 msgid "Parallel Line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:929
+#: alphacam_gtk/drawing_tools.py:951
 msgid "Parallel line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:933
+#: alphacam_gtk/drawing_tools.py:955
 msgid "Tangent at an Angle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:939
+#: alphacam_gtk/drawing_tools.py:961
 msgid "Tangent: now tap the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:952
+#: alphacam_gtk/drawing_tools.py:974
 msgid "Blend arc: now the 2nd point, line or arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:968
+#: alphacam_gtk/drawing_tools.py:990
 msgid "Blend arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:970
+#: alphacam_gtk/drawing_tools.py:992
 msgid "Blend Arc"
 msgstr ""
 
@@ -1113,12 +1130,12 @@ msgstr ""
 msgid "Repeats"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:43
+#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:45
 #: alphacam_gtk/op_factory.py:23 alphacam_gtk/window.py:36
 msgid "Dwell"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:43
+#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:45
 msgid "revolutions"
 msgstr ""
 
@@ -1163,169 +1180,203 @@ msgid "Lead in"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:41
+msgid "Retract distance"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:42
 msgid "Lead out"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:42
+#: alphacam_gtk/op_editor.py:43
+msgid "Spring passes"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:43
+msgid "extra cuts at the final diameter"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:44
 msgid "Infeed angle"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:42
+#: alphacam_gtk/op_editor.py:44
 msgid "degrees; 0 = straight in"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:46
+#: alphacam_gtk/op_editor.py:48
 msgid "External"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:46
+#: alphacam_gtk/op_editor.py:48
 msgid "off = internal (boring)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:47
+#: alphacam_gtk/op_editor.py:49
 msgid "Towards the chuck"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:48
+#: alphacam_gtk/op_editor.py:50
 msgid "Pre-finish pass"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:48
+#: alphacam_gtk/op_editor.py:50
 msgid "a finish pass with a 1 mm pull-off after the roughing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:49
+#: alphacam_gtk/op_editor.py:51
 msgid "Full retract"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:50
+#: alphacam_gtk/op_editor.py:52
 msgid "Front"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:51
-msgid "Spring pass"
+#: alphacam_gtk/op_editor.py:52
+msgid "off = FACE: across the front face"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:52
+#: alphacam_gtk/op_editor.py:53
+msgid "Follow contour"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:53
+msgid "each pass also cleans up the step it leaves"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:54
+msgid "Face"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:54
+msgid "finish a face: pulls off towards the axis"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:55
 msgid "Rapid"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:52
+#: alphacam_gtk/op_editor.py:55
 msgid "off = feed move"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:57
 msgid "Datum"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:57
 msgid "Mode"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:58
 msgid "area"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:58
 msgid "finish"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:58
 msgid "left"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:58
 msgid "right"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:56
+#: alphacam_gtk/op_editor.py:59
 msgid "Move to"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:56
+#: alphacam_gtk/op_editor.py:59
 msgid "Tool change point"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:56
+#: alphacam_gtk/op_editor.py:59
 msgid "Tool start"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:85 alphacam_gtk/report.py:58
+#: alphacam_gtk/op_editor.py:88 alphacam_gtk/report.py:58
 #: alphacam_gtk/report.py:69
 msgid "Operation"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:88
+#: alphacam_gtk/op_editor.py:91
 msgid "Move Up"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:89
+#: alphacam_gtk/op_editor.py:92
 msgid "Move Down"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:93
+#: alphacam_gtk/op_editor.py:96
 msgid "Close Editor"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:96
+#: alphacam_gtk/op_editor.py:99
 msgid "Delete Operation"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:108
+#: alphacam_gtk/op_editor.py:111
 #, python-brace-format
 msgid "Operation {n}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:146
+#: alphacam_gtk/op_editor.py:151
 msgid "Inner diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:146
+#: alphacam_gtk/op_editor.py:151
 msgid "Outer diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:147
+#: alphacam_gtk/op_editor.py:152
 msgid "(no lines)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:152
+#: alphacam_gtk/op_editor.py:157
 msgid "Contour (element ids, in cutting order)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:156
+#: alphacam_gtk/op_editor.py:161
 msgid "Pick Contour on the Drawing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:161
+#: alphacam_gtk/op_editor.py:166
+msgid ""
+"Face grooving: plunges along -Z, stepping outwards; the tool reference is "
+"the tip's corner nearest the axis."
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:169
 msgid ""
 "Grooving follows the drawn profile; the tool reference is the tip's -Z "
 "corner."
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:184 alphacam_gtk/op_editor.py:192
-#: alphacam_gtk/op_editor.py:196 alphacam_gtk/op_editor.py:200
-#: alphacam_gtk/op_editor.py:205
+#: alphacam_gtk/op_editor.py:192 alphacam_gtk/op_editor.py:200
+#: alphacam_gtk/op_editor.py:204 alphacam_gtk/op_editor.py:208
+#: alphacam_gtk/op_editor.py:213
 #, python-brace-format
 msgid "Change {what}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:209
+#: alphacam_gtk/op_editor.py:217
 msgid "Change contour"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:228
+#: alphacam_gtk/op_editor.py:236
 #, python-brace-format
 msgid "{n} element"
 msgid_plural "{n} elements"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/op_editor.py:230
+#: alphacam_gtk/op_editor.py:238
 #, python-brace-format
 msgid "from {a} to {b}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:242 alphacam_gtk/op_editor.py:251
+#: alphacam_gtk/op_editor.py:250 alphacam_gtk/op_editor.py:259
 #, python-brace-format
 msgid "{id} (missing)"
 msgstr ""

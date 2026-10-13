@@ -1067,3 +1067,33 @@ What it adds to the samples, by chapter:
   parallel line, split arc, mirror, blend between two points.
 * App changes from this: the thread "angle" field is now ALPHA-T's infeed angle (default 0, written to SD1 G76 A;
   non-zero is refused until there is a sample); parts saved with the old 60 load as 0.
+
+## Progress 38 (2026-10-13 night): the German manual's options, sampled
+Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there with the exact menu values) are in
+`samples/alphat_v12`; every one is checked by `tests/test_post.py` FromSD1 and `tests/test_sd1_write.py`.
+* Area clear FOLLOW YES (AREA_follow_contour, SD1 G71 E300): after a pass reaches the profile it feeds along the
+  profile towards the chuck to where the previous pass stopped (X56 at Z-25: up to X60 Z-25, along X60 to Z-50), then
+  the usual 45-degree retract. The first pass goes up to the top of the profile (X100 Z-50).
+* Area clear RETRACT DIST (AREA_retract2, SD1 R2): the pass retract and the SD1 lead-out use it; default 1.
+* Finish FACE (FINISH_face, the EXTERNAL item cycles EXTERNAL / INTERNAL / FACE): #127=16, SD1 G70 E2; the same pass
+  as external with the 45-degree pull-off towards the axis (X99.718 instead of 100.282).
+* Drilling RETRACT DIST (DRILL_retract1): the back-off after each peck and at the bottom (default 2). FULL RET YES
+  (DRILL_fullret, distance left at 2): back off 1, rapid out to the start Z, rapid back in to 0.5 above the last
+  depth. Half / quarter of the distance is inferred from that one sample. The SD1 has no parameter for either; the
+  importer reads them from the listed moves.
+* Threading ANGLE (THREAD_angle30, SD1 A30): only the start Z of each cut moves, by depth_n * tan(angle / 2) towards
+  the chuck, with depth_n the exact first * sqrt(n) (not the rounded diameter); the real Z is rounded to 3 decimals.
+  SPRING PASS 2 (THREAD_spring2, SD1 K2): the #127=21 block has #120=2 and two cuts at the final diameter.
+* Grooving FRONT -> FACE (GROOVE_face, SD1 L210, DATUM becomes BTM/TOP, Z-SHF becomes X-SHF): face grooving. Plunges
+  along -Z from the start Z to the shallowest profile Z under the tip, stepping out from the smallest diameter by the
+  stepover, the last clamped to the largest diameter - 2 x tip width; back off 1 in +Z, rapid to the start Z. The
+  older GROOVE_back (L210 with the whole turned profile picked) is the same option: ALPHA-T plunges X32..38 to Z-30
+  through the dia-40 part there; the app's plunges stop on the first face under the tip (DIFFERS_ON_PURPOSE).
+* Picking from the chuck end: ALPHA-T's area clear then only skims the front face (AREA_towards_from_chuck_end, H10)
+  and face clear makes one cut at the shoulder (FACE_towards_from_chuck_end, H1). Face clear picked from the axis
+  (FACE_identified_inside_out) is the default. AWAY picked from the chuck end: area AWAY feeds to Z0 and pulls off
+  into -Z (AREA_away_from_chuck_end), face AWAY runs Z-48 -> 0 but cuts to X56.8 inside the dia-60 shoulder
+  (FACE_away_from_chuck_end), thread AWAY is identical to the front-picked one. So the app cuts area and face clear
+  as if picked from the front (contour.front_first) and still refuses AWAY.
+* No crest height item on this ALPHA-T's threading menu. MIRROR IMAGE asks nothing: it mirrors the whole drawing
+  about the spindle axis (X100 Z-50 -> X-100 Z-50) and asks "Is this correct?"; the app now does the same.

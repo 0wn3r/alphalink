@@ -25,9 +25,10 @@ State as of 2026-10-13. Target machine: Harrison Alpha 400T, control FANUC Power
 
 ## Open items
 * Thread pitch x2 on the control display (first threading job).
-* Every ALPHA-T option is sampled. The app refuses area / face / thread AWAY and grooving from the BACK, because
-  ALPHA-T's own output for them is unsafe on these parts (Progress 36); a face-groove drawing would be the sample to
-  try BACK again.
+* Every ALPHA-T option is sampled (Progress 38: follow, retract distances, finish FACE, full retract, thread angle,
+  spring passes, face grooving). The app refuses area / face / thread AWAY, because ALPHA-T's own output for it is
+  unsafe on these parts, whichever end the contour is picked from (Progress 36, 38).
+* Not done (no sample, low priority): output units different from the drawing's, and writing .SDG drawings.
 * Meaning of #120..#140, M60-M71 and #1005/#1006/#1009 (needs the B703-0703 macro listing).
 * ATOOLIB.IM1/IM2 (tool images).
 

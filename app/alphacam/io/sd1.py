@@ -10,12 +10,13 @@ the .PRG) names every operation with its parameters as canned cycles:
   G1 / G0 ...                                      move / rapid to a point (in the tool block)
   G5 X Z                                           tool start of the next operation
   G115 X Z                                         operation limits (drilling: the hole bottom)
-  G70 R E U W                                      finish pass (E1 internal, U/W offsets; R1 = pre-finish of the area)
+  G70 R E U W                                      finish pass (E1 internal, E2 FACE, U/W offsets; R1 = pre-finish of the area)
   G71 ... D R E U W H                              area clear (E100, E-100 internal, E101/E-101 FACE direction) / face clear (E401), D depth
   G75 ... D I E L C                                grooving: D peck, I stepover, E tip width, L11x full retract
   G78 ... G178                                     grooving finish mode (path lines only)
   G117 X Z, G76 X Z ... D E F                      threading: start, final diameter and end, first cut, E1/-1, pitch
-  G74 + G1 pecks                                   drilling (peck = start Z - first G1 Z), G4 inside = dwell
+  G74 + G1 pecks                                   drilling (peck = start Z - first G1 Z), G4 inside = dwell,
+                                                   G1 back-off = RETRACT DIST, G0 to the start between = FULL RET
   G99 F T                                          tool change later in the program
 
 The contour of every profile operation is the drawing's chain. The rebuilt project can be checked by posting it
@@ -123,16 +124,19 @@ def read_sd1(text: str, project) -> list:
                 ops[-1].pre_finish = True
             else:
                 ops.append(FinishPass(tool, start, list(contour), feed=feed, offset_x=w.get("U", 0.0),
-                                      offset_z=w.get("W", 0.0), external=w.get("E", 0) != 1))
+                                      offset_z=w.get("W", 0.0), external=w.get("E", 0) != 1,
+                                      face=w.get("E", 0) == 2))
             continue
         if 71 in gs:
             e = int(w.get("E", 100))
             common = dict(depth_of_cut=w.get("D", 2.0), offset_x=w.get("U", 0.0), offset_z=w.get("W", 0.0), feed=feed)
             if e in (401, 411):  # 411 = AWAY (FACE_away_*)
                 ops.append(FaceClear(tool, start, list(contour), towards=e == 401, **common))
-            elif abs(e) in (100, 101, 110):  # 110 = AWAY (AREA_away_tool5)
+            elif abs(e) in (100, 101, 110, 300):  # 110 = AWAY (AREA_away_tool5), 300 = FOLLOW (AREA_follow_contour)
+                r = w.get("R", 1.0)
                 ops.append(AreaClear(tool, start, list(contour), external=e > 0, front=abs(e) != 101,
-                                     towards=abs(e) != 110, **common))
+                                     towards=abs(e) != 110, follow=abs(e) == 300,
+                                     retract=None if abs(r - 1.0) < 1e-9 else r, **common))
             else:
                 raise NotImplementedError(tr("G71 E{e} (area clear option) is not supported yet", e=e))
             continue
@@ -166,22 +170,32 @@ def read_sd1(text: str, project) -> list:
             outer, inner = (other, at_final) if external else (at_final, other)
             ops.append(Thread(tool, start, outer.id, inner.id, pitch=w["F"], cut_depth=w.get("D", 1.0),
                               external=external, lead_in=w.get("I", 5.0), lead_out=w.get("L", 0.0),
-                              spring_pass=w.get("K", 0) > 0, angle=w.get("A", 0.0), towards=abs(w.get("E", 1)) == 1))  # E2 = AWAY
+                              spring_passes=int(w.get("K", 0)), angle=w.get("A", 0.0), towards=abs(w.get("E", 1)) == 1))  # E2 = AWAY
             continue
         if 74 in gs:
-            peck, dwell = 0.0, 0.0
+            # G1 Z pecks, each followed by a G1 back-off; FULL RET adds G0 out to the start Z and G0 back in
+            peck, dwell, full, backs, zs = 0.0, 0.0, False, [], []
             while i < len(lines):
                 g2, w2 = _words(lines[i])
                 if 174 in g2:
                     break
-                if 1 in g2 and "Z" in w2 and not peck:
-                    peck = round(start.z - w2["Z"], 6)
+                if 1 in g2 and "Z" in w2:
+                    if zs and w2["Z"] > zs[-1]:
+                        backs.append(round(w2["Z"] - zs[-1], 6))
+                    zs.append(w2["Z"])
+                    if not peck:
+                        peck = round(start.z - w2["Z"], 6)
+                if 0 in g2 and "Z" in w2 and abs(w2["Z"] - start.z) < 1e-9 and i + 1 < len(lines) \
+                        and 174 not in _words(lines[i + 1])[0]:
+                    full = True
                 if 4 in g2:
                     dwell = w2["P"]
                 i += 1
             depth = limit.z
+            back = backs[0] if backs else 2.0
             ops.append(Drill(tool, start, depth=depth, peck=0.0 if abs(peck - (start.z - depth)) < 1e-9 else peck,
-                             feed=feed, dwell_revs=dwell))
+                             feed=feed, dwell_revs=dwell, full_retract=full,
+                             retract=None if (back * 2 if full else back) == 2.0 else (back * 2 if full else back)))
             continue
         # profile points, G20/G21/G17x/M30: nothing to do
     return ops

@@ -14,7 +14,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gtk  # noqa: E402
 
 from alphacam.model.geometry import Arc, Point  # noqa: E402
-from alphacam.model.operations import Groove  # noqa: E402
+from alphacam.model.operations import Drill, Groove  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 # field -> (label, subtitle, lower, upper, step, digits) for numbers
@@ -38,7 +38,9 @@ NUMBERS = {
     "cut_depth": (N_("First cut depth"), N_("radius; cut n goes to first × √n"), 0.01, 5, 0.05, 3),
     "cuts": (N_("Number of cuts"), N_("0 = from the first cut depth"), 0, 500, 1, 0),
     "lead_in": (N_("Lead in"), None, 0, 50, 0.5, 3),
+    "retract": (N_("Retract distance"), None, 0.01, 50, 0.1, 3),
     "lead_out": (N_("Lead out"), None, 0, 50, 0.5, 3),
+    "spring_passes": (N_("Spring passes"), N_("extra cuts at the final diameter"), 0, 9, 1, 0),
     "angle": (N_("Infeed angle"), N_("degrees; 0 = straight in"), 0, 60, 1, 1),
     "revs": (N_("Dwell"), N_("revolutions"), 0.1, 100, 1, 1),
 }
@@ -47,8 +49,9 @@ SWITCHES = {
     "towards": (N_("Towards the chuck"), None),
     "pre_finish": (N_("Pre-finish pass"), N_("a finish pass with a 1 mm pull-off after the roughing")),
     "full_retract": (N_("Full retract"), None),
-    "front": (N_("Front"), None),
-    "spring_pass": (N_("Spring pass"), None),
+    "front": (N_("Front"), N_("off = FACE: across the front face")),
+    "follow": (N_("Follow contour"), N_("each pass also cleans up the step it leaves")),
+    "face": (N_("Face"), N_("finish a face: pulls off towards the axis")),
     "rapid": (N_("Rapid"), N_("off = feed move")),
 }
 CHOICES = {"datum": (N_("Datum"), ["left", "right"]), "mode": (N_("Mode"), ["area", "finish"])}
@@ -120,6 +123,8 @@ class OpEditor(Gtk.Box):
                     group.add(row)
             elif name in NUMBERS:
                 lab, sub, lo, hi, step, digits = NUMBERS[name]
+                if name == "retract" and value is None:  # ALPHA-T's default: area clear 1 mm, drilling 2 mm
+                    value = round((2.0 if isinstance(op, Drill) else 1.0) / (25.4 if project.units == "inch" else 1), 4)
                 if name == "tool":
                     sub = self.tool_name(int(value)) or sub
                 row = self._spin(_(lab), sub and _(sub), lo, hi, step, digits, value)
@@ -157,7 +162,10 @@ class OpEditor(Gtk.Box):
                 pick.connect("activated", lambda *_: self.on_pick and self.on_pick(self.index))
                 group.add(pick)
                 group.add(_contour_rows(project, value))
-        if isinstance(op, Groove):
+        if isinstance(op, Groove) and not op.front:
+            group.set_description(_("Face grooving: plunges along -Z, stepping outwards; the tool reference is the "
+                                    "tip's corner nearest the axis."))
+        elif isinstance(op, Groove):
             group.set_description(_("Grooving follows the drawn profile; the tool reference is the tip's -Z corner."))
         self._building = False
         self.scroll.set_child(page)

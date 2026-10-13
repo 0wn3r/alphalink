@@ -155,9 +155,9 @@ class Construction(unittest.TestCase):
         arc = drawing.add_circle(self.p, Point(100, -50), 10)[0]
         drawing.split_arc(self.p, arc, Point(120, -50))
         self.assertEqual(len(self.p.geometry), 3)
-        drawing.mirror_z(self.p, -100)
+        drawing.mirror_axis(self.p)  # MIRROR IMAGE: about the spindle axis (samples/mirror: X100 Z-50 -> X-100 Z-50)
         self.assertEqual(len(self.p.geometry), 6)
-        self.assertIn(Point(100, -160), [g.a for g in self.p.geometry] + [g.b for g in self.p.geometry])
+        self.assertIn(Point(-120, -50), [g.a for g in self.p.geometry] + [g.b for g in self.p.geometry])
         sols = drawing.blends(self.p, ("point", Point(0, 0)), ("point", Point(0, -20)), 15)
         self.assertEqual(sorted(round(c.x, 3) for _a, c, _b in sols), [-22.361, 22.361])
         gid = drawing.add_blend(self.p, *sols[0])

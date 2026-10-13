@@ -59,7 +59,7 @@ def run():
         ids=[gid(40,0,40,-20),gid(40,-20,34,-20),gid(34,-20,34,-26),gid(34,-26,40,-26),gid(40,-26,40,-40)]
         edit(1, contour=ids, tip_width=2.0, stepover=1.5, start=Point(70,5))
         w.add_op('tool_change'); edit(2, tool=8)
-        w.add_op('thread'); edit(3, outer_line=gid(40,0,40,-20), inner_line=gid(38.2,0,38.2,-18), pitch=1.5, cut_depth=0.2, spring_pass=True, start=Point(70,5))
+        w.add_op('thread'); edit(3, outer_line=gid(40,0,40,-20), inner_line=gid(38.2,0,38.2,-18), pitch=1.5, cut_depth=0.2, spring_passes=1, start=Point(70,5))
         d.set_tool('select'); w._select_op(3)
     def bore():
         close(); w.set_project(Project(billet=Billet(80,50), first_tool=12)); d.set_tool('line')
