@@ -196,3 +196,31 @@ class GtkDrawing(unittest.TestCase):
         self.assertEqual(out["contour"], ["g0", "g1", "g2", "g5", "g3", "g6", "g4"])
         # drawn in the app = the ALPHA-T arc sample, byte for byte (billet and first tool as in that drawing)
         self.assertEqual(out["prg"], (SAMPLES / "ARC_finish_metric.PRG").read_bytes())
+
+
+class Simulation(unittest.TestCase):
+    def test_pass_starts(self):
+        from alphacam_gtk.canvas.paths import pass_starts
+
+        segs = segments(preview(sample_project("AREA1_metric")))
+        starts = pass_starts(segs)
+        passes = [(segs[i].block, segs[i].pass_no) for i in starts]
+        self.assertEqual(passes[1:27], [(20, n) for n in range(1, 27)])  # one stop per area-clear pass
+        self.assertEqual(segs[starts[1]].line, 40)  # pass 1 starts on PRG line 40 (M60 G0 ...)
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkKeypad(unittest.TestCase):
+    def test_keys(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from alphacam_gtk.keypad import Keypad
+
+        got = []
+        k = Keypad(got.append)
+        for key in ["4", "0", "→", "±", "2", "5", ".", "5", "⌫"]:
+            k._key(key)
+        self.assertEqual(k.text(), "40,-25.")
+        k._key("ABS")
+        self.assertEqual(k.text(), "@40,-25.")

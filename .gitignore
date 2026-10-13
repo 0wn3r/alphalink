@@ -3,3 +3,6 @@ __pycache__/
 capture.bin
 capture.hex
 tools/xkeys
+_to_delete/
+build/
+*.egg-info/

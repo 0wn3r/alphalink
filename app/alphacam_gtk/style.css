@@ -15,3 +15,7 @@ window.touch .hold-button { min-height: 96px; }
 .editor-pane { border-left: 1px solid alpha(currentColor, 0.15); }
 .command-entry { font-family: monospace; }
 window.touch .command-entry { min-height: 48px; }
+.keypad-key { min-height: 64px; min-width: 64px; font-size: 1.4em; }
+.keypad-field { min-height: 48px; font-family: monospace; font-size: 1.2em; }
+.sim-bar button { min-width: 36px; }
+window.touch .sim-bar button { min-width: 56px; min-height: 56px; }

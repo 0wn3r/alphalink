@@ -17,6 +17,7 @@ from alphacam.preview import preview  # noqa: E402
 
 from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
+from .simulation import SimulationBar  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
@@ -76,7 +77,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.root.add_named(self._build_main(), "main")
         self.root.set_visible_child_name("empty")
         self.input_mode = InputMode(self)
-        self.input_mode.connect("changed", lambda _m, mode: self.zoom_box.set_visible(mode == "touch"))
+        self.input_mode.connect("changed", lambda _m, mode: (self.zoom_box.set_visible(mode == "touch"),
+                                                             self.drawing.set_touch(mode == "touch")))
         self._setup_lock()
         self._install_actions()
         self.editor.on_pick = self.drawing.start_pick
@@ -149,6 +151,8 @@ class MainWindow(Adw.ApplicationWindow):
         part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         part.append(self.drawing.pick_banner)
         part.append(overlay)
+        self.sim = SimulationBar(self.canvas, self._sim_line)
+        part.append(self.sim)
         part.append(Gtk.Separator())
         part.append(self.drawing.bar)
         part.append(self.readout)
@@ -363,6 +367,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.canvas.set_project(project, self.pv)
         else:
             self.canvas.update(project, self.pv)
+        self.sim.reset()
         if self.pv.error:
             n = "" if self.pv.error_op is None else f"Operation {self.pv.error_op + 1}: "
             self.banner.set_title(f"{n}{self.pv.error}. Export is disabled.")
@@ -683,6 +688,19 @@ class MainWindow(Adw.ApplicationWindow):
             if a <= line <= b and op is not None:
                 self._select_op(op)
                 return
+
+    def _sim_line(self, line: int) -> None:
+        """Simulation position -> the matching line on the Program page (TOUCH.md 7.2/7.3)."""
+        buf = self.program_view.get_buffer()
+        ok, it = buf.get_iter_at_line(line - 1)
+        if not ok:
+            return
+        end = it.copy()
+        end.forward_to_line_end()
+        buf.select_range(it, end)
+        mark = buf.get_mark("sim") or buf.create_mark("sim", it, True)
+        buf.move_mark(mark, it)
+        self.program_view.scroll_to_mark(mark, 0.2, False, 0, 0)
 
     def _set_font(self, pt: float) -> None:
         self._font_pt = min(max(pt, 7.0), 32.0)
