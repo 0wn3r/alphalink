@@ -919,4 +919,9 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
   (bridges 4-5, 6-8-20) works.
 * Re-sent with `#132=5` (MET2_finish_metric_P5.PRG, posted by app/alphacam): the control then showed program
   number 5, so **#132 is the program number on the control**; `O2` stays constant.
-* Still open: Z x2 (C4) - check the control's graphics/program display, no cycle start.
+* **Z x2 confirmed for positions**: with program 0005 loaded, the control's run screen shows `OP. 0  TOOL 03
+  TOOL START X 100.000 Z 50.000` while the PRG has `#123=100.` `#124=100.` - the macros halve Z. So the ALPHA-T
+  scaling is intended and the app's default z_scale = 2 is right (user photo, 2026-10-13).
+* Feed not explained yet: the same screen shows `FEEDRATE 0.11`, while the PRG has `#130=0.3` (0.15 x2). Possibly
+  an override or a value left from manual mode; check on the first operation's screen before trusting F.
+* The screen was at "Start Spindle", PASS NO. 1/0: the control is ready to run. No cycle start until feed is clear.
