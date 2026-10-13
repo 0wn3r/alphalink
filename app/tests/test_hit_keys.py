@@ -17,8 +17,10 @@ class HitKeys(unittest.TestCase):
         for k, v in expect.items():
             self.assertEqual(hit_action(k), v, k)
             self.assertEqual(hit_action(k.upper()), v, k)
-        self.assertIsNone(hit_action("b"))  # blank in ALPHA-T
-        self.assertIsNone(hit_action("e"))  # exit: not mapped
+        # added here, free in ALPHA-T (b blank, e exit): chamfer tool, edit the selected element
+        self.assertEqual(hit_action("b"), "chamfer")
+        self.assertEqual(hit_action("e"), "edit")
+        self.assertIsNone(hit_action("w"))
         self.assertIsNone(hit_action(""))
 
     def test_numbers_go_to_the_entry(self):

@@ -651,3 +651,49 @@ class GtkLetterKeys(unittest.TestCase):
         self.assertEqual(out["entry_text"], "12")
         self.assertTrue(out["uk"])
         self.assertEqual(out["uk_sel"], out["arc"])
+
+
+class GtkEditKeyAndMessages(unittest.TestCase):
+    def test_e_edits_and_esc_clears_messages(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gdk, GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(100, 60), first_tool=3))
+            d = w.drawing
+            for t in ["0,0", "40,0", "40,-25"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d.set_tool("select")
+            d.hit_key("e")  # nothing selected: a hint
+            out["hint"] = w._toast_count
+            d._select_element(w.project.geometry[0].id)
+            d.hit_key("e")
+            out["dialog"] = w.get_visible_dialog() is not None
+            w.get_visible_dialog().force_close()
+            w.toast("one")
+            w.toast("two")
+            out["esc"] = d._window_esc(None, Gdk.KEY_Escape, 9, 0)
+            out["left"] = w._toast_count
+            out["tip"] = d.palette.get_toggle_by_name("corner").get_tooltip()
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["hint"], 1)
+        self.assertTrue(out["dialog"])
+        self.assertTrue(out["esc"])
+        self.assertEqual(out["left"], 0)
+        self.assertIn("(K)", out["tip"])

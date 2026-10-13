@@ -9,13 +9,13 @@ The table is ALPHA-T's own (HELP/ENG/SD503.HLP), checked in ALPHA-T under DOSBox
     O 2 entity radius                   K trim corner                       M X,Z measure
     N L,A measure                       T input text                        U erase text
     Q erase all the drawing             Z zoom                              V recall view
-    R redraw                            C CAD / CAM menus                   E exit (not mapped)
+    R redraw                            C CAD / CAM menus                   E exit (not mapped: E edits, below)
     cursor keys move the cursor, PgUp / PgDn step x10 / :10, Home screen centre, End reference point (0,0)
 
 The ALPHA-T cursor is the pointer's last position on the drawing, or where these keys put it. Typed numbers go to
 the command entry, as typing a coordinate did in ALPHA-T. Letters work while no text field has the focus, and in
 the command entry too (a coordinate never has letters), without Ctrl or Alt, so they never clash with the Ctrl
-shortcuts or with typing. They follow the key's place on the keyboard, so they also work with the Ukrainian layout
+shortcuts or with typing. Added here (not in ALPHA-T): E edits the selected element, B is the Chamfer tool. They follow the key's place on the keyboard, so they also work with the Ukrainian layout
 active (the key marked A/Ф is A). F1 stays this app's help."""
 
 from __future__ import annotations
@@ -24,7 +24,9 @@ from __future__ import annotations
 HIT_KEYS = {
     "a": "find-arc",
     "c": "cam",
+    "b": "chamfer",
     "d": "line-la",
+    "e": "edit",
     "f": "radius",
     "g": "move-abs",
     "h": "move-inc",

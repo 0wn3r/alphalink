@@ -232,6 +232,24 @@ msgstr "Фаска"
 msgid "Corner"
 msgstr "Кут"
 
+msgid "Select an element or an operation. L / A: select the nearest line / arc"
+msgstr "Вибрати елемент або операцію. L / A: вибрати найближчу лінію / дугу"
+
+msgid "Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"
+msgstr "Креслити лінії. X: ввести X,Z   D: довжина,кут   +: дотиками   S: почати від курсора"
+
+msgid "Draw an arc: start, a point on the arc, end"
+msgstr "Креслити дугу: початок, точка на дузі, кінець"
+
+msgid "Round a corner (O). F: radius at the corner nearest the cursor"
+msgstr "Скруглити кут (O). F: радіус на куті, найближчому до курсора"
+
+msgid "Chamfer a corner (B)"
+msgstr "Зняти фаску на куті (B)"
+
+msgid "Trim or extend two lines to meet (K)"
+msgstr "Обрізати або подовжити дві лінії до перетину (K)"
+
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
 
@@ -253,11 +271,11 @@ msgstr "_Готово"
 msgid "Finish the line (Esc)"
 msgstr "Завершити лінію (Esc)"
 
-msgid "Delete Element (Del)"
-msgstr "Видалити елемент (Del)"
+msgid "Delete Element (Del or -)"
+msgstr "Видалити елемент (Del або -)"
 
-msgid "Edit Element"
-msgstr "Редагувати елемент"
+msgid "Edit Element (E)"
+msgstr "Редагувати елемент (E)"
 
 msgid "Keypad"
 msgstr "Цифрова клавіатура"
@@ -294,6 +312,9 @@ msgstr "Немає лінії, яку можна знайти"
 
 msgid "{what} found: - or Delete erases it"
 msgstr "Знайдено {what}: - або Delete стирає"
+
+msgid "Select a line or arc first (L / A finds the nearest)"
+msgstr "Спершу виберіть лінію чи дугу (L / A знаходить найближчу)"
 
 msgid "No text to erase"
 msgstr "Немає тексту, який можна стерти"
@@ -1299,6 +1320,9 @@ msgstr "Показувати сітку"
 
 msgid "Part Settings…"
 msgstr "Параметри деталі…"
+
+msgid "Clear Messages"
+msgstr "Прибрати повідомлення"
 
 msgid "Automatic"
 msgstr "Автоматично"

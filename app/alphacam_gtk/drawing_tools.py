@@ -24,6 +24,15 @@ CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("
                   (N_("Mirror…"), "mirror")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
+# tooltips with the one-letter keys (hit_keys.py)
+TOOL_TIPS = {
+    "select": N_("Select an element or an operation. L / A: select the nearest line / arc"),
+    "line": N_("Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"),
+    "arc": N_("Draw an arc: start, a point on the arc, end"),
+    "fillet": N_("Round a corner (O). F: radius at the corner nearest the cursor"),
+    "chamfer": N_("Chamfer a corner (B)"),
+    "corner": N_("Trim or extend two lines to meet (K)"),
+}
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
 # what Enter in the command entry does, after the ALPHA-T key that asked for the point (hit_keys.py)
@@ -54,7 +63,7 @@ class DrawingTools:
         # palette (a bottom bar: thumb reach in touch mode)
         self.palette = Adw.ToggleGroup()
         for name, label in TOOLS:
-            self.palette.add(Adw.Toggle(name=name, label=_(label)))
+            self.palette.add(Adw.Toggle(name=name, label=_(label), tooltip=_(TOOL_TIPS[name])))
         self.palette.set_active_name("select")
         self.palette.connect("notify::active-name", lambda *_: self.set_tool(self.palette.get_active_name()))
 
@@ -69,10 +78,10 @@ class DrawingTools:
                                tooltip_text=_("Finish the line (Esc)"))
         self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
-        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del)"),
+        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del or -)"),
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
-        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element"), visible=False)
+        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (E)"), visible=False)
         self.edit_el.connect("clicked", lambda *_: self.edit_selected_element())
 
         self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
@@ -194,6 +203,7 @@ class DrawingTools:
         back to the drawing, so ALPHA-T's letter keys work again (after X the entry has the focus)."""
         if keyval != Gdk.KEY_Escape or self.w.get_visible_dialog() is not None:
             return False
+        cleared = self.w.dismiss_toasts()
         handled = True
         if self.construct is not None:
             self.cancel_construct()
@@ -208,7 +218,7 @@ class DrawingTools:
             self.finish_chain()
             self.entry.set_text("")
         else:
-            handled = False
+            handled = cleared
         focus = self.w.get_focus()
         if focus is not None and (focus is self.entry or focus.is_ancestor(self.entry)):
             self.entry.set_text("")
@@ -294,8 +304,13 @@ class DrawingTools:
                 self.set_tool("fillet")
             else:
                 self._size_popover("fillet", corner)
-        elif action in ("fillet", "corner"):
+        elif action in ("fillet", "corner", "chamfer"):
             self.set_tool(action)
+        elif action == "edit":
+            if self.selected_element:
+                self.edit_selected_element()
+            else:
+                self.w.toast(_("Select a line or arc first (L / A finds the nearest)"))
         elif action in ("measure-xz", "measure-la"):
             self.start_measure(action[-2:])
         elif action == "text":

@@ -83,6 +83,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.library = load_library()
 
         self.toasts = Adw.ToastOverlay()
+        self._toast_count = 0
         self.root = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
         self.toasts.set_child(self.root)
         self.set_content(self.toasts)
@@ -232,6 +233,7 @@ class MainWindow(Adw.ApplicationWindow):
         menu.append(_("Fit Part"), "win.fit")
         menu.append(_("Show Grid"), "win.show-grid")
         menu.append(_("Part Settings…"), "win.part-settings")
+        menu.append(_("Clear Messages"), "win.clear-messages")
         layout = Gio.Menu()
         for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
             item = Gio.MenuItem.new(label, None)
@@ -334,6 +336,7 @@ class MainWindow(Adw.ApplicationWindow):
         for kind in MANUALS:
             add(f"manual-{kind}", lambda *_, kind=kind: open_manual(self, kind))
         add("part-settings", lambda *_: self.part_settings_dialog())
+        add("clear-messages", lambda *_: self.dismiss_toasts())
         grid = Gio.SimpleAction.new_stateful("show-grid", None, GLib.Variant.new_boolean(settings()["show_grid"]))
         grid.connect("change-state", self._show_grid)
         self.add_action(grid)
@@ -859,8 +862,18 @@ class MainWindow(Adw.ApplicationWindow):
     def toast(self, text: str) -> None:
         self.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4 if len(text) < 80 else 8))
 
+    def dismiss_toasts(self) -> bool:
+        """Clear every message (Esc, or main menu ▸ Clear Messages); True when there was one."""
+        shown = self._toast_count > 0
+        self.part_toasts.dismiss_all()
+        self.toasts.dismiss_all()
+        self._toast_count = 0
+        return shown
+
     def add_toast(self, toast: Adw.Toast) -> None:
         on_part = self.root.get_visible_child_name() == "main" and self.stack.get_visible_child_name() == "part"
+        self._toast_count = getattr(self, "_toast_count", 0) + 1
+        toast.connect("dismissed", lambda *_: setattr(self, "_toast_count", max(0, self._toast_count - 1)))
         (self.part_toasts if on_part else self.toasts).add_toast(toast)
 
     # --- operations list --------------------------------------------------------------------------------
