@@ -43,6 +43,17 @@ class Sd1Writer(unittest.TestCase):
                 self.assertEqual(sd1(Project.load(EXAMPLES / f"{stem}.alcam")),
                                  (SAMPLES / f"{sample}.SD1").read_bytes())
 
+    def test_number_of_cuts_mode(self):
+        """NO. OF CUTS 6 on a depth-10 thread: first cut 10 / sqrt 6 = 4.0825, 6 passes (THREAD_6cuts)."""
+        from alphacam.post.alphat_prg import post
+
+        sdg = SAMPLES / "THREAD_6cuts_metric.SDG"
+        project = load_sdg(sdg)
+        project.operations = load_sd1(sdg.with_suffix(".SD1"), project)
+        project.operations[-1].cut_depth, project.operations[-1].cuts = 1.0, 6
+        self.assertEqual(post(project), sdg.with_suffix(".PRG").read_bytes())
+        self.assertEqual(sd1(project), sdg.with_suffix(".SD1").read_bytes())
+
     def test_cli_writes_sd1(self):
         with tempfile.TemporaryDirectory() as d:
             out = Path(d) / "P.SD1"

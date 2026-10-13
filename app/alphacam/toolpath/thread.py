@@ -21,6 +21,7 @@ class ThreadPlan:
     pullout_u: float  # incremental X of the pull-out
     inner: float  # final diameter of the last cut (#125): inner line external, outer line internal
     z_start: float = 0.0  # where every cut starts: top of the thread + lead-in
+    first_cut: float = 0.0  # radial depth of the first cut (SD1 G76 D)
 
 
 def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPlan:
@@ -32,14 +33,16 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
         raise ValueError("thread lines must be parallel to Z")
     xo, xi = outer.a.x, inner.a.x
     depth = (xo - xi) / 2
-    if depth <= 0 or op.cut_depth <= 0:
+    # NO. OF CUTS mode: ALPHA-T stores the first cut rounded to 4 decimals (SD1 D4.0825)
+    first = round(depth / math.sqrt(op.cuts), 4) if op.cuts > 0 else op.cut_depth
+    if depth <= 0 or first <= 0:
         raise ValueError("thread: outer diameter must be above the inner one, first cut > 0")
-    n = math.ceil(round((depth / op.cut_depth) ** 2, 9))
-    steps = [2 * round(op.cut_depth * math.sqrt(k), decimals) for k in range(1, n + 1)]
+    n = math.ceil(round((depth / first) ** 2, 9))
+    steps = [2 * round(first * math.sqrt(k), decimals) for k in range(1, n + 1)]
     # THREAD_leadin2_leadout2: cuts start at the thread top + lead-in (default 5) and end at its end - lead-out
     z_end = round(min(outer.a.z, outer.b.z) - op.lead_out, 9)
     z_start = round(max(outer.a.z, outer.b.z) + op.lead_in, 9)
     if op.external:  # from the outer diameter in towards the inner one
-        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi, z_start)
+        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi, z_start, first)
     # internal (THREAD_internal): from the inner (bore) diameter out to the outer one, pull-out inwards
-    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo, z_start)
+    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo, z_start, first)

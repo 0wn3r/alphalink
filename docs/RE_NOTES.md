@@ -999,4 +999,6 @@ app/alphacam/post/alphat_sd1.py writes ALPHA-T's .SD1 listing; all 41 samples wi
   at 45 degrees; pull-off finish G1 0.2, area G0 1 (=R), face G0 0.2 inwards, area FACE G0 1 outwards, pre-finish
   G1 1. Finish passes list the path moved by the offsets (first point only across its element); area/face don't.
 * G71 P = the G21 line, Q = the G0 back to the start, H = passes. G75 P/Q = first/last profile line, H = plunges.
-* G76 Q is 10 in every sample, where the thread depth (radius) is 10 too; written as the depth (inferred).
+* G76 Q = thread depth on radius from the drawing (THREAD_depth6: lines at 40 and 28 -> Q6). G76 D = first cut
+  depth; with NO. OF CUTS n instead of CUT DEPTH it is depth / sqrt n rounded to 4 decimals (THREAD_6cuts: n 6 ->
+  D4.0825, 6 passes, Q stays 10). The app has this as Thread.cuts.

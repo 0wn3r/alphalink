@@ -36,6 +36,7 @@ NUMBERS = {
     "peck": (N_("Peck"), N_("0 = no pecking"), 0, 100, 1, 3),
     "pitch": (N_("Pitch"), None, 0.01, 20, 0.05, 3),
     "cut_depth": (N_("First cut depth"), N_("radius; cut n goes to first × √n"), 0.01, 5, 0.05, 3),
+    "cuts": (N_("Number of cuts"), N_("0 = from the first cut depth"), 0, 500, 1, 0),
     "lead_in": (N_("Lead in"), None, 0, 50, 0.5, 3),
     "lead_out": (N_("Lead out"), None, 0, 50, 0.5, 3),
     "angle": (N_("Thread angle"), N_("degrees"), 1, 120, 1, 1),

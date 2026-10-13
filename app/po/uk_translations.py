@@ -350,4 +350,6 @@ UK = {
 "{title} (finish)": "{title} (чистова)",
 "{title} (face direction)": "{title} (у напрямку торця)",
 "Exported {name} ({size} bytes) and {listing}": "Експортовано {name} ({size} байт) і {listing}",
+"Number of cuts": "Кількість проходів",
+"0 = from the first cut depth": "0 = за глибиною першого проходу",
 }
