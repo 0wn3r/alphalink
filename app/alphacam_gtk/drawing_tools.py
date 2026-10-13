@@ -16,7 +16,7 @@ from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Arc, Line, Point  # noqa: E402
-from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action  # noqa: E402
+from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action, key_char  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
@@ -61,6 +61,9 @@ class DrawingTools:
         self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(ENTRY_MODES["point"]))
         self.entry.add_css_class("command-entry")
         self.entry.connect("activate", self._entry_activate)
+        entry_keys = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        entry_keys.connect("key-pressed", self._entry_key)
+        self.entry.add_controller(entry_keys)
         # shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
         self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False, sensitive=False,
                                tooltip_text=_("Finish the line (Esc)"))
@@ -236,7 +239,19 @@ class DrawingTools:
                 return False
             return self.cursor_key(name)
         u = Gdk.keyval_to_unicode(keyval)
-        return self.hit_key(chr(u) if u else "")
+        return self.hit_key(key_char(chr(u) if u else "", code))
+
+    def _entry_key(self, ctl, keyval, code, state) -> bool:
+        """A coordinate never has letters, so in the command entry a letter is ALPHA-T's one-letter command too
+        (typing X,Z then pressing A works as in ALPHA-T, without clicking the drawing first)."""
+        if state & (Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK | Gdk.ModifierType.SUPER_MASK):
+            return False
+        u = Gdk.keyval_to_unicode(keyval)
+        char = key_char(chr(u) if u else "", code)
+        if not (char.isalpha() and char.isascii()) or self.pick_op is not None:
+            return False
+        self.hit_key(char)
+        return True
 
     def hit_key(self, char: str) -> bool:
         """Run ALPHA-T's command for a typed character; True when it was one."""

@@ -138,14 +138,14 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - Ctrl+N new part, Ctrl+O open, Ctrl+S save, Ctrl+Shift+S save as, Ctrl+E export.
 - Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo.
 - Ctrl+0 fit, Ctrl++ zoom in, Ctrl+- zoom out.
-- Esc finishes the line being drawn, cancels contour picking or a command, or deselects. It also takes the keyboard out of the X,Z entry, so the one-letter keys work again (after X, the entry has it).
+- Esc finishes the line being drawn, cancels contour picking or a command, or deselects, and takes the keyboard out of the X,Z entry.
 - Delete removes the selected drawing element.
 - Ctrl+, preferences, F1 this help, Ctrl+Q quit.
 - Main menu ▸ Training Manual and Reference Manual open the full manuals (PDF) in the PDF viewer.
 
 ### ALPHA-T keys
 
-On the Part page, while no text field has the focus, ALPHA-T's one-letter commands work as in ALPHA-T. The cursor is where the mouse last was on the drawing, or where these keys put it (a cross).
+On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while the X,Z entry has the keyboard (a coordinate has no letters) and with the Ukrainian keyboard layout (the key marked A/Ф is A). The cursor is where the mouse last was on the drawing, or where these keys put it (a cross).
 
 - **X** draw line X,Z: the Line tool, ready for a typed point. Typing a number does the same.
 - **D** draw line D,A: type length,angle. 0° points towards -Z (9 o'clock), 90° towards +X.

@@ -4,7 +4,7 @@ import unittest
 
 from alphacam import drawing
 from alphacam.model import Arc, Point, Project, Text
-from alphacam_gtk.hit_keys import HIT_KEYS, hit_action
+from alphacam_gtk.hit_keys import HIT_KEYS, hit_action, key_char
 
 
 class HitKeys(unittest.TestCase):
@@ -108,3 +108,12 @@ class CursorMaths(unittest.TestCase):
 
     def test_no_texts_key_when_empty(self):
         self.assertNotIn("texts", Project().to_dict())
+
+
+class KeyLayout(unittest.TestCase):
+    def test_ukrainian_layout_letters_map_to_the_key(self):
+        self.assertEqual(key_char("ф", 38), "a")  # the A key
+        self.assertEqual(key_char("д", 46), "l")  # the L key
+        self.assertEqual(key_char("a", 38), "a")
+        self.assertEqual(key_char("5", 14), "5")
+        self.assertEqual(key_char("-", 20), "-")

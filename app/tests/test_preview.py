@@ -608,3 +608,46 @@ class GtkEditElement(unittest.TestCase):
         self.assertEqual(out["geom"][1], (Point(44, 0), Point(44, -25)))
         self.assertEqual(out["geom"][0][1], Point(44, 0))
         self.assertEqual(out["geom"][2][0], Point(44, -25))
+
+
+class GtkLetterKeys(unittest.TestCase):
+    def test_a_from_entry_and_ukrainian_layout(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import Gdk, GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(100, 60), first_tool=3))
+            d = w.drawing
+            for t in ["0,0", "40,0", "@0,-25", "60,-25", "60,-50", "100,-50"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d._apply_corner("fillet", Point(60, -50), 2)
+            arc = next(g.id for g in w.project.geometry if g.type == "arc")
+            d.entry.set_text("12")
+            out["entry"] = d._entry_key(None, Gdk.KEY_a, 38, 0)  # A typed while the entry has the keyboard
+            out["entry_sel"], out["entry_text"] = d.selected_element, d.entry.get_text()
+            d._select_element(None)
+            out["uk"] = d._hit_key_pressed(None, Gdk.KEY_Cyrillic_ef, 38, 0)  # A key, Ukrainian layout
+            out["uk_sel"] = d.selected_element
+            out["arc"] = arc
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertTrue(out["entry"])
+        self.assertEqual(out["entry_sel"], out["arc"])
+        self.assertEqual(out["entry_text"], "12")
+        self.assertTrue(out["uk"])
+        self.assertEqual(out["uk_sel"], out["arc"])

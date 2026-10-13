@@ -13,8 +13,10 @@ The table is ALPHA-T's own (HELP/ENG/SD503.HLP), checked in ALPHA-T under DOSBox
     cursor keys move the cursor, PgUp / PgDn step x10 / :10, Home screen centre, End reference point (0,0)
 
 The ALPHA-T cursor is the pointer's last position on the drawing, or where these keys put it. Typed numbers go to
-the command entry, as typing a coordinate did in ALPHA-T. Letters work while no text field has the focus and
-without Ctrl or Alt, so they never clash with the Ctrl shortcuts or with typing. F1 stays this app's help."""
+the command entry, as typing a coordinate did in ALPHA-T. Letters work while no text field has the focus, and in
+the command entry too (a coordinate never has letters), without Ctrl or Alt, so they never clash with the Ctrl
+shortcuts or with typing. They follow the key's place on the keyboard, so they also work with the Ukrainian layout
+active (the key marked A/Ф is A). F1 stays this app's help."""
 
 from __future__ import annotations
 
@@ -45,12 +47,25 @@ HIT_KEYS = {
     "+": "freehand",
 }
 
+# hardware key codes (evdev + 8, the same under X11 and Wayland) of the letter keys on a QWERTY keyboard; used when
+# the active layout gives a non-Latin letter, e.g. Ukrainian "ф" on the A key
+LATIN_BY_KEYCODE = dict(zip(
+    (38, 56, 54, 40, 26, 41, 42, 43, 31, 44, 45, 46, 58, 57, 32, 33, 24, 27, 39, 28, 30, 55, 25, 53, 29, 52),
+    "abcdefghijklmnopqrstuvwxyz"))
+
 # keys that move the cursor (Gdk key names); they act only while the drawing has the focus
 CURSOR_KEYS = {"Left": (0, -1), "Right": (0, 1), "Up": (1, 0), "Down": (-1, 0)}
 STEP_KEYS = {"Page_Up": 10.0, "Page_Down": 0.1}
 
 # keys that start a typed coordinate in the command entry
 ENTRY_CHARS = set("0123456789.-@,")
+
+
+def key_char(char: str, keycode: int) -> str:
+    """The character a key stands for in ALPHA-T: a non-Latin letter becomes the Latin letter on that key."""
+    if len(char) == 1 and char.isalpha() and not char.isascii():
+        return LATIN_BY_KEYCODE.get(keycode, char)
+    return char
 
 
 def hit_action(char: str, picking: bool = False, selected: bool = False) -> str | None:
