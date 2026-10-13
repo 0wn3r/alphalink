@@ -52,7 +52,9 @@ class ToolsPage(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self.w = window
         self._building = False
-        bar = Gtk.Box(spacing=6, margin_start=12, margin_end=12, margin_top=6, margin_bottom=6)
+        # a wrapping row: the button labels are much longer in Ukrainian and must not set the window's width
+        bar = Adw.WrapBox(child_spacing=6, line_spacing=6, margin_start=12, margin_end=12, margin_top=6,
+                          margin_bottom=6)
         for label, cb, css in ((_("_Add Tool"), self._add, None), (_("_Delete Tool"), self._delete, "destructive-action"),
                                (_("_Import ATOOLIB.TL1…"), self._import, None),
                                (_("_Reset to ALPHA-T Tools"), self._reset, None)):
@@ -61,10 +63,11 @@ class ToolsPage(Gtk.Box):
                 b.add_css_class(css)
             b.connect("clicked", lambda _b, cb=cb: cb())
             bar.append(b)
-        self.note = Gtk.Label(label=_("Tool numbers are the lathe's tool memory slots."), xalign=1, hexpand=True)
-        self.note.add_css_class("dim-label")
-        bar.append(self.note)
         self.append(bar)
+        self.note = Gtk.Label(label=_("Tool numbers are the lathe's tool memory slots."), xalign=0, wrap=True,
+                              margin_start=12, margin_end=12, margin_bottom=6)
+        self.note.add_css_class("dim-label")
+        self.append(self.note)
         self.append(Gtk.Separator())
         body = Gtk.Paned(position=360, vexpand=True, shrink_start_child=False, shrink_end_child=False)
         self.listbox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
