@@ -22,6 +22,7 @@ class SimulationBar(Gtk.Box):
         self.add_css_class("sim-bar")
         self.c, self.on_move = canvas, on_move
         self._play = 0
+        self._buttons = []
         buttons = [("media-skip-backward-symbolic", _("First move"), lambda: self.goto(0)),
                    ("media-seek-backward-symbolic", _("Previous pass"), lambda: self.step_pass(-1)),
                    (None, None, None),
@@ -31,9 +32,11 @@ class SimulationBar(Gtk.Box):
             if icon is None:
                 self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play / Pause"))
                 self.play_button.connect("clicked", lambda *_: self.toggle_play())
+                self._buttons.append(self.play_button)
                 self.append(self.play_button)
                 continue
             b = Gtk.Button(icon_name=icon, tooltip_text=tip)
+            self._buttons.append(b)
             b.connect("clicked", lambda _b, cb=cb: cb())
             b.add_css_class("flat")
             self.append(b)
@@ -110,6 +113,8 @@ class SimulationBar(Gtk.Box):
 
     def _label(self) -> None:
         segs, i = self.c.segs, self.c.sim_index
+        for b in self._buttons:  # nothing to play or step through without moves
+            b.set_sensitive(bool(segs))
         if not segs:
             self.label.set_label(_("no moves"))
             return

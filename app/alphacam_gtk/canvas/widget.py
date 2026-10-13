@@ -91,10 +91,11 @@ class LatheCanvas(Gtk.DrawingArea):
         zs, rs = [0.0], [0.0]
         p = self.project
         if p is not None:
-            zs += [-p.billet.length - 21]
-            rs.append(p.billet.diameter / 2 + 16)
+            k = 1 / 25.4 if p.units == "inch" else 1.0  # the jaws and margins are mm sizes
+            zs += [-p.billet.length - 21 * k]
+            rs.append(p.billet.diameter / 2 + 16 * k)
             if getattr(p.billet, "tailstock", False):
-                zs.append(6 * 1.732 + 30)
+                zs.append((6 * 1.732 + 30) * k)
             for g in p.geometry:
                 for pt in (g.a, g.b):
                     zs.append(pt.z)
@@ -173,31 +174,32 @@ class LatheCanvas(Gtk.DrawingArea):
         cr.set_dash([])
         b = p.billet
         zc, rb = -b.length, b.diameter / 2
+        k = 1 / 25.4 if p.units == "inch" else 1.0  # jaw and tailstock sizes are mm
         self._rgb(cr, "chuck")
         if getattr(b, "jaws", "external") == "internal":
             # expanding jaws gripping the bore: the first step inside the part, the next two behind it, each
             # reaching further in towards the axis (mirror of the external jaws)
             rg = b.bore / 2 if b.bore > 0 else rb * 0.4
             for i in range(3):
-                z0 = zc + 7 if i == 0 else zc - 7 * (i - 1)
-                self._rect_rz(cr, max(rg - 5 * (i + 1), 0), rg + 5 * i, z0 - 7, z0)
+                z0 = zc + 7 * k if i == 0 else zc - 7 * k * (i - 1)
+                self._rect_rz(cr, max(rg - 5 * k * (i + 1), 0), rg + 5 * k * i, z0 - 7 * k, z0)
         else:
             # stepped chuck jaws behind the billet (20 mm, like the ALPHA-T drawing layer)
-            for i, step in enumerate((5, 10, 15)):
-                x0, ytop = v.to_screen(2 * (rb + step), zc - 7 * i)
-                x1, ybot = v.to_screen(2 * (rb - 5 + step - 5 * (i > 0)), zc - 7 * (i + 1))
+            for i, step in enumerate((5 * k, 10 * k, 15 * k)):
+                x0, ytop = v.to_screen(2 * (rb + step), zc - 7 * k * i)
+                x1, ybot = v.to_screen(2 * (rb - 5 * k + step - 5 * k * (i > 0)), zc - 7 * k * (i + 1))
                 cr.rectangle(x1, ytop, x0 - x1, ybot - ytop)
                 cr.fill()
         if getattr(b, "tailstock", False):
             # live centre at the front face: a 60-degree point on the axis, then the quill
             self._rgb(cr, "chuck")
-            pts = [v.to_screen(0, 0), v.to_screen(2 * 6, 6 * 1.732), v.to_screen(-2 * 6, 6 * 1.732)]
+            pts = [v.to_screen(0, 0), v.to_screen(2 * 6 * k, 6 * 1.732 * k), v.to_screen(-2 * 6 * k, 6 * 1.732 * k)]
             cr.move_to(*pts[0])
             for q in pts[1:]:
                 cr.line_to(*q)
             cr.close_path()
             cr.fill()
-            self._rect_rz(cr, -12, 12, 6 * 1.732, 6 * 1.732 + 30)
+            self._rect_rz(cr, -12 * k, 12 * k, 6 * 1.732 * k, (6 * 1.732 + 30) * k)
         # billet
         self._rgb(cr, "billet")
         cr.set_dash([6, 4])

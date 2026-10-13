@@ -21,7 +21,10 @@ def _languages() -> list[str] | None:
     return [forced] if forced else None  # None: gettext reads LANGUAGE, LC_ALL, LC_MESSAGES, LANG
 
 
-_t = gettext.translation(DOMAIN, LOCALE_DIR, languages=_languages(), fallback=True)
+_LANGS = _languages()
+if _LANGS:  # GTK and libadwaita's own texts (About, file chooser) follow the chosen language too
+    os.environ["LANGUAGE"] = ":".join(_LANGS)
+_t = gettext.translation(DOMAIN, LOCALE_DIR, languages=_LANGS, fallback=True)
 try:  # also for GtkBuilder / C libraries that use the domain
     locale.bindtextdomain(DOMAIN, str(LOCALE_DIR))
 except (AttributeError, OSError):

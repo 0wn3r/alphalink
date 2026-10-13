@@ -276,7 +276,9 @@ class MachinePage(Gtk.Box):
             return
         alert = Adw.AlertDialog(heading=_("Send this program?"),
                                 body=_("{info}\n{size} bytes to {port}.\n\n{steps}").format(
-                                    info=self.program_info, size=len(self.data), port=self.port(), steps=STEPS_SEND))
+                                    info=self.program_info, size=len(self.data), port=self.port(),
+                                    steps=_("The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. "
+                                            "Then press Send.")))
         alert.add_response("cancel", _("_Cancel"))
         alert.add_response("send", _("_Send"))
         alert.set_response_appearance("send", Adw.ResponseAppearance.SUGGESTED)

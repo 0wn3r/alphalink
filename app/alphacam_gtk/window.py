@@ -8,7 +8,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, Gio, GLib, Gtk, Pango  # noqa: E402
 
 from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
@@ -107,6 +107,9 @@ class MainWindow(Adw.ApplicationWindow):
         bp.add_setter(self.editor, "width-request", 280)
         bp.add_setter(self.switcher_bar, "reveal", True)
         bp.add_setter(self.header_switcher, "visible", False)
+        # the header must fit a narrow (touch: 48 px buttons) window; these are in the main menu too
+        for wdg in (self.open_button, self.save_button, self.undo_box):
+            bp.add_setter(wdg, "visible", False)
         self.add_breakpoint(bp)
 
     # --- layout -----------------------------------------------------------------------------------------
@@ -123,8 +126,22 @@ class MainWindow(Adw.ApplicationWindow):
         btns.append(new)
         btns.append(btn)
         page.set_child(btns)
+        start_menu = Gio.Menu()  # what works without a part: the Machine page (Manual Ops backup), settings, help
+        start_menu.append(_("New Part…"), "win.new")
+        start_menu.append(_("Open…"), "win.open")
+        start_menu.append(_("Machine Page (Manual Ops backup)"), "win.machine-page")
+        more = Gio.Menu()
+        more.append(_("Preferences"), "win.preferences")
+        more.append(_("Help"), "win.help")
+        more.append(_("Training Manual"), "win.manual-training")
+        more.append(_("Reference Manual"), "win.manual-reference")
+        more.append(_("About AlphaLink CAM"), "app.about")
+        start_menu.append_section(None, more)
+        header = Adw.HeaderBar()
+        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=start_menu, primary=True,
+                                       tooltip_text=_("Main Menu")))
         view = Adw.ToolbarView()
-        view.add_top_bar(Adw.HeaderBar())
+        view.add_top_bar(header)
         view.set_content(page)
         return view
 
@@ -194,7 +211,7 @@ class MainWindow(Adw.ApplicationWindow):
         pinch.connect("begin", lambda *_: setattr(self, "_pinch_base", self._font_pt))
         pinch.connect("scale-changed", lambda g, s: self._set_font(self._pinch_base * s))
         self.program_view.add_controller(pinch)
-        self.program_info = Gtk.Label(xalign=0)
+        self.program_info = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)  # never widens the window
         self.program_info.add_css_class("readout")
         self.program_info.add_css_class("dim-label")
         prog = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
@@ -220,22 +237,36 @@ class MainWindow(Adw.ApplicationWindow):
         header = Adw.HeaderBar()
         self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.NARROW)  # 5 pages: icon over label fits
         header.set_title_widget(self.header_switcher)
-        header.pack_start(Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
-                                     tooltip_text=_("Open (Ctrl+O)")))
-        header.pack_start(Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
-                                     tooltip_text=_("Save (Ctrl+S)")))
-        undo_box = Gtk.Box()
+        self.open_button = Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
+                                      tooltip_text=_("Open (Ctrl+O)"))
+        self.save_button = Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
+                                      tooltip_text=_("Save (Ctrl+S)"))
+        header.pack_start(self.open_button)
+        header.pack_start(self.save_button)
+        undo_box = self.undo_box = Gtk.Box()
         undo_box.add_css_class("linked")
         undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text=_("Undo (Ctrl+Z)")))
         undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
                                    tooltip_text=_("Redo (Ctrl+Shift+Z)")))
         header.pack_start(undo_box)
         menu = Gio.Menu()
-        menu.append(_("Fit Part"), "win.fit")
-        menu.append(_("Show Grid"), "win.show-grid")
-        menu.append(_("Part Settings…"), "win.part-settings")
-        menu.append(_("Save as ALPHA-T Drawing…"), "win.save-sdg")
-        menu.append(_("Clear Messages"), "win.clear-messages")
+        files = Gio.Menu()  # also reachable by touch, and the header buttons hide on a narrow window
+        files.append(_("New Part…"), "win.new")
+        files.append(_("Open…"), "win.open")
+        files.append(_("Save"), "win.save")
+        files.append(_("Save As…"), "win.save-as")
+        files.append(_("Save as ALPHA-T Drawing…"), "win.save-sdg")
+        menu.append_section(None, files)
+        edit = Gio.Menu()
+        edit.append(_("Undo"), "win.undo")
+        edit.append(_("Redo"), "win.redo")
+        menu.append_section(None, edit)
+        view_menu = Gio.Menu()
+        view_menu.append(_("Fit Part"), "win.fit")
+        view_menu.append(_("Show Grid"), "win.show-grid")
+        view_menu.append(_("Part Settings…"), "win.part-settings")
+        view_menu.append(_("Clear Messages"), "win.clear-messages")
+        menu.append_section(None, view_menu)
         layout = Gio.Menu()
         for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
             item = Gio.MenuItem.new(label, None)
@@ -345,6 +376,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_action(grid)
         self.canvas.show_grid = settings()["show_grid"]
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
+        add("machine-page", lambda *_: self.machine_page())
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
         add("add-op", lambda a, v: self.add_op(v.get_string()), param=GLib.VariantType.new("s"))
@@ -510,6 +542,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def set_project(self, project: Project) -> None:
         self.project = project
+        self.readout.set_label(" ")  # nothing selected in the new part
         self.undo = UndoStack(project, lambda p: self._schedule_refresh())
         self.root.set_visible_child_name("main")
         self.editor_reveal.set_reveal_child(False)
@@ -642,16 +675,20 @@ class MainWindow(Adw.ApplicationWindow):
                              selected=1 if st["units"] == "inch" else 0)
         units.connect("notify::selected", lambda r, _p: st.set("units", "inch" if r.get_selected() else "mm"))
         new.add(units)
-        for key, title, lo, hi, step, digits in (("billet_diameter", _("Billet diameter"), 1, 1000, 1, 1),
-                                                 ("billet_length", _("Billet length"), 1, 2000, 1, 1),
+        size_rows = {}
+        inch = st["units"] == "inch"
+        for key, title, lo, hi, step, digits in (("billet_diameter", _("Billet diameter"), 0.01, 1000, 1, 1),
+                                                 ("billet_length", _("Billet length"), 0.01, 2000, 1, 1),
                                                  ("first_tool", _("First tool"), 1, 99, 1, 0)):
             row = Adw.SpinRow.new_with_range(lo, hi, step)
             row.set_title(title)
-            row.set_digits(digits)
+            row.set_digits(4 if inch and digits else digits)
             row.set_value(st[key])
             row.connect("notify::value", lambda r, _p, k=key, d=digits: st.set(k, int(r.get_value()) if d == 0
                                                                               else r.get_value()))
             new.add(row)
+            size_rows[key] = row
+        self._units_follow(units, size_rows, ("billet_diameter", "billet_length"))
         page.add(new)
         export = Adw.PreferencesGroup(title=_("Export"))
         sdg = Adw.SwitchRow(title=_("Also save the ALPHA-T drawing (.SDG)"),
@@ -671,10 +708,30 @@ class MainWindow(Adw.ApplicationWindow):
         dlg.add(page)
         dlg.present(self)
 
-    def _billet_rows(self, b, inch: bool = False) -> tuple[Adw.PreferencesGroup, dict]:
+    @staticmethod
+    def _units_follow(units_row, rows, keys=("diameter", "length", "bore")) -> None:
+        """Switching mm <-> inch converts the size rows already filled in (50 mm stays 50 mm, shown as 1.9685 in)."""
+        state = {"inch": units_row.get_selected() == 1}
+
+        def changed(row, _p):
+            inch = row.get_selected() == 1
+            if inch == state["inch"]:
+                return
+            state["inch"] = inch
+            for key in keys:
+                r = rows[key]
+                v = r.get_value()
+                r.set_digits(4 if inch else 1)
+                r.set_value(round(v / 25.4, 4) if inch else round(v * 25.4, 1))
+
+        units_row.connect("notify::selected", changed)
+
+    def _billet_rows(self, b, inch: bool = False, top: Gtk.Widget | None = None) -> tuple[Adw.PreferencesGroup, dict]:
         """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock. Inch parts get 4 decimals
         (a 0.75 in bar must not be rounded or clamped to 1)."""
         group = Adw.PreferencesGroup()
+        if top is not None:  # e.g. the units, first, so the sizes below are read in them
+            group.add(top)
         rows = {}
         for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 0.01, 1000),
                                        ("length", _("Billet length"), None, 0.01, 2000),
@@ -711,8 +768,9 @@ class MainWindow(Adw.ApplicationWindow):
         units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
                              selected=1 if settings()["units"] == "inch" else 0)
         group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
-                                               length=settings()["billet_length"]), settings()["units"] == "inch")
-        group.add(units)
+                                               length=settings()["billet_length"]), settings()["units"] == "inch",
+                                        top=units)
+        self._units_follow(units, rows)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
         alert.add_response("create", _("_Create"))
@@ -751,46 +809,74 @@ class MainWindow(Adw.ApplicationWindow):
         """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""
         if self.project is None:
             return
-        alert = Adw.AlertDialog(heading=_("Part Settings"),
-                                body=_("Billet, chuck jaws, tailstock, program number and program units of this part."))
+        # a dialog with room for the rows (an alert is too narrow: labels broke mid-word, rows scrolled away)
+        dlg = Adw.Dialog(title=_("Part Settings"), content_width=520, content_height=640)
         group, rows = self._billet_rows(self.project.billet, self.project.units == "inch")
+        group.set_title(_("Billet"))
+        group.set_description(_("Billet, chuck jaws and tailstock only change the picture."))
+        drawing = Adw.ActionRow(title=_("Drawing units"), subtitle=_("set when the part was made"))
+        drawing.add_suffix(Gtk.Label(label=_("mm") if self.project.units == "mm" else _("inch")))
+        program = Adw.PreferencesGroup(title=_("Program"))
         # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
         number = Adw.SpinRow.new_with_range(1, 9999, 1)
         number.set_title(_("Program number"))
         number.set_subtitle(_("shown on the control"))
         number.set_value(self.project.program_number)
-        group.add(number)
+        program.add(number)
         # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
         unit_keys = [None, "mm", "inch"]
         out_units = Adw.ComboRow(title=_("Program units"), subtitle=_("M71 mm / M70 inch on the control"),
                                  model=Gtk.StringList.new([_("As the drawing"), _("mm"), _("inch")]))
         current = self.project.output_units if self.project.output_units != self.project.units else None
         out_units.set_selected(unit_keys.index(current))
-        group.add(out_units)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("apply", _("_Apply"))
-        alert.set_response_appearance("apply", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("apply")
-        alert.set_close_response("cancel")
+        program.add(drawing)
+        program.add(out_units)
+        page = Adw.PreferencesPage()
+        page.add(group)
+        page.add(program)
 
-        def response(_d, r):
-            if r == "apply":
-                billet = self._billet_from(rows)
-                billet.face_allowance = self.project.billet.face_allowance
-                n = int(number.get_value())
-                out = unit_keys[out_units.get_selected()]
+        def apply(*_a):
+            billet = self._billet_from(rows)
+            billet.face_allowance = self.project.billet.face_allowance
+            n = int(number.get_value())
+            out = unit_keys[out_units.get_selected()]
 
-                def change(p):
-                    p.billet = billet
-                    p.program_number = n
-                    p.output_units = None if out == p.units else out
+            def change(p):
+                p.billet = billet
+                p.program_number = n
+                p.output_units = None if out == p.units else out
 
-                if self.apply_edit(_("Part settings"), change):
-                    self.refresh(fit=True)
+            dlg.close()
+            if self.apply_edit(_("Part settings"), change):
+                self.refresh(fit=True)
 
-        alert.connect("response", response)
-        alert.present(self)
+        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
+        cancel = Gtk.Button(label=_("_Cancel"), use_underline=True)
+        cancel.connect("clicked", lambda *_a: dlg.close())
+        ok = Gtk.Button(label=_("_Apply"), use_underline=True)
+        ok.add_css_class("suggested-action")
+        ok.connect("clicked", apply)
+        header.pack_start(cancel)
+        header.pack_end(ok)
+        view = Adw.ToolbarView()
+        view.add_top_bar(header)
+        view.set_content(page)
+        dlg.set_child(view)
+        dlg.set_default_widget(ok)
+        dlg.apply = apply  # for scripts and tests
+        dlg.present(self)
+
+    def machine_page(self) -> None:
+        """The Machine page without a part (e.g. to back up Manual Ops first): an empty new part behind it."""
+        if self.project is None:
+            from alphacam.model.project import Billet
+
+            st = settings()
+            self.set_project(Project(units=st["units"], billet=Billet(diameter=st["billet_diameter"],
+                                                                      length=st["billet_length"]),
+                                     first_tool=int(st["first_tool"])))
+            self.undo.mark_saved()
+        self.stack.set_visible_child_name("machine")
 
     # --- saving -----------------------------------------------------------------------------------------
 

@@ -434,7 +434,7 @@ class Translations(unittest.TestCase):
         pot = (Path(__file__).resolve().parents[1] / "po" / "alphalink-cam.pot").read_text()
         ids = [m for m in re.findall(r'\nmsgid "(.+)"\n(?:msgstr|msgid_plural)', pot)]
         uk = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, languages=["uk"])
-        untranslated = [m for m in ids if uk.gettext(m) == m and m not in ("ABS",)]
+        untranslated = [m for m in ids if uk.gettext(m) == m and m not in ("ABS", "INC")]  # as on the control
         self.assertEqual(untranslated, [])
         self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 21).format(n=21), "21 прохід")
         self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 24).format(n=24), "24 проходи")

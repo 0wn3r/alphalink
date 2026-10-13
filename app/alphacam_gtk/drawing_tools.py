@@ -36,9 +36,12 @@ TOOL_TIPS = {
 }
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
+FILLET_CHIPS_INCH = (0.01, 0.02, 0.04, 0.06, 0.1)
+CHAMFER_CHIPS_INCH = (0.01, 0.02, 0.04, 0.06)
 # what Enter in the command entry does, after the ALPHA-T key that asked for the point (hit_keys.py)
 ENTRY_MODES = {
     "point": N_("X,Z  or  @dX,dZ  then Enter (line tool)"),
+    "arc": N_("Arc: X,Z  or  @dX,dZ  then Enter: start, a point on the arc, end"),
     "line-la": N_("Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"),
     "move-abs": N_("Move the cursor to X,Z  then Enter"),
     "move-inc": N_("Move the cursor by dX,dZ  then Enter"),
@@ -103,8 +106,13 @@ class DrawingTools:
         window.add_action(construct)
         self.construct: dict | None = None
         self.construct_banner = Adw.Banner(button_label=_("_Cancel"))
-        self.construct_banner.connect("button-clicked", lambda *_: self.cancel_construct())
-        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.edit_el,
+        self.construct_banner.connect("button-clicked", lambda *_: self._banner_button())
+        # picking a contour: a way out without applying it (the banner has room for one button only)
+        self.cancel_pick_btn = Gtk.Button(label=_("Cancel Picking"), visible=False,
+                                          tooltip_text=_("Leave the contour as it was (Esc)"))
+        self.cancel_pick_btn.connect("clicked", lambda *_: self.cancel_pick())
+        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.cancel_pick_btn,
+                    self.edit_el,
                     self.delete_el):
             self.bar.append(wdg)
 
@@ -136,6 +144,8 @@ class DrawingTools:
         self.finish_chain()
         self.c.tool = name
         self.done.set_visible(name in ("line", "arc"))
+        if self.entry_mode == "point":
+            self.entry.set_placeholder_text(_(ENTRY_MODES["arc" if name == "arc" else "point"]))
         self._select_element(None)
         if name != "select":
             self.w._select_op(None)
@@ -500,6 +510,7 @@ class DrawingTools:
     def _arc_point(self, pt: Point) -> None:
         """Arc tool: start, a point on the arc, end (TOUCH.md 5.2). Exact points can be typed as for lines."""
         self.arc_pts.append(pt)
+        self.done.set_sensitive(True)  # Done / Esc drops a half-drawn arc
         self.c.marker = (pt, "end")
         hints = [_("Arc: now a point on the arc"), _("Arc: now the end point")]
         if len(self.arc_pts) < 3:
@@ -553,7 +564,7 @@ class DrawingTools:
 
     def _ask_done(self) -> None:
         self.entry_mode = "point"
-        self.entry.set_placeholder_text(_(ENTRY_MODES["point"]))
+        self.entry.set_placeholder_text(_(ENTRY_MODES["arc" if self.c.tool == "arc" else "point"]))
 
     def _entry_activate(self, entry) -> None:
         mode = self.entry_mode
@@ -629,6 +640,8 @@ class DrawingTools:
         self.c.highlight = {gid} if gid else set()
         self.delete_el.set_visible(gid is not None)
         self.edit_el.set_visible(gid is not None)
+        if gid is None:
+            self.w.readout.set_label(" ")  # not the last selected element any more
         if gid:
             g = next(g for g in self.w.project.geometry if g.id == gid)
             kind = _("Line") if isinstance(g, Line) else _("Arc")
@@ -663,6 +676,9 @@ class DrawingTools:
             r.set_title(label)
             r.set_digits(4 if self.w.project.units == "inch" else 3)
             r.set_value(value)
+            from .op_editor import fit_spin
+
+            fit_spin(r, -10000, 10000, r.get_digits())
             group.add(r)
             rows.append(r)
         if isinstance(g, Arc):
@@ -735,7 +751,9 @@ class DrawingTools:
         chips = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=5, column_spacing=6,
                             row_spacing=6)
         chip_buttons = []
-        for v in (FILLET_CHIPS if tool == "fillet" else CHAMFER_CHIPS):
+        inch = self.w.project.units == "inch"
+        for v in ((FILLET_CHIPS_INCH if inch else FILLET_CHIPS) if tool == "fillet"
+                  else (CHAMFER_CHIPS_INCH if inch else CHAMFER_CHIPS)):
             b = Gtk.Button(label=f"R{v:g}" if tool == "fillet" else f"{v:g}×45°")
             b.add_css_class("pill")
             b.connect("clicked", lambda _b, v=v: (pop.popdown(), self._apply_corner(tool, corner, v, ang())))
@@ -748,7 +766,7 @@ class DrawingTools:
         other = Gtk.Box(spacing=6)
         spin = Gtk.SpinButton.new_with_range(0.01, 100, 0.1)
         spin.set_digits(3)
-        spin.set_value(1)
+        spin.set_value(0.04 if inch else 1)
         ok = Gtk.Button(label=_("_Apply"), use_underline=True)
         ok.add_css_class("suggested-action")
         ok.connect("clicked", lambda *_: (pop.popdown(), self._apply_corner(tool, corner, spin.get_value(), ang())))
@@ -777,6 +795,7 @@ class DrawingTools:
         self.c.picked = []
         self.w.stack.set_visible_child_name("part")
         self.pick_banner.set_revealed(True)
+        self.cancel_pick_btn.set_visible(True)
         self.c.queue_draw()
 
     def _toggle_pick(self, gid: str) -> None:
@@ -809,6 +828,7 @@ class DrawingTools:
         self.pick_op = None
         self.c.picked = []
         self.pick_banner.set_revealed(False)
+        self.cancel_pick_btn.set_visible(False)
         self.pick_banner.set_title(_("Tap the contour elements in cutting order"))
         self.c.queue_draw()
 
@@ -825,7 +845,7 @@ class DrawingTools:
         if kind == "circle":
             c = self.cursor or Point(0, 0)
             self._numbers(_("Circle"), [(_("Centre X (Ø)"), c.x, -2000, 2000), (_("Centre Z"), c.z, -2000, 2000),
-                                       (_("Radius"), 10.0, 0.001, 1000)],
+                                       (_("Radius"), self._mm(10), 0.001, 1000)],
                           lambda v: self._edit(_("Circle"), lambda p: drawing.add_circle(p, Point(v[0], v[1]), v[2])))
             return
         if kind == "mirror":
@@ -844,22 +864,17 @@ class DrawingTools:
             return
         self.w.refresh()
         self.c.fit()
-        dlg = Adw.AlertDialog(heading=_("Is this correct?"),
-                              body=_("The drawing is mirrored about the spindle axis."))
-        dlg.add_response("no", _("_No"))
-        dlg.add_response("yes", _("_Yes"))
-        dlg.set_response_appearance("yes", Adw.ResponseAppearance.SUGGESTED)
-        dlg.set_default_response("yes")
-        dlg.set_close_response("no")
+        # ALPHA-T asks "Is this correct?" over the drawing; a banner keeps the mirrored drawing in full view
+        self.construct = {"kind": "mirror-confirm", "step": 0, "refs": []}
+        self.construct_banner.set_button_label(_("_No, Take It Back"))
+        self._prompt(_("Mirrored about the spindle axis. Is this correct? If yes, just carry on."))
 
-        def response(_d, r):
-            if r != "yes":
-                self.w.undo.undo()
-                self.w.refresh()
-                self.c.fit()
-
-        dlg.connect("response", response)
-        dlg.present(self.w)
+    def _banner_button(self) -> None:
+        if self.construct and self.construct["kind"] == "mirror-confirm":  # No: take the mirror image back
+            self.w.undo.undo()
+            self.w.refresh()
+            self.c.fit()
+        self.cancel_construct()
 
     def _prompt(self, text: str) -> None:
         self.construct_banner.set_title(text)
@@ -867,6 +882,7 @@ class DrawingTools:
 
     def cancel_construct(self) -> None:
         self.construct = None
+        self.construct_banner.set_button_label(_("_Cancel"))
         self.construct_banner.set_revealed(False)
         self.c.previews = []
         self.c.queue_draw()
@@ -883,10 +899,14 @@ class DrawingTools:
         group = Adw.PreferencesGroup()
         spins = []
         for label, value, lo, hi in fields:
+            from .op_editor import fit_spin
+
             r = Adw.SpinRow.new_with_range(lo, hi, 0.5)
             r.set_title(label)
-            r.set_digits(3)
+            digits = 4 if self.w.project.units == "inch" else 3
+            r.set_digits(digits)
             r.set_value(value)
+            fit_spin(r, lo, hi, digits)  # room for the widest value ("100.000", not "l00.000")
             group.add(r)
             spins.append(r)
         dlg.set_extra_child(group)
@@ -904,6 +924,10 @@ class DrawingTools:
 
         dlg.connect("response", response)
         dlg.present(self.w)
+
+    def _mm(self, v: float) -> float:
+        """A default size given in mm, in the part's units."""
+        return round(v / 25.4, 3) if self.w.project.units == "inch" else v
 
     def _element(self, gid: str):
         return next((g for g in self.w.project.geometry if g.id == gid), None)
@@ -952,6 +976,9 @@ class DrawingTools:
             previews, then = st["choices"]
             then(min(previews, key=lambda pv: self._dist_to_preview(pv, p)))
             return
+        if st["kind"] == "mirror-confirm":  # carrying on means yes
+            self.cancel_construct()
+            return
         kind, ref = st["kind"], self._ref_at(p, tol, element)
         try:
             if kind == "split":
@@ -963,7 +990,7 @@ class DrawingTools:
                     ref = ("line", element)
                 if ref[0] != "line":
                     raise ValueError(_("Tap a line"))
-                self._numbers(_("Parallel Line"), [(_("Distance"), 1.0, 0.001, 1000)], lambda v: self._choose(
+                self._numbers(_("Parallel Line"), [(_("Distance"), self._mm(1), 0.001, 1000)], lambda v: self._choose(
                     [("line", a, b) for a, b in drawing.parallels(self.w.project, ref[1], v[0])],
                     lambda pv: self._edit(_("Parallel line"), lambda pr: drawing.add_line(pr, pv[1], pv[2]))))
             elif kind == "tangent-angle":
@@ -1008,7 +1035,7 @@ class DrawingTools:
                     self._choose([("arc", s, c, e) for s, c, e in sols],
                                  lambda pv: self._edit(_("Blend arc"), lambda pr: drawing.add_blend(pr, pv[1], pv[2], pv[3])))
 
-                self._numbers(_("Blend Arc"), [(_("Radius"), 5.0, 0.001, 1000)], solve)
+                self._numbers(_("Blend Arc"), [(_("Radius"), self._mm(5), 0.001, 1000)], solve)
         except ValueError as e:
             self.w.toast(str(e))
         except Exception as e:  # never leave a command half done: say what happened and start over

@@ -307,6 +307,9 @@ msgstr "Обрізати або подовжити дві лінії до пер
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
 
+msgid "Arc: X,Z  or  @dX,dZ  then Enter: start, a point on the arc, end"
+msgstr "Дуга: X,Z  або  @dX,dZ  і Enter: початок, точка на дузі, кінець"
+
 msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
 msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
 
@@ -342,6 +345,12 @@ msgstr "Інші команди креслення"
 
 msgid "_Cancel"
 msgstr "_Скасувати"
+
+msgid "Cancel Picking"
+msgstr "Скасувати вибір"
+
+msgid "Leave the contour as it was (Esc)"
+msgstr "Залишити контур як був (Esc)"
 
 msgid "Tap the contour elements in cutting order"
 msgstr "Торкніться елементів контуру в порядку обробки"
@@ -443,7 +452,7 @@ msgid "Deleted {what}"
 msgstr "Видалено: {what}"
 
 msgid "_Undo"
-msgstr "_Скасувати"
+msgstr "_Відмінити"
 
 msgid "Edit {what}"
 msgstr "Редагувати {what}"
@@ -526,17 +535,11 @@ msgstr "Розділити дугу: торкніться дуги там, де 
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
 
-msgid "Is this correct?"
-msgstr "Чи це правильно?"
+msgid "_No, Take It Back"
+msgstr "_Ні, повернути"
 
-msgid "The drawing is mirrored about the spindle axis."
-msgstr "Креслення дзеркально відображено відносно осі шпинделя."
-
-msgid "_No"
-msgstr "_Ні"
-
-msgid "_Yes"
-msgstr "_Так"
+msgid "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
+msgstr "Дзеркально відображено відносно осі шпинделя. Чи це правильно? Якщо так, просто працюйте далі."
 
 msgid "No solution for these elements"
 msgstr "Для цих елементів розв’язку немає"
@@ -593,10 +596,10 @@ msgid "Point"
 msgstr "Точка"
 
 msgid "ABS"
-msgstr "АБС"
+msgstr "ABS"
 
 msgid "INC"
-msgstr "ПРИР"
+msgstr "INC"
 
 msgid "On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold “Send to the Lathe” here."
 msgstr "На верстаті: клавіша CAM, 4 «LOAD CAM FILE», потім торкніться стрілки ←. Тоді утримуйте тут «Надіслати на верстат»."
@@ -708,6 +711,9 @@ msgstr "Надіслати цю програму?"
 
 msgid "{info}\n{size} bytes to {port}.\n\n{steps}"
 msgstr "{info}\n{size} байт на {port}.\n\n{steps}"
+
+msgid "The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then press Send."
+msgstr "Верстат має бути в CAM, 4 «LOAD CAM FILE», зі стрілкою ← натиснутою. Потім натисніть «Надіслати»."
 
 msgid "_Send"
 msgstr "_Надіслати"
@@ -910,8 +916,8 @@ msgstr "До патрона"
 msgid "Pre-finish pass"
 msgstr "Напівчистовий прохід"
 
-msgid "a finish pass with a 1 mm pull-off after the roughing"
-msgstr "чистовий прохід із відведенням 1 мм після чорнової обробки"
+msgid "a finish pass after the roughing, pulling off by the retract distance"
+msgstr "чистовий прохід після чорнової обробки з відведенням на відстань відведення"
 
 msgid "Full retract"
 msgstr "Повне відведення"
@@ -994,8 +1000,11 @@ msgstr "Лінія зовнішнього діаметра"
 msgid "(no lines)"
 msgstr "(немає ліній)"
 
-msgid "Contour (element ids, in cutting order)"
-msgstr "Контур (ідентифікатори елементів у порядку обробки)"
+msgid "Contour, in cutting order"
+msgstr "Контур, у порядку обробки"
+
+msgid "Element ids, e.g. g0 g1 g2"
+msgstr "Ідентифікатори елементів, напр. g0 g1 g2"
 
 msgid "Pick Contour on the Drawing"
 msgstr "Вибрати контур на кресленні"
@@ -1387,6 +1396,30 @@ msgstr "_Нова деталь…"
 msgid "_Open…"
 msgstr "_Відкрити…"
 
+msgid "New Part…"
+msgstr "Нова деталь…"
+
+msgid "Open…"
+msgstr "Відкрити…"
+
+msgid "Machine Page (Manual Ops backup)"
+msgstr "Сторінка «Верстат» (резервна копія ручних операцій)"
+
+msgid "Preferences"
+msgstr "Параметри"
+
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
+
+msgid "About AlphaLink CAM"
+msgstr "Про AlphaLink CAM"
+
+msgid "Main Menu"
+msgstr "Головне меню"
+
 msgid "Add Operation (C)"
 msgstr "Додати операцію (C)"
 
@@ -1409,7 +1442,7 @@ msgid "Program"
 msgstr "Програма"
 
 msgid "Sheet"
-msgstr "Карта наладки"
+msgstr "Наладка"
 
 msgid "Tools"
 msgstr "Інструменти"
@@ -1424,19 +1457,31 @@ msgid "Save (Ctrl+S)"
 msgstr "Зберегти (Ctrl+S)"
 
 msgid "Undo (Ctrl+Z)"
-msgstr "Скасувати (Ctrl+Z)"
+msgstr "Відмінити (Ctrl+Z)"
 
 msgid "Redo (Ctrl+Shift+Z)"
 msgstr "Повторити (Ctrl+Shift+Z)"
+
+msgid "Save"
+msgstr "Зберегти"
+
+msgid "Save As…"
+msgstr "Зберегти як…"
+
+msgid "Save as ALPHA-T Drawing…"
+msgstr "Зберегти креслення ALPHA-T…"
+
+msgid "Undo"
+msgstr "Відмінити"
+
+msgid "Redo"
+msgstr "Повторити"
 
 msgid "Show Grid"
 msgstr "Показувати сітку"
 
 msgid "Part Settings…"
 msgstr "Параметри деталі…"
-
-msgid "Save as ALPHA-T Drawing…"
-msgstr "Зберегти як креслення ALPHA-T…"
 
 msgid "Clear Messages"
 msgstr "Прибрати повідомлення"
@@ -1452,21 +1497,6 @@ msgstr "Сенсор"
 
 msgid "Input Layout"
 msgstr "Режим введення"
-
-msgid "Preferences"
-msgstr "Параметри"
-
-msgid "Training Manual"
-msgstr "Навчальний посібник"
-
-msgid "Reference Manual"
-msgstr "Довідковий посібник"
-
-msgid "About AlphaLink CAM"
-msgstr "Про AlphaLink CAM"
-
-msgid "Main Menu"
-msgstr "Головне меню"
 
 msgid "_Export PRG"
 msgstr "_Експорт PRG"
@@ -1574,10 +1604,10 @@ msgid "Program {number} · {name} · tools {tools}"
 msgstr "Програма {number} · {name} · інструменти {tools}"
 
 msgid "Undid {action}"
-msgstr "Скасовано: {action}"
+msgstr "Відмінено: «{action}»"
 
 msgid "Redid {action}"
-msgstr "Повторено: {action}"
+msgstr "Повторено: «{action}»"
 
 msgid "Add {what}"
 msgstr "Додати: {what}"
@@ -1651,8 +1681,17 @@ msgstr "Накресліть профіль: торкайтеся точок а�
 msgid "Part Settings"
 msgstr "Параметри деталі"
 
-msgid "Billet, chuck jaws, tailstock, program number and program units of this part."
-msgstr "Заготовка, кулачки патрона, задня бабка, номер програми й одиниці програми цієї деталі."
+msgid "Billet"
+msgstr "Заготовка"
+
+msgid "Billet, chuck jaws and tailstock only change the picture."
+msgstr "Заготовка, кулачки патрона й задня бабка змінюють лише зображення."
+
+msgid "Drawing units"
+msgstr "Одиниці креслення"
+
+msgid "set when the part was made"
+msgstr "задаються під час створення деталі"
 
 msgid "Program number"
 msgstr "Номер програми"

@@ -47,7 +47,7 @@ NUMBERS = {
 SWITCHES = {
     "external": (N_("External"), N_("off = internal (boring)")),
     "towards": (N_("Towards the chuck"), None),
-    "pre_finish": (N_("Pre-finish pass"), N_("a finish pass with a 1 mm pull-off after the roughing")),
+    "pre_finish": (N_("Pre-finish pass"), N_("a finish pass after the roughing, pulling off by the retract distance")),
     "full_retract": (N_("Full retract"), None),
     "front": (N_("Front"), N_("off = FACE: across the front face")),
     "follow": (N_("Follow contour"), N_("each pass also cleans up the step it leaves")),
@@ -86,7 +86,7 @@ class OpEditor(Gtk.Box):
         self.on_pick = None  # set by the window: start contour picking for operation n
         self.tool_name = lambda n: ""  # set by the window: name of tool n in the library
         self.title = Adw.WindowTitle(title=_("Operation"))
-        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
+        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False, show_back_button=False)
         header.set_title_widget(self.title)
         for icon, tip, cb in (("go-up-symbolic", _("Move Up"), lambda *a: on_move(-1)),
                               ("go-down-symbolic", _("Move Down"), lambda *a: on_move(1))):
@@ -138,6 +138,9 @@ class OpEditor(Gtk.Box):
                 if name == "tool":
                     row.connect("notify::value", lambda r, _p: r.set_subtitle(self.tool_name(int(r.get_value()))))
                 row.connect("notify::value", self._number_changed, name, hints[name] is int)
+                if name == "feed":
+                    self._feed_row = row
+                    row.set_sensitive(not getattr(op, "rapid", False))  # a rapid move has no feed
                 group.add(row)
             elif name in SWITCHES:
                 lab, sub = SWITCHES[name]
@@ -154,15 +157,15 @@ class OpEditor(Gtk.Box):
                 group.add(row)
             elif name in ("outer_line", "inner_line"):
                 ids = [g.id for g in project.geometry if not isinstance(g, Arc)]
-                labels = [_element_label(project, i) for i in ids]
+                labels = [_line_label(project, i) for i in ids]  # short: the coordinates tell the lines apart
                 row = Adw.ComboRow(title=_("Outer diameter line") if name == "outer_line" else _("Inner diameter line"),
                                    model=Gtk.StringList.new(labels or [_("(no lines)")]),
                                    selected=ids.index(value) if value in ids else 0)
                 row.connect("notify::selected", self._line_changed, name, ids)
                 group.add(row)
             elif name == "contour":
-                row = Adw.EntryRow(title=_("Contour (element ids, in cutting order)"), text=" ".join(value),
-                                   show_apply_button=True)
+                row = Adw.EntryRow(title=_("Contour, in cutting order"), text=" ".join(value),
+                                   show_apply_button=True, tooltip_text=_("Element ids, e.g. g0 g1 g2"))
                 row.connect("apply", self._contour_applied)
                 group.add(row)
                 pick = Adw.ButtonRow(title=_("Pick Contour on the Drawing"), start_icon_name="find-location-symbolic")
@@ -221,6 +224,8 @@ class OpEditor(Gtk.Box):
 
     def _switch_changed(self, row, _pspec, name):
         v = row.get_active()
+        if name == "rapid" and getattr(self, "_feed_row", None) is not None:
+            self._feed_row.set_sensitive(not v)
         self._edit(_("Change {what}").format(what=row.get_title()), lambda op: setattr(op, name, v))
 
     def _choice_changed(self, row, _pspec, name, opts):
@@ -269,6 +274,15 @@ def _contour_rows(project, ids: list[str]) -> Adw.ExpanderRow:
         if gid not in by_id:
             exp.add_row(Adw.ActionRow(title=_("{id} (missing)").format(id=gid)))
     return exp
+
+
+def _line_label(project, gid: str) -> str:
+    g = next((g for g in project.geometry if g.id == gid), None)
+    if g is None:
+        return _("{id} (missing)").format(id=gid)
+    if g.a.x == g.b.x:  # a diameter line: X and its Z range
+        return f"X{g.a.x:g}  Z{max(g.a.z, g.b.z):g}…{min(g.a.z, g.b.z):g}  ({gid})"
+    return f"X{g.a.x:g} Z{g.a.z:g} → X{g.b.x:g} Z{g.b.z:g}  ({gid})"
 
 
 def _element_label(project, gid: str) -> str:

@@ -56,6 +56,8 @@ def default_op(kind: str, project, at: int):
         feed = standard_library().get(tool).default_feed
     except KeyError:
         pass
+    if inch:  # the library feeds are mm per rev; 0.15 in/rev would be 3.8 mm/rev
+        feed = round(feed / 25.4, 4)
     lines = [g.id for g in project.geometry if not isinstance(g, Arc) and g.a.x == g.b.x]
     if kind == "area_clear":
         return AreaClear(tool, start, contour, depth_of_cut=0.0787 if inch else 2.0, feed=feed)
