@@ -922,23 +922,35 @@ msgstr[2] "Імпортовано {n} елементів з {name}."
 msgid "Skipped: {what}."
 msgstr "Пропущено: {what}."
 
-msgid "{name}: drawing only (no .SD1 next to it, so no operations)"
-msgstr "{name}: лише креслення (поруч немає .SD1, тому операцій немає)"
+msgid "{name}: drawing only, no .SD1 found next to it, so no operations."
+msgstr "{name}: лише креслення, поруч не знайдено .SD1, тому операцій немає."
+
+msgid "_Choose .SD1…"
+msgstr "_Вибрати .SD1…"
+
+msgid "ALPHA-T program listing (.SD1)"
+msgstr "Лістинг програми ALPHA-T (.SD1)"
+
+msgid "Choose the .SD1 for {name}"
+msgstr "Виберіть .SD1 для {name}"
 
 msgid "Operations not rebuilt from {name}: {error}"
 msgstr "Операції з {name} не відновлено: {error}"
 
-msgid "The program matches ALPHA-T's {name} byte for byte."
-msgstr "Програма побайтово збігається з {name} від ALPHA-T."
-
-msgid "The program differs from ALPHA-T's {name}: check before sending."
-msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
+msgid "Operations from {name}"
+msgstr "Операції з {name}"
 
 msgid "Rebuilt {n} operation from {name}."
 msgid_plural "Rebuilt {n} operations from {name}."
 msgstr[0] "Відновлено {n} операцію з {name}."
 msgstr[1] "Відновлено {n} операції з {name}."
 msgstr[2] "Відновлено {n} операцій з {name}."
+
+msgid "The program matches ALPHA-T's {name} byte for byte."
+msgstr "Програма побайтово збігається з {name} від ALPHA-T."
+
+msgid "The program differs from ALPHA-T's {name}: check before sending."
+msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
 
 msgid "Untitled"
 msgstr "Без назви"
