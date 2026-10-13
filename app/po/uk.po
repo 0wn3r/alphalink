@@ -772,6 +772,12 @@ msgstr "{title} (внутрішня)"
 msgid "{title} + pre-finish"
 msgstr "{title} + напівчистовий прохід"
 
+msgid "{title} (finish)"
+msgstr "{title} (чистова)"
+
+msgid "{title} (face direction)"
+msgstr "{title} (у напрямку торця)"
+
 msgid "{revs} revs"
 msgstr "{revs} об."
 

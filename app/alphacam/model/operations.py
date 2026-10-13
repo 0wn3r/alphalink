@@ -19,8 +19,10 @@ OP_KINDS: dict[int, str] = {
     10: "area_prefinish",
     14: "finish",
     15: "finish_internal",
+    17: "groove_finish",
     18: "drill",
     20: "thread",
+    21: "thread_spring",
 }
 
 
@@ -47,6 +49,7 @@ class AreaClear:
     towards: bool = True
     pre_finish: bool = False
     external: bool = True
+    front: bool = True  # ALPHA-T FRONT/FACE toggle; FACE (SD1 E101) cuts radial passes like face clear, #127=8
     type = "area_clear"
     op_kind = 6  # 7 when internal
 
@@ -124,8 +127,8 @@ class Thread:
     inner_line: str
     pitch: float  # > 0 (V1.21)
     cut_depth: float = 1.0  # first cut (radius); cut n goes to first * sqrt(n), constant chip area
-    lead_in: float = 0.0
-    lead_out: float = 0.0
+    lead_in: float = 5.0  # ALPHA-T default: passes start this far in front of the thread (+Z)
+    lead_out: float = 0.0  # the thread runs this far past the drawn end
     angle: float = 60.0
     external: bool = True
     towards: bool = True

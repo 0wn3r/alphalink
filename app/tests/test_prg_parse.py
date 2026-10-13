@@ -40,6 +40,23 @@ EXPECTED_OPS = {
     "FACE_depth3_start110_metric": [("face_clear", 18)],
     "PECK_groove_metric": [("groove", 1)],
     "PECK_fullret_groove_metric": [("groove", 1)],
+    # 2026-10-13 batch (samples/alphat_v12, menu values in README_options_2026-10-13.md)
+    "ARC_touching_R5_R3_finish_metric": [("finish", 1)],
+    "AREA_from_dia20_metric": [("area_clear", 21)],
+    "AREA_front_face_metric": [("face_clear", 26)],
+    "DRILL_nopeck_nodwell_metric": [("drill", 1)],
+    "FACE_arcs_metric": [("face_clear", 26)],
+    "FACE_slope_metric": [("face_clear", 25)],
+    "FACE_tool1_metric": [("face_clear", 26)],
+    "FINISH_then_move_rapid_dwell_metric": [("finish", 1)],
+    "GROOVE_datumright_metric": [("groove", 1)],
+    "GROOVE_dwell2_metric": [("groove", 1)],
+    "GROOVE_finishmode_metric": [("groove_finish", 1)],
+    "GROOVE_zshift10_rep1_metric": [("groove", 2)],
+    "INT_area_offset_metric": [("area_clear_internal", 8)],
+    "INT_finish_offset_metric": [("finish_internal", 1)],
+    "THREAD_leadin2_leadout2_metric": [("thread", 100)],
+    "THREAD_spring1_metric": [("thread", 100), ("thread_spring", 1)],
 }
 
 
@@ -129,9 +146,11 @@ class EverySample(unittest.TestCase):
                 self.assertEqual(tc.start, (float(g5[0]["X"]), float(g5[0]["Z"])))
                 tools = [b for b in prog.blocks if b.op_kind == 1]
                 self.assertEqual([b.feed for b in tools], tool_feeds)
-                for i, b in enumerate(prog.operations):
+                i = -1
+                for b in prog.operations:
+                    i += b.op_name != "thread_spring"  # the spring pass block repeats the thread's limits
                     self.assertEqual(b.limit, (float(g115[i]["X"]), float(g115[i]["Z"])))
-                    if b.op_name == "thread":
+                    if b.op_name in ("thread", "thread_spring"):
                         g76 = next(r for r in sd1 if 76 in r["G"])
                         self.assertAlmostEqual(b.feed, float(g76["F"]))  # pitch
                     else:
@@ -140,6 +159,8 @@ class EverySample(unittest.TestCase):
 
     def test_moves_inside_limits(self):
         for path in PRGS:
+            if any(75 in r["G"] and float(r.get("R", 0)) > 0 for r in sd1_words(path.with_suffix(".SD1"))):
+                continue  # a +Z grooving Z-SHIFT repeats the plunges above the start Z (GROOVE_zshift10_rep1)
             prog = parse_file(path)
             for b in prog.operations:
                 with self.subTest(path.name):

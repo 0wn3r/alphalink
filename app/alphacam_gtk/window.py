@@ -42,6 +42,10 @@ def op_title(op) -> str:
         title = _("{title} (internal)").format(title=title)
     if getattr(op, "pre_finish", False):
         title = _("{title} + pre-finish").format(title=title)
+    if op.type == "groove" and op.mode == "finish":
+        title = _("{title} (finish)").format(title=title)
+    if op.type == "area_clear" and not op.front:
+        title = _("{title} (face direction)").format(title=title)
     return title
 
 

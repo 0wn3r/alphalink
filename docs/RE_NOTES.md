@@ -965,3 +965,25 @@ Regenerated cloud samples PECK_groove_metric (PECK DEPTH 2, FULL RET NO, SD1 L11
   G76 thread, G74 drill, G4 dwell, G0/G1 moves, G99 T tool change, G70 R1 = pre-finish). For all 24 metric samples,
   SDG + SD1 -> post is byte-identical to ALPHA-T's .PRG (app/tests/test_post.py FromSD1). Opening an .SDG in the
   app does this automatically and reports whether the result matches the .PRG next to it.
+
+### Progress 33 - 16 more option samples (2026-10-13)
+New samples in samples/alphat_v12 (made by the cloud ALPHA-T run, menu values in samples/alphat_v12/README_options_2026-10-13.md).
+All but two are byte-identical via SDG + SD1 -> post:
+* Area clear: start on a diameter (AREA_from_dia20); FACE direction instead of FRONT (AREA_front_face, SD1 G71
+  E101) is posted as #127=8 with face-clear passes, but the area retract (1 mm) and an outward 45-degree pull-off
+  (+2R in X, +R in Z); face clear proper pulls off inwards (-2R, +R) with R 0.2.
+* Internal finish/area with OFFSET X0.5 Z0.2: X moves inwards for internal work (INT_*_offset).
+* Face clear with the 0.8R rougher: the rapid after the pull-off goes to (start X - 2r, pull-off Z + r).
+* Face clear over a slope (FACE_slope) and corner radii (FACE_arcs): zones split at faces only; each pass ends on the
+  tip path's diameter at that Z. ALPHA-T differs from the exact value by up to 0.001 on diameter in either direction
+  (a numeric search with a tolerance, presumably); test_post SD1_KNOWN_DIFF allows that.
+* Corner radii meeting each other (ARC_touching_R5_R3, the diameter between them has zero length): G3 then G2.
+* Grooving: DATUM RIGHT = SD1 L100, plunges +tip width; Z-SHIFT 10 / REPEATS 1 = SD1 R10 C2, a second pass with
+  the plunges shifted (above the start Z here); DWELL 2 = SD1 A2, G4 at every plunge bottom; FINISH mode = SD1
+  G78 ... G178, #127=17: one pass along the drawn profile, the vertices of walls where the profile steps down move
+  -tip width (datum left), rapid in at (start X, first Z), feed out to the start X.
+* Threading: LEAD IN (default 5, SD1 I) moves the start Z to thread top + lead in; LEAD OUT (default 0, SD1 L) extends
+  the end; SPRING PASS 1 (SD1 K1) is its own block #127=21 with one cut at the final diameter, and the thread block
+  then ends without M64.
+* Drill without peck or dwell: one G1 to the bottom and back. Moves/dwell after an operation (MOVE TO CUR, RAPID TO
+  CUR, DWELL) go into the empty block after it (FINISH_then_move_rapid_dwell: G1X80.Z10. G0X80.Z-30. G4P2000).

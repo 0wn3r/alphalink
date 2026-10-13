@@ -17,16 +17,17 @@ from ..model.operations import Thread
 @dataclass
 class ThreadPlan:
     xs: list[float]  # cut diameters
-    z_end: float  # thread end (G32 stops one pitch before)
+    z_end: float  # thread end incl. lead-out (G32 stops one pitch before)
     pullout_u: float  # incremental X of the pull-out
     inner: float  # final diameter of the last cut (#125): inner line external, outer line internal
+    z_start: float = 0.0  # where every cut starts: top of the thread + lead-in
 
 
 def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPlan:
     """The radial depth of each cut is rounded to the output decimals before it is doubled (cut 6:
     sqrt(6) -> 2.449, X35.102, not 35.101)."""
-    if op.lead_in or op.lead_out or op.spring_pass or not op.towards:
-        raise NotImplementedError("threading: only towards, no lead-in/out or spring pass (no sample)")
+    if not op.towards:
+        raise NotImplementedError("threading away from the chuck is not supported (no sample)")
     if outer.a.x != outer.b.x or inner.a.x != inner.b.x:
         raise ValueError("thread lines must be parallel to Z")
     xo, xi = outer.a.x, inner.a.x
@@ -35,8 +36,10 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
         raise ValueError("thread: outer diameter must be above the inner one, first cut > 0")
     n = math.ceil(round((depth / op.cut_depth) ** 2, 9))
     steps = [2 * round(op.cut_depth * math.sqrt(k), decimals) for k in range(1, n + 1)]
-    z_end = min(outer.a.z, outer.b.z)
+    # THREAD_leadin2_leadout2: cuts start at the thread top + lead-in (default 5) and end at its end - lead-out
+    z_end = round(min(outer.a.z, outer.b.z) - op.lead_out, 9)
+    z_start = round(max(outer.a.z, outer.b.z) + op.lead_in, 9)
     if op.external:  # from the outer diameter in towards the inner one
-        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi)
+        return ThreadPlan([round(max(xo - d, xi), 9) for d in steps], z_end, xo - xi + 1, xi, z_start)
     # internal (THREAD_internal): from the inner (bore) diameter out to the outer one, pull-out inwards
-    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo)
+    return ThreadPlan([round(min(xi + d, xo), 9) for d in steps], z_end, -(xo - xi + 1), xo, z_start)
