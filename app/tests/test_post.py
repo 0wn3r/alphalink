@@ -1,5 +1,6 @@
 """Alpha-T PRG post: golden tests (byte-identical to ALPHA-T output) and rule tests."""
 
+import re
 import unittest
 from pathlib import Path
 
@@ -60,6 +61,37 @@ GOLDEN = {
     "GROOVE_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3)],
     "DRILL_DWELL_metric": [Dwell(3), Drill(3, Point(0, 5), depth=-30, peck=10, dwell_revs=3)],
     "THREAD_metric": [Thread(3, S, "g0", "g1", pitch=1.5, cut_depth=1)],
+    # cloud run 2026-10-13 (2)
+    "THREAD_internal_metric": [Thread(3, S, "g0", "g1", pitch=1.5, external=False)],
+    "THREAD_p2_len30_metric": [Thread(3, S, "g0", "g1", pitch=2)],
+    "FACE_offset_metric": [FaceClear(3, S, MET2, offset_x=0.5, offset_z=0.2)],
+    "FACE_depth3_start110_metric": [FaceClear(3, Point(110, 3), MET2, depth_of_cut=3)],
+}
+
+# Inch versions (samples/alphat_v12_inch, cloud run): drawing typed in inch, start X5 Z0.2, depth of cut 0.0787
+# (= 2 mm), offsets X0.02 Z0.008. Known differences are listed with the reason; they are checked to stay small.
+INCH = "alphat_v12_inch"
+TC_IN = Point(3.937, 1.9685)
+S_IN = Point(5, 0.2)
+D_IN = 0.0787
+GOLDEN_INCH = {
+    "ARC_finish_inch": [FinishPass(3, S_IN, ARC)],
+    "SLOPE_area_inch": [AreaClear(3, S_IN, MET2, depth_of_cut=D_IN)],
+    "INT_finish_inch": [ToolChange(12, TC_IN, 0.12), FinishPass(12, Point(0.6, 0.2), INT, feed=0.12, external=False)],
+    "INT_area_inch": [ToolChange(12, TC_IN, 0.12),
+                      AreaClear(12, Point(0.6, 0.2), INT, feed=0.12, external=False, depth_of_cut=D_IN)],
+    "OFFSET_finish_inch": [FinishPass(3, S_IN, MET2, offset_x=0.02, offset_z=0.008)],
+    "OFFSET_area_inch": [AreaClear(3, S_IN, MET2, depth_of_cut=D_IN, offset_x=0.02, offset_z=0.008)],
+    "PREFINISH_area_inch": [AreaClear(3, S_IN, MET2, depth_of_cut=D_IN, pre_finish=True)],
+    "TWOOP_inch": [AreaClear(3, S_IN, MET2, depth_of_cut=D_IN), FinishPass(3, S_IN, MET2)],
+}
+INCH_KNOWN_DIFF = {
+    # area pass ends on the inch arcs come out 0.0001 shallower than ALPHA-T's (its arc maths is not pinned yet)
+    "ARC_area_inch": [AreaClear(3, S_IN, ARC, depth_of_cut=D_IN)],
+    # after a mid-program tool change ALPHA-T's inch finish pass is 0.0002 higher in Z (nose radius rounding of
+    # the previous tool, presumably); metric is byte-identical
+    "TOOLCHG_inch": [ToolChange(1, TC_IN, 0.2), AreaClear(1, S_IN, MET2, feed=0.2, depth_of_cut=D_IN),
+                     ToolChange(3, TC_IN, 0.15), FinishPass(3, S_IN, MET2)],
 }
 
 
@@ -90,6 +122,32 @@ class Golden(unittest.TestCase):
                 self.assertEqual(post(project), (SAMPLES / f"{name}.PRG").read_bytes())
 
 
+class GoldenInch(unittest.TestCase):
+    def _post(self, name, ops):
+        project = load_sdg(SAMPLES.parent / INCH / f"{name}.SDG")
+        project.operations = list(ops)
+        return post(project), (SAMPLES.parent / INCH / f"{name}.PRG").read_bytes()
+
+    def test_byte_identical(self):
+        for name, ops in GOLDEN_INCH.items():
+            with self.subTest(name):
+                out, expected = self._post(name, ops)
+                self.assertEqual(out, expected)
+
+    def test_known_differences_stay_small(self):
+        for name, ops in INCH_KNOWN_DIFF.items():
+            with self.subTest(name):
+                out, expected = self._post(name, ops)
+                a, b = out.decode().splitlines(), expected.decode().splitlines()
+                self.assertEqual(len(a), len(b))
+                diffs = [(x, y) for x, y in zip(a, b) if x != y]
+                self.assertTrue(diffs)
+                for x, y in diffs:
+                    nx, ny = re.findall(r"-?[\d.]+", x), re.findall(r"-?[\d.]+", y)
+                    self.assertEqual(len(nx), len(ny), (x, y))
+                    self.assertLessEqual(max(abs(float(p) - float(q)) for p, q in zip(nx, ny)), 0.00041, (x, y))
+
+
 class Rules(unittest.TestCase):
     def test_area_pass_floor(self):
         path = chain(load_sdg(SAMPLES / "AREA1_metric.SDG").contour(MET2))
@@ -98,8 +156,9 @@ class Rules(unittest.TestCase):
         xs = [p.moves[0].x for p in tp.passes]
         self.assertEqual(xs[:2], [94, 88])
         self.assertEqual(xs[-1], -0.8)  # last pass clamped to Xmin - 2r
-        self.assertEqual(len(xs), 17)  # ceil(100.8 / 6)
-        self.assertEqual([p.moves[1].z for p in tp.passes if p.moves[0].x in (64, 58, 40)], [-50, -25, -25])
+        # the shoulders X60 and X40 get their own passes and restart the stepping
+        self.assertEqual(xs, [94, 88, 82, 76, 70, 64, 60, 54, 48, 42, 40, 34, 28, 22, 16, 10, 4, -0.8])
+        self.assertEqual([p.moves[1].z for p in tp.passes if p.moves[0].x in (64, 54, 40)], [-50, -25, -25])
 
     def test_tip_path_arcs(self):
         """Convex R5 becomes R5.4, concave R3 becomes R2.6, centres shifted by (-r, -r)."""

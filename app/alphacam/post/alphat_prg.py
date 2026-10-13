@@ -153,7 +153,10 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
     """Emit the block(s) for one operation, each followed by its empty block (left open: the caller closes the
     last one). Returns the last block number used."""
     tool = _tool(project, op.tool)
-    r = mm(tool.nose_radius, project.units)
+    r_exact = mm(tool.nose_radius, project.units)
+    # the toolpaths use the nose radius rounded to the output decimals (inch: 0.4 mm -> 0.0157, ARC_finish_inch),
+    # the #125/#126 limits the exact one (-0.063 = -4 x 0.015748)
+    r = round(r_exact, w.dec)
     if isinstance(op, Thread):
         _thread_block(w, block, project, op)
         return block
@@ -161,7 +164,7 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
         _generic_block(w, block, op, drill(op, project.units, w.dec), 18, (op.start.x, op.depth))
         return block
     path = chain(project.contour(op.contour))
-    limit = limits(points(path), r)
+    limit = limits(points(path), r_exact)
     if isinstance(op, FinishPass):
         _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec), 14 if op.external else 15, limit)
     elif isinstance(op, AreaClear):
@@ -172,7 +175,8 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
             _empty_block(w, block + 1, None)
             block += 2
             fp = FinishPass(op.tool, op.start, op.contour, op.feed)
-            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec, PREFINISH_LEAD_OUT_MM),
+            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec,
+                                                         round(mm(PREFINISH_LEAD_OUT_MM, project.units), w.dec)),
                            10, limit)
     elif isinstance(op, FaceClear):
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec), 8, limit)

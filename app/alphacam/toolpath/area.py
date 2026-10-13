@@ -2,8 +2,9 @@
 
 Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOLCHG):
   * the boundary is the imaginary tool-tip path (contour.tip_path), translated by the offsets;
-  * external: pass k at X = max(Xmax - 2*k*depth, Xmin - 2r), Xmax from the boundary, Xmin from the drawing;
-    internal: X = min(Xmin + 2*k*depth, Xmax), both from the boundary. Passes continue until that limit;
+  * external: passes step down by 2*depth from the boundary's Xmax to Xmin - 2r (Xmin from the drawing);
+    internal: up from the boundary's Xmin to its Xmax. Each Z-parallel boundary diameter in between gets a pass
+    and restarts the stepping (zones, seen in the inch samples);
   * each pass: rapid to (X, start Z), feed along -Z to the boundary, feed a 45-degree retract (retract distance in
     X radius, outwards from the cut: -X internal, and in +Z), rapid back to start Z; after the last, rapid to start;
   * pre-finish (op.pre_finish) is posted as a separate finish block, see post.alphat_prg;
@@ -50,13 +51,25 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
         start, limit = max(bx), min(p.x for p in points(path)) - 2 * nose_radius
     else:
         start, limit = min(bx), max(bx)
-    n = math.ceil(round(abs(limit - start) / step, 9))
+    # Zones: every diameter of a Z-parallel boundary line between start and limit is a pass of its own, and the
+    # stepping restarts from it (inch samples: ... 2.426, 2.4, 2.2426 ...; in the metric samples the steps happened
+    # to land on the shoulders, so this was invisible there).
+    walls = sorted({s.a.x for s in boundary if not s.is_arc and s.a.x == s.b.x
+                    and min(start, limit) < s.a.x < max(start, limit)}, reverse=op.external)
+    xs = []
+    for stop in walls + [limit]:
+        x = start
+        while True:
+            x = round(max(x - step, stop) if op.external else min(x + step, stop), 9)
+            xs.append(x)
+            if x == stop:
+                break
+        start = stop
     side = 1 if op.external else -1
     retract = round(mm(RETRACT_MM, units), decimals)
     zs = op.start.z
     passes = []
-    for k in range(1, n + 1):
-        x = round(max(start - k * step, limit) if op.external else min(start + k * step, limit), 9)
+    for x in xs:
         z = round(_end_z(boundary, x, op.external), decimals)
         xr = x + side * 2 * retract
         passes.append(Pass([
