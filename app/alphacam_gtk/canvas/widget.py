@@ -13,7 +13,7 @@ from gi.repository import Adw, GObject, Gtk  # noqa: E402
 from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.geometry import Arc  # noqa: E402
 
-from .hittest import RADIUS_PX, hit  # noqa: E402
+from .hittest import RADIUS_PX, element_polyline, hit, hit_element  # noqa: E402
 from .input import InputRouter  # noqa: E402
 from .paths import segments  # noqa: E402
 from .view import ViewTransform  # noqa: E402
@@ -35,6 +35,8 @@ class LatheCanvas(Gtk.DrawingArea):
     __gsignals__ = {
         "cursor-moved": (GObject.SignalFlags.RUN_FIRST, None, (float, float)),
         "op-tapped": (GObject.SignalFlags.RUN_FIRST, None, (int,)),  # -1: tapped empty space
+        # every tap: world X (dia), Z, the input's radius in mm, toolpath op (-1 none), drawing element ('' none)
+        "canvas-tapped": (GObject.SignalFlags.RUN_FIRST, None, (float, float, float, int, str)),
     }
 
     def __init__(self):
@@ -44,12 +46,20 @@ class LatheCanvas(Gtk.DrawingArea):
         self.segs = []
         self.selected: int | None = None
         self.view = ViewTransform()
+        # drawing overlay, set by the window's tools: highlighted / picked element ids, rubber-band line, snap marker
+        self.highlight: set[str] = set()
+        self.picked: list[str] = []
+        self.rubber: tuple | None = None
+        self.marker: tuple | None = None  # (Point, kind)
+        self.tool = "select"
         self.pointer = (0.0, 0.0)
         self._fit_pending = True
         self._before_fit: ViewTransform | None = None
         self.set_draw_func(self._draw)
-        self.connect("resize", lambda *_: self._fit_pending and self.fit())
-        self.router = InputRouter(self, self.queue_draw, self._tap, self.toggle_fit, self._pointer)
+        # keep the part fitted while the user has not panned or zoomed (e.g. when the editor pane opens)
+        self._auto_fit = True
+        self.connect("resize", lambda *_: (self._fit_pending or self._auto_fit) and self.fit())
+        self.router = InputRouter(self, self._user_view_change, self._tap, self.toggle_fit, self._pointer)
         Adw.StyleManager.get_default().connect("notify::dark", lambda *_: self.queue_draw())
 
     # --- data -------------------------------------------------------------------------------------------
@@ -89,7 +99,12 @@ class LatheCanvas(Gtk.DrawingArea):
         r1 = max(rs)
         return min(zs), max(zs), min(min(rs), -0.12 * r1), r1
 
+    def _user_view_change(self) -> None:
+        self._auto_fit = False
+        self.queue_draw()
+
     def fit(self) -> None:
+        self._auto_fit = True
         w, h = self.get_width(), self.get_height()
         if w < 10 or h < 10:
             self._fit_pending = True
@@ -102,12 +117,14 @@ class LatheCanvas(Gtk.DrawingArea):
         """Double tap: fit; double tap again returns to the previous view (TOUCH.md 4)."""
         if self._before_fit is not None:
             self.view, self._before_fit = self._before_fit, None
+            self._auto_fit = False
             self.queue_draw()
             return
         self._before_fit = self.view.copy()
         self.fit()
 
     def zoom(self, factor: float) -> None:
+        self._auto_fit = False
         self.view.zoom_at(self.get_width() / 2, self.get_height() / 2, factor)
         self.queue_draw()
 
@@ -116,8 +133,13 @@ class LatheCanvas(Gtk.DrawingArea):
         self.emit("cursor-moved", *self.view.to_world(x, y))
 
     def _tap(self, x, y, source) -> None:
-        s = hit(self.segs, self.view, x, y, RADIUS_PX[source])
-        self.emit("op-tapped", -1 if s is None or s.op_index is None else s.op_index)
+        r = RADIUS_PX[source]
+        s = hit(self.segs, self.view, x, y, r) if self.tool == "select" else None
+        el = hit_element(self.project, self.view, x, y, r) if self.project is not None else None
+        xd, z = self.view.to_world(x, y)
+        self.last_tap_screen = (x, y)
+        self.emit("canvas-tapped", xd, z, r / self.view.scale, -1 if s is None or s.op_index is None else s.op_index,
+                  el or "")
 
     # --- drawing ----------------------------------------------------------------------------------------
 
@@ -168,7 +190,9 @@ class LatheCanvas(Gtk.DrawingArea):
                     cr.move_to(*v.to_screen(g.a.x * mirror, g.a.z))
                     cr.line_to(*v.to_screen(g.b.x * mirror, g.b.z))
                 cr.stroke()
-        self._paths(cr)
+        if self.tool == "select" or not self.picked:
+            self._paths(cr)
+        self._overlay(cr)
 
     def _arc(self, cr, a, b, c, ccw: bool) -> None:
         """G3/ccw is counter-clockwise with Z right and X up: decreasing cairo angle on screen (y down)."""
@@ -201,3 +225,60 @@ class LatheCanvas(Gtk.DrawingArea):
                 cr.line_to(*self.view.to_screen(*s.b))
             cr.stroke()
         cr.set_dash([])
+
+    def _overlay(self, cr) -> None:
+        v, p = self.view, self.project
+        by_id = {g.id: g for g in p.geometry}
+        for gid, colour, width in [(g, "rapid", 4.0) for g in self.highlight] + \
+                                  [(g, "feed", 5.0) for g in self.picked]:
+            g = by_id.get(gid)
+            if g is None:
+                continue
+            self._rgb(cr, colour, 0.85)
+            cr.set_line_width(width)
+            pts = [v.to_screen(*q) for q in element_polyline(g)]
+            cr.move_to(*pts[0])
+            for q in pts[1:]:
+                cr.line_to(*q)
+            cr.stroke()
+        for n, gid in enumerate(self.picked, 1):  # order badges on picked elements
+            g = by_id.get(gid)
+            if g is None:
+                continue
+            pts = element_polyline(g)
+            mx, my = v.to_screen(*pts[len(pts) // 2]) if len(pts) > 2 else v.to_screen(
+                (pts[0][0] + pts[1][0]) / 2, (pts[0][1] + pts[1][1]) / 2)
+            self._rgb(cr, "feed")
+            cr.arc(mx, my, 10, 0, 2 * math.pi)
+            cr.fill()
+            self._rgb(cr, "bg")
+            cr.set_font_size(11)
+            ext = cr.text_extents(str(n))
+            cr.move_to(mx - ext.width / 2 - ext.x_bearing, my - ext.height / 2 - ext.y_bearing)
+            cr.show_text(str(n))
+        if self.rubber is not None:
+            a, b = self.rubber
+            self._rgb(cr, "part", 0.7)
+            cr.set_line_width(1.5)
+            cr.set_dash([4, 3])
+            cr.move_to(*v.to_screen(a.x, a.z))
+            cr.line_to(*v.to_screen(b.x, b.z))
+            cr.stroke()
+            cr.set_dash([])
+        if self.marker is not None:
+            pt, kind = self.marker
+            sx, sy = v.to_screen(pt.x, pt.z)
+            self._rgb(cr, "rapid")
+            cr.set_line_width(2)
+            if kind == "end":
+                cr.rectangle(sx - 6, sy - 6, 12, 12)
+            else:
+                cr.move_to(sx - 8, sy)
+                cr.line_to(sx + 8, sy)
+                cr.move_to(sx, sy - 8)
+                cr.line_to(sx, sy + 8)
+            cr.stroke()
+            label = f"X{pt.x:g} Z{pt.z:g}"
+            cr.set_font_size(12)
+            cr.move_to(sx + 10, sy - 10)
+            cr.show_text(label)

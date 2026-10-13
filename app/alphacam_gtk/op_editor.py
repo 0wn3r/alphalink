@@ -59,6 +59,7 @@ class OpEditor(Gtk.Box):
     def __init__(self, apply, on_move, on_delete, on_close):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._apply, self.index, self._building = apply, None, False
+        self.on_pick = None  # set by the window: start contour picking for operation n
         self.title = Adw.WindowTitle(title="Operation")
         header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
         header.set_title_widget(self.title)
@@ -125,6 +126,9 @@ class OpEditor(Gtk.Box):
                                    show_apply_button=True)
                 row.connect("apply", self._contour_applied)
                 group.add(row)
+                pick = Adw.ButtonRow(title="Pick Contour on the Drawing", start_icon_name="find-location-symbolic")
+                pick.connect("activated", lambda *_: self.on_pick and self.on_pick(self.index))
+                group.add(pick)
                 desc = Adw.ActionRow(title=f"{len(value)} elements",
                                      subtitle=" → ".join(_element_label(project, i) for i in value[:4])
                                      + (" …" if len(value) > 4 else ""))

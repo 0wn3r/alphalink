@@ -16,6 +16,7 @@ from alphacam.model.project import Project  # noqa: E402
 from alphacam.preview import preview  # noqa: E402
 
 from .canvas.widget import LatheCanvas  # noqa: E402
+from .drawing_tools import DrawingTools  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
@@ -78,6 +79,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.input_mode.connect("changed", lambda _m, mode: self.zoom_box.set_visible(mode == "touch"))
         self._setup_lock()
         self._install_actions()
+        self.editor.on_pick = self.drawing.start_pick
 
         bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
         bp.add_setter(self.split, "collapsed", True)
@@ -90,10 +92,15 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_empty(self) -> Gtk.Widget:
         page = Adw.StatusPage(title="No Part Open", icon_name="document-open-symbolic",
                               description="Open an AlphaLink part (.alcam) or an ALPHA-T drawing (.SDG)")
-        btn = Gtk.Button(label="_Open…", use_underline=True, halign=Gtk.Align.CENTER, action_name="win.open")
+        btns = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
+        new = Gtk.Button(label="_New Part…", use_underline=True, action_name="win.new")
+        new.add_css_class("pill")
+        btn = Gtk.Button(label="_Open…", use_underline=True, action_name="win.open")
         btn.add_css_class("pill")
         btn.add_css_class("suggested-action")
-        page.set_child(btn)
+        btns.append(new)
+        btns.append(btn)
+        page.set_child(btns)
         view = Adw.ToolbarView()
         view.add_top_bar(Adw.HeaderBar())
         view.set_content(page)
@@ -122,7 +129,6 @@ class MainWindow(Adw.ApplicationWindow):
         # part view
         self.canvas = LatheCanvas()
         self.canvas.connect("cursor-moved", self._cursor_moved)
-        self.canvas.connect("op-tapped", self._op_tapped)
         self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,
                                 valign=Gtk.Align.END)
         self.zoom_box.add_css_class("canvas-zoom")
@@ -139,9 +145,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.readout = Gtk.Label(xalign=0, label=" ")
         self.readout.add_css_class("readout")
         self.readout.add_css_class("dim-label")
+        self.drawing = DrawingTools(self, self.canvas)
         part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        part.append(self.drawing.pick_banner)
         part.append(overlay)
         part.append(Gtk.Separator())
+        part.append(self.drawing.bar)
         part.append(self.readout)
 
         # program view
@@ -280,6 +289,7 @@ class MainWindow(Adw.ApplicationWindow):
         add("zoom-out", lambda *_: self.canvas.zoom(0.8), ["<Control>minus"])
         add("deselect", lambda *_: self._select_op(None), ["Escape"])
         add("save", lambda *_: self.save(), ["<Control>s"])
+        add("new", lambda *_: self.new_dialog(), ["<Control>n"])
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
@@ -430,6 +440,45 @@ class MainWindow(Adw.ApplicationWindow):
         if self.apply_edit("Move operation", move):
             self.refresh()
             self._select_op(i + delta)
+
+    def new_dialog(self) -> None:
+        """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
+        alert = Adw.AlertDialog(heading="New Part", body="Billet size and units. The drawing starts empty.")
+        group = Adw.PreferencesGroup()
+        units = Adw.ComboRow(title="Units", model=Gtk.StringList.new(["mm", "inch"]))
+        dia = Adw.SpinRow.new_with_range(1, 1000, 1)
+        dia.set_title("Billet diameter")
+        dia.set_value(50)
+        length = Adw.SpinRow.new_with_range(1, 2000, 1)
+        length.set_title("Billet length")
+        length.set_value(80)
+        for r in (units, dia, length):
+            group.add(r)
+        alert.set_extra_child(group)
+        alert.add_response("cancel", "_Cancel")
+        alert.add_response("create", "_Create")
+        alert.set_response_appearance("create", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("create")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "create":
+                return
+            from alphacam.model.geometry import Point
+            from alphacam.model.project import Billet
+
+            inch = units.get_selected() == 1
+            k = 25.4 if inch else 1.0
+            project = Project(units="inch" if inch else "mm",
+                              billet=Billet(diameter=dia.get_value(), length=length.get_value()),
+                              tool_change=Point(round(100 / k, 4), round(50 / k, 4)), first_tool=3)
+            self.path = None
+            self.set_project(project)
+            self.drawing.set_tool("line")
+            self.toast("Draw the profile: tap points, or type X,Z and Enter")
+
+        alert.connect("response", response)
+        alert.present(self)
 
     # --- saving -----------------------------------------------------------------------------------------
 

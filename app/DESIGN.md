@@ -22,6 +22,11 @@ Status: **design draft 1** (2026-10-12).
 - M4 part 1 (2026-10-13): editing. `alphacam/commands.py` undo stack (JSON snapshots); operation editor pane with
   rows generated per operation type; add (menu, sensible defaults), delete (Undo toast), move up/down; undo/redo
   (Ctrl+Z / Ctrl+Shift+Z, header buttons); Save / Save As (.alcam) and an unsaved-changes prompt. Next: drawing tools.
+- M4 part 2 (2026-10-13): drawing. `alphacam/drawing.py` (snap to ends/axis/grid, Z/X/45° direction lock, lines,
+  fillet, chamfer, delete, contour pick ordering); Part page tools Select / Line / Fillet / Chamfer (Adw.ToggleGroup
+  bar), command entry `X,Z` / `@dX,dZ`, fillet/chamfer size chips in a popover at the corner, element select +
+  delete (Undo toast), "Pick Contour on the Drawing" with numbered badges, New Part dialog (units, billet).
+  A part drawn in the app (MET2 + R5/R3 fillets) posts byte-identical to the ALPHA-T ARC sample.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a

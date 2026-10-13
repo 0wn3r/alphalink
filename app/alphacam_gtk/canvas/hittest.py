@@ -27,3 +27,28 @@ def hit(segs: list[Segment], view: ViewTransform, sx: float, sy: float, radius_p
             if d <= best_d:
                 best, best_d = s, d
     return best
+
+
+def element_polyline(g) -> list[tuple[float, float]]:
+    """Points along a drawing element (lines: ends; arcs: sampled), as (X diameter, Z)."""
+    from alphacam.io.prg_parse import MoveKind
+    from alphacam.model.geometry import Arc
+
+    from .paths import Segment
+
+    if isinstance(g, Arc):
+        kind = MoveKind.ARC_CCW if g.ccw else MoveKind.ARC_CW
+        return Segment(kind, (g.a.x, g.a.z), (g.b.x, g.b.z), None, 0, (g.centre.x, g.centre.z)).polyline()
+    return [(g.a.x, g.a.z), (g.b.x, g.b.z)]
+
+
+def hit_element(project, view: ViewTransform, sx: float, sy: float, radius_px: float):
+    """Id of the drawing element nearest the screen point within radius_px, or None."""
+    best, best_d = None, radius_px
+    for g in project.geometry:
+        pts = [view.to_screen(*p) for p in element_polyline(g)]
+        for a, b in zip(pts, pts[1:]):
+            d = _dist_point_segment((sx, sy), a, b)
+            if d <= best_d:
+                best, best_d = g.id, d
+    return best

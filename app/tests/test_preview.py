@@ -152,3 +152,47 @@ class GtkEditing(unittest.TestCase):
         app.run([])
         self.assertEqual(out, {"ops": ["area_clear", "finish"], "feed_in_prg": True, "dirty": True,
                                "after_delete": 1, "after_undo": 2})
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkDrawing(unittest.TestCase):
+    def test_draw_fillet_pick_post(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            for t in ["0,0", "40,0", "@0,-25", "60,-25", "60,-50", "100,-50"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d._apply_corner("fillet", Point(60, -25), 5)
+            d._apply_corner("fillet", Point(60, -50), 3)
+            w.add_op("finish")
+            d.start_pick(0)
+            for gid in ["g4", "g0", "g1", "g5", "g2", "g6", "g3"]:
+                d._toggle_pick(gid)
+            d.finish_pick()
+            out["contour"] = w.project.operations[0].contour
+            w.undo.apply("start", lambda p: setattr(p.operations[0], "start", Point(120, 5)))
+            w.refresh()
+            out["prg"] = w.pv.data
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["contour"], ["g0", "g1", "g2", "g5", "g3", "g6", "g4"])
+        # drawn in the app = the ALPHA-T arc sample, byte for byte (billet and first tool as in that drawing)
+        self.assertEqual(out["prg"], (SAMPLES / "ARC_finish_metric.PRG").read_bytes())

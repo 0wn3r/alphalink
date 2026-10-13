@@ -36,6 +36,12 @@ def default_op(kind: str, project, at: int):
     tool = current_tool(project, at)
     start = Point(project.billet.diameter / (25.4 if inch else 1), 0.2 if inch else 5)
     contour = [g.id for g in project.geometry]
+    try:  # the whole drawing as one chain, in cutting order (fillets are appended last in the element list)
+        from alphacam.drawing import pick_order
+
+        contour = pick_order(project, contour)
+    except (ValueError, KeyError):
+        pass
     for op in reversed(project.operations[:at]):  # reuse the start and feed of the operation before
         if hasattr(op, "start"):
             start = op.start
