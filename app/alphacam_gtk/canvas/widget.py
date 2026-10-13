@@ -51,6 +51,7 @@ class LatheCanvas(Gtk.DrawingArea):
         self.picked: list[str] = []
         self.rubber: tuple | None = None
         self.marker: tuple | None = None  # (Point, kind)
+        self.cursor = None  # ALPHA-T's cursor (a Point) while the keys move it
         self.tool = "select"
         self.sim_index: int | None = None  # simulation: number of moves done (None = show everything)
         self.pointer = (0.0, 0.0)
@@ -191,10 +192,19 @@ class LatheCanvas(Gtk.DrawingArea):
                     cr.move_to(*v.to_screen(g.a.x * mirror, g.a.z))
                     cr.line_to(*v.to_screen(g.b.x * mirror, g.b.z))
                 cr.stroke()
+        self._texts(cr)
         if self.tool == "select" or not self.picked:
             self._paths(cr)
         self._overlay(cr)
         self._axes(cr, height)
+
+    def _texts(self, cr) -> None:
+        """Drawing text (ALPHA-T T): starts at its point, character height in drawing units."""
+        self._rgb(cr, "part")
+        for t in self.project.texts:
+            cr.set_font_size(max(t.size * self.view.scale, 1.0))
+            cr.move_to(*self.view.to_screen(t.p.x, t.p.z))
+            cr.show_text(t.text)
 
     def _axes(self, cr, height) -> None:
         """Axis directions in the bottom-left corner (+Z right, +X up, like the lathe from the front) and a
@@ -316,6 +326,15 @@ class LatheCanvas(Gtk.DrawingArea):
             cr.line_to(*v.to_screen(b.x, b.z))
             cr.stroke()
             cr.set_dash([])
+        if self.cursor is not None:  # ALPHA-T's cross-hair cursor
+            sx, sy = v.to_screen(self.cursor.x, self.cursor.z)
+            self._rgb(cr, "part", 0.8)
+            cr.set_line_width(1)
+            cr.move_to(sx - 18, sy)
+            cr.line_to(sx + 18, sy)
+            cr.move_to(sx, sy - 18)
+            cr.line_to(sx, sy + 18)
+            cr.stroke()
         if self.marker is not None:
             pt, kind = self.marker
             sx, sy = v.to_screen(pt.x, pt.z)

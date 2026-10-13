@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from . import serde
-from .geometry import ELEMENT_TYPES, Contour, Element, Point
+from .geometry import ELEMENT_TYPES, Contour, Element, Point, Text
 from .operations import OP_KINDS, OPERATION_TYPES, Operation
 from .tools import Tool
 
@@ -62,6 +62,7 @@ class Project:
     tools: list[Tool] = field(default_factory=list)
     geometry: list[Element] = field(default_factory=list)
     operations: list[Operation] = field(default_factory=list)
+    texts: list[Text] = field(default_factory=list)
 
     def __post_init__(self):
         if self.units not in UNITS:
@@ -88,7 +89,7 @@ class Project:
             "tools": serde.to_json(self.tools),
             "geometry": serde.to_json(self.geometry),
             "operations": serde.to_json(self.operations),
-        }
+        } | ({"texts": serde.to_json(self.texts)} if self.texts else {})
 
     @classmethod
     def from_dict(cls, data: dict) -> "Project":
@@ -106,6 +107,7 @@ class Project:
             tools=[serde.from_json(Tool, t) for t in data.get("tools", [])],
             geometry=[serde.from_json(None, g, ELEMENT_TYPES) for g in data.get("geometry", [])],
             operations=[serde.from_json(None, o, OPERATION_TYPES) for o in data.get("operations", [])],
+            texts=[serde.from_json(Text, t) for t in data.get("texts", [])],
         )
 
     def dumps(self) -> str:

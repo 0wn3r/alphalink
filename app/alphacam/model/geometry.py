@@ -57,6 +57,15 @@ class Arc:
         return self.a.distance(self.centre)
 
 
+@dataclass
+class Text:
+    """A line of text on the drawing (ALPHA-T hit code T); not part of any contour or program."""
+
+    p: Point
+    text: str
+    size: float = 5.0  # character height, drawing units
+
+
 Element = Line | Arc
 ELEMENT_TYPES: dict[str, type] = {"line": Line, "arc": Arc}
 

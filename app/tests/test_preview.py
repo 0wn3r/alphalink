@@ -290,12 +290,13 @@ class GtkLineTool(unittest.TestCase):
 
 @unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkHitKeys(unittest.TestCase):
-    def test_alpha_t_letters_draw_and_erase(self):
+    def test_alpha_t_keys(self):
         import gi
 
         gi.require_version("Gtk", "4.0")
         from gi.repository import GLib
 
+        from alphacam import drawing
         from alphacam.model.project import Billet
         from alphacam_gtk.application import Application
         from alphacam_gtk.window import MainWindow
@@ -303,27 +304,46 @@ class GtkHitKeys(unittest.TestCase):
         app = Application()
         out = {}
 
+        def typed(d, key, text):
+            d.hit_key(key)
+            d.entry.set_text(text)
+            d._entry_activate(d.entry)
+
         def run():
             w = MainWindow(app)
             w.set_project(Project(billet=Billet(120, 100), first_tool=3))
             d = w.drawing
-            d.hit_key("s")  # start point
-            out["tool"] = w.canvas.tool
+            d.hit_key("s")  # start point at the cursor (none yet: X0 Z0)
+            out["tool"], out["start"] = w.canvas.tool, list(d.points)
             d.hit_key("4")  # a number goes to the entry
             out["typed"] = d.entry.get_text()
-            d.entry.set_text("0,0")
+            d.entry.set_text("40,0")
             d._entry_activate(d.entry)
-            d.hit_key("h")  # incremental move
-            out["relative"] = d.entry.get_text()
-            d.entry.set_text("@40,0")
-            d._entry_activate(d.entry)
-            out["lines"] = len(w.project.geometry)
-            d.hit_key("f")
-            out["fillet"] = w.canvas.tool
-            d.set_tool("select")
-            d._select_element(w.project.geometry[0].id)
-            d.hit_key("l")  # erase line
+            typed(d, "d", "25,0")  # draw line D,A: 25 long at 0 degrees (towards -Z)
+            out["lines"] = [(g.a, g.b) for g in w.project.geometry]
+            typed(d, "y", "10,90")  # L,A move: 10 up in radius, the next line starts there
+            out["moved"], out["chain"] = d.cursor, list(d.points)
+            d.hit_key("p")  # find point
+            out["found"] = d.cursor
+            d.hit_key("m")  # measure X-Z: X0 Z0 to the found point
+            d.cursor_key("End")
+            d.cursor_key("Return")
+            d.move_cursor(Point(41, -24))
+            d.cursor_key("Return")
+            out["measure"] = w.readout.get_label()
+            typed(d, "g", "41,-12")  # absolute move next to the shoulder
+            d.hit_key("l")  # find nearest line
+            out["found_line"] = d.selected_element
+            d.hit_key("-")  # erase it
             out["after_erase"] = len(w.project.geometry)
+            w.apply_edit("text", lambda q: drawing.add_text(q, Point(0, 10), "HELLO"))
+            d.hit_key("u")
+            out["texts"] = len(w.project.texts)
+            d.hit_key("q")
+            w.get_visible_dialog().emit("response", "erase")
+            out["after_q"] = len(w.project.geometry)
+            w._undo()
+            out["after_undo"] = len(w.project.geometry)
             w.add_op("finish")
             d.start_pick(0)
             out["pick_letter"] = d.hit_key("x")
@@ -335,11 +355,18 @@ class GtkHitKeys(unittest.TestCase):
         app.connect("activate", lambda *_: GLib.idle_add(run))
         app.run([])
         self.assertEqual(out["tool"], "line")
+        self.assertEqual(out["start"], [Point(0, 0)])
         self.assertEqual(out["typed"], "4")
-        self.assertEqual(out["relative"], "@")
-        self.assertEqual(out["lines"], 1)
-        self.assertEqual(out["fillet"], "fillet")
-        self.assertEqual(out["after_erase"], 0)
+        self.assertEqual(out["lines"], [(Point(0, 0), Point(40, 0)), (Point(40, 0), Point(40, -25))])
+        self.assertEqual(out["moved"], Point(60, -25))
+        self.assertEqual(out["chain"], [Point(60, -25)])
+        self.assertEqual(out["found"], Point(40, -25))
+        self.assertEqual(out["measure"], "X 40  Z -25")
+        self.assertEqual(out["found_line"], "g1")
+        self.assertEqual(out["after_erase"], 1)
+        self.assertEqual(out["texts"], 0)
+        self.assertEqual(out["after_q"], 0)
+        self.assertEqual(out["after_undo"], 1)
         self.assertFalse(out["pick_letter"])
         self.assertIsNone(out["picking"])
 

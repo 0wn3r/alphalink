@@ -55,8 +55,77 @@ msgstr "Торкніться елементів контуру в порядку
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
 
-msgid "Tap the element to erase, then press the key again"
-msgstr "Торкніться елемента, який треба стерти, і натисніть клавішу ще раз"
+msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
+
+msgid "Move the cursor to X,Z  then Enter"
+msgstr "Перемістити курсор у X,Z  і Enter"
+
+msgid "Move the cursor by dX,dZ  then Enter"
+msgstr "Перемістити курсор на dX,dZ  і Enter"
+
+msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
+
+msgid "Command aborted"
+msgstr "Команду скасовано"
+
+msgid "No point to find"
+msgstr "Немає точки, яку можна знайти"
+
+msgid "No intersection to find"
+msgstr "Немає перетину, який можна знайти"
+
+msgid "No line to find"
+msgstr "Немає лінії, яку можна знайти"
+
+msgid "No arc to find"
+msgstr "Немає дуги, яку можна знайти"
+
+msgid "{what} found: - or Delete erases it"
+msgstr "Знайдено {what}: - або Delete стирає"
+
+msgid "No text to erase"
+msgstr "Немає тексту, який можна стерти"
+
+msgid "Erase text"
+msgstr "Стерти текст"
+
+msgid "Cursor step {step}"
+msgstr "Крок курсора {step}"
+
+msgid "Measure: tap the 1st point, or move the cursor and press Enter"
+msgstr "Вимірювання: торкніться 1-ї точки або поставте курсор і натисніть Enter"
+
+msgid "Measure: now the 2nd point"
+msgstr "Вимірювання: тепер 2-га точка"
+
+msgid "Text"
+msgstr "Текст"
+
+msgid "At X{x} Z{z}"
+msgstr "У точці X{x} Z{z}"
+
+msgid "Height"
+msgstr "Висота"
+
+msgid "_Add"
+msgstr "_Додати"
+
+msgid "Erase All of the Drawing?"
+msgstr "Стерти все креслення?"
+
+msgid "Lines, arcs and text are erased. Operations stay, without their contours. Undo brings the drawing back."
+msgstr "Лінії, дуги й текст буде стерто. Операції залишаться, але без контурів. Скасування повертає креслення."
+
+msgid "_Erase"
+msgstr "_Стерти"
+
+msgid "Erase drawing"
+msgstr "Стерти креслення"
+
+msgid "Add Operation (C)"
+msgstr "Додати операцію (C)"
 
 msgid "Draw line"
 msgstr "Накреслити лінію"
