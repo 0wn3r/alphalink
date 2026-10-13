@@ -31,9 +31,10 @@ Status: **design draft 1** (2026-10-12).
   all, scrub), not-yet-cut moves faded, tool marker, label with operation, pass and PRG line, Program page follows;
   on-screen keypad for X,Z (ABS/INC, big keys) shown in touch mode.
 - M5 packaging (2026-10-13): `app/pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file,
-  metainfo (validated), icon, Flatpak manifest `app/build-aux/flatpak/` (GNOME 50 runtime, pyserial pinned by
-  sha256, `--device=all` for the serial port). Build: `flatpak-builder --user --install build-dir
-  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json` (not built here: no flatpak-builder on this machine).
+  metainfo (validated), icon, Flatpak manifest `app/build-aux/flatpak/` (GNOME 51 runtime, pyserial pinned by
+  sha256, `--device=all` for the serial port). Built and installed on Ubuntu 26.04 with flatpak-builder 1.4.8:
+  `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install build-dir
+  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`; examples in /app/share/alphalink-cam/examples.
 - Translations (2026-10-13): gettext domain `alphalink-cam`; all UI strings marked; Ukrainian complete
   (`app/po/uk.po`, sources of truth `app/po/uk_translations.py`). The language follows the desktop; `ALPHALINK_LANG=uk`
   forces it. After changing UI strings run `python3 tools/update_translations.py` (needs gettext); a test fails if
@@ -42,8 +43,8 @@ Status: **design draft 1** (2026-10-12).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
 digit, so `0wn3r` becomes `_0wn3r`, as Flatpak does).
-Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.6+, pyserial. Target: a Microsoft Surface Pro tablet running
-Ubuntu 26.04 / 26.10 (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
+Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.7+ (Adw.ToggleGroup), pyserial. Target: a Microsoft Surface Pro tablet running
+**Ubuntu 26.04 LTS** (decided 2026-10-13; native: `sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-serial`) (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
 `app/TOUCH.md`); packaged as a Flatpak.
 
 ## 1. Purpose and scope
