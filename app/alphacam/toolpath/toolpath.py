@@ -35,6 +35,7 @@ class Pass:
 class Toolpath:
     passes: list[Pass] = field(default_factory=list)
     retract: list[Move] = field(default_factory=list)  # after the last pass (back to the tool start)
+    plunges: int = 0  # grooving: plunges per pass (SD1 G75 H)
 
     @property
     def moves(self) -> list[Move]:

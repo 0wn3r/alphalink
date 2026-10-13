@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 17:46+0300\n"
+"POT-Creation-Date: 2026-10-13 17:52+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1471,21 +1471,26 @@ msgstr ""
 msgid "Export Alpha-T Program"
 msgstr ""
 
-#: alphacam_gtk/window.py:755
+#: alphacam_gtk/window.py:760
 #, python-brace-format
 msgid "Export failed: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:757
+#: alphacam_gtk/window.py:763
+#, python-brace-format
+msgid "Exported {name} ({size} bytes) and {listing}"
+msgstr ""
+
+#: alphacam_gtk/window.py:766
 #, python-brace-format
 msgid "Exported {name} ({size} bytes)"
 msgstr ""
 
-#: alphacam_gtk/window.py:847
+#: alphacam_gtk/window.py:856
 #, python-brace-format
 msgid "Program {number} · {units} · {lines} lines · {size} bytes"
 msgstr ""
 
-#: alphacam_gtk/window.py:849
+#: alphacam_gtk/window.py:858
 msgid "incomplete (see banner)"
 msgstr ""

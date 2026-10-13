@@ -1,6 +1,6 @@
 """CLI:
     python -m alphacam dump FILE.PRG [--moves]
-    python -m alphacam post PROJECT.alcam [-o FILE.PRG]"""
+    python -m alphacam post PROJECT.alcam [-o FILE.PRG] [--sd1 FILE.SD1]"""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import sys
 from .io.prg_parse import PrgSyntaxError, parse_file
 from .model.project import MachineProfile, Project
 from .post.alphat_prg import post
+from .post.alphat_sd1 import sd1
 
 
 def _fmt(v: float | None) -> str:
@@ -60,12 +61,17 @@ def main(argv: list[str] | None = None) -> int:
     po = sub.add_parser("post", help="post an .alcam project to an ALPHA-T .PRG")
     po.add_argument("project")
     po.add_argument("-o", "--output", help="output file (default: stdout)")
+    po.add_argument("--sd1", help="also write ALPHA-T's .SD1 listing to this file")
     po.add_argument("--z-scale", type=float, default=2.0)
     po.add_argument("--f-scale", type=float, default=2.0)
     args = ap.parse_args(argv)
     profile = MachineProfile(z_scale=args.z_scale, f_scale=args.f_scale)
     if args.cmd == "post":
-        data = post(Project.load(args.project), profile)
+        project = Project.load(args.project)
+        data = post(project, profile)
+        if args.sd1:
+            with open(args.sd1, "wb") as fh:
+                fh.write(sd1(project))
         if args.output:
             with open(args.output, "wb") as fh:
                 fh.write(data)

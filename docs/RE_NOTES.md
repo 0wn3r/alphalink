@@ -987,3 +987,16 @@ All but two are byte-identical via SDG + SD1 -> post:
   then ends without M64.
 * Drill without peck or dwell: one G1 to the bottom and back. Moves/dwell after an operation (MOVE TO CUR, RAPID TO
   CUR, DWELL) go into the empty block after it (FINISH_then_move_rapid_dwell: G1X80.Z10. G0X80.Z-30. G4P2000).
+
+### Progress 34 - SD1 writer (2026-10-13)
+app/alphacam/post/alphat_sd1.py writes ALPHA-T's .SD1 listing; all 41 samples with an .SD1 come out byte-identical
+(app/tests/test_sd1_write.py). Rules worth knowing:
+* 4 decimals, no trailing point; N steps by 5, M30 without N; G30 metric / G31 inch on N10; G92X163.3803Z120 always.
+* Motion lines leave out a coordinate equal to the previous one, but the first motion line after any other line
+  has both.
+* G70/G71 list the nose-centre path with the exact nose radius: first point offset along its element's normal, last
+  point offset and then carried r further along its element (not for face clear, E401/E101). Approach G0 from 2 mm
+  at 45 degrees; pull-off finish G1 0.2, area G0 1 (=R), face G0 0.2 inwards, area FACE G0 1 outwards, pre-finish
+  G1 1. Finish passes list the path moved by the offsets (first point only across its element); area/face don't.
+* G71 P = the G21 line, Q = the G0 back to the start, H = passes. G75 P/Q = first/last profile line, H = plunges.
+* G76 Q is 10 in every sample, where the thread depth (radius) is 10 too; written as the depth (inferred).
