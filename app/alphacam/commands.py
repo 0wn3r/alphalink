@@ -71,6 +71,10 @@ class UndoStack:
     def mark_saved(self) -> None:
         self._saved = self.project.to_dict()
 
+    def mark_unsaved(self) -> None:
+        """For a part that exists only in memory (e.g. a fresh DXF import)."""
+        self._saved = {}
+
     def _set(self, data: dict) -> None:
         fresh = Project.from_dict(data)
         # keep the same Project object so views holding a reference stay valid
