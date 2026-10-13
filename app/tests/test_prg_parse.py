@@ -34,6 +34,10 @@ EXPECTED_OPS = {
     "INT_area_metric": [("area_clear_internal", 8)],
     "TOOLCHG_rough1_finish3_metric": [("area_clear", 26), ("finish", 1)],
     "PREFINISH_area_metric": [("area_clear", 26), ("area_prefinish", 1)],
+    "THREAD_internal_metric": [("thread", 100)],
+    "THREAD_p2_len30_metric": [("thread", 100)],
+    "FACE_offset_metric": [("face_clear", 26)],
+    "FACE_depth3_start110_metric": [("face_clear", 18)],
 }
 
 

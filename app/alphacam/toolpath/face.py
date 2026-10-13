@@ -4,8 +4,9 @@ Rules from FACE_metric (MET2 profile, depth 2, retract 0.2):
   * the profile's faces (constant-Z elements) split it into zones; each zone is cut from its top face down in steps
     of the depth of cut, the last pass clamped onto the next face (Z-2 ... -24, -25, -27 ... -49, -50);
   * pass: rapid to (start X, Z), feed to the profile, 45-degree pull-off (-2R in X, +R in Z, R = retract),
-    rapid to (start X - 4R, Z + 3R); after the last pass, rapid to the start. The last rapid matches the sample but
-    could equally be (start X - 2r, pull-off Z + r) with nose radius r = 0.4 = 2R: one sample cannot tell;
+    rapid to (start X - 4R, Z + 3R); after the last pass, rapid to the start. FACE_depth3_start110 (depth 3, start
+    X110 Z3) gives the same X109.2 / Z+0.6, so the offsets do not depend on depth or start; whether they come from the
+    retract (R = 0.2) or the nose radius (r = 0.4 = 2R) still needs a sample with another tool;
   * the cut ends on the vertical element spanning Z, half-open towards the face below (lo <= Z < hi)."""
 
 from __future__ import annotations
@@ -13,7 +14,7 @@ from __future__ import annotations
 import math
 
 from ..model.operations import FaceClear
-from .contour import Seg, mm, tip_path
+from .contour import Seg, mm, tip_path, translate
 from .toolpath import Move, MoveKind, Pass, Toolpath
 
 RETRACT_MM = 0.2  # face clear default (SD1 R0.2)
@@ -27,9 +28,10 @@ def _end_x(boundary: list[Seg], z: float) -> float:
 
 
 def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
-    if op.offset_x or op.offset_z or op.pre_finish or not op.towards:
-        raise NotImplementedError("face clear: only towards, without offsets or pre-finish (no sample)")
-    boundary = tip_path(path, nose_radius)
+    if op.pre_finish or not op.towards:
+        raise NotImplementedError("face clear: only towards, without pre-finish (no sample)")
+    # offsets translate the profile like area clear (FACE_offset: X40 -> 41, faces Z0/-25/-50 -> 0.2/-24.8/-49.8)
+    boundary = translate(tip_path(path, nose_radius), op.offset_x, op.offset_z)
     if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in boundary):
         raise NotImplementedError("face clear: only profiles of faces and diameters (no sample with slopes/arcs)")
     levels = sorted({s.a.z for s in boundary if s.a.z == s.b.z}, reverse=True)

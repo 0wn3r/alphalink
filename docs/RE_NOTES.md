@@ -932,3 +932,18 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
   changes the tool at the tool change point" (X100 Z50 by default). The tool numbers in the CAM must match the
   control's tool memory slots (e.g. T03 = the 55 deg finisher with its measured offsets). MET2 and MOVE_RAPID were
   run on the machine; the user judged the result close, with any remaining differences easy to fix later.
+
+### Progress 30 - more cloud samples: internal/pitch-2 threads, face offsets, inch set (2026-10-13)
+* Byte-identical now: THREAD_internal (cuts from the inner line out to the outer one, U-21., #125 = outer),
+  THREAD_p2_len30 (W = -pitch x2), FACE_offset (offsets translate the profile like area clear), FACE_depth3_start110
+  (pull-off rapid again start X - 0.8, Z + 0.6: independent of depth and start).
+* **Area clear zones** (seen only in inch, where steps no longer land on the shoulders): every Z-parallel diameter
+  of the profile between start and limit gets its own pass and the stepping restarts from it
+  (... 2.426, **2.4**, 2.2426 ...). Metric AREA1/ARC/SLOPE unchanged because 100-4k hits 60 and 40 exactly.
+* Inch rounding: the toolpaths use the nose radius rounded to 4 decimals (0.4 mm -> 0.0157: arc R 0.2157, area
+  floor -0.0314), the #125/#126 limits the exact one (-0.063). The pre-finish pull-off is the area retract distance
+  as entered (0.0394 in) at 45 degrees -> 0.0279.
+* samples/alphat_v12_inch: 10 inch samples, 8 byte-identical. Known small differences: ARC_area_inch (area pass
+  ends on arcs 0.0001 shallower) and TOOLCHG_inch (finish Z +0.0002 after a tool change). The machine runs metric
+  (M71), so these are parked; REA on ALPHA-T's arc code would settle them.
+* PECK_groove / PECK_fullret_groove arrived truncated at 12288 bytes with empty SDGs - regenerate before use.
