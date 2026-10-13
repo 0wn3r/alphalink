@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 18:24+0300\n"
+"POT-Creation-Date: 2026-10-13 18:36+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -68,7 +68,7 @@ msgstr ""
 msgid "Keypad"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:60 alphacam_gtk/drawing_tools.py:352
+#: alphacam_gtk/drawing_tools.py:60 alphacam_gtk/drawing_tools.py:380
 msgid "Tap the contour elements in cutting order"
 msgstr ""
 
@@ -136,21 +136,31 @@ msgstr ""
 msgid "Radius at {point}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:298
+#: alphacam_gtk/drawing_tools.py:290
+msgid "Angle"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:294
+msgid ""
+"Between the chamfer and the line along Z; the size is measured along that "
+"line"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:322
 msgid "_Apply"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:310
-#, python-brace-format
-msgid "Chamfer {size}"
-msgstr ""
-
-#: alphacam_gtk/drawing_tools.py:310
+#: alphacam_gtk/drawing_tools.py:334
 #, python-brace-format
 msgid "Fillet R{size}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:344
+#: alphacam_gtk/drawing_tools.py:337
+#, python-brace-format
+msgid "Chamfer {size}"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:372
 msgid "Pick contour"
 msgstr ""
 
@@ -200,7 +210,7 @@ msgid "Opening port…"
 msgstr ""
 
 #: alphacam_gtk/machine.py:47 alphacam_gtk/machine.py:278
-#: alphacam_gtk/machine.py:332 alphacam_gtk/tools_page.py:171
+#: alphacam_gtk/machine.py:332 alphacam_gtk/tools_page.py:174
 #: alphacam_gtk/window.py:384 alphacam_gtk/window.py:643
 #: alphacam_gtk/window.py:718
 msgid "_Cancel"
@@ -960,121 +970,121 @@ msgstr ""
 msgid "Right hand"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:56
+#: alphacam_gtk/tools_page.py:58
 msgid "_Add Tool"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:56
+#: alphacam_gtk/tools_page.py:58
 msgid "_Delete Tool"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:57
+#: alphacam_gtk/tools_page.py:59
 msgid "_Import ATOOLIB.TL1…"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:58
+#: alphacam_gtk/tools_page.py:60
 msgid "_Reset to ALPHA-T Tools"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:64
+#: alphacam_gtk/tools_page.py:67
 msgid "Tool numbers are the lathe's tool memory slots."
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:109
+#: alphacam_gtk/tools_page.py:112
 msgid "Name"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:113
+#: alphacam_gtk/tools_page.py:116
 msgid "Type"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:117
+#: alphacam_gtk/tools_page.py:120
 msgid "Hand"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:122
+#: alphacam_gtk/tools_page.py:125
 msgid "Nose radius"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:122
+#: alphacam_gtk/tools_page.py:125
 msgid "mm; changes the toolpath"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:123
+#: alphacam_gtk/tools_page.py:126
 msgid "Front clearance angle"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:123
+#: alphacam_gtk/tools_page.py:126
 msgid "degrees from Z; negative = internal"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:124
+#: alphacam_gtk/tools_page.py:127
 msgid "Rear clearance angle"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:124
+#: alphacam_gtk/tools_page.py:127
 msgid "degrees from Z"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:125
+#: alphacam_gtk/tools_page.py:128
 msgid "Width"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:125
+#: alphacam_gtk/tools_page.py:128
 msgid "grooving tip or drill diameter, mm"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:126
+#: alphacam_gtk/tools_page.py:129
 msgid "Default feed"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:126
+#: alphacam_gtk/tools_page.py:129
 msgid "per revolution, for new operations"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:134
+#: alphacam_gtk/tools_page.py:137
 msgid "Description"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:161
+#: alphacam_gtk/tools_page.py:164
 msgid "New tool"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:168
+#: alphacam_gtk/tools_page.py:171
 #, python-brace-format
 msgid "Delete T{n}?"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:169
+#: alphacam_gtk/tools_page.py:172
 #, python-brace-format
 msgid ""
 "{name} is removed from your tool library. Parts that use it fall back to "
 "ALPHA-T's standard tool with that number."
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:172
+#: alphacam_gtk/tools_page.py:175
 msgid "_Delete"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:186
+#: alphacam_gtk/tools_page.py:189
 msgid "ALPHA-T tool library"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:190
+#: alphacam_gtk/tools_page.py:193
 msgid "Import Tool Library"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:200
+#: alphacam_gtk/tools_page.py:203
 #, python-brace-format
 msgid "Could not import {name}: {error}"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:204
+#: alphacam_gtk/tools_page.py:207
 #, python-brace-format
 msgid "Imported {n} tools from {name}"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:211
+#: alphacam_gtk/tools_page.py:214
 msgid "Tool library reset to ALPHA-T's 32 standard tools"
 msgstr ""
 

@@ -94,14 +94,20 @@ msgstr "Фаска в {point}"
 msgid "Radius at {point}"
 msgstr "Радіус у {point}"
 
+msgid "Angle"
+msgstr "Кут"
+
+msgid "Between the chamfer and the line along Z; the size is measured along that line"
+msgstr "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії"
+
 msgid "_Apply"
 msgstr "_Застосувати"
 
-msgid "Chamfer {size}"
-msgstr "Фаска {size}"
-
 msgid "Fillet R{size}"
 msgstr "Скруглення R{size}"
+
+msgid "Chamfer {size}"
+msgstr "Фаска {size}"
 
 msgid "Pick contour"
 msgstr "Вибір контуру"

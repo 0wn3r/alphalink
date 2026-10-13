@@ -200,6 +200,54 @@ class GtkDrawing(unittest.TestCase):
         self.assertEqual(out["prg"], (SAMPLES / "ARC_finish_metric.PRG").read_bytes())
 
 
+class GtkChamferAngle(unittest.TestCase):
+    def test_popup_angle_sets_chips_and_geometry(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib, Gtk
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def widgets(root, kind):
+            found, c = [], root.get_first_child()
+            while c:
+                if isinstance(c, kind):
+                    found.append(c)
+                found += widgets(c, kind)
+                c = c.get_next_sibling()
+            return found
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d = w.drawing
+            for t in ["0,0", "40,0", "40,-25"]:
+                d.entry.set_text(t)
+                d._entry_activate(d.entry)
+            d.finish_chain()
+            d._size_popover("chamfer", Point(40, 0))
+            pop = widgets(w.canvas, Gtk.Popover)[-1]
+            widgets(pop, Gtk.SpinButton)[0].set_value(30)  # the angle
+            chips = [b for b in widgets(pop, Gtk.Button) if not isinstance(b, Gtk.SpinButton)]
+            out["labels"] = [b.get_label() for b in chips]
+            next(b for b in chips if b.get_label() == "2×30°").emit("clicked")
+            out["chamfer"] = w.project.geometry[-1]
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertIn("2×30°", out["labels"])
+        self.assertEqual(out["chamfer"].b, Point(40, -2))
+        self.assertAlmostEqual(out["chamfer"].a.x, 40 - 4 * 0.57735, places=3)
+
+
 class Simulation(unittest.TestCase):
     def test_pass_starts(self):
         from alphacam_gtk.canvas.paths import pass_starts
