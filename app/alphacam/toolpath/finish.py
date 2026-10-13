@@ -10,13 +10,15 @@ LEAD_IN_MM = 2.0  # 45-degree approach to the first point, from +Z and outside i
 LEAD_OUT_MM = 0.2  # 45-degree pull-off from the last point, same directions (ALPHA-T; V1.81 uses 2)
 
 
-def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
+def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str, decimals: int,
+                lead_out_mm: float = LEAD_OUT_MM) -> Toolpath:
+    """lead_out_mm is 1.0 for the pre-finish pass of an area clear (PREFINISH sample, #127=10)."""
     side = 1 if op.external else -1
     if not op.external and (op.offset_x or op.offset_z):
         raise NotImplementedError("internal finish with offsets is not supported yet (no sample)")
     tip = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z)
     lead_in = leg45(mm(LEAD_IN_MM, units), decimals)
-    lead_out = leg45(mm(LEAD_OUT_MM, units), decimals)
+    lead_out = leg45(mm(lead_out_mm, units), decimals)
     first, last = tip[0].a, tip[-1].b
     moves = [Move(MoveKind.RAPID, first.x + side * 2 * lead_in, first.z + lead_in),
              Move(MoveKind.FEED, first.x, first.z, op.feed)]

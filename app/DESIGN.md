@@ -7,6 +7,8 @@ Status: **design draft 1** (2026-10-12).
   MET2 (mm and inch), AREA1 and MOVE_RAPID are byte-identical to ALPHA-T. `python -m alphacam post PART.alcam -o P.PRG`.
 - M1+ (2026-10-13): arcs, sloped lines, offsets, internal finish/area (#127 15/7), several operations and mid-program
   tool changes; 13 golden samples byte-identical. The PRG contour is the imaginary tool-tip path (RE_NOTES Progress 27).
+- M4 post part (2026-10-13): face clear, grooving, drilling, threading and area pre-finish; all 18 ALPHA-T samples
+  are byte-identical (RE_NOTES Progress 28). Drawing tools and the remaining options are still to do.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 ## 1. Purpose and scope

@@ -16,6 +16,7 @@ OP_KINDS: dict[int, str] = {
     7: "area_clear_internal",
     8: "face_clear",
     9: "groove",
+    10: "area_prefinish",
     14: "finish",
     15: "finish_internal",
     18: "drill",
@@ -103,6 +104,8 @@ class FinishPass:
 
 @dataclass
 class Drill:
+    """`depth` is the absolute Z of the hole bottom (ALPHA-T asks for the Z, e.g. -30)."""
+
     tool: int
     start: Point
     depth: float
@@ -120,8 +123,7 @@ class Thread:
     outer_line: str
     inner_line: str
     pitch: float  # > 0 (V1.21)
-    cuts: int = 10
-    cut_depth: float = 0.0
+    cut_depth: float = 1.0  # first cut (radius); cut n goes to first * sqrt(n), constant chip area
     lead_in: float = 0.0
     lead_out: float = 0.0
     angle: float = 60.0

@@ -1,19 +1,26 @@
 """Alpha-T .PRG post (DESIGN.md section 5): project in, bytes out.
 
 Supported: tool blocks (with move/rapid and dwell appended), finish pass and area clear (external and internal,
-with offsets on external ops, lines and arcs), several operations and mid-program tool changes.
+with offsets on external ops, lines and arcs, area pre-finish), face clear, grooving, drilling, threading, several
+operations and mid-program tool changes.
 Everything is pinned by golden tests against the ALPHA-T samples in samples/alphat_v12."""
 
 from __future__ import annotations
 
-from ..model.operations import AreaClear, Dwell, FinishPass, MoveTo, ToolChange
+from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
 from ..model.project import MachineProfile, Project
 from ..model.tools import Tool, standard_library
 from ..numfmt import format_number
 from ..toolpath.area import area_clear
 from ..toolpath.contour import chain, limits, mm, points
+from ..toolpath.drill import drill
+from ..toolpath.face import face_clear
 from ..toolpath.finish import finish_pass
-from ..toolpath.toolpath import Move, MoveKind
+from ..toolpath.groove import groove
+from ..toolpath.thread import plan_thread
+from ..toolpath.toolpath import Move, MoveKind, Toolpath
+
+PREFINISH_LEAD_OUT_MM = 1.0  # area clear pre-finish block (#127=10): pull-off 1 mm instead of 0.2
 
 HEADER_LOGIC = [
     "#140=0",
@@ -98,22 +105,14 @@ def _tool_block(w: _Writer, block: int, tc: ToolChange, moves: list[Move]) -> No
     w.emit(f"N{label}")
 
 
-def _op_block(w: _Writer, block: int, project: Project, op) -> None:
-    tool = _tool(project, op.tool)
-    r = mm(tool.nose_radius, project.units)
-    path = chain(project.contour(op.contour))
-    if isinstance(op, FinishPass):
-        tp = finish_pass(op, path, r, project.units, w.dec)
-        kind = 14 if op.external else 15
-    elif isinstance(op, AreaClear):
-        tp = area_clear(op, path, r, project.units, w.dec)
-        kind = 6 if op.external else 7
-    else:
-        raise NotImplementedError(f"{op.type} is not supported by the post yet")
-    lim_x, lim_z = limits(points(path), r)
-    w.emit(f"N{block * 10}", f"#120={len(tp.passes)}", "#121=1", f"#122={op.tool}",
-           f"#123={w.x(op.start.x)}", f"#124={w.z(op.start.z)}", f"#125={w.x(lim_x)}", f"#126={w.z(lim_z)}",
-           f"#127={kind}", "#128=1", f"#129={block}", f"#130={w.f(op.feed)}", "#131=#131+1")
+def _header(w: _Writer, block: int, op, passes: int, kind: int, limit: tuple[float, float], feed: str) -> None:
+    w.emit(f"N{block * 10}", f"#120={passes}", "#121=1", f"#122={op.tool}",
+           f"#123={w.x(op.start.x)}", f"#124={w.z(op.start.z)}", f"#125={w.x(limit[0])}", f"#126={w.z(limit[1])}",
+           f"#127={kind}", "#128=1", f"#129={block}", f"#130={feed}", "#131=#131+1")
+
+
+def _generic_block(w: _Writer, block: int, op, tp: Toolpath, kind: int, limit: tuple[float, float]) -> None:
+    _header(w, block, op, len(tp.passes), kind, limit, w.f(op.feed))
     label = None
     for n, p in enumerate(tp.passes, 1):
         if n > 1:
@@ -125,6 +124,73 @@ def _op_block(w: _Writer, block: int, project: Project, op) -> None:
         w.moves(p.moves)
     w.moves(tp.retract)
     w.emit("M64", f"N{label}")
+
+
+def _thread_block(w: _Writer, block: int, project: Project, op: Thread) -> None:
+    """THREAD sample layout: one restart point for the whole op; per cut M60 G0 to (X, start Z) M61, M62, #121=n, M66,
+    G32 to one pitch before the end, U/W pull-out, G0 out to the start X (no M60/M61), M60 G0 back to start Z M61."""
+    outer, inner = project.contour([op.outer_line])[0], project.contour([op.inner_line])[0]
+    plan = plan_thread(op, outer, inner, w.dec)
+    pitch = w.f(op.pitch)
+    _header(w, block, op, len(plan.xs), 20, (plan.inner, plan.z_end), pitch)
+    w.emit("M66")
+    label = w.restart_jump()
+    w.emit("M63")
+    sx, sz = op.start.x, op.start.z
+    w.feeding = False
+    w.moves([Move(MoveKind.RAPID, sx, sz)])
+    for n, x in enumerate(plan.xs, 1):
+        w.moves([Move(MoveKind.RAPID, x, sz)])
+        w.emit("M62", f"#121={n}", "M66", f"G32X{w.x(x)}Z{w.z(plan.z_end + op.pitch)}F{pitch}",
+               f"U{format_number(plan.pullout_u, w.dec)}W{format_number(-op.pitch * w.zs, w.dec)}",
+               f"G0X{w.x(sx)}Z{w.z(plan.z_end)}")
+        w.feeding = False
+        w.moves([Move(MoveKind.RAPID, sx, sz)])
+    w.emit("M64", f"N{label}")
+
+
+def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
+    """Emit the block(s) for one operation, each followed by its empty block (left open: the caller closes the
+    last one). Returns the last block number used."""
+    tool = _tool(project, op.tool)
+    r = mm(tool.nose_radius, project.units)
+    if isinstance(op, Thread):
+        _thread_block(w, block, project, op)
+        return block
+    if isinstance(op, Drill):
+        _generic_block(w, block, op, drill(op, project.units, w.dec), 18, (op.start.x, op.depth))
+        return block
+    path = chain(project.contour(op.contour))
+    limit = limits(points(path), r)
+    if isinstance(op, FinishPass):
+        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec), 14 if op.external else 15, limit)
+    elif isinstance(op, AreaClear):
+        if op.pre_finish and (not op.external or op.offset_x or op.offset_z):
+            raise NotImplementedError("pre-finish only for external area clear without offsets (no sample)")
+        _generic_block(w, block, op, area_clear(op, path, r, project.units, w.dec), 6 if op.external else 7, limit)
+        if op.pre_finish:
+            _empty_block(w, block + 1, None)
+            block += 2
+            fp = FinishPass(op.tool, op.start, op.contour, op.feed)
+            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec, PREFINISH_LEAD_OUT_MM),
+                           10, limit)
+    elif isinstance(op, FaceClear):
+        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec), 8, limit)
+    elif isinstance(op, Groove):
+        _generic_block(w, block, op, groove(op, path, r, project.units, w.dec), 9, limit)
+    else:
+        raise NotImplementedError(f"{op.type} is not supported by the post yet")
+    return block
+
+
+def _empty_block(w: _Writer, block: int, next_tool: ToolChange | None) -> None:
+    """The empty block after an operation; it holds the rapid to the tool change point when a tool change follows."""
+    w.emit(f"N{block * 10}", "M66")
+    label = w.restart_jump()
+    if next_tool is not None:
+        w.feeding = False
+        w.moves([Move(MoveKind.RAPID, next_tool.change_point.x, next_tool.change_point.z)])
+    w.emit(f"N{label}")
 
 
 def post(project: Project, profile: MachineProfile | None = None) -> bytes:
@@ -160,15 +226,8 @@ def post(project: Project, profile: MachineProfile | None = None) -> bytes:
             continue
         if isinstance(op, (MoveTo, Dwell)):
             raise NotImplementedError("move/dwell after an operation is not supported yet (no sample)")
-        _op_block(w, block, project, op)
-        # empty block after every operation
-        block += 1
-        w.emit(f"N{block * 10}", "M66")
-        label = w.restart_jump()
-        if i < len(ops) and isinstance(ops[i], ToolChange):
-            w.feeding = False
-            w.moves([Move(MoveKind.RAPID, ops[i].change_point.x, ops[i].change_point.z)])
-        w.emit(f"N{label}")
+        block = _op_blocks(w, block, project, op) + 1
+        _empty_block(w, block, ops[i] if i < len(ops) and isinstance(ops[i], ToolChange) else None)
     block += 1
     w.emit(f"N{block * 10}", "M65", "%")
     return "".join(line + "\r\n" for line in w.lines).encode("ascii")
