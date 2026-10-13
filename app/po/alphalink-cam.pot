@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 17:52+0300\n"
+"POT-Creation-Date: 2026-10-13 18:02+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgid "translator-credits"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:251
-#: alphacam_gtk/op_editor.py:200
+#: alphacam_gtk/op_editor.py:201
 msgid "Arc"
 msgstr ""
 
@@ -36,7 +36,7 @@ msgid "Fillet"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:21 alphacam_gtk/drawing_tools.py:251
-#: alphacam_gtk/op_editor.py:200
+#: alphacam_gtk/op_editor.py:201
 msgid "Line"
 msgstr ""
 
@@ -496,12 +496,12 @@ msgstr ""
 msgid "Repeats"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:42
+#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:43
 #: alphacam_gtk/op_factory.py:23 alphacam_gtk/window.py:35
 msgid "Dwell"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:42
+#: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:43
 msgid "revolutions"
 msgstr ""
 
@@ -534,168 +534,176 @@ msgid "radius; cut n goes to first × √n"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:39
-msgid "Lead in"
+msgid "0 = from the first cut depth"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:39
+msgid "Number of cuts"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:40
+msgid "Lead in"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:41
 msgid "Lead out"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:41
+#: alphacam_gtk/op_editor.py:42
 msgid "Thread angle"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:41
+#: alphacam_gtk/op_editor.py:42
 msgid "degrees"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:45
+#: alphacam_gtk/op_editor.py:46
 msgid "External"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:45
+#: alphacam_gtk/op_editor.py:46
 msgid "off = internal (boring)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:46
+#: alphacam_gtk/op_editor.py:47
 msgid "Towards the chuck"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:47
+#: alphacam_gtk/op_editor.py:48
 msgid "Pre-finish pass"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:47
+#: alphacam_gtk/op_editor.py:48
 msgid "a finish pass with a 1 mm pull-off after the roughing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:48
+#: alphacam_gtk/op_editor.py:49
 msgid "Full retract"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:49
+#: alphacam_gtk/op_editor.py:50
 msgid "Front"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:50
+#: alphacam_gtk/op_editor.py:51
 msgid "Spring pass"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:51
+#: alphacam_gtk/op_editor.py:52
 msgid "Rapid"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:51
+#: alphacam_gtk/op_editor.py:52
 msgid "off = feed move"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:53
+#: alphacam_gtk/op_editor.py:54
 msgid "Datum"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:53
+#: alphacam_gtk/op_editor.py:54
 msgid "Mode"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:55
 msgid "area"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:55
 msgid "finish"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:55
 msgid "left"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:54
+#: alphacam_gtk/op_editor.py:55
 msgid "right"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:56
 msgid "Move to"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:56
 msgid "Tool change point"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:55
+#: alphacam_gtk/op_editor.py:56
 msgid "Tool start"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:66 alphacam_gtk/report.py:53
+#: alphacam_gtk/op_editor.py:67 alphacam_gtk/report.py:53
 #: alphacam_gtk/report.py:64
 msgid "Operation"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:69
+#: alphacam_gtk/op_editor.py:70
 msgid "Move Up"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:70
+#: alphacam_gtk/op_editor.py:71
 msgid "Move Down"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:74
+#: alphacam_gtk/op_editor.py:75
 msgid "Close Editor"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:77
+#: alphacam_gtk/op_editor.py:78
 msgid "Delete Operation"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:89
+#: alphacam_gtk/op_editor.py:90
 #, python-brace-format
 msgid "Operation {n}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:127
+#: alphacam_gtk/op_editor.py:128
 msgid "Inner diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:127
+#: alphacam_gtk/op_editor.py:128
 msgid "Outer diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:128
+#: alphacam_gtk/op_editor.py:129
 msgid "(no lines)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:133
+#: alphacam_gtk/op_editor.py:134
 msgid "Contour (element ids, in cutting order)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:137
+#: alphacam_gtk/op_editor.py:138
 msgid "Pick Contour on the Drawing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:140
+#: alphacam_gtk/op_editor.py:141
 #, python-brace-format
 msgid "{n} element"
 msgid_plural "{n} elements"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/op_editor.py:146
+#: alphacam_gtk/op_editor.py:147
 msgid ""
 "Grooving follows the drawn profile; the tool reference is the tip's -Z "
 "corner."
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:169 alphacam_gtk/op_editor.py:177
-#: alphacam_gtk/op_editor.py:181 alphacam_gtk/op_editor.py:185
-#: alphacam_gtk/op_editor.py:190
+#: alphacam_gtk/op_editor.py:170 alphacam_gtk/op_editor.py:178
+#: alphacam_gtk/op_editor.py:182 alphacam_gtk/op_editor.py:186
+#: alphacam_gtk/op_editor.py:191
 #, python-brace-format
 msgid "Change {what}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:194
+#: alphacam_gtk/op_editor.py:195
 msgid "Change contour"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:202
+#: alphacam_gtk/op_editor.py:203
 #, python-brace-format
 msgid "{id} (missing)"
 msgstr ""

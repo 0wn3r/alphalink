@@ -367,6 +367,12 @@ msgstr "Глибина першого проходу"
 msgid "radius; cut n goes to first × √n"
 msgstr "на радіус; прохід n — перший × √n"
 
+msgid "0 = from the first cut depth"
+msgstr "0 = за глибиною першого проходу"
+
+msgid "Number of cuts"
+msgstr "Кількість проходів"
+
 msgid "Lead in"
 msgstr "Вхід"
 

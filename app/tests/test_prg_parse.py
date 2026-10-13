@@ -57,6 +57,8 @@ EXPECTED_OPS = {
     "INT_finish_offset_metric": [("finish_internal", 1)],
     "THREAD_leadin2_leadout2_metric": [("thread", 100)],
     "THREAD_spring1_metric": [("thread", 100), ("thread_spring", 1)],
+    "THREAD_depth6_metric": [("thread", 36)],
+    "THREAD_6cuts_metric": [("thread", 6)],
 }
 
 

@@ -127,6 +127,7 @@ class Thread:
     inner_line: str
     pitch: float  # > 0 (V1.21)
     cut_depth: float = 1.0  # first cut (radius); cut n goes to first * sqrt(n), constant chip area
+    cuts: int = 0  # NO. OF CUTS mode: > 0 sets the first cut to depth / sqrt(cuts) (THREAD_6cuts: 10 / sqrt 6 = 4.0825)
     lead_in: float = 5.0  # ALPHA-T default: passes start this far in front of the thread (+Z)
     lead_out: float = 0.0  # the thread runs this far past the drawn end
     angle: float = 60.0
