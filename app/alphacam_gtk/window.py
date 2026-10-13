@@ -10,6 +10,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
+from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
 from alphacam.io.sdg import load_sdg  # noqa: E402
 from alphacam.commands import UndoStack  # noqa: E402
@@ -102,7 +103,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _build_empty(self) -> Gtk.Widget:
         page = Adw.StatusPage(title=_("No Part Open"), icon_name="document-open-symbolic",
-                              description=_("Open an AlphaLink part (.alcam) or an ALPHA-T drawing (.SDG)"))
+                              description=_("Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"))
         btns = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
         new = Gtk.Button(label=_("_New Part…"), use_underline=True, action_name="win.new")
         new.add_css_class("pill")
@@ -330,7 +331,7 @@ class MainWindow(Adw.ApplicationWindow):
     def open_dialog(self) -> None:
         filters = Gio.ListStore.new(Gtk.FileFilter)
         f = Gtk.FileFilter(name=_("Parts and drawings"))
-        for pat in ("*.alcam", "*.sdg", "*.SDG"):
+        for pat in ("*.alcam", "*.sdg", "*.SDG", "*.dxf", "*.DXF"):
             f.add_pattern(pat)
         filters.append(f)
         dlg = Gtk.FileDialog(title=_("Open Part"), filters=filters)
@@ -344,6 +345,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.load(Path(file.get_path()))
 
     def load(self, path: Path) -> None:
+        if path.suffix.lower() == ".dxf":
+            self._dxf_dialog(path)
+            return
         note = None
         try:
             if path.suffix.lower() == ".sdg":
@@ -358,6 +362,50 @@ class MainWindow(Adw.ApplicationWindow):
         self.set_project(project)
         if note:
             self.toast(note)
+
+    def _dxf_dialog(self, path: Path) -> None:
+        """ATDXF: a DXF becomes a new part. Lathe drawings usually give Y as a radius; units are the DXF's."""
+        st = settings()
+        alert = Adw.AlertDialog(heading=_("Import DXF"),
+                                body=_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
+        group = Adw.PreferencesGroup()
+        y_row = Adw.ComboRow(title=_("DXF Y is"), model=Gtk.StringList.new([_("Radius"), _("Diameter")]))
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+                             selected=1 if st["units"] == "inch" else 0)
+        half = Adw.SwitchRow(title=_("Upper half only"), active=True,
+                             subtitle=_("Drop the mirrored half below the axis"))
+        for r in (y_row, units, half):
+            group.add(r)
+        alert.set_extra_child(group)
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("import", _("_Import"))
+        alert.set_response_appearance("import", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("import")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "import":
+                return
+            try:
+                res = load_dxf(path, y_is="radius" if y_row.get_selected() == 0 else "diameter",
+                               units="inch" if units.get_selected() == 1 else "mm", upper_half=half.get_active())
+            except (OSError, ValueError) as e:
+                self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
+                return
+            res.project.first_tool = int(st["first_tool"])
+            self.path = path.with_suffix(".alcam")
+            self.set_project(res.project)
+            self.undo.mark_unsaved()
+            self.refresh()
+            skipped = ", ".join(f"{k} ×{n}" for k, n in sorted(res.skipped.items()))
+            msg = ngettext("Imported {n} element from {name}.", "Imported {n} elements from {name}.",
+                           len(res.project.geometry)).format(n=len(res.project.geometry), name=path.name)
+            if skipped:
+                msg += " " + _("Skipped: {what}.").format(what=skipped)
+            self.toast(msg)
+
+        alert.connect("response", response)
+        alert.present(self)
 
     def _ops_from_sd1(self, path: Path, project: Project) -> str:
         """ALPHA-T keeps the operations only in the programs it writes: rebuild them from the .SD1 next to the

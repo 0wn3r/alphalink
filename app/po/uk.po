@@ -778,8 +778,8 @@ msgstr[2] "{n} проходів"
 msgid "No Part Open"
 msgstr "Деталь не відкрито"
 
-msgid "Open an AlphaLink part (.alcam) or an ALPHA-T drawing (.SDG)"
-msgstr "Відкрийте деталь AlphaLink (.alcam) або креслення ALPHA-T (.SDG)"
+msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
+msgstr "Відкрийте деталь AlphaLink (.alcam), креслення ALPHA-T (.SDG) або DXF"
 
 msgid "_New Part…"
 msgstr "_Нова деталь…"
@@ -871,6 +871,42 @@ msgstr "Відкрити деталь"
 msgid "Could not open {name}: {error}"
 msgstr "Не вдалося відкрити {name}: {error}"
 
+msgid "Import DXF"
+msgstr "Імпорт DXF"
+
+msgid "{name}: the DXF X axis becomes Z. How is Y drawn?"
+msgstr "{name}: вісь X у DXF стає віссю Z. Як задано Y?"
+
+msgid "DXF Y is"
+msgstr "Y у DXF — це"
+
+msgid "Diameter"
+msgstr "Діаметр"
+
+msgid "Radius"
+msgstr "Радіус"
+
+msgid "Units"
+msgstr "Одиниці"
+
+msgid "Upper half only"
+msgstr "Лише верхня половина"
+
+msgid "Drop the mirrored half below the axis"
+msgstr "Відкинути дзеркальну половину під віссю"
+
+msgid "_Import"
+msgstr "_Імпортувати"
+
+msgid "Imported {n} element from {name}."
+msgid_plural "Imported {n} elements from {name}."
+msgstr[0] "Імпортовано {n} елемент з {name}."
+msgstr[1] "Імпортовано {n} елементи з {name}."
+msgstr[2] "Імпортовано {n} елементів з {name}."
+
+msgid "Skipped: {what}."
+msgstr "Пропущено: {what}."
+
 msgid "{name}: drawing only (no .SD1 next to it, so no operations)"
 msgstr "{name}: лише креслення (поруч немає .SD1, тому операцій немає)"
 
@@ -918,9 +954,6 @@ msgstr "Загальні"
 
 msgid "New parts"
 msgstr "Нові деталі"
-
-msgid "Units"
-msgstr "Одиниці"
 
 msgid "Billet diameter"
 msgstr "Діаметр заготовки"
