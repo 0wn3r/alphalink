@@ -16,6 +16,7 @@ from gi.repository import Adw, Gdk, Gtk  # noqa: E402
 
 from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Line, Point  # noqa: E402
+from .hit_keys import hit_action  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
@@ -76,6 +77,10 @@ class DrawingTools:
         esc = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
         esc.connect("key-pressed", self._window_esc)
         window.add_controller(esc)
+        # ALPHA-T's one-letter commands (hit_keys.py); bubble phase, so focused text fields get the keys first
+        hit = Gtk.EventControllerKey()
+        hit.connect("key-pressed", self._hit_key_pressed)
+        window.add_controller(hit)
 
     # --- tools ------------------------------------------------------------------------------------------
 
@@ -156,6 +161,55 @@ class DrawingTools:
             self.delete_selected_element()
             return True
         return False
+
+    def _hit_key_pressed(self, ctl, keyval, code, state) -> bool:
+        w = self.w
+        if (state & (Gdk.ModifierType.CONTROL_MASK | Gdk.ModifierType.ALT_MASK | Gdk.ModifierType.SUPER_MASK)
+                or w.project is None or w.get_visible_dialog() is not None
+                or w.stack.get_visible_child_name() != "part" or isinstance(w.get_focus(), Gtk.Editable)):
+            return False
+        if keyval in (Gdk.KEY_Return, Gdk.KEY_KP_Enter):
+            char = "\r"
+        else:
+            u = Gdk.keyval_to_unicode(keyval)
+            char = chr(u) if u else ""
+        return self.hit_key(char)
+
+    def hit_key(self, char: str) -> bool:
+        """Run ALPHA-T's command for a typed character; True when it was one."""
+        action = hit_action(char, picking=self.pick_op is not None)
+        if action is None:
+            return False
+        if action == "pick-done":
+            self.finish_pick()
+        elif action == "type":
+            if self.c.tool not in ("line", "arc"):
+                self.set_tool("line")
+            self._focus_entry(char)
+        elif action in ("start", "line", "absolute", "relative"):
+            if self.c.tool not in ("line", "arc"):
+                self.set_tool("line")
+            if action == "start":
+                self.finish_chain()
+            self._focus_entry("@" if action == "relative" else "")
+        elif action in ("fillet", "chamfer", "corner"):
+            self.set_tool(action)
+        elif action == "erase":
+            if self.selected_element:
+                self.delete_selected_element()
+            else:
+                self.set_tool("select")
+                self.w.toast(_("Tap the element to erase, then press the key again"))
+        elif action == "zoom-in":
+            self.c.zoom(1.25)
+        elif action == "fit":
+            self.c.fit()
+        return True
+
+    def _focus_entry(self, text: str) -> None:
+        self.entry.grab_focus()
+        self.entry.set_text(text)
+        self.entry.set_position(-1)
 
     # --- line tool --------------------------------------------------------------------------------------
 

@@ -55,6 +55,9 @@ msgstr "Торкніться елементів контуру в порядку
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
 
+msgid "Tap the element to erase, then press the key again"
+msgstr "Торкніться елемента, який треба стерти, і натисніть клавішу ще раз"
+
 msgid "Draw line"
 msgstr "Накреслити лінію"
 

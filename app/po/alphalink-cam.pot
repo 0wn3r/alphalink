@@ -80,6 +80,10 @@ msgstr ""
 msgid "Tap a corner between two lines"
 msgstr ""
 
+#: alphacam_gtk/drawing_tools.py
+msgid "Tap the element to erase, then press the key again"
+msgstr ""
+
 #: alphacam_gtk/drawing_tools.py:166 alphacam_gtk/drawing_tools.py:238
 msgid "Draw line"
 msgstr ""

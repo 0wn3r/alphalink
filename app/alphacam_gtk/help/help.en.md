@@ -115,6 +115,18 @@ The app never starts the machine. Always check the program on the control before
 - Delete removes the selected drawing element.
 - Ctrl+, preferences, F1 this help, Ctrl+Q quit.
 
+### ALPHA-T keys
+
+On the Part page, while no text field has the focus, ALPHA-T's one-letter commands work as before:
+
+- **S** start point, **X** or **Y** draw line: the Line tool, ready for a typed point.
+- **G** absolute point (`X,Z`), **H** incremental point (`@dX,dZ`).
+- Typing a number starts a point in the entry; Enter draws to it.
+- **F** or **O** fillet, **C** chamfer, **B** trim two lines to a corner.
+- **L** or **A** erases the selected line or arc.
+- **Z** zooms in, **R** redraws the whole part.
+- Picking a contour, **3** or Enter finishes it.
+
 ## Preferences
 
 Main menu ▸ Preferences: units, billet size and first tool for new parts, and the language (after a restart).

@@ -12,6 +12,7 @@ UK = {
 "Keypad": "Цифрова клавіатура",
 "Tap the contour elements in cutting order": "Торкніться елементів контуру в порядку обробки",
 "Tap a corner between two lines": "Торкніться кута між двома лініями",
+"Tap the element to erase, then press the key again": "Торкніться елемента, який треба стерти, і натисніть клавішу ще раз",
 "Draw line": "Накреслити лінію",
 "Type X,Z (diameter, Z) or @dX,dZ": "Введіть X,Z (діаметр, Z) або @dX,dZ",
 "@ needs a previous point": "Для @ потрібна попередня точка",
