@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 22:22+0300\n"
+"POT-Creation-Date: 2026-10-13 22:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -362,7 +362,7 @@ msgid ""
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:31
-msgid "Draw an arc: start, a point on the arc, end"
+msgid "Draw an arc: start, a point on the arc, end (W)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:32

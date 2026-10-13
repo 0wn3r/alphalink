@@ -162,7 +162,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 - **C** opens the operations menu (ALPHA-T's CAM menu).
 - The arrow keys move the cursor, PgUp and PgDn make the step 10 times bigger or smaller, Home puts it in the middle of the view, End on X0 Z0, and Enter takes it as the next point.
 - Picking a contour, **3** or Enter finishes it.
-- Added here (free in ALPHA-T): **E** edits the selected element, **B** is the Chamfer tool.
+- Added here (free in ALPHA-T): **E** edits the selected element, **B** is the Chamfer tool, **W** the Arc tool.
 - Not mapped: Tab. F1 stays this help. Esc also clears the messages at the bottom (or main menu ▸ Clear Messages).
 
 ## Part settings

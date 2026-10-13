@@ -20,7 +20,8 @@ class HitKeys(unittest.TestCase):
         # added here, free in ALPHA-T (b blank, e exit): chamfer tool, edit the selected element
         self.assertEqual(hit_action("b"), "chamfer")
         self.assertEqual(hit_action("e"), "edit")
-        self.assertIsNone(hit_action("w"))
+        self.assertEqual(hit_action("w"), "arc")
+        self.assertIsNone(hit_action("j"))
         self.assertIsNone(hit_action(""))
 
     def test_numbers_go_to_the_entry(self):

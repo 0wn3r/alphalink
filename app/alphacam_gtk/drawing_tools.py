@@ -28,7 +28,7 @@ TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("f
 TOOL_TIPS = {
     "select": N_("Select an element or an operation. L / A: select the nearest line / arc"),
     "line": N_("Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"),
-    "arc": N_("Draw an arc: start, a point on the arc, end"),
+    "arc": N_("Draw an arc: start, a point on the arc, end (W)"),
     "fillet": N_("Round a corner (O). F: radius at the corner nearest the cursor"),
     "chamfer": N_("Chamfer a corner (B)"),
     "corner": N_("Trim or extend two lines to meet (K)"),
@@ -304,7 +304,7 @@ class DrawingTools:
                 self.set_tool("fillet")
             else:
                 self._size_popover("fillet", corner)
-        elif action in ("fillet", "corner", "chamfer"):
+        elif action in ("fillet", "corner", "chamfer", "arc"):
             self.set_tool(action)
         elif action == "edit":
             if self.selected_element:

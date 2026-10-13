@@ -15,7 +15,7 @@ The table is ALPHA-T's own (HELP/ENG/SD503.HLP), checked in ALPHA-T under DOSBox
 The ALPHA-T cursor is the pointer's last position on the drawing, or where these keys put it. Typed numbers go to
 the command entry, as typing a coordinate did in ALPHA-T. Letters work while no text field has the focus, and in
 the command entry too (a coordinate never has letters), without Ctrl or Alt, so they never clash with the Ctrl
-shortcuts or with typing. Added here (not in ALPHA-T): E edits the selected element, B is the Chamfer tool. They follow the key's place on the keyboard, so they also work with the Ukrainian layout
+shortcuts or with typing. Added here (not in ALPHA-T): E edits the selected element, B is the Chamfer tool, W the Arc tool. They follow the key's place on the keyboard, so they also work with the Ukrainian layout
 active (the key marked A/Ф is A). F1 stays this app's help."""
 
 from __future__ import annotations
@@ -43,6 +43,7 @@ HIT_KEYS = {
     "t": "text",
     "u": "erase-text",
     "v": "recall-view",
+    "w": "arc",
     "x": "line",
     "y": "move-la",
     "z": "zoom-in",

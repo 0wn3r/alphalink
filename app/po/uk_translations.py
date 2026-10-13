@@ -516,7 +516,7 @@ UK = {
 "{gid} would have no length": "{gid} мав би нульову довжину",
 "Select an element or an operation. L / A: select the nearest line / arc": "Вибрати елемент або операцію. L / A: вибрати найближчу лінію / дугу",
 "Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor": "Креслити лінії. X: ввести X,Z   D: довжина,кут   +: дотиками   S: почати від курсора",
-"Draw an arc: start, a point on the arc, end": "Креслити дугу: початок, точка на дузі, кінець",
+"Draw an arc: start, a point on the arc, end (W)": "Креслити дугу: початок, точка на дузі, кінець (W)",
 "Round a corner (O). F: radius at the corner nearest the cursor": "Скруглити кут (O). F: радіус на куті, найближчому до курсора",
 "Chamfer a corner (B)": "Зняти фаску на куті (B)",
 "Trim or extend two lines to meet (K)": "Обрізати або подовжити дві лінії до перетину (K)",

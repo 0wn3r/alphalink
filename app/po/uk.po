@@ -238,8 +238,8 @@ msgstr "Вибрати елемент або операцію. L / A: вибра
 msgid "Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"
 msgstr "Креслити лінії. X: ввести X,Z   D: довжина,кут   +: дотиками   S: почати від курсора"
 
-msgid "Draw an arc: start, a point on the arc, end"
-msgstr "Креслити дугу: початок, точка на дузі, кінець"
+msgid "Draw an arc: start, a point on the arc, end (W)"
+msgstr "Креслити дугу: початок, точка на дузі, кінець (W)"
 
 msgid "Round a corner (O). F: radius at the corner nearest the cursor"
 msgstr "Скруглити кут (O). F: радіус на куті, найближчому до курсора"
