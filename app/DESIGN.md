@@ -18,7 +18,8 @@ Status (2026-10-13): **working app**; all milestones of section 10 are done. Wha
   manifest `build-aux/flatpak/` (GNOME 51 runtime, `--device=all` for the serial port, home and removable media).
 - Commands: `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG|DRAWING.DXF]`; `python3 -m alphacam dump FILE.PRG`;
   `python3 -m alphacam post PART.alcam -o P.PRG [--sd1 P.SD1]`.
-- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`). Translations: after changing
+- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`); the GTK tests run on a private
+  Xvfb display when Xvfb is installed (`ALPHALINK_TEST_DISPLAY=1` shows them instead). Translations: after changing
   UI strings run `python3 tools/update_translations.py`; a test fails if a string has no Ukrainian translation.
   Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`.
