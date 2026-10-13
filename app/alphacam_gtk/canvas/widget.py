@@ -51,6 +51,7 @@ class LatheCanvas(Gtk.DrawingArea):
         self.picked: list[str] = []
         self.rubber: tuple | None = None
         self.marker: tuple | None = None  # (Point, kind)
+        self.previews: list = []  # construction choices: ("line", a, b) | ("arc", a, centre, b); tap picks one
         self.cursor = None  # ALPHA-T's cursor (a Point) while the keys move it
         self.tool = "select"
         self.show_grid = True
@@ -404,6 +405,21 @@ class LatheCanvas(Gtk.DrawingArea):
             ext = cr.text_extents(str(n))
             cr.move_to(mx - ext.width / 2 - ext.x_bearing, my - ext.height / 2 - ext.y_bearing)
             cr.show_text(str(n))
+        for pv in self.previews:
+            self._rgb(cr, "feed", 0.9)
+            cr.set_line_width(2)
+            cr.set_dash([6, 4])
+            if pv[0] == "line":
+                cr.move_to(*v.to_screen(pv[1].x, pv[1].z))
+                cr.line_to(*v.to_screen(pv[2].x, pv[2].z))
+            else:
+                _k, a, c, b = pv
+                pts = arc_polyline(a, c, b)
+                cr.move_to(*v.to_screen(*pts[0]))
+                for q in pts[1:]:
+                    cr.line_to(*v.to_screen(*q))
+            cr.stroke()
+            cr.set_dash([])
         if self.rubber is not None:
             a, b = self.rubber
             self._rgb(cr, "part", 0.7)
@@ -439,3 +455,12 @@ class LatheCanvas(Gtk.DrawingArea):
             cr.set_font_size(12)
             cr.move_to(sx + 10, sy - 10)
             cr.show_text(label)
+
+
+def arc_polyline(a, c, b, n: int = 32) -> list[tuple[float, float]]:
+    """(X dia, Z) points along the shorter arc about c from a to b (construction previews)."""
+    cr, cz = c.x / 2, c.z
+    ta, tb = math.atan2(a.x / 2 - cr, a.z - cz), math.atan2(b.x / 2 - cr, b.z - cz)
+    rad = math.hypot(a.x / 2 - cr, a.z - cz)
+    d = (tb - ta + math.pi) % (2 * math.pi) - math.pi
+    return [(2 * (cr + rad * math.sin(ta + d * k / n)), cz + rad * math.cos(ta + d * k / n)) for k in range(n + 1)]

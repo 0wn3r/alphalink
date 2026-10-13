@@ -112,3 +112,53 @@ class MoreDrawing(unittest.TestCase):
         self.assertEqual((lb.a, lb.b), (Point(40, -25), Point(60, -25)))
         with self.assertRaises(ValueError):
             drawing.corner(p, a, a)
+
+
+class Construction(unittest.TestCase):
+    """ALPHA-T's other drawing commands (German manual pp. 20-34)."""
+
+    def setUp(self):
+        from alphacam.model.project import Project
+
+        self.p = Project()
+
+    def test_circle_is_two_halves_split_at_3_oclock(self):
+        a, b = drawing.add_circle(self.p, Point(100, -50), 10)
+        g1, g2 = self.p.geometry
+        self.assertEqual((g1.a, g1.b, g2.a, g2.b), (Point(100, -40), Point(100, -60), Point(100, -60), Point(100, -40)))
+
+    def test_tangents_touch_the_circle(self):
+        arc = drawing.add_circle(self.p, Point(100, -50), 10)[0]
+        for a, t in drawing.tangents_point_arc(self.p, Point(100, -80), arc):
+            self.assertAlmostEqual(t.distance(Point(100, -50)), 10, places=5)
+            # tangent: radius at t is perpendicular to the line
+            v1 = ((t.x - a.x) / 2, t.z - a.z)
+            v2 = ((t.x - 100) / 2, t.z + 50)
+            self.assertAlmostEqual(v1[0] * v2[0] + v1[1] * v2[1], 0, places=4)
+        other = drawing.add_circle(self.p, Point(60, -10), 5)[0]
+        lines = drawing.tangents_arc_arc(self.p, arc, other)
+        self.assertEqual(len(lines), 4)
+        for t1, t2 in lines:
+            self.assertAlmostEqual(t1.distance(Point(100, -50)), 10, places=5)
+            self.assertAlmostEqual(t2.distance(Point(60, -10)), 5, places=5)
+
+    def test_parallel_and_angle_tangent(self):
+        line = drawing.add_line(self.p, Point(40, 0), Point(40, -20))
+        (a1, b1), (a2, b2) = drawing.parallels(self.p, line, 2)
+        self.assertEqual({a1.x, a2.x}, {44.0, 36.0})
+        self.assertAlmostEqual(a1.distance(b1), 30, places=5)  # 1.5 x the 20 mm line
+        arc = drawing.add_circle(self.p, Point(100, -50), 10)[0]
+        zs = sorted(a.z for a, _b in drawing.tangents_at_angle(self.p, arc, 90))
+        self.assertEqual(zs, [-60.0, -40.0])
+
+    def test_split_mirror_blend(self):
+        arc = drawing.add_circle(self.p, Point(100, -50), 10)[0]
+        drawing.split_arc(self.p, arc, Point(120, -50))
+        self.assertEqual(len(self.p.geometry), 3)
+        drawing.mirror_z(self.p, -100)
+        self.assertEqual(len(self.p.geometry), 6)
+        self.assertIn(Point(100, -160), [g.a for g in self.p.geometry] + [g.b for g in self.p.geometry])
+        sols = drawing.blends(self.p, ("point", Point(0, 0)), ("point", Point(0, -20)), 15)
+        self.assertEqual(sorted(round(c.x, 3) for _a, c, _b in sols), [-22.361, 22.361])
+        gid = drawing.add_blend(self.p, *sols[0])
+        self.assertTrue(gid)

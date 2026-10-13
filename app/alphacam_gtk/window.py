@@ -169,6 +169,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.drawing = DrawingTools(self, self.canvas)
         part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         part.append(self.drawing.pick_banner)
+        part.append(self.drawing.construct_banner)
         # Part page messages show over the drawing, above the simulation and tool bars, so they never cover the
         # tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
         self.part_toasts = Adw.ToastOverlay(child=overlay, vexpand=True)

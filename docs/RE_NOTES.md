@@ -1063,7 +1063,7 @@ What it adds to the samples, by chapter:
   infeed (SD1 G76 A; every sample has A0), **finishing passes** (Schlichtspäne, SD1 K, can be more than 1: the last
   pass repeated to remove tool spring). Tapered threads by drawing the two lines at the taper. On the control,
   "re-run operation" repeats only the spring passes (for size correction with the offset).
-* CAD commands the app does not have yet: circle, tangent (point to arc, arc to arc), tangent to an arc at an angle,
+* CAD commands added to the app from this (More menu): circle, tangent (point to arc, arc to arc), tangent to an arc at an angle,
   parallel line, split arc, mirror, blend between two points.
 * App changes from this: the thread "angle" field is now ALPHA-T's infeed angle (default 0, written to SD1 G76 A;
   non-zero is refused until there is a sample); parts saved with the old 60 load as 0.

@@ -54,6 +54,14 @@ The tools are in the bar under the drawing.
 - **Fillet**: tap a corner between two lines, then pick a radius or type one.
 - **Chamfer**: tap a corner, set the angle (30°, 45°, 60° or any), then pick a size or type one. The size is measured along the line that runs along Z, the angle is between the chamfer and that line: 2×30° on a shoulder is 2 mm along the diameter and 1.155 mm down the face.
 - **Corner**: tap two lines to extend or trim them until they meet.
+- **More** (ALPHA-T's other drawing commands): a banner says what to tap; where there are several answers they are shown dashed and you tap the one you want. Esc or Cancel stops.
+  - **Circle…**: centre X, Z and radius (two half arcs, split at the 3 o'clock point as ALPHA-T does).
+  - **Tangent**: tap a point (or a line end) and an arc, or two arcs.
+  - **Tangent at an Angle…**: tap an arc, give the angle (0° towards -Z, 90° towards +X).
+  - **Parallel Line…**: tap a line, give the distance (1.5 × as long, as in ALPHA-T).
+  - **Split Arc**: tap an arc where it should be split.
+  - **Blend Arc…**: tap two points, lines or arcs, give the radius, tap the arc you want.
+  - **Mirror…**: copies the whole drawing mirrored about a Z position.
 
 ## Operations
 

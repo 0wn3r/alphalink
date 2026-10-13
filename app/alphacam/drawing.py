@@ -441,3 +441,211 @@ def nearest_text(project, p: Point) -> int | None:
     if not project.texts:
         return None
     return min(range(len(project.texts)), key=lambda i: p.distance(project.texts[i].p))
+
+
+# --- construction commands from the ALPHA-T manual (German manual pp. 20-34) ----------------------------------
+# All work in (radius, Z) and return Points with X as a diameter. Where ALPHA-T offers several solutions and cycles
+# them with the space bar, these return all of them and the app lets the user tap the one wanted.
+
+
+def add_circle(project, centre: Point, radius: float) -> list[str]:
+    """ALPHA-T KREIS: a full circle, as two half arcs split at 3 and 9 o'clock (ALPHA-T draws circles from the
+    3-o'clock point, so that point is already a split point)."""
+    if radius <= 0:
+        raise ValueError(tr("radius must be > 0"))
+    cr, cz = _rz(centre)
+    p3, p9 = _pt((cr, cz + radius)), _pt((cr, cz - radius))
+    return [add_arc_3p(project, p3, _pt((cr + radius, cz)), p9), add_arc_3p(project, p9, _pt((cr - radius, cz)), p3)]
+
+
+def _circle_of(project, gid: str):
+    g = next((e for e in project.geometry if e.id == gid), None)
+    if not isinstance(g, Arc):
+        raise ValueError(tr("pick an arc"))
+    return _circle(g)
+
+
+def _line_of(project, gid: str) -> Line:
+    g = next((e for e in project.geometry if e.id == gid), None)
+    if not isinstance(g, Line):
+        raise ValueError(tr("pick a line"))
+    return g
+
+
+def tangents_point_arc(project, p: Point, arc_id: str) -> list[tuple[Point, Point]]:
+    """ALPHA-T TANGENTE 1: the (up to 2) lines from p touching the arc's circle."""
+    cr, cz, rad = _circle_of(project, arc_id)
+    pr, pz = _rz(p)
+    d = math.hypot(pr - cr, pz - cz)
+    if d <= rad + 1e-9:
+        raise ValueError(tr("the point is inside the arc"))
+    base = math.atan2(pr - cr, pz - cz)
+    off = math.acos(rad / d)
+    return [(p, _pt((cr + rad * math.sin(base + s * off), cz + rad * math.cos(base + s * off)))) for s in (1, -1)]
+
+
+def tangents_arc_arc(project, id1: str, id2: str) -> list[tuple[Point, Point]]:
+    """ALPHA-T TANGENTE 2: the (up to 4) lines touching both arcs' circles: 2 outer, 2 crossing."""
+    (r1, z1, a), (r2, z2, b) = _circle_of(project, id1), _circle_of(project, id2)
+    dz, dr = z2 - z1, r2 - r1
+    d = math.hypot(dz, dr)
+    if d < 1e-9:
+        raise ValueError(tr("the arcs have the same centre"))
+    out = []
+    for sign in (1, -1):  # 1: outer tangents (same side), -1: inner (crossing)
+        c = (a - sign * b) / d
+        if abs(c) > 1:
+            continue
+        h = math.sqrt(max(1 - c * c, 0.0))
+        for k in (1, -1):
+            # unit normal n with n . (centre2 - centre1)/d = c
+            nz = (dz * c - k * h * dr) / d
+            nr = (dr * c + k * h * dz) / d
+            t1 = _pt((r1 + a * nr, z1 + a * nz))
+            t2 = _pt((r2 + sign * b * nr, z2 + sign * b * nz))
+            if t1 != t2:
+                out.append((t1, t2))
+    return out
+
+
+def tangents_at_angle(project, arc_id: str, angle: float) -> list[tuple[Point, Point]]:
+    """ALPHA-T TANGENTE ZUM KREISBOGEN: a line at `angle` (as polar: 0 = towards -Z, 90 = +X) touching the arc's
+    circle, on either side; 1.5 x the diameter long, centred on the touching point (ALPHA-T draws it 1.5 x long)."""
+    cr, cz, rad = _circle_of(project, arc_id)
+    a = math.radians(angle)
+    ur, uz = math.sin(a), -math.cos(a)  # direction in (r, z)
+    half = 1.5 * rad
+    out = []
+    for s in (1, -1):
+        tr_, tz_ = cr + s * rad * uz, cz - s * rad * ur  # normal to the direction
+        out.append((_pt((tr_ - half * ur, tz_ - half * uz)), _pt((tr_ + half * ur, tz_ + half * uz))))
+    return out
+
+
+def parallels(project, line_id: str, distance: float) -> list[tuple[Point, Point]]:
+    """ALPHA-T PARALLEL-LINIE: the two lines `distance` away from the line, 1.5 x its length, centred on it."""
+    if distance <= 0:
+        raise ValueError(tr("distance must be > 0"))
+    g = _line_of(project, line_id)
+    (ar, az), (br, bz) = _rz(g.a), _rz(g.b)
+    length = math.hypot(br - ar, bz - az)
+    ur, uz = (br - ar) / length, (bz - az) / length
+    mr, mz = (ar + br) / 2, (az + bz) / 2
+    half = 0.75 * length
+    out = []
+    for s in (1, -1):
+        nr, nz = -uz * s * distance, ur * s * distance
+        out.append((_pt((mr + nr - half * ur, mz + nz - half * uz)), _pt((mr + nr + half * ur, mz + nz + half * uz))))
+    return out
+
+
+def split_arc(project, arc_id: str, p: Point) -> list[str]:
+    """ALPHA-T TEILE KREISBOGEN: split the arc at the point of it nearest p; returns the two new ids."""
+    g = next((e for e in project.geometry if e.id == arc_id), None)
+    if not isinstance(g, Arc):
+        raise ValueError(tr("pick an arc"))
+    cr, cz, rad = _circle(g)
+    pr, pz = _rz(p)
+    ang = math.atan2(pr - cr, pz - cz)
+    q = _pt((cr + rad * math.sin(ang), cz + rad * math.cos(ang)))
+    if not _on_arc(g, q) or q in (g.a, g.b):
+        raise ValueError(tr("the point is not inside the arc"))
+    i = project.geometry.index(g)
+    first = Arc(g.a, q, g.centre, g.ccw, id=g.id)
+    second = Arc(q, g.b, g.centre, g.ccw, id=next_id(project))
+    project.geometry[i:i + 1] = [first, second]
+    return [first.id, second.id]
+
+
+def mirror_z(project, z0: float) -> list[str]:
+    """ALPHA-T SPIEGELN: add the mirror image of every line and arc about the plane Z = z0 (a symmetric part drawn
+    once). Returns the new ids."""
+    def m(p: Point) -> Point:
+        return Point(p.x, round(2 * z0 - p.z, 6))
+
+    new = []
+    for g in list(project.geometry):
+        gid = next_id(project)
+        if isinstance(g, Arc):
+            project.geometry.append(Arc(m(g.a), m(g.b), m(g.centre), not g.ccw, id=gid))
+        else:
+            project.geometry.append(Line(m(g.a), m(g.b), id=gid))
+        new.append(gid)
+    return new
+
+
+def _ref_loci(project, ref, radius: float):
+    """Where the centre of a blend arc of `radius` can be for one reference: ("point", P) -> circle radius R about
+    P; ("line", id) -> two parallel lines; ("arc", id, convex) -> concentric circle r + R (convex) or |r - R|."""
+    kind = ref[0]
+    if kind == "point":
+        pr, pz = _rz(ref[1])
+        return [("c", pr, pz, radius)]
+    if kind == "line":
+        g = _line_of(project, ref[1])
+        (ar, az), (br, bz) = _rz(g.a), _rz(g.b)
+        length = math.hypot(br - ar, bz - az)
+        nr, nz = -(bz - az) / length, (br - ar) / length
+        return [("l", ar + s * radius * nr, az + s * radius * nz, br - ar, bz - az) for s in (1, -1)]
+    cr, cz, rad = _circle_of(project, ref[1])
+    return [("c", cr, cz, rad + radius if ref[2] else abs(rad - radius))]
+
+
+def _contact(project, ref, cr: float, cz: float, radius: float) -> Point:
+    """The point where a blend arc centred (cr, cz) touches the reference."""
+    kind = ref[0]
+    if kind == "point":
+        return ref[1]
+    if kind == "line":
+        g = _line_of(project, ref[1])
+        (ar, az), (br, bz) = _rz(g.a), _rz(g.b)
+        dr, dz = br - ar, bz - az
+        t = ((cr - ar) * dr + (cz - az) * dz) / (dr * dr + dz * dz)
+        return _pt((ar + t * dr, az + t * dz))
+    r0, z0, rad = _circle_of(project, ref[1])
+    d = math.hypot(cr - r0, cz - z0)
+    return _pt((r0 + rad * (cr - r0) / d, z0 + rad * (cz - z0) / d))
+
+
+def blends(project, ref1, ref2, radius: float) -> list[tuple[Point, Point, Point]]:
+    """ALPHA-T VERSCHMELZUNG: arcs of `radius` touching two references (a point, a line, or an arc given as convex or
+    concave). Returns (start, centre, end) for every solution; the user picks one by its centre."""
+    if radius <= 0:
+        raise ValueError(tr("radius must be > 0"))
+    centres = []
+    for l1 in _ref_loci(project, ref1, radius):
+        for l2 in _ref_loci(project, ref2, radius):
+            if l1[0] == "c" and l2[0] == "c":
+                pts = _circle_circle(l1[1:], l2[1:])
+            elif l1[0] == "l" and l2[0] == "l":
+                a1r, a1z, d1r, d1z = l1[1:]
+                a2r, a2z, d2r, d2z = l2[1:]
+                den = d1r * d2z - d1z * d2r
+                if abs(den) < 1e-12:
+                    continue
+                t = ((a2r - a1r) * d2z - (a2z - a1z) * d2r) / den
+                pts = [(a1r + t * d1r, a1z + t * d1z)]
+            else:
+                ln, ci = (l1, l2) if l1[0] == "l" else (l2, l1)
+                ar, az, dr, dz = ln[1:]
+                fake = Line(_pt((ar, az)), _pt((ar + dr, az + dz)))
+                pts = _line_circle(fake, *ci[1:])
+            centres += pts
+    out = []
+    for cr, cz in centres:
+        a = _contact(project, ref1, cr, cz, radius)
+        b = _contact(project, ref2, cr, cz, radius)
+        if a != b:
+            out.append((a, _pt((cr, cz)), b))
+    return out
+
+
+def add_blend(project, start: Point, centre: Point, end: Point) -> str:
+    """The shorter arc about `centre` from start to end."""
+    cr, cz = _rz(centre)
+    (ar, az), (br, bz) = _rz(start), _rz(end)
+    rad = math.hypot(ar - cr, az - cz)
+    ta, tb = math.atan2(ar - cr, az - cz), math.atan2(br - cr, bz - cz)
+    d = (tb - ta + math.pi) % (2 * math.pi) - math.pi  # signed shortest sweep
+    tm = ta + d / 2
+    return add_arc_3p(project, start, _pt((cr + rad * math.sin(tm), cz + rad * math.cos(tm))), end)

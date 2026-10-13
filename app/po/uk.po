@@ -58,6 +58,24 @@ msgstr "лінія зменшилася б до точки"
 msgid "no text"
 msgstr "немає тексту"
 
+msgid "pick an arc"
+msgstr "виберіть дугу"
+
+msgid "pick a line"
+msgstr "виберіть лінію"
+
+msgid "the point is inside the arc"
+msgstr "точка всередині дуги"
+
+msgid "the arcs have the same centre"
+msgstr "дуги мають спільний центр"
+
+msgid "distance must be > 0"
+msgstr "відстань має бути > 0"
+
+msgid "the point is not inside the arc"
+msgstr "точка не лежить на дузі"
+
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
 
@@ -169,6 +187,27 @@ msgstr "CAM для токарного верстата Harrison Alpha 400T, що
 msgid "translator-credits"
 msgstr "Claude (переклад), Eduard (перевірка)"
 
+msgid "Circle…"
+msgstr "Коло…"
+
+msgid "Tangent"
+msgstr "Дотична"
+
+msgid "Tangent at an Angle…"
+msgstr "Дотична під кутом…"
+
+msgid "Blend Arc…"
+msgstr "Дуга сполучення…"
+
+msgid "Parallel Line…"
+msgstr "Паралельна лінія…"
+
+msgid "Split Arc"
+msgstr "Розділити дугу"
+
+msgid "Mirror…"
+msgstr "Дзеркало…"
+
 msgid "Arc"
 msgstr "Дуга"
 
@@ -213,6 +252,15 @@ msgstr "Видалити елемент (Del)"
 
 msgid "Keypad"
 msgstr "Цифрова клавіатура"
+
+msgid "More"
+msgstr "Ще"
+
+msgid "More drawing commands"
+msgstr "Інші команди креслення"
+
+msgid "_Cancel"
+msgstr "_Скасувати"
 
 msgid "Tap the contour elements in cutting order"
 msgstr "Торкніться елементів контуру в порядку обробки"
@@ -261,9 +309,6 @@ msgstr "Текст"
 
 msgid "Height"
 msgstr "Висота"
-
-msgid "_Cancel"
-msgstr "_Скасувати"
 
 msgid "_Add"
 msgstr "_Додати"
@@ -345,6 +390,78 @@ msgstr[2] "Вибрано {n} — торкніться ще раз, щоб пр�
 
 msgid "Pick contour"
 msgstr "Вибір контуру"
+
+msgid "Centre X (Ø)"
+msgstr "Центр X (Ø)"
+
+msgid "Centre Z"
+msgstr "Центр Z"
+
+msgid "Circle"
+msgstr "Коло"
+
+msgid "Radius"
+msgstr "Радіус"
+
+msgid "Mirror"
+msgstr "Дзеркало"
+
+msgid "Mirror about Z"
+msgstr "Дзеркально відносно Z"
+
+msgid "Tangent at an angle: tap the arc"
+msgstr "Дотична під кутом: торкніться дуги"
+
+msgid "Tangent: tap a point, or an arc"
+msgstr "Дотична: торкніться точки або дуги"
+
+msgid "Parallel line: tap the line"
+msgstr "Паралельна лінія: торкніться лінії"
+
+msgid "Split arc: tap the arc where to split it"
+msgstr "Розділити дугу: торкніться дуги там, де розділити"
+
+msgid "Blend arc: tap the 1st point, line or arc"
+msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
+
+msgid "No solution for these elements"
+msgstr "Для цих елементів розв’язку немає"
+
+msgid "Tap the one you want (dashed)"
+msgstr "Торкніться потрібного варіанта (пунктир)"
+
+msgid "Tap an arc"
+msgstr "Торкніться дуги"
+
+msgid "Split arc"
+msgstr "Розділити дугу"
+
+msgid "Tap a line"
+msgstr "Торкніться лінії"
+
+msgid "Distance"
+msgstr "Відстань"
+
+msgid "Parallel Line"
+msgstr "Паралельна лінія"
+
+msgid "Parallel line"
+msgstr "Паралельна лінія"
+
+msgid "Tangent at an Angle"
+msgstr "Дотична під кутом"
+
+msgid "Tangent: now tap the arc"
+msgstr "Дотична: тепер торкніться дуги"
+
+msgid "Blend arc: now the 2nd point, line or arc"
+msgstr "Дуга сполучення: тепер 2-а точка, лінія або дуга"
+
+msgid "Blend arc"
+msgstr "Дуга сполучення"
+
+msgid "Blend Arc"
+msgstr "Дуга сполучення"
 
 msgid "Help"
 msgstr "Довідка"
@@ -1200,9 +1317,6 @@ msgstr "Y у DXF — це"
 
 msgid "Diameter"
 msgstr "Діаметр"
-
-msgid "Radius"
-msgstr "Радіус"
 
 msgid "Units"
 msgstr "Одиниці"

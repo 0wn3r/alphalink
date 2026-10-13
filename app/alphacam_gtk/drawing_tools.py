@@ -12,13 +12,16 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gtk  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, Gtk  # noqa: E402
 
 from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Arc, Line, Point  # noqa: E402
 from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
+CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
+                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc…"), "blend"),
+                  (N_("Mirror…"), "mirror")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
@@ -73,7 +76,20 @@ class DrawingTools:
         # of cutting the tool names short
         self.bar = Adw.WrapBox(child_spacing=6, line_spacing=6, margin_start=6, margin_end=6, margin_top=6,
                                margin_bottom=6, justify=Adw.JustifyMode.FILL, justify_last_line=True)
-        for wdg in (self.palette, self.keypad_button, self.entry, self.done, self.delete_el):
+        # ALPHA-T's other drawing commands (German manual pp. 20-34): circle, tangents, parallel, split, mirror, blend
+        more = Gio.Menu()
+        for label, kind in CONSTRUCT_MENU:
+            item = Gio.MenuItem.new(_(label), None)
+            item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
+            more.append_item(item)
+        self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More drawing commands"))
+        construct = Gio.SimpleAction.new("construct", GLib.VariantType.new("s"))
+        construct.connect("activate", lambda _a, v: self.start_construct(v.get_string()))
+        window.add_action(construct)
+        self.construct: dict | None = None
+        self.construct_banner = Adw.Banner(button_label=_("_Cancel"))
+        self.construct_banner.connect("button-clicked", lambda *_: self.cancel_construct())
+        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.delete_el):
             self.bar.append(wdg)
 
         # contour picking banner
@@ -117,6 +133,9 @@ class DrawingTools:
             self._toggle_pick(element)
             return
         self.cursor, self.c.cursor = Point(x, z), None
+        if self.construct is not None:
+            self._construct_tap(Point(x, z), tol, element)
+            return
         if self.measure is not None:
             self._measure_point(Point(x, z))
             return
@@ -167,6 +186,9 @@ class DrawingTools:
     def _window_esc(self, ctl, keyval, code, state) -> bool:
         if keyval != Gdk.KEY_Escape or self.w.get_visible_dialog() is not None:
             return False
+        if self.construct is not None:
+            self.cancel_construct()
+            return True
         if self.pick_op is not None:
             self.cancel_pick()
             return True
@@ -683,3 +705,180 @@ class DrawingTools:
         self.pick_banner.set_revealed(False)
         self.pick_banner.set_title(_("Tap the contour elements in cutting order"))
         self.c.queue_draw()
+
+    # --- construction commands (ALPHA-T manual pp. 20-34) ----------------------------------------------------
+    # A small state machine: each step says what to tap in the banner; numbers come from a dialog; where there
+    # are several solutions they are shown dashed and the tap nearest one picks it (ALPHA-T cycles them with Space).
+
+    def start_construct(self, kind: str) -> None:
+        if self.w.project is None:
+            return
+        self.cancel_pick() if self.pick_op is not None else None
+        self.finish_chain()
+        self.set_tool("select")
+        if kind == "circle":
+            c = self.cursor or Point(0, 0)
+            self._numbers(_("Circle"), [(_("Centre X (Ø)"), c.x, -2000, 2000), (_("Centre Z"), c.z, -2000, 2000),
+                                       (_("Radius"), 10.0, 0.001, 1000)],
+                          lambda v: self._edit(_("Circle"), lambda p: drawing.add_circle(p, Point(v[0], v[1]), v[2])))
+            return
+        if kind == "mirror":
+            z = self.cursor.z if self.cursor else 0.0
+            self._numbers(_("Mirror"), [(_("Mirror about Z"), z, -2000, 2000)],
+                          lambda v: self._edit(_("Mirror"), lambda p: drawing.mirror_z(p, v[0])))
+            return
+        first = {"tangent": _("Tangent: tap a point, or an arc"), "tangent-angle": _("Tangent at an angle: tap the arc"),
+                 "parallel": _("Parallel line: tap the line"), "split": _("Split arc: tap the arc where to split it"),
+                 "blend": _("Blend arc: tap the 1st point, line or arc")}[kind]
+        self.construct = {"kind": kind, "step": 0, "refs": []}
+        self._prompt(first)
+
+    def _prompt(self, text: str) -> None:
+        self.construct_banner.set_title(text)
+        self.construct_banner.set_revealed(True)
+
+    def cancel_construct(self) -> None:
+        self.construct = None
+        self.construct_banner.set_revealed(False)
+        self.c.previews = []
+        self.c.queue_draw()
+
+    def _edit(self, label: str, fn) -> None:
+        try:
+            if self.w.apply_edit(label, fn):
+                self.w.refresh()
+        finally:
+            self.cancel_construct()
+
+    def _numbers(self, title: str, fields, done) -> None:
+        dlg = Adw.AlertDialog(heading=title)
+        group = Adw.PreferencesGroup()
+        spins = []
+        for label, value, lo, hi in fields:
+            r = Adw.SpinRow.new_with_range(lo, hi, 0.5)
+            r.set_title(label)
+            r.set_digits(3)
+            r.set_value(value)
+            group.add(r)
+            spins.append(r)
+        dlg.set_extra_child(group)
+        dlg.add_response("cancel", _("_Cancel"))
+        dlg.add_response("ok", _("_Apply"))
+        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("ok")
+        dlg.set_close_response("cancel")
+
+        def response(_d, r):
+            if r == "ok":
+                done([s.get_value() for s in spins])
+            else:
+                self.cancel_construct()
+
+        dlg.connect("response", response)
+        dlg.present(self.w)
+
+    def _element(self, gid: str):
+        return next((g for g in self.w.project.geometry if g.id == gid), None)
+
+    def _ref_at(self, p: Point, tol: float, element: str):
+        """What a construction tap means: an arc or line under the finger, else the nearest point (snapped)."""
+        g = self._element(element) if element else None
+        from alphacam.model.geometry import Arc
+
+        if isinstance(g, Arc):
+            return ("arc", g.id)
+        if g is not None and isinstance(g, Line) and drawing.distance_to(g, p) <= tol:
+            near = min((g.a, g.b), key=p.distance)
+            if near.distance(p) > tol:
+                return ("line", g.id)
+            return ("point", near)
+        pt, _k = drawing.snap(self.w.project, p, tol, grid=1.0 if self.w.project.units == "mm" else 0.05)
+        return ("point", pt)
+
+    def _choose(self, previews, then) -> None:
+        if not previews:
+            self.w.toast(_("No solution for these elements"))
+            self.cancel_construct()
+            return
+        if len(previews) == 1:
+            then(previews[0])
+            return
+        self.c.previews = previews
+        self.construct["choices"] = (previews, then)
+        self._prompt(_("Tap the one you want (dashed)"))
+        self.c.queue_draw()
+
+    @staticmethod
+    def _dist_to_preview(pv, p: Point) -> float:
+        from alphacam.model.geometry import Line as L
+
+        if pv[0] == "line":
+            return drawing.distance_to(L(pv[1], pv[2]), p)
+        from alphacam_gtk.canvas.widget import arc_polyline
+
+        return min(Point(x, z).distance(p) for x, z in arc_polyline(pv[1], pv[2], pv[3]))
+
+    def _construct_tap(self, p: Point, tol: float, element: str) -> None:
+        st = self.construct
+        if "choices" in st:
+            previews, then = st["choices"]
+            then(min(previews, key=lambda pv: self._dist_to_preview(pv, p)))
+            return
+        kind, ref = st["kind"], self._ref_at(p, tol, element)
+        try:
+            if kind == "split":
+                if ref[0] != "arc":
+                    raise ValueError(_("Tap an arc"))
+                self._edit(_("Split arc"), lambda pr: drawing.split_arc(pr, ref[1], p))
+            elif kind == "parallel":
+                if ref[0] == "point" and element and isinstance(self._element(element), Line):
+                    ref = ("line", element)
+                if ref[0] != "line":
+                    raise ValueError(_("Tap a line"))
+                self._numbers(_("Parallel Line"), [(_("Distance"), 1.0, 0.001, 1000)], lambda v: self._choose(
+                    [("line", a, b) for a, b in drawing.parallels(self.w.project, ref[1], v[0])],
+                    lambda pv: self._edit(_("Parallel line"), lambda pr: drawing.add_line(pr, pv[1], pv[2]))))
+            elif kind == "tangent-angle":
+                if ref[0] != "arc":
+                    raise ValueError(_("Tap an arc"))
+                self._numbers(_("Tangent at an Angle"), [(_("Angle"), 0.0, -360, 360)], lambda v: self._choose(
+                    [("line", a, b) for a, b in drawing.tangents_at_angle(self.w.project, ref[1], v[0])],
+                    lambda pv: self._edit(_("Tangent"), lambda pr: drawing.add_line(pr, pv[1], pv[2]))))
+            elif kind == "tangent":
+                st["refs"].append(ref)
+                if len(st["refs"]) == 1:
+                    self._prompt(_("Tangent: now tap the arc"))
+                    return
+                first, second = st["refs"]
+                if second[0] != "arc":
+                    st["refs"].pop()
+                    raise ValueError(_("Tap an arc"))
+                lines = (drawing.tangents_arc_arc(self.w.project, first[1], second[1]) if first[0] == "arc"
+                         else drawing.tangents_point_arc(self.w.project, first[1], second[1]))
+                self._choose([("line", a, b) for a, b in lines],
+                             lambda pv: self._edit(_("Tangent"), lambda pr: drawing.add_line(pr, pv[1], pv[2])))
+            elif kind == "blend":
+                st["refs"].append(ref)
+                if len(st["refs"]) == 1:
+                    self._prompt(_("Blend arc: now the 2nd point, line or arc"))
+                    return
+                refs = [(r[0], r[1], cv) if r[0] == "arc" else r for r in st["refs"] for cv in ((True, False)
+                        if r[0] == "arc" else (None,))]
+                r1 = [r for r in refs if r[1] == st["refs"][0][1]]
+                r2 = [r for r in refs if r[1] == st["refs"][1][1]]
+
+                def solve(v):
+                    sols = []
+                    for a in r1:
+                        for b in r2:
+                            try:
+                                sols += drawing.blends(self.w.project, a, b, v[0])
+                            except ValueError:
+                                pass
+                    self._choose([("arc", s, c, e) for s, c, e in sols],
+                                 lambda pv: self._edit(_("Blend arc"), lambda pr: drawing.add_blend(pr, pv[1], pv[2], pv[3])))
+
+                self._numbers(_("Blend Arc"), [(_("Radius"), 5.0, 0.001, 1000)], solve)
+        except ValueError as e:
+            self.w.toast(str(e))
+

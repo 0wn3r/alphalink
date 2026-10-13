@@ -502,3 +502,45 @@ class GtkArcCorner(unittest.TestCase):
         self.assertAlmostEqual(out["arc"][0].x, 50, places=2)
         self.assertAlmostEqual(out["arc"][0].z, -30, places=2)
         self.assertEqual(out["corner"], (Point(40, -25), Point(40, -25)))
+
+
+class GtkConstruct(unittest.TestCase):
+    def test_parallel_line_by_taps(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(100, 60), first_tool=3))
+            d = w.drawing
+            d.entry.set_text("40,0")
+            d._entry_activate(d.entry)
+            d.entry.set_text("40,-20")
+            d._entry_activate(d.entry)
+            d.finish_chain()
+            line = w.project.geometry[0].id
+            d.start_construct("parallel")
+            d._tapped(w.canvas, 40, -10, 1.0, -1, line)
+            dlg = w.get_visible_dialog()
+            dlg.emit("response", "ok")
+            out["previews"] = len(w.canvas.previews)
+            d._tapped(w.canvas, 44, -10, 1.0, -1, "")  # the outer one
+            out["new"] = w.project.geometry[-1]
+            out["banner"] = d.construct_banner.get_revealed()
+            w.undo.mark_saved()
+            app.quit()
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["previews"], 2)
+        self.assertEqual((out["new"].a.x, out["new"].b.x), (42.0, 42.0))  # distance 1 (radius) = X+2
+        self.assertFalse(out["banner"])
