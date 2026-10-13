@@ -288,6 +288,15 @@ class GtkLineTool(unittest.TestCase):
         self.assertTrue(out["chamfer_done_hidden"])
 
 
+class ShiftScroll(unittest.TestCase):
+    def test_shift_wheel_scrolls_sideways(self):
+        from alphacam_gtk.canvas.input import shift_scroll
+
+        self.assertEqual(shift_scroll(0, 1, True), (1, 0))
+        self.assertEqual(shift_scroll(0, 1, False), (0, 1))
+        self.assertEqual(shift_scroll(2, 1, True), (2, 1))  # a touchpad's own sideways scroll is kept
+
+
 class Simulation(unittest.TestCase):
     def test_pass_starts(self):
         from alphacam_gtk.canvas.paths import pass_starts

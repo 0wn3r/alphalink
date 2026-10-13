@@ -4,7 +4,7 @@
   two-finger pinch               zoom about the fingers' centre, and pan with the centre (pinch wins over drag)
   double tap / double click      fit; again returns to the previous view
   tap / click                    select the toolpath under it, with a radius from the event's source
-  wheel                          pan; Ctrl+wheel or touchpad pinch-scroll zooms
+  wheel                          pan up/down; Shift+wheel pans sideways; Ctrl+wheel or touchpad pinch-scroll zooms
 Rotation is ignored on purpose (T5)."""
 
 from __future__ import annotations
@@ -152,6 +152,15 @@ class InputRouter:
             px, py = self.w.pointer
             self.w.view.zoom_at(px, py, 0.87 if dy > 0 else 1.15)
         else:
+            dx, dy = shift_scroll(dx, dy, bool(state & Gdk.ModifierType.SHIFT_MASK))
             self.w.view.pan(-dx * step, -dy * step)
         self.on_view_changed()
         return True
+
+
+def shift_scroll(dx: float, dy: float, shift: bool) -> tuple[float, float]:
+    """Shift turns a vertical wheel into a horizontal scroll (desktop convention; GTK does not do it for us). A
+    touchpad's own sideways movement (dx) is left alone."""
+    if shift and dx == 0:
+        return dy, 0.0
+    return dx, dy
