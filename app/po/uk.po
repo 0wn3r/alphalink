@@ -202,8 +202,8 @@ msgstr "Дотична"
 msgid "Tangent at an Angle…"
 msgstr "Дотична під кутом…"
 
-msgid "Blend Arc…"
-msgstr "Дуга сполучення…"
+msgid "Blend Arc… (O)"
+msgstr "Дуга сполучення… (O)"
 
 msgid "Parallel Line…"
 msgstr "Паралельна лінія…"
@@ -241,8 +241,8 @@ msgstr "Креслити лінії. X: ввести X,Z   D: довжина,к�
 msgid "Draw an arc: start, a point on the arc, end (W)"
 msgstr "Креслити дугу: початок, точка на дузі, кінець (W)"
 
-msgid "Round a corner (O). F: radius at the corner nearest the cursor"
-msgstr "Скруглити кут (O). F: радіус на куті, найближчому до курсора"
+msgid "Round a corner. F: radius at the corner nearest the cursor"
+msgstr "Скруглити кут. F: радіус на куті, найближчому до курсора"
 
 msgid "Chamfer a corner (B)"
 msgstr "Зняти фаску на куті (B)"

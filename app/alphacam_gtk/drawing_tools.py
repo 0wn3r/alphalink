@@ -20,7 +20,7 @@ from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action, key_char  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
-                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc…"), "blend"),
+                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc… (O)"), "blend"),
                   (N_("Mirror…"), "mirror")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
@@ -29,7 +29,7 @@ TOOL_TIPS = {
     "select": N_("Select an element or an operation. L / A: select the nearest line / arc"),
     "line": N_("Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"),
     "arc": N_("Draw an arc: start, a point on the arc, end (W)"),
-    "fillet": N_("Round a corner (O). F: radius at the corner nearest the cursor"),
+    "fillet": N_("Round a corner. F: radius at the corner nearest the cursor"),
     "chamfer": N_("Chamfer a corner (B)"),
     "corner": N_("Trim or extend two lines to meet (K)"),
 }
@@ -304,7 +304,9 @@ class DrawingTools:
                 self.set_tool("fillet")
             else:
                 self._size_popover("fillet", corner)
-        elif action in ("fillet", "corner", "chamfer", "arc"):
+        elif action == "blend":
+            self.start_construct("blend")  # ALPHA-T's O: 2 PKT RADIUS
+        elif action in ("corner", "chamfer", "arc"):
             self.set_tool(action)
         elif action == "edit":
             if self.selected_element:

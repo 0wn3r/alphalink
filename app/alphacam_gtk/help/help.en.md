@@ -154,7 +154,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 - **G** moves the cursor to X,Z, **H** moves it by dX,dZ, **Y** by length,angle. With the Line tool the next line starts there.
 - **P** jumps to the nearest point (a line or arc end, an arc centre), **I** to the nearest intersection.
 - **L** or **A** finds the nearest line or arc; then **-** or Delete erases it.
-- **F** radius at the corner nearest the cursor, **O** the Fillet tool, **K** trim corner (the Corner tool).
+- **F** radius at the corner nearest the cursor, **O** blend arc between two elements (ALPHA-T's 2 PKT RADIUS, More ▸ Blend Arc), **K** trim corner (the Corner tool).
 - **M** measures X and Z between two points, **N** length and angle. Tap the points, or move the cursor and press Enter; the nearest point is used.
 - **T** puts text at the cursor, **U** erases the nearest text.
 - **Q** erases all of the drawing after asking (Enter erases, Esc does not). Undo brings it back.

@@ -12,7 +12,7 @@ class HitKeys(unittest.TestCase):
         """The letters of ALPHA-T's hit code table (HELP/ENG/SD503.HLP)."""
         expect = {"a": "find-arc", "c": "cam", "d": "line-la", "f": "radius", "g": "move-abs", "h": "move-inc",
                   "i": "find-intersection", "k": "corner", "l": "find-line", "m": "measure-xz", "n": "measure-la",
-                  "o": "fillet", "p": "find-point", "q": "erase-drawing", "r": "fit", "s": "start", "t": "text",
+                  "o": "blend", "p": "find-point", "q": "erase-drawing", "r": "fit", "s": "start", "t": "text",
                   "u": "erase-text", "v": "recall-view", "x": "line", "y": "move-la", "z": "zoom-in", "+": "freehand"}
         for k, v in expect.items():
             self.assertEqual(hit_action(k), v, k)

@@ -687,6 +687,9 @@ class GtkEditKeyAndMessages(unittest.TestCase):
             out["esc"] = d._window_esc(None, Gdk.KEY_Escape, 9, 0)
             out["left"] = w._toast_count
             out["tip"] = d.palette.get_toggle_by_name("corner").get_tooltip()
+            d.hit_key("o")  # ALPHA-T's 2 PKT RADIUS
+            out["blend"] = d.construct
+            d.cancel_construct()
             w.undo.mark_saved()
             app.quit()
 
@@ -697,3 +700,4 @@ class GtkEditKeyAndMessages(unittest.TestCase):
         self.assertTrue(out["esc"])
         self.assertEqual(out["left"], 0)
         self.assertIn("(K)", out["tip"])
+        self.assertIn("blend", str(out["blend"]))

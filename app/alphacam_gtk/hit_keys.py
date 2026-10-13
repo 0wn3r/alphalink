@@ -35,7 +35,7 @@ HIT_KEYS = {
     "l": "find-line",
     "m": "measure-xz",
     "n": "measure-la",
-    "o": "fillet",
+    "o": "blend",
     "p": "find-point",
     "q": "erase-drawing",
     "r": "fit",

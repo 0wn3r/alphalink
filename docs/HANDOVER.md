@@ -27,3 +27,8 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 - Vendor binaries and manuals are not in the repo; see `docs/VENDOR_FILES_SHA256.txt`.
 - User manuals: Training Manual and Reference Manual (English and Ukrainian) are written as Claude Docs, exported
   to PDF into `app/alphacam_gtk/manuals/` and opened from the main menu. Screenshots: `tools/manual_shots.py`.
+  Training: https://claude.ai/code/artifact/c21b95e7-67ca-46aa-8c3d-633ed77f4bd8 · Reference:
+  https://claude.ai/code/artifact/b0e78fdb-72a0-4624-910b-cd4c108c830c. After editing a doc, export each tab to PDF
+  again and replace `manuals/<training|reference>.<en|uk>.pdf`.
+- One-letter keys follow ALPHA-T (`app/alphacam_gtk/hit_keys.py`); added where ALPHA-T had none: E edit element,
+  B Chamfer tool, W Arc tool. O is ALPHA-T's 2 PKT RADIUS (Blend Arc). Only J is still free.
