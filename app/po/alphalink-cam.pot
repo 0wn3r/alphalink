@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 21:00+0300\n"
+"POT-Creation-Date: 2026-10-13 21:16+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -27,7 +27,7 @@ msgid "translator-credits"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:553
-#: alphacam_gtk/op_editor.py:219
+#: alphacam_gtk/op_editor.py:232 alphacam_gtk/op_editor.py:249
 msgid "Arc"
 msgstr ""
 
@@ -36,7 +36,7 @@ msgid "Fillet"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:22 alphacam_gtk/drawing_tools.py:553
-#: alphacam_gtk/op_editor.py:219
+#: alphacam_gtk/op_editor.py:232 alphacam_gtk/op_editor.py:249
 msgid "Line"
 msgstr ""
 
@@ -816,31 +816,36 @@ msgstr ""
 msgid "Pick Contour on the Drawing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:159
+#: alphacam_gtk/op_editor.py:161
+msgid ""
+"Grooving follows the drawn profile; the tool reference is the tip's -Z "
+"corner."
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:184 alphacam_gtk/op_editor.py:192
+#: alphacam_gtk/op_editor.py:196 alphacam_gtk/op_editor.py:200
+#: alphacam_gtk/op_editor.py:205
+#, python-brace-format
+msgid "Change {what}"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:209
+msgid "Change contour"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:228
 #, python-brace-format
 msgid "{n} element"
 msgid_plural "{n} elements"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/op_editor.py:165
-msgid ""
-"Grooving follows the drawn profile; the tool reference is the tip's -Z "
-"corner."
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:188 alphacam_gtk/op_editor.py:196
-#: alphacam_gtk/op_editor.py:200 alphacam_gtk/op_editor.py:204
-#: alphacam_gtk/op_editor.py:209
+#: alphacam_gtk/op_editor.py:230
 #, python-brace-format
-msgid "Change {what}"
+msgid "from {a} to {b}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:213
-msgid "Change contour"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:221
+#: alphacam_gtk/op_editor.py:242 alphacam_gtk/op_editor.py:251
 #, python-brace-format
 msgid "{id} (missing)"
 msgstr ""

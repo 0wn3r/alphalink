@@ -568,12 +568,6 @@ msgstr "Контур (ідентифікатори елементів у пор�
 msgid "Pick Contour on the Drawing"
 msgstr "Вибрати контур на кресленні"
 
-msgid "{n} element"
-msgid_plural "{n} elements"
-msgstr[0] "{n} елемент"
-msgstr[1] "{n} елементи"
-msgstr[2] "{n} елементів"
-
 msgid "Grooving follows the drawn profile; the tool reference is the tip's -Z corner."
 msgstr "Точіння канавок іде за накресленим профілем; базова точка інструмента — кут різця з боку -Z."
 
@@ -582,6 +576,15 @@ msgstr "Змінити: {what}"
 
 msgid "Change contour"
 msgstr "Змінити контур"
+
+msgid "{n} element"
+msgid_plural "{n} elements"
+msgstr[0] "{n} елемент"
+msgstr[1] "{n} елементи"
+msgstr[2] "{n} елементів"
+
+msgid "from {a} to {b}"
+msgstr "від {a} до {b}"
 
 msgid "{id} (missing)"
 msgstr "{id} (відсутній)"

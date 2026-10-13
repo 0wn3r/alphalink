@@ -156,11 +156,7 @@ class OpEditor(Gtk.Box):
                 pick = Adw.ButtonRow(title=_("Pick Contour on the Drawing"), start_icon_name="find-location-symbolic")
                 pick.connect("activated", lambda *_: self.on_pick and self.on_pick(self.index))
                 group.add(pick)
-                desc = Adw.ActionRow(title=ngettext("{n} element", "{n} elements", len(value)).format(n=len(value)),
-                                     subtitle=" → ".join(_element_label(project, i) for i in value[:4])
-                                     + (" …" if len(value) > 4 else ""))
-                desc.add_css_class("property")
-                group.add(desc)
+                group.add(_contour_rows(project, value))
         if isinstance(op, Groove):
             group.set_description(_("Grooving follows the drawn profile; the tool reference is the tip's -Z corner."))
         self._building = False
@@ -211,6 +207,40 @@ class OpEditor(Gtk.Box):
     def _contour_applied(self, row):
         ids = row.get_text().replace(",", " ").split()
         self._edit(_("Change contour"), lambda op: setattr(op, "contour", ids))
+
+
+def _fmt_pt(p) -> str:
+    return f"X{p.x:g}  Z{p.z:g}"
+
+
+def _contour_rows(project, ids: list[str]) -> Adw.ExpanderRow:
+    """The picked contour as a list: one row per element in cutting order (kind and number, from → to, radius),
+    folded under a summary row with the element count and where the contour starts and ends."""
+    from alphacam.toolpath.contour import chain
+
+    by_id = {g.id: g for g in project.geometry}
+    elems = [by_id[i] for i in ids if i in by_id]
+    try:  # oriented in cutting order, as the post walks it
+        segs = chain(elems)
+        ends = [(s.a, s.b) for s in segs]
+    except (ValueError, KeyError):
+        ends = [(g.a, g.b) for g in elems]
+    exp = Adw.ExpanderRow(title=ngettext("{n} element", "{n} elements", len(ids)).format(n=len(ids)))
+    if ends:
+        exp.set_subtitle(_("from {a} to {b}").format(a=_fmt_pt(ends[0][0]), b=_fmt_pt(ends[-1][1])))
+    for n, (g, (a, b)) in enumerate(zip(elems, ends), 1):
+        kind = _("Arc") if isinstance(g, Arc) else _("Line")
+        row = Adw.ActionRow(title=f"{n}. {kind}", subtitle=f"{_fmt_pt(a)}  →  {_fmt_pt(b)}")
+        row.add_css_class("property")
+        if isinstance(g, Arc):
+            r = ((g.a.x / 2 - g.centre.x / 2) ** 2 + (g.a.z - g.centre.z) ** 2) ** 0.5
+            row.add_suffix(Gtk.Label(label=f"R{r:g}", css_classes=["dim-label"]))
+        row.add_suffix(Gtk.Label(label=g.id, css_classes=["dim-label", "caption"]))
+        exp.add_row(row)
+    for gid in ids:
+        if gid not in by_id:
+            exp.add_row(Adw.ActionRow(title=_("{id} (missing)").format(id=gid)))
+    return exp
 
 
 def _element_label(project, gid: str) -> str:

@@ -404,4 +404,5 @@ UK = {
 "Billet, chuck jaws and tailstock of this part.": "Заготовка, кулачки патрона й задня бабка цієї деталі.",
 "Part settings": "Параметри деталі",
 "Part Settings…": "Параметри деталі…",
+"from {a} to {b}": "від {a} до {b}",
 }
