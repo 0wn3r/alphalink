@@ -922,6 +922,8 @@ data/program_formats.json and the app/alphacam/toolpath/*.py docstrings):
 * **Z x2 confirmed for positions**: with program 0005 loaded, the control's run screen shows `OP. 0  TOOL 03
   TOOL START X 100.000 Z 50.000` while the PRG has `#123=100.` `#124=100.` - the macros halve Z. So the ALPHA-T
   scaling is intended and the app's default z_scale = 2 is right (user photo, 2026-10-13).
-* Feed not explained yet: the same screen shows `FEEDRATE 0.11`, while the PRG has `#130=0.3` (0.15 x2). Possibly
-  an override or a value left from manual mode; check on the first operation's screen before trusting F.
-* The screen was at "Start Spindle", PASS NO. 1/0: the control is ready to run. No cycle start until feed is clear.
+* **Feed x2 confirmed too**: the screen first showed `FEEDRATE 0.11` with the feed override knob below 100%; at 100%
+  it shows `FEEDRATE 0.15` for `#130=0.3`. The displayed feed includes the override. The same screen shows
+  `LIMITS X 0.000 Z 0.000` for the tool block (no #125/#126 there) and the turret on T01 while the program wants T03.
+* So C4 is settled for Z and feed on the control display: ALPHA-T's x2 is what the T macros expect. Thread pitch x2
+  is assumed by the same logic but not yet seen on the control.
