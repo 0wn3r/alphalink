@@ -18,7 +18,8 @@ from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Line, Point  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
-TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("fillet", N_("Fillet")), ("chamfer", N_("Chamfer"))]
+TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
+         ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
 RE_COORD = re.compile(r"\s*(@)?\s*(-?\d*\.?\d+)\s*[,; ]\s*(-?\d*\.?\d+)\s*$")
@@ -30,6 +31,8 @@ class DrawingTools:
         self.points: list[Point] = []  # line tool: the chain being drawn
         self.selected_element: str | None = None
         self.pick_op: int | None = None
+        self.arc_pts: list[Point] = []  # arc tool: start, through, end
+        self.corner_first: str | None = None  # corner tool: first line
 
         # palette (a bottom bar: thumb reach in touch mode)
         self.palette = Adw.ToggleGroup()
@@ -99,6 +102,11 @@ class DrawingTools:
         elif tool == "line":
             pt, _ = drawing.snap(project, Point(x, z), tol, grid=1.0 if project.units == "mm" else 0.05)
             self.add_point(pt)
+        elif tool == "arc":
+            pt, _k = drawing.snap(project, Point(x, z), tol, grid=1.0 if project.units == "mm" else 0.05)
+            self._arc_point(pt)
+        elif tool == "corner":
+            self._corner_pick(element)
         elif tool in ("fillet", "chamfer"):
             corner = self._corner_near(Point(x, z), tol)
             if corner is None:
@@ -107,15 +115,15 @@ class DrawingTools:
             self._size_popover(tool, corner)
 
     def _motion(self, ctl, sx, sy) -> None:
-        if self.c.tool != "line" or self.w.project is None:
+        if self.c.tool not in ("line", "arc") or self.w.project is None:
             return
         x, z = self.c.view.to_world(sx, sy)
         tol = 10 / self.c.view.scale
         pt, kind = drawing.snap(self.w.project, Point(x, z), tol, grid=1.0 if self.w.project.units == "mm" else 0.05)
-        if self.points and kind != "end":
+        if self.c.tool == "line" and self.points and kind != "end":
             pt = drawing.lock_direction(self.points[-1], pt)
         self.c.marker = (pt, kind)
-        self.c.rubber = (self.points[-1], pt) if self.points else None
+        self.c.rubber = (self.points[-1], pt) if self.c.tool == "line" and self.points else None
         self.c.queue_draw()
 
     def _key(self, ctl, keyval, code, state) -> bool:
@@ -144,7 +152,38 @@ class DrawingTools:
         self.c.marker = (pt, "end")
         self.c.queue_draw()
 
+    def _arc_point(self, pt: Point) -> None:
+        """Arc tool: start, a point on the arc, end (TOUCH.md 5.2). Exact points can be typed as for lines."""
+        self.arc_pts.append(pt)
+        self.c.marker = (pt, "end")
+        hints = [_("Arc: now a point on the arc"), _("Arc: now the end point")]
+        if len(self.arc_pts) < 3:
+            self.w.readout.set_label(hints[len(self.arc_pts) - 1])
+            self.c.queue_draw()
+            return
+        a, m, b = self.arc_pts
+        self.arc_pts = []
+        if self.w.apply_edit(_("Draw arc"), lambda p: drawing.add_arc_3p(p, a, m, b)):
+            self.w.refresh()
+
+    def _corner_pick(self, element: str) -> None:
+        """Corner tool: tap two lines; both are trimmed or extended to meet."""
+        if not element:
+            return
+        if self.corner_first is None or self.corner_first == element:
+            self.corner_first = element
+            self.c.highlight = {element}
+            self.w.readout.set_label(_("Corner: now tap the second line"))
+            self.c.queue_draw()
+            return
+        first, self.corner_first = self.corner_first, None
+        self.c.highlight = set()
+        if self.w.apply_edit(_("Corner"), lambda p: drawing.corner(p, first, element)):
+            self.w.refresh()
+
     def finish_chain(self) -> None:
+        self.arc_pts = []
+        self.corner_first = None
         self.points.clear()
         self.done.set_visible(False)
         self.c.rubber = None
@@ -158,11 +197,17 @@ class DrawingTools:
             return
         x, z = float(m[2]), float(m[3])
         if m[1]:
-            if not self.points:
+            last = self.arc_pts[-1] if self.c.tool == "arc" and self.arc_pts else (self.points[-1] if self.points
+                                                                                     else None)
+            if last is None:
                 self.w.toast(_("@ needs a previous point"))
                 return
-            prev = self.points[-1]
+            prev = last
             x, z = prev.x + x, prev.z + z
+        if self.c.tool == "arc":
+            self._arc_point(Point(x, z))
+            entry.set_text("")
+            return
         if self.c.tool != "line":
             self.set_tool("line")
         # typed values are exact: no snapping, no direction lock

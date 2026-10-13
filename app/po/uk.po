@@ -16,8 +16,8 @@ msgstr "CAM для токарного верстата Harrison Alpha 400T, що
 msgid "translator-credits"
 msgstr "Claude (переклад), Eduard (перевірка)"
 
-msgid "Chamfer"
-msgstr "Фаска"
+msgid "Arc"
+msgstr "Дуга"
 
 msgid "Fillet"
 msgstr "Скруглення"
@@ -27,6 +27,12 @@ msgstr "Лінія"
 
 msgid "Select"
 msgstr "Вибір"
+
+msgid "Chamfer"
+msgstr "Фаска"
+
+msgid "Corner"
+msgstr "Кут"
 
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
@@ -49,6 +55,18 @@ msgstr "Торкніться кута між двома лініями"
 msgid "Draw line"
 msgstr "Накреслити лінію"
 
+msgid "Arc: now a point on the arc"
+msgstr "Дуга: тепер точка на дузі"
+
+msgid "Arc: now the end point"
+msgstr "Дуга: тепер кінцева точка"
+
+msgid "Draw arc"
+msgstr "Накреслити дугу"
+
+msgid "Corner: now tap the second line"
+msgstr "Кут: тепер торкніться другої лінії"
+
 msgid "Type X,Z (diameter, Z) or @dX,dZ"
 msgstr "Введіть X,Z (діаметр, Z) або @dX,dZ"
 
@@ -60,9 +78,6 @@ msgstr "Наступна точка"
 
 msgid "Start Point"
 msgstr "Початкова точка"
-
-msgid "Arc"
-msgstr "Дуга"
 
 msgid "Delete {what}"
 msgstr "Видалити {what}"
