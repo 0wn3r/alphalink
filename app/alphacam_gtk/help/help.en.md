@@ -137,7 +137,7 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - Ctrl+N new part, Ctrl+O open, Ctrl+S save, Ctrl+Shift+S save as, Ctrl+E export.
 - Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo.
 - Ctrl+0 fit, Ctrl++ zoom in, Ctrl+- zoom out.
-- Esc finishes the line being drawn, cancels contour picking, or deselects.
+- Esc finishes the line being drawn, cancels contour picking or a command, or deselects. It also takes the keyboard out of the X,Z entry, so the one-letter keys work again (after X, the entry has it).
 - Delete removes the selected drawing element.
 - Ctrl+, preferences, F1 this help, Ctrl+Q quit.
 

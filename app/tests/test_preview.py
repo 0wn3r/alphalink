@@ -270,7 +270,9 @@ class GtkLineTool(unittest.TestCase):
             out["done"] = (d.done.get_visible(), d.done.get_sensitive())
             d.add_point(Point(0, 0))
             out["after_point"] = d.done.get_sensitive()
+            d.entry.grab_focus()
             out["esc"] = d._window_esc(None, Gdk.KEY_Escape, 0, 0)
+            out["focus_back"] = w.get_focus() is w.canvas
             out["points"] = list(d.points)
             d._tapped(w.canvas, 0, 0, 1, -1, "")  # line tool tap
             d.set_tool("chamfer")
@@ -284,6 +286,7 @@ class GtkLineTool(unittest.TestCase):
         self.assertEqual(out["done"], (True, False))
         self.assertTrue(out["after_point"])
         self.assertTrue(out["esc"])
+        self.assertTrue(out["focus_back"])  # letter keys work again after Esc
         self.assertEqual(out["points"], [])
         self.assertTrue(out["chamfer_done_hidden"])
 

@@ -184,25 +184,31 @@ class DrawingTools:
         self.c.queue_draw()
 
     def _window_esc(self, ctl, keyval, code, state) -> bool:
+        """Esc ends whatever is going on (a construction, picking, a typed command, a line) and gives the keyboard
+        back to the drawing, so ALPHA-T's letter keys work again (after X the entry has the focus)."""
         if keyval != Gdk.KEY_Escape or self.w.get_visible_dialog() is not None:
             return False
+        handled = True
         if self.construct is not None:
             self.cancel_construct()
-            return True
-        if self.pick_op is not None:
+        elif self.pick_op is not None:
             self.cancel_pick()
-            return True
-        if self.measure is not None or self.entry_mode != "point":
+        elif self.measure is not None or self.entry_mode != "point":
             self.measure = None
             self._ask_done()
             self.entry.set_text("")
             self.w.readout.set_label(_("Command aborted"))
-            return True
-        if self.points or self.arc_pts or self.corner_first:
+        elif self.points or self.arc_pts or self.corner_first:
             self.finish_chain()
             self.entry.set_text("")
-            return True
-        return False
+        else:
+            handled = False
+        focus = self.w.get_focus()
+        if focus is not None and (focus is self.entry or focus.is_ancestor(self.entry)):
+            self.entry.set_text("")
+            self.c.grab_focus()
+            handled = True
+        return handled
 
     def _key(self, ctl, keyval, code, state) -> bool:
         if keyval == Gdk.KEY_Escape and (self.points or self.pick_op is not None):
