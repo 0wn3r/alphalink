@@ -226,3 +226,19 @@ class OperationRules(unittest.TestCase):
         plunges = [m.z for m in tp.passes[0].moves if m.kind is MoveKind.FEED][::2]
         self.assertIn(-30, plunges)
         self.assertEqual(plunges[:2], [-3, -5])
+
+
+class FromSD1(unittest.TestCase):
+    """Independent of the hand-written GOLDEN lists: the operations are rebuilt from ALPHA-T's own .SD1 listing,
+    posted, and compared with ALPHA-T's .PRG for every sample."""
+
+    def test_every_sample_rebuilds_byte_identical(self):
+        from alphacam.io.sd1 import load_sd1, verify
+
+        sdgs = sorted(SAMPLES.glob("*.SDG"))
+        self.assertGreaterEqual(len(sdgs), 24)
+        for sdg in sdgs:
+            with self.subTest(sdg.stem):
+                project = load_sdg(sdg)
+                project.operations = load_sd1(sdg.with_suffix(".SD1"), project)
+                self.assertTrue(verify(project, sdg.with_suffix(".PRG")))

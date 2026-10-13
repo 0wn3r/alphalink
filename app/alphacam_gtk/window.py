@@ -10,6 +10,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
+from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
 from alphacam.io.sdg import load_sdg  # noqa: E402
 from alphacam.commands import UndoStack  # noqa: E402
 from alphacam.model.project import Project  # noqa: E402
@@ -331,13 +332,41 @@ class MainWindow(Adw.ApplicationWindow):
         self.load(Path(file.get_path()))
 
     def load(self, path: Path) -> None:
+        note = None
         try:
-            project = load_sdg(path) if path.suffix.lower() == ".sdg" else Project.load(path)
+            if path.suffix.lower() == ".sdg":
+                project = load_sdg(path)
+                note = self._ops_from_sd1(path, project)
+            else:
+                project = Project.load(path)
         except (OSError, ValueError, KeyError) as e:
             self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
             return
         self.path = path
         self.set_project(project)
+        if note:
+            self.toast(note)
+
+    def _ops_from_sd1(self, path: Path, project: Project) -> str:
+        """ALPHA-T keeps the operations only in the programs it writes: rebuild them from the .SD1 next to the
+        drawing, and check the result against its .PRG when that is there too."""
+        sd1 = sibling(path, ".SD1")
+        if sd1 is None:
+            return _("{name}: drawing only (no .SD1 next to it, so no operations)").format(name=path.name)
+        try:
+            project.operations = load_sd1(sd1, project)
+        except (NotImplementedError, ValueError, KeyError) as e:
+            return _("Operations not rebuilt from {name}: {error}").format(name=sd1.name, error=e)
+        n = len(project.operations)
+        prg = sibling(path, ".PRG")
+        if prg is None:
+            check = ""
+        elif verify(project, prg):
+            check = " " + _("The program matches ALPHA-T's {name} byte for byte.").format(name=prg.name)
+        else:
+            check = " " + _("The program differs from ALPHA-T's {name}: check before sending.").format(name=prg.name)
+        return ngettext("Rebuilt {n} operation from {name}.", "Rebuilt {n} operations from {name}.", n).format(
+            n=n, name=sd1.name) + check
 
     def set_project(self, project: Project) -> None:
         self.project = project
@@ -576,7 +605,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast(_("Exported {name} ({size} bytes)").format(name=Path(file.get_path()).name, size=len(self.pv.data)))
 
     def toast(self, text: str) -> None:
-        self.toasts.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4))
+        self.toasts.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4 if len(text) < 80 else 8))
 
     # --- operations list --------------------------------------------------------------------------------
 

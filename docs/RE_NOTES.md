@@ -957,3 +957,11 @@ Regenerated cloud samples PECK_groove_metric (PECK DEPTH 2, FULL RET NO, SD1 L11
 * FULL RET YES: G1 back one peck, rapid out to the start X, rapid in to one peck above the last peck (x + 8),
   G1 to the next peck; the final plunge goes in from the last peck + 4 and backs off 4.
 * ALPHA-T's default is FULL RET NO; the app model default was changed to match.
+
+### Progress 32 - operations live only in the .SD1/.PRG; SD1 import (2026-10-13)
+* The .SDG holds geometry and billet only; the .SDT is byte-identical for area, face and finish samples, so ALPHA-T
+  does not save the operations with the drawing.
+* app/alphacam/io/sd1.py rebuilds them from the .SD1 cycles (G70 finish, G71 E100/-100/401 area/face, G75 groove,
+  G76 thread, G74 drill, G4 dwell, G0/G1 moves, G99 T tool change, G70 R1 = pre-finish). For all 24 metric samples,
+  SDG + SD1 -> post is byte-identical to ALPHA-T's .PRG (app/tests/test_post.py FromSD1). Opening an .SDG in the
+  app does this automatically and reports whether the result matches the .PRG next to it.
