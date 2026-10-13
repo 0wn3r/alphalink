@@ -56,6 +56,24 @@ CHOICE_LABELS = {"left": N_("left"), "right": N_("right"), "area": N_("area"), "
 POINTS = {"start": N_("Tool start"), "change_point": N_("Tool change point"), "point": N_("Move to")}
 
 
+def fit_spin(row: Adw.SpinRow, lo: float, hi: float, digits: int) -> Adw.SpinRow:
+    """Reserve room for the widest value, so the number is never clipped when a long (e.g. Ukrainian) title takes
+    the row's width: "120.00(" instead of "120.000"."""
+    chars = max(len(f"{v:.{max(digits, 0)}f}") for v in (lo, hi))
+    stack = [row]
+    while stack:
+        w = stack.pop()
+        if isinstance(w, Gtk.SpinButton):
+            w.set_width_chars(chars)
+            w.set_max_width_chars(chars)
+            break
+        c = w.get_first_child()
+        while c:
+            stack.append(c)
+            c = c.get_next_sibling()
+    return row
+
+
 class OpEditor(Gtk.Box):
     """Shows one operation; `apply(label, fn)` is the window's undoable edit entry point."""
 
@@ -158,7 +176,7 @@ class OpEditor(Gtk.Box):
             row.set_subtitle(subtitle)
         row.set_digits(digits)
         row.set_value(value)
-        return row
+        return fit_spin(row, lo, hi, digits)
 
     def _edit(self, label, fn):
         if not self._building and self.index is not None:

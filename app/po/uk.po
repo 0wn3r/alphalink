@@ -112,6 +112,12 @@ msgstr "Скруглення R{size}"
 msgid "Chamfer {size}"
 msgstr "Фаска {size}"
 
+msgid "{n} picked — tap again to remove, then Done"
+msgid_plural "{n} picked — tap again to remove, then Done"
+msgstr[0] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+msgstr[1] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+msgstr[2] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+
 msgid "Pick contour"
 msgstr "Вибір контуру"
 
@@ -130,8 +136,8 @@ msgstr "АБС"
 msgid "INC"
 msgstr "ПРИР"
 
-msgid "On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold Send here."
-msgstr "На верстаті: клавіша CAM, 4 «LOAD CAM FILE», потім торкніться стрілки ←. Тоді утримуйте тут «Надіслати»."
+msgid "On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold “Send to the Lathe” here."
+msgstr "На верстаті: клавіша CAM, 4 «LOAD CAM FILE», потім торкніться стрілки ←. Тоді утримуйте тут «Надіслати на верстат»."
 
 msgid "Start the backup here first, then on the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the → arrow."
 msgstr "Спершу запустіть резервне копіювання тут, потім на верстаті: у Manual Ops торкніться значка файлу операцій, 1 «OP. SAVE/RESTORE», потім стрілки →."
@@ -228,6 +234,12 @@ msgstr "Скасовано"
 
 msgid "Log: {path}"
 msgstr "Журнал: {path}"
+
+msgid "{done} / {total} bytes"
+msgstr "{done} / {total} байт"
+
+msgid "{done} bytes"
+msgstr "{done} байт"
 
 msgid "Send this program?"
 msgstr "Надіслати цю програму?"
@@ -528,6 +540,42 @@ msgstr "Зміна інструмента"
 
 msgid "Move / Rapid"
 msgstr "Переміщення / прискорений хід"
+
+msgid "Apr"
+msgstr "кві"
+
+msgid "Aug"
+msgstr "сер"
+
+msgid "Feb"
+msgstr "лют"
+
+msgid "Jan"
+msgstr "січ"
+
+msgid "Jul"
+msgstr "лип"
+
+msgid "Jun"
+msgstr "чер"
+
+msgid "Mar"
+msgstr "бер"
+
+msgid "May"
+msgstr "тра"
+
+msgid "Oct"
+msgstr "жов"
+
+msgid "Sep"
+msgstr "вер"
+
+msgid "Dec"
+msgstr "гру"
+
+msgid "Nov"
+msgstr "лис"
 
 msgid "AREA CLEARANCE"
 msgstr "ЧОРНОВА ОБРОБКА"

@@ -55,7 +55,10 @@ class DrawingTools:
 
         self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
         self.keypad_button.connect("clicked", lambda *_: self.open_keypad())
-        self.bar = Gtk.Box(spacing=6, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
+        # wraps the entry under the tool names when the Part page is narrow (editor open on half a screen), instead
+        # of cutting the tool names short
+        self.bar = Adw.WrapBox(child_spacing=6, line_spacing=6, margin_start=6, margin_end=6, margin_top=6,
+                               margin_bottom=6, justify=Adw.JustifyMode.FILL, justify_last_line=True)
         for wdg in (self.palette, self.keypad_button, self.entry, self.done, self.delete_el):
             self.bar.append(wdg)
 
@@ -375,7 +378,9 @@ class DrawingTools:
             self.c.picked.remove(gid)
         else:
             self.c.picked.append(gid)
-        self.pick_banner.set_title(f"{len(self.c.picked)} picked — tap again to remove, then Done")
+        n = len(self.c.picked)
+        self.pick_banner.set_title(ngettext("{n} picked — tap again to remove, then Done",
+                                            "{n} picked — tap again to remove, then Done", n).format(n=n))
         self.c.queue_draw()
 
     def finish_pick(self) -> None:

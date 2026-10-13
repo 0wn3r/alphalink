@@ -25,6 +25,7 @@ from alphacam.model.tools import (  # noqa: E402
     standard_library,
 )
 
+from .op_editor import fit_spin  # noqa: E402
 from .i18n import N_, _  # noqa: E402
 
 LIBRARY_PATH = Path(GLib.get_user_config_dir()) / "alphalink-cam" / "tools.json"
@@ -132,6 +133,7 @@ class ToolsPage(Gtk.Box):
             row.set_subtitle(sub)
             row.set_digits(digits)
             row.set_value(getattr(t, field))
+            fit_spin(row, lo, hi, digits)
             row.connect("notify::value", lambda r, _p, f=field, d=digits: self._set(f, round(r.get_value(), max(d, 0))))
             g.add(row)
         desc = Adw.EntryRow(title=_("Description"), text=t.description, show_apply_button=True)

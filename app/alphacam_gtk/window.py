@@ -98,8 +98,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.editor.on_pick = self.drawing.start_pick
         self.editor.tool_name = self._tool_name
 
-        bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
+        # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
+        # gets narrower, so nothing is cut off (sidebar 260 + Part page ~600 do not fit below 900)
+        bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 900sp"))
         bp.add_setter(self.split, "collapsed", True)
+        bp.add_setter(self.editor, "width-request", 280)
         bp.add_setter(self.switcher_bar, "reveal", True)
         bp.add_setter(self.header_switcher, "visible", False)
         self.add_breakpoint(bp)
@@ -195,7 +198,9 @@ class MainWindow(Adw.ApplicationWindow):
         Gtk.StyleContext.add_provider_for_display(self.get_display(), self._font_css,
                                                   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
 
-        self.stack = Adw.ViewStack()
+        # size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the width of
+        # the Part page with the editor open
+        self.stack = Adw.ViewStack(hhomogeneous=False)
         self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
         self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
