@@ -496,6 +496,108 @@ msgstr "Зміна інструмента"
 msgid "Move / Rapid"
 msgstr "Переміщення / прискорений хід"
 
+msgid "AREA CLEARANCE"
+msgstr "ЧОРНОВА ОБРОБКА"
+
+msgid "TOOL CHANGE"
+msgstr "ЗМІНА ІНСТРУМЕНТА"
+
+msgid "FACE CLEAR"
+msgstr "ОБРОБКА ТОРЦЯ"
+
+msgid "FINISH PASS"
+msgstr "ЧИСТОВИЙ ПРОХІД"
+
+msgid "GROOVING"
+msgstr "ТОЧІННЯ КАНАВОК"
+
+msgid "DRILLING"
+msgstr "СВЕРДЛІННЯ"
+
+msgid "PRE-FINISH PASS"
+msgstr "НАПІВЧИСТОВИЙ ПРОХІД"
+
+msgid "THREADING"
+msgstr "НАРІЗАННЯ РІЗЬБИ"
+
+msgid "DATE"
+msgstr "ДАТА"
+
+msgid "TITLE"
+msgstr "НАЗВА"
+
+msgid "  (no program)"
+msgstr "  (немає програми)"
+
+msgid "Tool No."
+msgstr "Інстр. №"
+
+msgid "Tool change"
+msgstr "Зміна інструмента"
+
+msgid "Maximum X"
+msgstr "Межа X"
+
+msgid "Tool Start X"
+msgstr "Поч. точка X"
+
+msgid "Maximum Z"
+msgstr "Межа Z"
+
+msgid "Tool Start Z"
+msgstr "Поч. точка Z"
+
+msgid "Op. No."
+msgstr "Опер. №"
+
+msgid "Total Passes"
+msgstr "Проходів"
+
+msgid "Depth Of Cut"
+msgstr "Глибина різання"
+
+msgid "Pass No."
+msgstr "Прохід №"
+
+msgid "RAPID TO"
+msgstr "ПРИСК. ДО"
+
+msgid "FEED  TO"
+msgstr "ПОДАЧА ДО"
+
+msgid "ARC CCW TO"
+msgstr "ДУГА ПРГС ДО"
+
+msgid "ARC CW TO"
+msgstr "ДУГА ГС ДО"
+
+msgid "centre"
+msgstr "центр"
+
+msgid "THREAD TO"
+msgstr "РІЗЬБА ДО"
+
+msgid "DWELL"
+msgstr "ВИТРИМКА"
+
+msgid "revs"
+msgstr "об."
+
+msgid "Tool moves"
+msgstr "Переміщення інструмента"
+
+msgid "_Save as Text…"
+msgstr "_Зберегти як текст…"
+
+msgid "UNTITLED"
+msgstr "БЕЗ НАЗВИ"
+
+msgid "Save Setup Sheet"
+msgstr "Зберегти карту наладки"
+
+msgid "Saved {name}"
+msgstr "Збережено {name}"
+
 msgid "First move"
 msgstr "Перше переміщення"
 
@@ -537,9 +639,6 @@ msgstr "Чорнова обробка"
 
 msgid "Face clear"
 msgstr "Обробка торця"
-
-msgid "Tool change"
-msgstr "Зміна інструмента"
 
 msgid "Finish pass"
 msgstr "Чистовий прохід"
@@ -603,6 +702,9 @@ msgstr "Деталь"
 
 msgid "Program"
 msgstr "Програма"
+
+msgid "Sheet"
+msgstr "Карта наладки"
 
 msgid "Machine"
 msgstr "Верстат"
@@ -726,9 +828,6 @@ msgstr "Зберегти деталь"
 
 msgid "Could not save: {error}"
 msgstr "Не вдалося зберегти: {error}"
-
-msgid "Saved {name}"
-msgstr "Збережено {name}"
 
 msgid "Save changes?"
 msgstr "Зберегти зміни?"
