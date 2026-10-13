@@ -39,7 +39,9 @@ def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
 
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
     if not op.towards:
-        raise NotImplementedError("area clear 'away' is not supported (the AWAY sample gouges the shoulder)")
+        # AWAY_area_tool5 and its rerun: ALPHA-T's passes end 1.6 mm past the dia-100 shoulder (its preview does not)
+        raise NotImplementedError("area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app "
+                                  "does not offer it; use TOWARDS")
     if op.depth_of_cut <= 0:
         raise ValueError("depth of cut must be > 0")
     boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)

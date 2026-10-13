@@ -73,3 +73,19 @@ groove/thread variants start from the original at_groove/at_thread scripts (groo
 | 13 | AREA_from_dia20_metric.* | profile (20,0)(40,0)(40,-25)(100,-25), area defaults | H21 |
 | 14 | AREA_front_face_metric.* | area clear, FRONT toggled -> FACE (Enter) | SD1 E101, #127=8 |
 | 15 | DRILL_nopeck_nodwell_metric.* | at_drill.ks without the DWELL step, peck 0 (start X0 Z5, depth -30) | single G1 to Z-60 and back |
+
+## Options the app still refused (2026-10-13 evening, metric, MET2, tool 3 unless noted)
+| # | Files | Exact menu values | Result / note |
+|---|---|---|---|
+| 1 | AREA_away_tool5_retry_metric.*, AREA_away_tool5_retry_preview.png | CHANGE TOOL 5, area clear TOWARDS->AWAY | Byte-identical to AWAY_area_tool5 (deterministic). The preview stops at the shoulder, but the PRG passes still end at Z-103.2 (-51.6 real), 1.6 past the Z-50 shoulder. SD1 E110, G21 E2 ... C1 |
+| 2 | FACE_away_tool5_metric.* | CHANGE TOOL 5, face clear TOWARDS->AWAY | Tools 3, 9 and 19 are refused: "Invalid tip angle. Continue without collision check?". Tool 5: one pass only (H1, E411), still feeding X120 -> 36.8 at Z0 |
+| 2b | FACE_away_tool3_nocheck_metric.* | tool 3, AWAY, answered Enter (Yes) to "continue without collision check" | Same single pass as tool 5, with tool 3 values |
+| 3 | FACE_prefinish_metric.* | face clear, "Automatic Pre-Finish pass?" = Enter (Yes) | Extra op #127=12 after the face op (#127=8): finish contour, 45 deg pull-off X98.918 Z-99.718 |
+| 4 | GROOVE_internal_metric.* | bore 50,0 50,-8 54,-8 54,-14 50,-14 50,-20 36,-20 36,-40 20,-40; CHANGE TOOL 14 (2mm Internal Groove); tool start X15 Z5, cursor Up x2; contour 50,0 -> 50,-20 (5 Enters, then 3 = finish); STEPOV 2 / TIPWD 2; EXTERNAL->INTERNAL; area (1), dwell 0 | SD1 E2 L-110 H10; plunges X15 -> 50 (54 inside the groove) -> back 2; it plunges along the whole picked bore section, not just the groove |
+| 5 | GROOVE_back_metric.* | grooving as GROOVE_metric, FRONT->BACK | SD1 L210 H19; becomes face grooving: plunges in Z (G1 X0 Z0, back to Z2) stepping in X by 4 |
+| 6 | GROOVE_finishoffset_metric.* | grooving as GROOVE_metric, OFFSET X,Z = 0.5,0.2 | SD1 U0.5 W0.2; plunges stop at X41 (40 + 2x0.5), Z shifted by 0.4 (2x0.2) |
+| 7 | THREAD_away_metric.* | threading as THREAD_metric, TOWARDS->AWAY | SD1 G117 X120 Z-5, G76 ... E2; passes start at Z-10 (= -5 real) and still G32 to Z-53, pull-out U21. W3. (positive W) |
+| 8 | AREA_face_internal_metric.* | INT_area setup (tool 12, bore, INTERNAL) + FRONT->FACE | SD1 E-101 H20, #127=7 |
+| 9 | AREA_prefinish_internal_metric.* | INT_area setup + pre-finish Yes | extra op #127=11 (internal pre-finish; external is 10) |
+| 10 | AREA_prefinish_offset_metric.* | area clear, OFFSET 0.5,0.2, pre-finish Yes | roughing + #127=10 with the offset applied |
+| 11 | GROOVE_finishmode_slope_metric.* | GROOVE_metric profile with the groove side 40,-20 -> 30,-25 (45 deg), finish mode (2) | #127=17, SD1 G78 |

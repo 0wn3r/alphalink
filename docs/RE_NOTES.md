@@ -1013,3 +1013,22 @@ app/alphacam/post/alphat_sd1.py writes ALPHA-T's .SD1 listing; all 41 samples wi
   taper, thread, ops file (list <- clipboard), coolant. The ops file icon opens 1 OP. SAVE/RESTORE, 2 DELETE
   CURRENT OP., 3 DELETE ALL OP.S; OP. SAVE/RESTORE shows → (lathe -> PC, save) and ← (PC -> lathe, restore).
 * The app's machine page instructions now use these names.
+
+### Progress 36 - the last options: pre-finish variants, internal FACE, grooving, AWAY (2026-10-13)
+Samples in samples/alphat_v12 (second table of README_options_2026-10-13.md). Byte-identical (PRG and SD1):
+* Pre-finish after internal area clear: #127=11; after area clear with offsets: the finish path moved by the offsets
+  (SD1 G70 R1 U W); after face clear: #127=12, SD1 G70 R1 E2, the path ends on the offset end (X99.2, not the drawn
+  X100) and pulls off 0.2 mm inwards like face clear.
+* Area clear FACE on a bore (E-101): #127=7, passes feed outwards from the start X to the bore wall, pull-off and
+  rapid towards the axis; the first zone starts at the bore's top (no face there). SD1 lists G21 E-1 Q3, and in face
+  mode the first point is carried r back along its element (X49.2 Z0.4).
+* Grooving internal (tool 14, SD1 L-110): X mirrored; plunges go out to the nearest bore wall under the tip and back
+  off 2 towards the axis; the SD1 lists only the picked elements (P/Q), so the importer reads them from there.
+* Grooving FINISH OFFSET X/Z (U W): every side of the profile keeps the allowance (diameters +2U, faces W towards the
+  open side), and a plunge is inserted at a groove's +Z wall - tip width when a step would jump over it.
+* Grooving finish mode on a slope: both ends of a descending side move by -tip width, like a face.
+* Refused by the app, because ALPHA-T's own output is unsafe on these parts: area clear AWAY (passes end 1.6 mm
+  past the shoulder; the rerun is byte-identical), face clear AWAY (E411: one pass at Z0 only, tools 3/9/19 refused
+  with "Invalid tip angle"), threading AWAY (E2: cuts start at Z-5 inside the thread, W+ pull-out), grooving from
+  the BACK (L2xx: face grooving that plunges through the turned profile). A real face-groove drawing would be the
+  sample to try BACK again.

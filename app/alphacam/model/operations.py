@@ -17,6 +17,8 @@ OP_KINDS: dict[int, str] = {
     8: "face_clear",
     9: "groove",
     10: "area_prefinish",
+    11: "area_prefinish_internal",
+    12: "face_prefinish",
     14: "finish",
     15: "finish_internal",
     17: "groove_finish",

@@ -50,7 +50,7 @@ class Preview(unittest.TestCase):
         pv = preview(p)
         self.assertIsNone(pv.data)
         self.assertEqual(pv.error_op, 1)
-        self.assertIn("away", pv.error)
+        self.assertIn("AWAY", pv.error)
         self.assertEqual([o.op_index for o in pv.ops], [None, 0])  # the area clear before it still previews
 
 

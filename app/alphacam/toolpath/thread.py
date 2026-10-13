@@ -28,7 +28,10 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     """The radial depth of each cut is rounded to the output decimals before it is doubled (cut 6:
     sqrt(6) -> 2.449, X35.102, not 35.101)."""
     if not op.towards:
-        raise NotImplementedError("threading away from the chuck is not supported (no sample)")
+        # THREAD_away: ALPHA-T only moves the start to Z-5 (inside the thread) and flips the pull-out W; the cuts
+        # still run towards the chuck
+        raise NotImplementedError("threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the "
+                                  "app does not offer it; use TOWARDS")
     if outer.a.x != outer.b.x or inner.a.x != inner.b.x:
         raise ValueError("thread lines must be parallel to Z")
     xo, xi = outer.a.x, inner.a.x

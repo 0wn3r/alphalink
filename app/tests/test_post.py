@@ -231,6 +231,10 @@ class OperationRules(unittest.TestCase):
 # face clear ending on slopes/arcs: ALPHA-T's diameters differ from the exact tip path by up to 0.001 either way
 # (FACE_slope +0.0006, FACE_arcs -0.0007/+0.0008; a numeric search with a tolerance, presumably)
 SD1_KNOWN_DIFF = {"FACE_slope_metric", "FACE_arcs_metric"}
+# options whose ALPHA-T output is unsafe on these parts (cuts past the shoulder, one pass only, cuts starting inside the
+# thread, face grooving through a turned part): the app refuses them with a reason instead of copying them
+REFUSED = {"AREA_away_tool5_retry_metric", "FACE_away_tool5_metric", "FACE_away_tool3_nocheck_metric",
+           "THREAD_away_metric", "GROOVE_back_metric"}
 
 
 class FromSD1(unittest.TestCase):
@@ -246,6 +250,10 @@ class FromSD1(unittest.TestCase):
             with self.subTest(sdg.stem):
                 project = load_sdg(sdg)
                 project.operations = load_sd1(sdg.with_suffix(".SD1"), project)
+                if sdg.stem in REFUSED:
+                    with self.assertRaises(NotImplementedError):
+                        post(project)
+                    continue
                 if sdg.stem in SD1_KNOWN_DIFF:
                     a = post(project).decode().splitlines()
                     b = sdg.with_suffix(".PRG").read_bytes().decode().splitlines()

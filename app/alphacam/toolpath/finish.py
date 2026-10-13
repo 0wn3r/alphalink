@@ -11,11 +11,13 @@ LEAD_OUT_MM = 0.2  # 45-degree pull-off from the last point, same directions (AL
 
 
 def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str, decimals: int,
-                lead_out: float | None = None) -> Toolpath:
+                lead_out: float | None = None, face_end: bool = False) -> Toolpath:
     """lead_out (project units) overrides the 0.2 mm pull-off: the area pre-finish (#127=10) pulls off by the area
-    retract distance as entered (1 mm; inch 0.0394, which gives 0.0279 at 45 degrees, not 0.0278)."""
+    retract distance as entered (1 mm; inch 0.0394, which gives 0.0279 at 45 degrees, not 0.0278).
+    face_end: the face clear pre-finish (#127=12, FACE_prefinish) ends on the shifted offset end, not the drawn end
+    point, and pulls off 0.2 mm inwards (-X) like face clear."""
     side = 1 if op.external else -1
-    tip = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
+    tip = translate(tip_path(path, nose_radius, op.external, not face_end), op.offset_x, op.offset_z, op.external)
     lead_in = leg45(mm(LEAD_IN_MM, units), decimals)
     lead_out = leg45(mm(LEAD_OUT_MM, units) if lead_out is None else lead_out, decimals)
     first, last = tip[0].a, tip[-1].b
@@ -27,5 +29,6 @@ def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str,
             moves.append(Move(kind, s.b.x, s.b.z, op.feed, centre_x=s.centre.x, centre_z=s.centre.z))
         else:
             moves.append(Move(MoveKind.FEED, s.b.x, s.b.z, op.feed))
-    moves.append(Move(MoveKind.FEED, last.x + side * 2 * lead_out, last.z + lead_out, op.feed))
+    out_side = -side if face_end else side
+    moves.append(Move(MoveKind.FEED, last.x + out_side * 2 * lead_out, last.z + lead_out, op.feed))
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, op.start.x, op.start.z)])

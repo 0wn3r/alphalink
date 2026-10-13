@@ -59,6 +59,19 @@ EXPECTED_OPS = {
     "THREAD_spring1_metric": [("thread", 100), ("thread_spring", 1)],
     "THREAD_depth6_metric": [("thread", 36)],
     "THREAD_6cuts_metric": [("thread", 6)],
+    # 2026-10-13 evening: the options the app still refused (README_options_2026-10-13.md, second table)
+    "AREA_away_tool5_retry_metric": [("area_clear", 26)],
+    "AREA_face_internal_metric": [("area_clear_internal", 20)],
+    "AREA_prefinish_internal_metric": [("area_clear_internal", 8), ("area_prefinish_internal", 1)],
+    "AREA_prefinish_offset_metric": [("area_clear", 26), ("area_prefinish", 1)],
+    "FACE_away_tool3_nocheck_metric": [("face_clear", 1)],
+    "FACE_away_tool5_metric": [("face_clear", 1)],
+    "FACE_prefinish_metric": [("face_clear", 26), ("face_prefinish", 1)],
+    "GROOVE_back_metric": [("groove", 1)],
+    "GROOVE_finishmode_slope_metric": [("groove_finish", 1)],
+    "GROOVE_finishoffset_metric": [("groove", 1)],
+    "GROOVE_internal_metric": [("groove", 1)],
+    "THREAD_away_metric": [("thread", 100)],
 }
 
 
@@ -163,6 +176,8 @@ class EverySample(unittest.TestCase):
         for path in PRGS:
             if any(75 in r["G"] and float(r.get("R", 0)) > 0 for r in sd1_words(path.with_suffix(".SD1"))):
                 continue  # a +Z grooving Z-SHIFT repeats the plunges above the start Z (GROOVE_zshift10_rep1)
+            if path.stem == "THREAD_away_metric":
+                continue  # ALPHA-T's AWAY thread rapids out to Z15 after each cut (the app refuses AWAY)
             prog = parse_file(path)
             for b in prog.operations:
                 with self.subTest(path.name):
