@@ -347,4 +347,6 @@ UK = {
 "Program {number} · {units} · {lines} lines · {size} bytes": "Програма {number} · {units} · рядків: {lines} · {size} байт",
 "incomplete (see banner)": "неповна (див. повідомлення вгорі)",
 ("{n} picked — tap again to remove, then Done", "{n} picked — tap again to remove, then Done"): ["Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"] * 3,
+"{title} (finish)": "{title} (чистова)",
+"{title} (face direction)": "{title} (у напрямку торця)",
 }

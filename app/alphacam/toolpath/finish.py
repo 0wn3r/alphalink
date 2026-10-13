@@ -15,9 +15,7 @@ def finish_pass(op: FinishPass, path: list[Seg], nose_radius: float, units: str,
     """lead_out (project units) overrides the 0.2 mm pull-off: the area pre-finish (#127=10) pulls off by the area
     retract distance as entered (1 mm; inch 0.0394, which gives 0.0279 at 45 degrees, not 0.0278)."""
     side = 1 if op.external else -1
-    if not op.external and (op.offset_x or op.offset_z):
-        raise NotImplementedError("internal finish with offsets is not supported yet (no sample)")
-    tip = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z)
+    tip = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
     lead_in = leg45(mm(LEAD_IN_MM, units), decimals)
     lead_out = leg45(mm(LEAD_OUT_MM, units) if lead_out is None else lead_out, decimals)
     first, last = tip[0].a, tip[-1].b

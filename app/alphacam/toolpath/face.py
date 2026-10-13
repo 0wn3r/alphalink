@@ -4,38 +4,42 @@ Rules from FACE_metric (MET2 profile, depth 2, retract 0.2):
   * the profile's faces (constant-Z elements) split it into zones; each zone is cut from its top face down in steps
     of the depth of cut, the last pass clamped onto the next face (Z-2 ... -24, -25, -27 ... -49, -50);
   * pass: rapid to (start X, Z), feed to the profile, 45-degree pull-off (-2R in X, +R in Z, R = retract),
-    rapid to (start X - 4R, Z + 3R); after the last pass, rapid to the start. FACE_depth3_start110 (depth 3, start
-    X110 Z3) gives the same X109.2 / Z+0.6, so the offsets do not depend on depth or start; whether they come from the
-    retract (R = 0.2) or the nose radius (r = 0.4 = 2R) still needs a sample with another tool;
-  * the cut ends on the vertical element spanning Z, half-open towards the face below (lo <= Z < hi)."""
+    rapid to (start X - 2r, pull-off Z + r) with the nose radius r (FACE_tool1: X118.4 for the 0.8R rougher, X119.2
+    for the 0.4R finisher); after the last pass, rapid to the start;
+  * the cut ends on the element spanning Z, half-open towards the face below (lo <= Z < hi); on slopes and arcs
+    (FACE_slope, FACE_arcs) at the tip path's diameter at Z. ALPHA-T's values there differ from the exact ones by
+    up to 0.001 on diameter, either way (a numeric search, presumably), so those two samples are known diffs.
+
+Area clear with FACE instead of FRONT (AREA_front_face, SD1 E101) posts the same passes as #127=8, but with the
+area clear retract (1 mm) and the pull-off going outwards: (+2R in X, +R in Z)."""
 
 from __future__ import annotations
 
 import math
 
 from ..model.operations import FaceClear
-from .contour import Seg, mm, tip_path, translate
+from .contour import Seg, mm, tip_path, translate, x_at
 from .toolpath import Move, MoveKind, Pass, Toolpath
 
 RETRACT_MM = 0.2  # face clear default (SD1 R0.2)
 
 
 def _end_x(boundary: list[Seg], z: float) -> float:
-    hits = [s.a.x for s in boundary if s.a.x == s.b.x and min(s.a.z, s.b.z) <= z < max(s.a.z, s.b.z)]
+    hits = [x_at(s, z) for s in boundary if s.a.z != s.b.z and min(s.a.z, s.b.z) <= z < max(s.a.z, s.b.z)]
     if not hits:
         raise ValueError(f"face clear: no profile at Z{z:g}")
     return max(hits)
 
 
-def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
+def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, decimals: int,
+               retract_mm: float = RETRACT_MM, outward: bool = False) -> Toolpath:
     if op.pre_finish or not op.towards:
         raise NotImplementedError("face clear: only towards, without pre-finish (no sample)")
     # offsets translate the profile like area clear (FACE_offset: X40 -> 41, faces Z0/-25/-50 -> 0.2/-24.8/-49.8)
     boundary = translate(tip_path(path, nose_radius), op.offset_x, op.offset_z)
-    if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in boundary):
-        raise NotImplementedError("face clear: only profiles of faces and diameters (no sample with slopes/arcs)")
-    levels = sorted({s.a.z for s in boundary if s.a.z == s.b.z}, reverse=True)
-    r = round(mm(RETRACT_MM, units), decimals)
+    levels = sorted({s.a.z for s in boundary if s.a.z == s.b.z and not s.is_arc}, reverse=True)
+    r = round(mm(retract_mm, units), decimals)
+    pull = 2 * r if outward else -2 * r
     sx, d = op.start.x, op.depth_of_cut
     passes = []
     for top, bottom in zip(levels, levels[1:]):
@@ -45,7 +49,7 @@ def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, d
             passes.append(Pass([
                 Move(MoveKind.RAPID, sx, z),
                 Move(MoveKind.FEED, x, z, op.feed),
-                Move(MoveKind.FEED, x - 2 * r, z + r, op.feed),
-                Move(MoveKind.RAPID, sx - 4 * r, z + 3 * r),
+                Move(MoveKind.FEED, x + pull, z + r, op.feed),
+                Move(MoveKind.RAPID, sx - 2 * nose_radius, z + r + nose_radius),
             ]))
     return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)])

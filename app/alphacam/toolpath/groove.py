@@ -50,9 +50,10 @@ def _left_walls(boundary: list[Seg]) -> list[float]:
 
 
 def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
-    if (op.datum != "left" or not op.external or not op.front or op.z_shift or op.repeat
-            or op.mode != "area" or op.dwell_revs or op.finish_offset_x or op.finish_offset_z):
-        raise NotImplementedError("grooving: only external area grooving with default options (no sample)")
+    if not op.external or not op.front or op.finish_offset_x or op.finish_offset_z:
+        raise NotImplementedError("grooving: only external, front, no finish offsets (no sample for the others)")
+    if op.mode == "finish":
+        return groove_finish(op, path)
     # The drawn profile, not the tip path: a groove's -Z-facing wall would move by 2r with the (-r, -r) tip shift,
     # and the sample (made with the 0.4R tool 3) plunges against the drawn walls. Grooving tools have r = 0 anyway.
     boundary = path
@@ -62,24 +63,63 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
     walls = _left_walls(boundary)
     back = round(mm(RETRACT_DIA_MM, units), decimals)
     sx = op.start.x
-    moves = []
+    # plunge positions for the tip's -Z corner, then the reference corner: DATUM RIGHT is the +Z corner
+    # (GROOVE_datumright: every plunge 3 = tip width further +Z)
+    plunges = []
     z = round(top - w, 9)
     while True:
-        x = _depth(boundary, z, z + w)
-        moves.append(Move(MoveKind.RAPID, sx, z))
-        moves += _pecks(op, sx, x, z, back) if op.peck_depth > 0 else []
-        if op.peck_depth > 0 and op.full_retract:
-            last = _peck_xs(op, sx, x)[-1] if _peck_xs(op, sx, x) else sx
-            moves += [Move(MoveKind.RAPID, last + 2 * op.peck_depth, z), Move(MoveKind.FEED, x, z, op.feed),
-                      Move(MoveKind.FEED, x + 2 * op.peck_depth, z, op.feed)]
-        else:
-            moves += [Move(MoveKind.FEED, x, z, op.feed), Move(MoveKind.FEED, x + back, z, op.feed)]
-        moves.append(Move(MoveKind.RAPID, sx, z))
+        plunges.append((z, _depth(boundary, z, z + w)))
         if z <= end:
             break
         nz = round(max(z - step, end), 9)
         skipped = [e for e in walls if nz < e < z]
         z = max(skipped) if skipped else nz
+    if op.datum == "right":
+        plunges = [(round(z + w, 9), x) for z, x in plunges]
+    # Z-SHIFT / REPEATS: each repeat is another pass, the same plunges shifted by z_shift (GROOVE_zshift10_rep1)
+    passes = []
+    for k in range(op.repeat + 1):
+        moves = []
+        for z, x in plunges:
+            z = round(z + k * op.z_shift, 9)
+            moves.append(Move(MoveKind.RAPID, sx, z))
+            moves += _pecks(op, sx, x, z, back) if op.peck_depth > 0 else []
+            if op.peck_depth > 0 and op.full_retract:
+                last = _peck_xs(op, sx, x)[-1] if _peck_xs(op, sx, x) else sx
+                moves += [Move(MoveKind.RAPID, last + 2 * op.peck_depth, z), Move(MoveKind.FEED, x, z, op.feed)]
+                bottom_back = x + 2 * op.peck_depth
+            else:
+                moves.append(Move(MoveKind.FEED, x, z, op.feed))
+                bottom_back = x + back
+            if op.dwell_revs:  # GROOVE_dwell2: G4 at the bottom of every plunge
+                moves.append(Move(MoveKind.DWELL, x, z, dwell_revs=op.dwell_revs))
+            moves += [Move(MoveKind.FEED, bottom_back, z, op.feed), Move(MoveKind.RAPID, sx, z)]
+        passes.append(Pass(moves))
+    return Toolpath(passes, retract=[Move(MoveKind.RAPID, sx, op.start.z)])
+
+
+def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:
+    """FINISH mode (#127=17, GROOVE_finishmode): one pass along the drawn profile. The tip covers Z .. Z + tip width
+    (datum left), so the vertices of a wall where the profile steps down (the groove's +Z wall) move by -tip width;
+    datum right covers Z - tip width .. Z and moves the walls where it steps up by +tip width instead (assumed by
+    symmetry, no sample). Rapid to (start X, first Z), feed along the profile, feed out to the start X."""
+    if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in path):
+        raise NotImplementedError("grooving finish: only faces and diameters (no sample with slopes/arcs)")
+    w = op.tip_width
+    pts = points(path)
+    shift = [0.0] * len(pts)
+    for i, s in enumerate(path):
+        if s.a.z == s.b.z and s.a.x != s.b.x:
+            down = s.b.x < s.a.x
+            if op.datum == "left" and down:
+                shift[i] = shift[i + 1] = -w
+            elif op.datum == "right" and not down:
+                shift[i] = shift[i + 1] = w
+    zs = [round(p.z + d, 9) for p, d in zip(pts, shift)]
+    sx = op.start.x
+    moves = [Move(MoveKind.RAPID, sx, zs[0])]
+    moves += [Move(MoveKind.FEED, p.x, z, op.feed) for p, z in zip(pts, zs)]
+    moves.append(Move(MoveKind.FEED, sx, zs[-1], op.feed))
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, sx, op.start.z)])
 
 

@@ -40,11 +40,9 @@ def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
     if not op.towards:
         raise NotImplementedError("area clear 'away' is not supported (the AWAY sample gouges the shoulder)")
-    if not op.external and (op.offset_x or op.offset_z):
-        raise NotImplementedError("internal area clear with offsets is not supported yet (no sample)")
     if op.depth_of_cut <= 0:
         raise ValueError("depth of cut must be > 0")
-    boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z)
+    boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
     bx = [p.x for p in points(boundary)]
     step = 2 * op.depth_of_cut
     if op.external:

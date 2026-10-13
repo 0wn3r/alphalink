@@ -139,6 +139,8 @@ def tip_path(path: list[Seg], nose_radius: float, external: bool = True) -> list
     if nose_radius == 0:
         return [Seg(s.a, s.b, s.centre, s.ccw) for s in path]
     side = 1 if external else -1
+    # a zero-length element (e.g. a diameter fully eaten by the fillets on both ends) has no direction
+    path = [s for s in path if not _same(s.a, s.b)] or path
     off = [_offset(s, nose_radius, side) for s in path]
     corners = [path[0].a]
     for i in range(1, len(off)):
@@ -158,15 +160,22 @@ def tip_path(path: list[Seg], nose_radius: float, external: bool = True) -> list
     return out
 
 
-def translate(path: list[Seg], offset_x: float, offset_z: float) -> list[Seg]:
-    """OFFSET X (radius) / Z: move the path by (2*offset_x, offset_z); points on the axis stay on the axis."""
+def translate(path: list[Seg], offset_x: float, offset_z: float, external: bool = True) -> list[Seg]:
+    """OFFSET X (radius) / Z: move the path by (2*offset_x, offset_z), X outwards for external work and inwards
+    (-X) for internal. The first point only moves across its element, not along it: an external face starting on
+    the axis keeps X0 (OFFSET_finish), an internal bore starting at the front keeps Z0 (INT_finish_offset)."""
     if not (offset_x or offset_z):
         return path
+    dx = (1 if external else -1) * 2 * offset_x
 
-    def mv(p: Point) -> Point:
-        return Point(p.x if p.x == 0 else round(p.x + 2 * offset_x, 9), round(p.z + offset_z, 9))
+    def mv(p: Point, keep_x: bool = False, keep_z: bool = False) -> Point:
+        return Point(p.x if keep_x else round(p.x + dx, 9), p.z if keep_z else round(p.z + offset_z, 9))
 
-    return [Seg(mv(s.a), mv(s.b), mv(s.centre) if s.is_arc else None, s.ccw) for s in path]
+    out = [Seg(mv(s.a), mv(s.b), mv(s.centre) if s.is_arc else None, s.ccw) for s in path]
+    first = path[0]
+    if not first.is_arc:
+        out[0].a = mv(first.a, keep_x=first.a.z == first.b.z, keep_z=first.a.x == first.b.x)
+    return out
 
 
 def z_at(seg: Seg, x: float) -> float:
@@ -183,6 +192,22 @@ def z_at(seg: Seg, x: float) -> float:
     lo, hi = min(az, bz), max(az, bz)
     cands = [z for z in (cz + dz, cz - dz) if lo - 1e-6 <= z <= hi + 1e-6]
     return max(cands) if cands else (cz + dz if abs(cz + dz - az) < abs(cz - dz - az) else cz - dz)
+
+
+def x_at(seg: Seg, z: float) -> float | None:
+    """Diameter of the segment at Z, or None when the segment does not reach Z (faces never do)."""
+    lo, hi = sorted((seg.a.z, seg.b.z))
+    if not lo - 1e-9 <= z <= hi + 1e-9 or lo == hi:
+        return None
+    if not seg.is_arc:
+        return seg.a.x + (z - seg.a.z) / (seg.b.z - seg.a.z) * (seg.b.x - seg.a.x)
+    (ar, az), (cr, cz) = _rz(seg.a), _rz(seg.centre)
+    radius = math.hypot(ar - cr, az - cz)
+    dr = math.sqrt(max(radius * radius - (z - cz) ** 2, 0.0))
+    # the branch on the arc's own side of the centre (corner radii are at most a quarter circle)
+    lo_r, hi_r = sorted((ar, seg.b.x / 2))
+    cands = [r for r in (cr + dr, cr - dr) if lo_r - 1e-6 <= r <= hi_r + 1e-6]
+    return 2 * (cands[0] if cands else cr + dr)
 
 
 def mm(value_mm: float, units: str) -> float:

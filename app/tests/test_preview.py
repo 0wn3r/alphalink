@@ -44,11 +44,13 @@ class Preview(unittest.TestCase):
 
     def test_error_stops_at_failing_op(self):
         p = sample_project("TWOOP_area_finish_metric")
-        p.operations.insert(1, FinishPass(3, Point(120, 5), ["g0", "g1"], offset_x=1, external=False))
+        from alphacam.model import AreaClear
+
+        p.operations.insert(1, AreaClear(3, Point(120, 5), ["g0", "g1"], towards=False))  # "away": refused
         pv = preview(p)
         self.assertIsNone(pv.data)
         self.assertEqual(pv.error_op, 1)
-        self.assertIn("internal finish", pv.error)
+        self.assertIn("away", pv.error)
         self.assertEqual([o.op_index for o in pv.ops], [None, 0])  # the area clear before it still previews
 
 

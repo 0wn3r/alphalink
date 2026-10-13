@@ -156,14 +156,14 @@ rather than a hard-coded constant.
 | Op | `#127` | Parameters (ALPHA-T menu) |
 |---|---|---|
 | Tool change | 1 | tool, tool change X/Z, feed |
-| Area clear | 6 | start, contour, depth of cut, offset X/Z, feed, towards/away, pre-finish yes/no |
+| Area clear | 6 (7 internal; 8 with FACE direction) | start, contour, depth of cut, offset X/Z, feed, towards/away, front/face, pre-finish yes/no |
 | Face clear | 8 | start, contour, depth of cut, offset X/Z, feed, towards, pre-finish |
-| Grooving | 9 | start, groove, datum left/right, finish offset X/Z, peck depth, stepover, tip width, feed, full retract, external/internal, front/back, Z shift/repeat, area/finish, dwell revs |
+| Grooving | 9 (17 finish mode) | start, groove, datum left/right, finish offset X/Z, peck depth, stepover, tip width, feed, full retract, external/internal, front/back, Z shift/repeat, area/finish, dwell revs |
 | Finish pass | 14 | start, contour, feed, offset |
 | Drilling | 18 | start X/Z, depth, peck, feed, dwell |
-| Threading | 20 | start, outer/inner diameter lines, number of cuts, cut depth/data, lead in/out (default 0, V1.21), pitch (> 0, V1.21), angle, external/internal, towards, spring pass |
+| Threading | 20 | start, outer/inner diameter lines, number of cuts, cut depth/data, lead in (default 5) / lead out (default 0), pitch (> 0, V1.21), angle, external/internal, towards, spring pass (own block, 21) |
 | Dwell | - | revs (PRG `G4P<revs*1000>`) |
-| Move / rapid to point | - | X, Z (appended to the current tool block) |
+| Move / rapid to point | - | X, Z (appended to the current tool block, or the empty block after an operation) |
 
 ## 5. Alpha-T PRG post (spec, from samples)
 

@@ -43,7 +43,7 @@
    "#124": "tool start Z (x2)",
    "#125": "limit X",
    "#126": "limit Z (x2)",
-   "#127": "operation kind: 6 area clear, 7 internal area clear, 8 face clear, 9 grooving, 10 area clear pre-finish, 14 finish pass, 15 internal finish pass, 18 drilling, 20 threading (1 = N10 tool block)",
+   "#127": "operation kind: 6 area clear, 7 internal area clear, 8 face clear, 9 grooving, 10 area clear pre-finish, 14 finish pass, 15 internal finish pass, 17 grooving finish mode, 18 drilling, 20 threading, 21 thread spring pass (1 = N10 tool block)",
    "#128": "1",
    "#129": "block no.",
    "#130": "feed (x2); for threading = pitch x2 (pitch 1.5 -> #130=3.)",
