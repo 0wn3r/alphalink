@@ -8,3 +8,7 @@ window.touch .canvas-zoom button { min-width: 56px; min-height: 56px; }
 .op-badge { font-weight: bold; min-width: 28px; }
 .program-text { font-family: monospace; }
 .readout { font-family: monospace; padding: 6px 12px; }
+.modem-line { padding: 2px 8px; border-radius: 99px; font-weight: bold; font-size: smaller; }
+.modem-line.success { background: alpha(@success_color, 0.18); }
+.hold-button { padding: 8px 16px; }
+window.touch .hold-button { min-height: 96px; }

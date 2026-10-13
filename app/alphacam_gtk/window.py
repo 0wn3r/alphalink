@@ -16,6 +16,7 @@ from alphacam.preview import preview  # noqa: E402
 
 from .canvas.widget import LatheCanvas  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
+from .machine import MachinePage  # noqa: E402
 
 OP_TITLES = {
     "tool_change": "Tool change", "area_clear": "Area clear", "face_clear": "Face clear", "groove": "Grooving",
@@ -69,6 +70,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.root.set_visible_child_name("empty")
         self.input_mode = InputMode(self)
         self.input_mode.connect("changed", lambda _m, mode: self.zoom_box.set_visible(mode == "touch"))
+        self._setup_lock()
         self._install_actions()
 
         bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 720sp"))
@@ -154,6 +156,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack = Adw.ViewStack()
         self.stack.add_titled_with_icon(part, "part", "Part", "view-paged-symbolic")
         self.stack.add_titled_with_icon(prog, "program", "Program", "text-x-generic-symbolic")
+        self.machine = MachinePage(self)
+        self.stack.add_titled_with_icon(self.machine, "machine", "Machine", "network-wired-symbolic")
 
         header = Adw.HeaderBar()
         self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
@@ -177,6 +181,9 @@ class MainWindow(Adw.ApplicationWindow):
                             tooltip_text="Export the Alpha-T program (Ctrl+E)")
         export.add_css_class("suggested-action")
         header.pack_end(export)
+        self.lock_button = Gtk.ToggleButton(icon_name="changes-allow-symbolic",
+                                            tooltip_text="Touch Lock: ignore touches (hold to unlock by touch)")
+        header.pack_end(self.lock_button)
 
         self.banner = Adw.Banner()
         self.switcher_bar = Adw.ViewSwitcherBar(stack=self.stack)
@@ -190,6 +197,36 @@ class MainWindow(Adw.ApplicationWindow):
         self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
                                              min_sidebar_width=260, max_sidebar_width=340)
         return self.split
+
+    # --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
+
+    def _setup_lock(self) -> None:
+        im = self.input_mode
+        im.lock_exempt.append(self.lock_button)
+        self._lock_guard = False
+
+        def toggled(btn):
+            if self._lock_guard:
+                return
+            im.set_locked(btn.get_active())
+
+        def lock_changed(_im, locked):
+            self._lock_guard = True
+            self.lock_button.set_active(locked)
+            self._lock_guard = False
+            self.lock_button.set_icon_name("changes-prevent-symbolic" if locked else "changes-allow-symbolic")
+            if locked:
+                self.toast("Touch locked. Hold the lock button, or click it with the mouse, to unlock.")
+
+        self.lock_button.connect("toggled", toggled)
+        im.connect("lock-changed", lock_changed)
+        # by touch, unlocking needs a long press; a plain tap on a locked button is ignored
+        tap = Gtk.GestureClick(propagation_phase=Gtk.PropagationPhase.CAPTURE, touch_only=True)
+        tap.connect("pressed", lambda g, *a: im.locked and g.set_state(Gtk.EventSequenceState.CLAIMED))
+        self.lock_button.add_controller(tap)
+        hold = Gtk.GestureLongPress(touch_only=True, delay_factor=2.0)
+        hold.connect("pressed", lambda *_: im.locked and im.set_locked(False))
+        self.lock_button.add_controller(hold)
 
     # --- actions ----------------------------------------------------------------------------------------
 
@@ -262,6 +299,10 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self.banner.set_revealed(False)
         self.export_action.set_enabled(self.pv.data is not None)
+        prog = self.pv.program
+        tools = sorted({b.tool for b in prog.blocks if b.op_kind == 1}) if prog else []
+        self.machine.set_program(self.pv.data, f"Program {project.program_number} · {name} · "
+                                               f"tools {', '.join(f'T{t}' for t in tools)}")
 
     def export_dialog(self) -> None:
         if self.pv is None or self.pv.data is None:

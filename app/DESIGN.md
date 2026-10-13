@@ -14,6 +14,11 @@ Status: **design draft 1** (2026-10-12).
   operation), shows the program with the selected operation highlighted (pinch changes the font size), and exports
   the PRG. Touch density switches automatically (TOUCH.md 3). Examples in `app/examples/`. Not yet: editing operations,
   op reorder and bottom-sheet editors (M4), simulation, machine page (M3).
+- M3 (2026-10-13): `alphacam/link/serial_link.py` (9600 7E2, wait for DC1, XON/XOFF within a 4-byte chunk, per-char
+  delay, receive to the 2nd %, Manual Ops load parity, loopback; pty tests) and the **Machine** page: port, live
+  modem lines, hold-to-send with confirmation, transfer dialog with cancel, Manual Ops backup / restore (hold +
+  warning), loopback test, transfer logs in ~/.local/state/alphalink-cam/logs, and a touch lock (also automatic
+  during transfers). Not yet tried against the lathe from the app.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
