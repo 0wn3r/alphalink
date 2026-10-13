@@ -40,6 +40,9 @@ msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
 msgid "_Done"
 msgstr "_Готово"
 
+msgid "Finish the line (Esc)"
+msgstr "Завершити лінію (Esc)"
+
 msgid "Delete Element (Del)"
 msgstr "Видалити елемент (Del)"
 

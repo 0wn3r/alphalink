@@ -710,7 +710,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast(_("Saved {name}").format(name=path.name))
         return True
 
-    def _close_request(self, *_) -> bool:
+    def _close_request(self, *_args) -> bool:
         if not (self.undo and self.undo.modified):
             return False
         alert = Adw.AlertDialog(heading=_("Save changes?"),

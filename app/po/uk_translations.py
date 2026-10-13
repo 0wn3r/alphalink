@@ -354,4 +354,5 @@ UK = {
 "0 = from the first cut depth": "0 = за глибиною першого проходу",
 "Angle": "Кут",
 "Between the chamfer and the line along Z; the size is measured along that line": "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії",
+"Finish the line (Esc)": "Завершити лінію (Esc)",
 }
