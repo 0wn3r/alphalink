@@ -1,7 +1,7 @@
 # AlphaLink CAM (GNOME): design
 
 Status (2026-10-14): **working app**; all milestones of section 10 are done. What exists:
-- Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, the .SDG/.SDT writer, program units conversion (`model/units.py`), PRG parser, toolpaths for
+- Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, the .SDG/.SDT writer, program units (converted at output, `post/alphat_prg._Writer`), PRG parser, toolpaths for
   every ALPHA-T operation (area, face, finish, groove incl. finish mode, thread, drill, dwell, moves, tool changes) and
   their options with samples, the .PRG post and the .SD1 writer. Both are byte-identical to ALPHA-T on every metric
   sample in `samples/alphat_v12` (tests `test_post`, `test_sd1_write`); known sub-micron differences: face clear ending

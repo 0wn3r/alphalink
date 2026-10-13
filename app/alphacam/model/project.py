@@ -79,14 +79,6 @@ class Project:
             if not g.id:
                 g.id = f"g{i}"
 
-    def for_output(self) -> "Project":
-        """The project in its output units (itself when they are the drawing's)."""
-        if self.output_units in (None, self.units):
-            return self
-        from .units import convert_units
-
-        return convert_units(self, self.output_units)
-
     def contour(self, ids: list[str]) -> list[Element]:
         return Contour(ids).resolve(self.geometry)
 

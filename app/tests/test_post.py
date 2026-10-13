@@ -287,22 +287,44 @@ class FromSD1(unittest.TestCase):
 
 
 class OutputUnits(unittest.TestCase):
-    """ALPHA-T's "Select Units To Store Output In": a program in other units than the drawing."""
+    """ALPHA-T's "Select Units To Store Output In" (samples/alphat_units): the program in other units than the
+    drawing; the .SD1 stays in the drawing's units."""
+
+    def _close(self, a: bytes, b: bytes, tol: float):
+        la, lb = a.decode().splitlines(), b.decode().splitlines()
+        self.assertEqual(len(la), len(lb))
+        for x, y in zip(la, lb):
+            nx, ny = re.findall(r"-?[\d.]+", x), re.findall(r"-?[\d.]+", y)
+            self.assertEqual(re.sub(r"-?[\d.]+", "#", x), re.sub(r"-?[\d.]+", "#", y), (x, y))
+            self.assertLessEqual(max((abs(float(p) - float(q)) for p, q in zip(nx, ny)), default=0), tol, (x, y))
+
+    def _sample(self, name, out):
+        from alphacam.io.sd1 import load_sd1
+
+        d = SAMPLES.parent / "alphat_units"
+        p = load_sdg(d / f"{name}.SDG")
+        p.operations = load_sd1(d / f"{name}.SD1", p)
+        p.output_units = out
+        return p, d
 
     def test_metric_drawing_inch_program(self):
-        from alphacam.model.units import convert_units
         from alphacam.post.alphat_sd1 import sd1
 
-        project = sample_project("TOOLCHG_rough1_finish3_metric")
-        project.output_units = "inch"
-        out = post(project)
-        self.assertIn(b"\r\nM70\r\n", out)
-        self.assertEqual(out, post(convert_units(project, "inch")))
-        self.assertEqual(sd1(project), sd1(convert_units(project, "inch")))
-        self.assertIn(b"G31", sd1(project))
-        self.assertIn(b"#123=4.7244\r\n", out)  # tool start X120 mm
+        p, d = self._sample("UNITS_metricdwg_inchout", "inch")
+        # one value differs by 0.0002 (the finish pull-off Z, -3.9258 / -3.926), as in the inch samples
+        self._close(post(p), (d / "UNITS_metricdwg_inchout.PRG").read_bytes(), 0.00021)
+        self.assertEqual(sd1(p), (d / "UNITS_metricdwg_inchout.SD1").read_bytes())
 
-    def test_back_to_mm_and_saved(self):
+    def test_inch_drawing_metric_program(self):
+        from alphacam.post.alphat_sd1 import sd1
+
+        p, d = self._sample("UNITS_inchdwg_metricout", "mm")
+        # ALPHA-T's own contour lands 0.002 low in Z here (Z-0.002, -50.802; 0.004 after the x2); the app gives the
+        # exact values
+        self._close(post(p), (d / "UNITS_inchdwg_metricout.PRG").read_bytes(), 0.0041)
+        self._close(sd1(p), (d / "UNITS_inchdwg_metricout.SD1").read_bytes(), 0.00011)
+
+    def test_saved_and_same_units(self):
         project = sample_project("MET2_finish_inch")
         project.output_units = "mm"
         self.assertIn(b"\r\nM71\r\n", post(project))

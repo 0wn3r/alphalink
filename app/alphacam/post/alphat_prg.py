@@ -36,23 +36,35 @@ UNITS_MCODE = {"mm": "M71", "inch": "M70"}
 
 
 class _Writer:
+    """Formats the program's numbers. Toolpaths are computed in the drawing's units (rounded to `tdec`); a program
+    in other units (Project.output_units, ALPHA-T's "Select Units To Store Output In") converts each value at the
+    end, rounding the real value to the output decimals before the x2 scaling, as ALPHA-T does (UNITS_metricdwg_
+    inchout: Z-25 mm -> 0.9843 -> Z-1.9686; X96 -> radius 1.8898 -> X3.7796; feed 0.15 -> 0.0059 -> 0.0118)."""
+
     def __init__(self, project: Project, profile: MachineProfile):
-        self.units = project.units
-        self.dec = profile.decimals(project.units)
+        out = project.output_units or project.units
+        self.units = out
+        self.dec = profile.decimals(out)
+        self.tdec = profile.decimals(project.units)
+        self.k = 1.0 if out == project.units else (1 / 25.4 if out == "inch" else 25.4)
         self.zs, self.fs = profile.z_scale, profile.f_scale
         self.lines: list[str] = []
         self.restart = 0  # restart points so far: IF[#140EQk] GOTO 50(k+1)
         self.feeding = False  # inside an M62 feed group
         self.pos = (None, None)  # last end point, for arc I/K
 
-    def x(self, v: float) -> str:
-        return format_number(v, self.dec)
+    def _c(self, v: float) -> float:
+        """A real value in the output units (rounded first, when converted)."""
+        return v if self.k == 1.0 else round(v * self.k, self.dec)
+
+    def x(self, v: float) -> str:  # a diameter: its radius is converted
+        return format_number(v if self.k == 1.0 else 2 * self._c(v / 2), self.dec)
 
     def z(self, v: float) -> str:
-        return format_number(v * self.zs, self.dec)
+        return format_number(self._c(v) * self.zs, self.dec)
 
     def f(self, v: float) -> str:
-        return format_number(v * self.fs, self.dec)
+        return format_number(self._c(v) * self.fs, self.dec)
 
     def emit(self, *lines: str) -> None:
         self.lines.extend(lines)
@@ -81,8 +93,8 @@ class _Writer:
                     self.emit("M62")
                     self.feeding = True
                 g = 2 if m.kind is MoveKind.ARC_CW else 3
-                i = format_number(m.centre_x - start[0], self.dec)
-                k = format_number((m.centre_z - start[1]) * self.zs, self.dec)
+                i = self.x(m.centre_x - start[0])
+                k = self.z(m.centre_z - start[1])
                 self.emit(f"G{g}X{self.x(m.x)}Z{self.z(m.z)}I{i}K{k}F{self.f(m.feed)}")
             elif m.kind is MoveKind.DWELL:
                 self.emit(f"G4P{round(m.dwell_revs * 1000)}")
@@ -143,14 +155,14 @@ def _thread_block(w: _Writer, block: int, project: Project, op: Thread) -> int:
     Start Z = thread top + lead-in. A spring pass (THREAD_spring1) is its own block #127=21 right after, with one
     cut at the final diameter; the thread block then ends without M64. Returns the last block number used."""
     outer, inner = project.contour([op.outer_line])[0], project.contour([op.inner_line])[0]
-    plan = plan_thread(op, outer, inner, w.dec)
+    plan = plan_thread(op, outer, inner, w.tdec)
     pitch = w.f(op.pitch)
     sx, sz = op.start.x, plan.z_start
 
     def cut(n: int, x: float) -> None:
         w.moves([Move(MoveKind.RAPID, x, plan.cut_start_z(len(plan.xs) if x == plan.xs[-1] else n))])
         w.emit("M62", f"#121={n}", "M66", f"G32X{w.x(x)}Z{w.z(plan.z_end + op.pitch)}F{pitch}",
-               f"U{format_number(plan.pullout_u, w.dec)}W{format_number(-op.pitch * w.zs, w.dec)}",
+               f"U{w.x(plan.pullout_u)}W{w.z(-op.pitch)}",
                f"G0X{w.x(sx)}Z{w.z(plan.z_end)}")
         w.feeding = False
         w.moves([Move(MoveKind.RAPID, sx, sz)])
@@ -186,47 +198,47 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
     r_exact = mm(tool.nose_radius, project.units)
     # the toolpaths use the nose radius rounded to the output decimals (inch: 0.4 mm -> 0.0157, ARC_finish_inch),
     # the #125/#126 limits the exact one (-0.063 = -4 x 0.015748)
-    r = round(r_exact, w.dec)
+    r = round(r_exact, w.tdec)
     if isinstance(op, Thread):
         return _thread_block(w, block, project, op)
     if isinstance(op, Drill):
-        _generic_block(w, block, op, drill(op, project.units, w.dec), 18, (op.start.x, op.depth))
+        _generic_block(w, block, op, drill(op, project.units, w.tdec), 18, (op.start.x, op.depth))
         return block
     path = chain(project.contour(op.contour))
     if isinstance(op, (AreaClear, FaceClear)):
         path = front_first(path)
     limit = limits(points(path), r_exact)
     if isinstance(op, FinishPass):
-        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.dec),
+        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.tdec),
                        16 if op.face else 14 if op.external else 15, limit)
     elif isinstance(op, AreaClear) and not op.front:
         # FACE direction: face-clear passes; #127=8 external (AREA_front_face), 7 internal (AREA_face_internal)
         if op.pre_finish:
             raise NotImplementedError(tr("area clear FACE with pre-finish (no sample)"))
-        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec, retract_mm(op, project.units),
+        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.tdec, retract_mm(op, project.units),
                                                      outward=True),
                        8 if op.external else 7, limit)
     elif isinstance(op, AreaClear):
-        _generic_block(w, block, op, area_clear(op, path, r, project.units, w.dec), 6 if op.external else 7, limit)
+        _generic_block(w, block, op, area_clear(op, path, r, project.units, w.tdec), 6 if op.external else 7, limit)
         if op.pre_finish:
             # its own block after an empty one: #127=10, internal 11 (AREA_prefinish_internal), with the area's
             # offsets (AREA_prefinish_offset) and a 1 mm pull-off
             _empty_block(w, block + 1, None)
             block += 2
             fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, op.external)
-            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec,
+            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.tdec,
                                                          round(mm(retract_mm(op, project.units, PREFINISH_LEAD_OUT_MM),
-                                                                  project.units), w.dec)),
+                                                                  project.units), w.tdec)),
                            10 if op.external else 11, limit)
     elif isinstance(op, FaceClear):
-        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec), 8, limit)
+        _generic_block(w, block, op, face_clear(op, path, r, project.units, w.tdec), 8, limit)
         if op.pre_finish:  # FACE_prefinish: #127=12, ends on the offset end, 0.2 mm pull-off inwards
             _empty_block(w, block + 1, None)
             block += 2
             fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z)
-            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.dec, face_end=True), 12, limit)
+            _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.tdec, face_end=True), 12, limit)
     elif isinstance(op, Groove):
-        _generic_block(w, block, op, groove(op, path, r, project.units, w.dec),
+        _generic_block(w, block, op, groove(op, path, r, project.units, w.tdec),
                        17 if op.mode == "finish" else 9, limit)
     else:
         raise NotImplementedError(tr("{type} is not supported by the post yet", type=op.type))
@@ -264,10 +276,9 @@ def post(project: Project, profile: MachineProfile | None = None, library: ToolL
     and an empty block (which holds the rapid to the tool change point when a tool change comes next); a later tool
     change is another tool block; finally an M65 block and %."""
     profile = profile or MachineProfile()
-    project = project.for_output()  # ALPHA-T's "Select Units To Store Output In"
     w = _Writer(project, profile)
     w.library = library
-    w.emit("%", f"O{profile.o_number}", f"#132={project.program_number}", *HEADER_LOGIC, UNITS_MCODE[project.units])
+    w.emit("%", f"O{profile.o_number}", f"#132={project.program_number}", *HEADER_LOGIC, UNITS_MCODE[project.output_units or project.units])
 
     ops = list(project.operations)
     if not ops or not isinstance(ops[0], ToolChange):

@@ -133,10 +133,11 @@ def read_sd1(text: str, project) -> list:
             if e in (401, 411):  # 411 = AWAY (FACE_away_*)
                 ops.append(FaceClear(tool, start, list(contour), towards=e == 401, **common))
             elif abs(e) in (100, 101, 110, 300):  # 110 = AWAY (AREA_away_tool5), 300 = FOLLOW (AREA_follow_contour)
-                r = w.get("R", 1.0)
+                default = 1.0 if project.units == "mm" else round(1 / 25.4, 4)  # RETRACT DIST, drawing units
+                r = w.get("R", default)
                 ops.append(AreaClear(tool, start, list(contour), external=e > 0, front=abs(e) != 101,
                                      towards=abs(e) != 110, follow=abs(e) == 300,
-                                     retract=None if abs(r - 1.0) < 1e-9 else r, **common))
+                                     retract=None if abs(r - default) < 1e-9 else r, **common))
             else:
                 raise NotImplementedError(tr("G71 E{e} (area clear option) is not supported yet", e=e))
             continue

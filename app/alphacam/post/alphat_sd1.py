@@ -129,7 +129,8 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
 
 
 def sd1(project: Project, library: ToolLibrary | None = None) -> bytes:
-    project = project.for_output()
+    # ALPHA-T keeps the .SD1 in the drawing's units even when the program is written in others
+    # (UNITS_metricdwg_inchout: G30, F0.15, mm values next to an inch .PRG)
     units = project.units
     out = _Listing()
     ops = list(project.operations)
@@ -206,10 +207,13 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
             e, tp = (101 if external else -101), face_clear(op, path, r, units, DEC, retract_mm(op, units), outward=True)
         else:
             e, tp = (100 if external else -100), area_clear(op, path, r, units, DEC)
-        retract = FACE_RETRACT_MM if face else retract_mm(op, units)
+        retract = FACE_RETRACT_MM if face else retract_mm(op, units)  # mm, for the pull-off legs
+        # R as entered, in the drawing's units (UNITS_inchdwg_metricout: R0.0079)
+        r_shown = retract if units == "mm" else (op.retract if getattr(op, "retract", None) is not None
+                                                 else round(retract / 25.4, 4))
         _contour_cycle(out, op, path, r, units, external,
                        lambda p, q: f"G71P{p}Q{q}U{_n(op.offset_x)}W{_n(op.offset_z)}D{_n(op.depth_of_cut)}"
-                                    f"R{_n(retract)}A45E{e + 200 if getattr(op, "follow", False) else e}"
+                                    f"R{_n(r_shown)}A45E{e + 200 if getattr(op, "follow", False) else e}"
                                     f"H{len(tp.passes)}",
                        retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100))
         if getattr(op, "pre_finish", False):  # G70 R1, E0 / E1 internal / E2 face, with the op's offsets

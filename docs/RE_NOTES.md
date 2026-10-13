@@ -1109,6 +1109,15 @@ Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there
   identical in every sample; written as zeros. The .SDT of a drawing without text: word 0 = element count, word 1
   = 18, words 112, 40, 76 at 0x80, 12 at 0xCC. The reader now divides the billet by 25.4 in inch drawings (it is
   stored in mm).
-* Program units: ALPHA-T's "Select Units To Store Output In". The app converts the part (geometry, billet,
-  every length, feed and pitch) to the output units before posting; whether ALPHA-T converts the feed is not
-  sampled yet.
+* Program units: ALPHA-T's "Select Units To Store Output In" (samples/alphat_units, cloud run 2026-10-13 late).
+  ALPHA-T computes in the drawing's units and converts each value of the .PRG at the end, rounding the real value
+  to the output decimals before the x2 scaling (Z-25 mm -> 0.9843 -> Z-1.9686; X96 -> radius 1.8898 -> X3.7796);
+  the feed is converted too (0.15 mm/rev -> #130=0.0118). The .SD1 stays in the drawing's units (G30, F0.15, mm).
+  The app does the same; remaining differences: one 0.0002 value (metric drawing, inch program) and ALPHA-T's own
+  0.002 low Z on an inch drawing with a metric program. Area RETRACT DIST in an inch drawing is entered in inch
+  (SD1 R0.0079).
+* ALPHA-T bug seen in that run: any drawing ALPHA-T retrieves (its own too) loses its reference: SD1 G92X0Z0 and
+  the contour shifted by +163.3803 in X and +120 in Z, while the typed tool start stays; programs made on a
+  retrieved drawing are unusable. Only freshly drawn parts give correct programs. App-written .SDG files load and
+  redraw in ALPHA-T (APPMET2, APPARC, APPBIL80); a finish pass made on APPMET2 is byte-identical to the same pass on
+  ALPHA-T's own MET2.

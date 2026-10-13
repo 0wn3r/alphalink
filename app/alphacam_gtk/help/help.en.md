@@ -171,7 +171,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 ## Part settings
 
-Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program (and the .SD1) in mm (M71) or inch (M70) whatever the drawing's units, like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
+Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program in mm (M71) or inch (M70) whatever the drawing's units (the .SD1 stays in the drawing's units, as ALPHA-T keeps it), like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
 ## Preferences
 
