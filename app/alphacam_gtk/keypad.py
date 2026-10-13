@@ -9,13 +9,14 @@ import gi
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gtk  # noqa: E402
+from .i18n import _  # noqa: E402
 
 KEYS = [["7", "8", "9", "⌫"], ["4", "5", "6", "±"], ["1", "2", "3", "ABS"], ["0", ".", "→", "✓"]]
 
 
 class Keypad(Adw.Dialog):
-    def __init__(self, on_done, title: str = "Point"):
-        super().__init__(title=title, content_width=360)
+    def __init__(self, on_done, title: str | None = None):
+        super().__init__(title=title or _("Point"), content_width=360)
         self.on_done = on_done
         self.values = {"x": "", "z": ""}
         self.active = "x"
@@ -115,4 +116,4 @@ class Keypad(Adw.Dialog):
                 b.add_css_class("accent")
             else:
                 b.remove_css_class("accent")
-        self.abs_button.set_label("INC" if self.incremental else "ABS")
+        self.abs_button.set_label(_("INC") if self.incremental else _("ABS"))

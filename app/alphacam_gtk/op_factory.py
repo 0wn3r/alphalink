@@ -15,11 +15,12 @@ from alphacam.model.operations import (
     ToolChange,
 )
 from alphacam.model.tools import standard_library
+from .i18n import _
 
 OP_MENU = [
-    ("Area Clear", "area_clear"), ("Finish Pass", "finish"), ("Face Clear", "face_clear"), ("Grooving", "groove"),
-    ("Threading", "thread"), ("Drilling", "drill"), ("Tool Change", "tool_change"), ("Dwell", "dwell"),
-    ("Move / Rapid", "move"),
+    (_("Area Clear"), "area_clear"), (_("Finish Pass"), "finish"), (_("Face Clear"), "face_clear"),
+    (_("Grooving"), "groove"), (_("Threading"), "thread"), (_("Drilling"), "drill"), (_("Tool Change"), "tool_change"),
+    (_("Dwell"), "dwell"), (_("Move / Rapid"), "move"),
 ]
 
 

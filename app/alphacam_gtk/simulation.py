@@ -11,6 +11,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, Gtk  # noqa: E402
 
 from .canvas.paths import pass_starts  # noqa: E402
+from .i18n import _, ngettext  # noqa: E402
 
 MOVES_PER_SECOND = 25
 
@@ -21,14 +22,14 @@ class SimulationBar(Gtk.Box):
         self.add_css_class("sim-bar")
         self.c, self.on_move = canvas, on_move
         self._play = 0
-        buttons = [("media-skip-backward-symbolic", "First move", lambda: self.goto(0)),
-                   ("media-seek-backward-symbolic", "Previous pass", lambda: self.step_pass(-1)),
+        buttons = [("media-skip-backward-symbolic", _("First move"), lambda: self.goto(0)),
+                   ("media-seek-backward-symbolic", _("Previous pass"), lambda: self.step_pass(-1)),
                    (None, None, None),
-                   ("media-seek-forward-symbolic", "Next pass", lambda: self.step_pass(1)),
-                   ("media-skip-forward-symbolic", "Show all", lambda: self.goto(None))]
+                   ("media-seek-forward-symbolic", _("Next pass"), lambda: self.step_pass(1)),
+                   ("media-skip-forward-symbolic", _("Show all"), lambda: self.goto(None))]
         for icon, tip, cb in buttons:
             if icon is None:
-                self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text="Play / Pause")
+                self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play / Pause"))
                 self.play_button.connect("clicked", lambda *_: self.toggle_play())
                 self.append(self.play_button)
                 continue
@@ -110,14 +111,15 @@ class SimulationBar(Gtk.Box):
     def _label(self) -> None:
         segs, i = self.c.segs, self.c.sim_index
         if not segs:
-            self.label.set_label("no moves")
+            self.label.set_label(_("no moves"))
             return
         if i is None:
-            self.label.set_label(f"{len(segs)} moves")
+            self.label.set_label(ngettext("{n} move", "{n} moves", len(segs)).format(n=len(segs)))
             return
         s = segs[max(i - 1, 0)]
-        op = "tool block" if s.op_index is None else f"op {s.op_index + 1}"
-        pas = f" · pass {s.pass_no}" if s.pass_no else ""
-        self.label.set_label(f"{i}/{len(segs)} · {op}{pas} · line {s.line}")
+        op = _("tool block") if s.op_index is None else _("op {n}").format(n=s.op_index + 1)
+        pas = " · " + _("pass {n}").format(n=s.pass_no) if s.pass_no else ""
+        self.label.set_label(_("{i}/{total} · {op}{pass_} · line {line}").format(
+            i=i, total=len(segs), op=op, pass_=pas, line=s.line))
         if self.on_move:
             self.on_move(s.line)

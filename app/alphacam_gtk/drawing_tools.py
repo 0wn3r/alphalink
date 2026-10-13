@@ -16,8 +16,9 @@ from gi.repository import Adw, Gdk, Gtk  # noqa: E402
 
 from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Line, Point  # noqa: E402
+from .i18n import N_, _, ngettext  # noqa: E402
 
-TOOLS = [("select", "Select"), ("line", "Line"), ("fillet", "Fillet"), ("chamfer", "Chamfer")]
+TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("fillet", N_("Fillet")), ("chamfer", N_("Chamfer"))]
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
 RE_COORD = re.compile(r"\s*(@)?\s*(-?\d*\.?\d+)\s*[,; ]\s*(-?\d*\.?\d+)\s*$")
@@ -33,27 +34,27 @@ class DrawingTools:
         # palette (a bottom bar: thumb reach in touch mode)
         self.palette = Adw.ToggleGroup()
         for name, label in TOOLS:
-            self.palette.add(Adw.Toggle(name=name, label=label))
+            self.palette.add(Adw.Toggle(name=name, label=_(label)))
         self.palette.set_active_name("select")
         self.palette.connect("notify::active-name", lambda *_: self.set_tool(self.palette.get_active_name()))
 
-        self.entry = Gtk.Entry(hexpand=True, placeholder_text="X,Z  or  @dX,dZ  then Enter (line tool)")
+        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_("X,Z  or  @dX,dZ  then Enter (line tool)"))
         self.entry.add_css_class("command-entry")
         self.entry.connect("activate", self._entry_activate)
-        self.done = Gtk.Button(label="_Done", use_underline=True, visible=False)
+        self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False)
         self.done.connect("clicked", lambda *_: self.finish_chain())
-        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text="Delete Element (Del)",
+        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del)"),
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
 
-        self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text="Keypad", visible=False)
+        self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
         self.keypad_button.connect("clicked", lambda *_: self.open_keypad())
         self.bar = Gtk.Box(spacing=6, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
         for wdg in (self.palette, self.keypad_button, self.entry, self.done, self.delete_el):
             self.bar.append(wdg)
 
         # contour picking banner
-        self.pick_banner = Adw.Banner(title="Tap the contour elements in cutting order", button_label="_Done")
+        self.pick_banner = Adw.Banner(title=_("Tap the contour elements in cutting order"), button_label=_("_Done"))
         self.pick_banner.connect("button-clicked", lambda *_: self.finish_pick())
 
         canvas.connect("canvas-tapped", self._tapped)
@@ -101,7 +102,7 @@ class DrawingTools:
         elif tool in ("fillet", "chamfer"):
             corner = self._corner_near(Point(x, z), tol)
             if corner is None:
-                self.w.toast("Tap a corner between two lines")
+                self.w.toast(_("Tap a corner between two lines"))
                 return
             self._size_popover(tool, corner)
 
@@ -135,7 +136,7 @@ class DrawingTools:
                 pt = drawing.lock_direction(prev, pt)
             if pt == prev:
                 return
-            if not self.w.apply_edit("Draw line", lambda p: drawing.add_line(p, prev, pt)):
+            if not self.w.apply_edit(_("Draw line"), lambda p: drawing.add_line(p, prev, pt)):
                 return
             self.w.refresh()
         self.points.append(pt)
@@ -153,12 +154,12 @@ class DrawingTools:
     def _entry_activate(self, entry) -> None:
         m = RE_COORD.match(entry.get_text())
         if not m:
-            self.w.toast("Type X,Z (diameter, Z) or @dX,dZ")
+            self.w.toast(_("Type X,Z (diameter, Z) or @dX,dZ"))
             return
         x, z = float(m[2]), float(m[3])
         if m[1]:
             if not self.points:
-                self.w.toast("@ needs a previous point")
+                self.w.toast(_("@ needs a previous point"))
                 return
             prev = self.points[-1]
             x, z = prev.x + x, prev.z + z
@@ -170,7 +171,7 @@ class DrawingTools:
             pt = Point(x, z)
             if pt == prev:
                 return
-            if not self.w.apply_edit("Draw line", lambda p: drawing.add_line(p, prev, pt)):
+            if not self.w.apply_edit(_("Draw line"), lambda p: drawing.add_line(p, prev, pt)):
                 return
             self.w.refresh()
             self.points.append(pt)
@@ -188,7 +189,7 @@ class DrawingTools:
             self.entry.set_text(text)
             self._entry_activate(self.entry)
 
-        Keypad(done, title="Next Point" if self.points else "Start Point").present(self.w)
+        Keypad(done, title=_("Next Point") if self.points else _("Start Point")).present(self.w)
 
     def set_touch(self, touch: bool) -> None:
         """Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6)."""
@@ -202,17 +203,17 @@ class DrawingTools:
         self.delete_el.set_visible(gid is not None)
         if gid:
             g = next(g for g in self.w.project.geometry if g.id == gid)
-            kind = "Line" if isinstance(g, Line) else "Arc"
+            kind = _("Line") if isinstance(g, Line) else _("Arc")
             self.w.readout.set_label(f"{gid} {kind}  X{g.a.x:g} Z{g.a.z:g} → X{g.b.x:g} Z{g.b.z:g}")
             self.c.grab_focus()
         self.c.queue_draw()
 
     def delete_selected_element(self) -> None:
         gid = self.selected_element
-        if gid and self.w.apply_edit(f"Delete {gid}", lambda p: drawing.delete_element(p, gid)):
+        if gid and self.w.apply_edit(_("Delete {what}").format(what=gid), lambda p: drawing.delete_element(p, gid)):
             self._select_element(None)
             self.w.refresh()
-            self.w.toasts.add_toast(Adw.Toast(title=f"Deleted {gid}", button_label="_Undo",
+            self.w.toasts.add_toast(Adw.Toast(title=_("Deleted {what}").format(what=gid), button_label=_("_Undo"),
                                               action_name="win.undo", timeout=6))
 
     # --- fillet / chamfer ---------------------------------------------------------------------------------
@@ -233,7 +234,8 @@ class DrawingTools:
         rect.x, rect.y, rect.width, rect.height = int(sx), int(sy), 1, 1
         pop.set_pointing_to(rect)
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
-        title = Gtk.Label(label=("Radius" if tool == "fillet" else "Chamfer") + f" at X{corner.x:g} Z{corner.z:g}")
+        title = Gtk.Label(label=(_("Radius at {point}") if tool == "fillet" else _("Chamfer at {point}")).format(
+            point=f"X{corner.x:g} Z{corner.z:g}"))
         title.add_css_class("heading")
         box.append(title)
         chips = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=5, column_spacing=6,
@@ -248,7 +250,7 @@ class DrawingTools:
         spin = Gtk.SpinButton.new_with_range(0.01, 100, 0.1)
         spin.set_digits(3)
         spin.set_value(1)
-        ok = Gtk.Button(label="_Apply", use_underline=True)
+        ok = Gtk.Button(label=_("_Apply"), use_underline=True)
         ok.add_css_class("suggested-action")
         ok.connect("clicked", lambda *_: (pop.popdown(), self._apply_corner(tool, corner, spin.get_value())))
         other.append(spin)
@@ -260,7 +262,7 @@ class DrawingTools:
 
     def _apply_corner(self, tool: str, corner: Point, size: float) -> None:
         fn = drawing.fillet if tool == "fillet" else drawing.chamfer
-        label = f"{'Fillet R' if tool == 'fillet' else 'Chamfer '}{size:g}"
+        label = (_("Fillet R{size}") if tool == "fillet" else _("Chamfer {size}")).format(size=f"{size:g}")
         if self.w.apply_edit(label, lambda p: fn(p, corner, size)):
             self.w.refresh()
 
@@ -294,7 +296,7 @@ class DrawingTools:
         except ValueError as e:
             self.w.toast(str(e))
             return
-        if self.w.apply_edit("Pick contour", lambda p: setattr(p.operations[i], "contour", order)):
+        if self.w.apply_edit(_("Pick contour"), lambda p: setattr(p.operations[i], "contour", order)):
             self.w.refresh()
             self.w._select_op(i)
 
@@ -302,5 +304,5 @@ class DrawingTools:
         self.pick_op = None
         self.c.picked = []
         self.pick_banner.set_revealed(False)
-        self.pick_banner.set_title("Tap the contour elements in cutting order")
+        self.pick_banner.set_title(_("Tap the contour elements in cutting order"))
         self.c.queue_draw()

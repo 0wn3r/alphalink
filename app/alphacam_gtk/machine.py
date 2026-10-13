@@ -17,14 +17,15 @@ from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 from alphacam.link import serial_link as sl  # noqa: E402
 
 from .hold_button import HoldButton  # noqa: E402
+from .i18n import _  # noqa: E402
 
 LOG_DIR = Path(GLib.get_user_state_dir()) / "alphalink-cam" / "logs"
 
-STEPS_SEND = "On the lathe: CAM key, 4 “CAM-Datei laden”, then the arrow key. Then hold Send here."
-STEPS_BACKUP = "Start the backup here first, then on the lathe: Manual Ops, Edit, Save."
-STEPS_RESTORE = ("Only Manual Ops files saved from this lathe. Programs not made for the Alpha-T can corrupt its "
-                 "macros (Alphalink-T manual).")
-STEPS_LOOP = "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test."
+STEPS_SEND = _("On the lathe: CAM key, 4 “CAM-Datei laden”, then the arrow key. Then hold Send here.")
+STEPS_BACKUP = _("Start the backup here first, then on the lathe: Manual Ops, Edit, Save.")
+STEPS_RESTORE = _("Only Manual Ops files saved from this lathe. Programs not made for the Alpha-T can corrupt its "
+                  "macros (Alphalink-T manual).")
+STEPS_LOOP = _("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test.")
 
 
 class TransferDialog(Adw.Dialog):
@@ -35,12 +36,12 @@ class TransferDialog(Adw.Dialog):
         self.cancel = threading.Event()
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, margin_top=24, margin_bottom=24,
                       margin_start=24, margin_end=24)
-        self.state = Gtk.Label(label="Opening port…", wrap=True)
+        self.state = Gtk.Label(label=_("Opening port…"), wrap=True)
         self.state.add_css_class("title-3")
         self.bar = Gtk.ProgressBar(show_text=True)
         self.detail = Gtk.Label(label="", wrap=True)
         self.detail.add_css_class("dim-label")
-        self.button = Gtk.Button(label="_Cancel", use_underline=True, halign=Gtk.Align.CENTER)
+        self.button = Gtk.Button(label=_("_Cancel"), use_underline=True, halign=Gtk.Align.CENTER)
         self.button.add_css_class("pill")
         self.button.connect("clicked", self._cancel_or_close)
         for w in (self.state, self.bar, self.detail, self.button):
@@ -57,12 +58,12 @@ class TransferDialog(Adw.Dialog):
             self.close()
         else:
             self.cancel.set()
-            self.state.set_label("Cancelling…")
+            self.state.set_label(_("Cancelling…"))
 
     def finish(self, ok: bool, text: str) -> None:
         self.finished = True
         self.state.set_label(text)
-        self.button.set_label("_Close")
+        self.button.set_label(_("_Close"))
         if ok:
             self.bar.set_fraction(1.0)
 
@@ -78,17 +79,17 @@ class MachinePage(Gtk.Box):
 
         page = Adw.PreferencesPage()
         # connection
-        conn = Adw.PreferencesGroup(title="Connection")
+        conn = Adw.PreferencesGroup(title=_("Connection"))
         self.port_model = Gtk.StringList()
-        self.port_row = Adw.ComboRow(title="Serial port", model=self.port_model)
-        refresh = Gtk.Button(icon_name="view-refresh-symbolic", valign=Gtk.Align.CENTER, tooltip_text="Rescan Ports")
+        self.port_row = Adw.ComboRow(title=_("Serial port"), model=self.port_model)
+        refresh = Gtk.Button(icon_name="view-refresh-symbolic", valign=Gtk.Align.CENTER, tooltip_text=_("Rescan Ports"))
         refresh.add_css_class("flat")
         refresh.connect("clicked", lambda *_: self.refresh_ports())
         self.port_row.add_suffix(refresh)
         conn.add(self.port_row)
-        self.lines_row = Adw.ActionRow(title="Modem lines", subtitle="Shown while this page is open")
-        self.lines_row.set_tooltip_text("With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only "
-                                        "echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe.")
+        self.lines_row = Adw.ActionRow(title=_("Modem lines"), subtitle=_("Shown while this page is open"))
+        self.lines_row.set_tooltip_text(_("With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only "
+                                          "echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe."))
         self.line_labels = {}
         for name in ("CTS", "DSR", "CD", "RI"):
             lbl = Gtk.Label(label=name, valign=Gtk.Align.CENTER)
@@ -97,40 +98,40 @@ class MachinePage(Gtk.Box):
             self.lines_row.add_suffix(lbl)
         conn.add(self.lines_row)
         self.delay_row = Adw.SpinRow.new_with_range(0, 20, 0.5)
-        self.delay_row.set_title("Delay per character (ms)")
-        self.delay_row.set_subtitle("2 ms works on the 400T; 0 sends at full speed")
+        self.delay_row.set_title(_("Delay per character (ms)"))
+        self.delay_row.set_subtitle(_("2 ms works on the 400T; 0 sends at full speed"))
         self.delay_row.set_value(2.0)
         conn.add(self.delay_row)
-        self.wait_row = Adw.SwitchRow(title="Wait for the control (DC1)", active=True,
-                                      subtitle="Nothing is sent until the lathe asks for data")
+        self.wait_row = Adw.SwitchRow(title=_("Wait for the control (DC1)"), active=True,
+                                      subtitle=_("Nothing is sent until the lathe asks for data"))
         conn.add(self.wait_row)
         page.add(conn)
 
         # send
-        send = Adw.PreferencesGroup(title="Send CAM program", description=STEPS_SEND)
-        self.send_info = Adw.ActionRow(title="No program", subtitle="Open a part first")
+        send = Adw.PreferencesGroup(title=_("Send CAM program"), description=STEPS_SEND)
+        self.send_info = Adw.ActionRow(title=_("No program"), subtitle=_("Open a part first"))
         send.add(self.send_info)
-        self.send_button = HoldButton("Send to the Lathe", margin_top=12, height_request=72)
+        self.send_button = HoldButton(_("Send to the Lathe"), margin_top=12, height_request=72)
         self.send_button.add_css_class("suggested-action")
         self.send_button.connect("held", lambda *_: self._confirm_send())
         send.add(self.send_button)
         page.add(send)
 
         # manual ops
-        mops = Adw.PreferencesGroup(title="Manual Ops", description=STEPS_BACKUP)
-        backup = Adw.ButtonRow(title="Back Up Manual Ops from the Lathe…", start_icon_name="document-save-symbolic")
+        mops = Adw.PreferencesGroup(title=_("Manual Ops"), description=STEPS_BACKUP)
+        backup = Adw.ButtonRow(title=_("Back Up Manual Ops from the Lathe…"), start_icon_name="document-save-symbolic")
         backup.connect("activated", lambda *_: self._backup())
         mops.add(backup)
-        restore_row = Adw.ActionRow(title="Restore Manual Ops", subtitle=STEPS_RESTORE)
+        restore_row = Adw.ActionRow(title=_("Restore Manual Ops"), subtitle=STEPS_RESTORE)
         mops.add(restore_row)
-        self.restore_button = HoldButton("Restore to the Lathe…", margin_top=12, height_request=64)
+        self.restore_button = HoldButton(_("Restore to the Lathe…"), margin_top=12, height_request=64)
         self.restore_button.add_css_class("destructive-action")
         self.restore_button.connect("held", lambda *_: self._restore_pick())
         mops.add(self.restore_button)
         page.add(mops)
 
-        test = Adw.PreferencesGroup(title="Cable Test", description=STEPS_LOOP)
-        loop = Adw.ButtonRow(title="Run Loopback Test", start_icon_name="media-playlist-repeat-symbolic")
+        test = Adw.PreferencesGroup(title=_("Cable Test"), description=STEPS_LOOP)
+        loop = Adw.ButtonRow(title=_("Run Loopback Test"), start_icon_name="media-playlist-repeat-symbolic")
         loop.connect("activated", lambda *_: self._loopback())
         test.add(loop)
         page.add(test)
@@ -147,10 +148,11 @@ class MachinePage(Gtk.Box):
         self.data, self.program_info = data, info
         if data:
             self.send_info.set_title(info)
-            self.send_info.set_subtitle(f"{len(data)} bytes, about {len(data) * 11 / 9600 + len(data) * self.delay_row.get_value() / 1000:.0f} s")
+            secs = len(data) * 11 / 9600 + len(data) * self.delay_row.get_value() / 1000
+            self.send_info.set_subtitle(_("{size} bytes, about {secs} s").format(size=len(data), secs=f"{secs:.0f}"))
         else:
-            self.send_info.set_title("No program")
-            self.send_info.set_subtitle("Open a part that posts without errors")
+            self.send_info.set_title(_("No program"))
+            self.send_info.set_subtitle(_("Open a part that posts without errors"))
         self.send_button.set_sensitive(bool(data))
 
     def port(self) -> str | None:
@@ -159,7 +161,7 @@ class MachinePage(Gtk.Box):
 
     def refresh_ports(self) -> None:
         self.port_model.splice(0, self.port_model.get_n_items(),
-                               [f"{dev}  {desc}" for dev, desc in sl.list_ports()] or ["/dev/ttyUSB0  (not present)"])
+                               [f"{dev}  {desc}" for dev, desc in sl.list_ports()] or ["/dev/ttyUSB0  " + _("(not present)")])
 
     # --- modem lines (5 Hz while visible, not during transfers) ----------------------------------------
 
@@ -218,7 +220,7 @@ class MachinePage(Gtk.Box):
                 finally:
                     ser.close()
             except sl.Cancelled:
-                error = "Cancelled"
+                error = _("Cancelled")
             except Exception as e:  # noqa: BLE001
                 error = _port_error(e)
             log.add(f"result: {error or 'ok'}")
@@ -231,7 +233,7 @@ class MachinePage(Gtk.Box):
             path = _write_log(title, port, log)
             if error:
                 dlg.finish(False, error)
-                dlg.detail.set_label(f"Log: {path}")
+                dlg.detail.set_label(_("Log: {path}").format(path=path))
             else:
                 done(dlg, result)
             return False
@@ -255,10 +257,11 @@ class MachinePage(Gtk.Box):
     def _confirm_send(self) -> None:
         if not self.data:
             return
-        alert = Adw.AlertDialog(heading="Send this program?",
-                                body=f"{self.program_info}\n{len(self.data)} bytes to {self.port()}.\n\n{STEPS_SEND}")
-        alert.add_response("cancel", "_Cancel")
-        alert.add_response("send", "_Send")
+        alert = Adw.AlertDialog(heading=_("Send this program?"),
+                                body=_("{info}\n{size} bytes to {port}.\n\n{steps}").format(
+                                    info=self.program_info, size=len(self.data), port=self.port(), steps=STEPS_SEND))
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("send", _("_Send"))
         alert.set_response_appearance("send", Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("cancel")
         alert.set_close_response("cancel")
@@ -269,21 +272,21 @@ class MachinePage(Gtk.Box):
         opts = sl.SendOptions(wait_xon=self.wait_row.get_active(), char_delay_ms=self.delay_row.get_value())
 
         def work(ser, dlg, log):
-            GLib.idle_add(lambda: dlg.state.set_label("Waiting for the lathe (DC1)…") and False)
-            return sl.send(ser, data, opts, self._progress(dlg, "Sending…"), dlg.cancel, log)
+            GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for the lathe (DC1)…")) and False)
+            return sl.send(ser, data, opts, self._progress(dlg, _("Sending…")), dlg.cancel, log)
 
-        self._run("Send CAM Program", work,
-                  lambda dlg, n: dlg.finish(True, f"Sent {n} bytes. Check the program list on the control."))
+        self._run(_("Send CAM Program"), work,
+                  lambda dlg, n: dlg.finish(True, _("Sent {n} bytes. Check the program list on the control.").format(n=n)))
 
     def _backup(self) -> None:
         def work(ser, dlg, log):
-            GLib.idle_add(lambda: dlg.state.set_label("Waiting for data: Manual Ops, Edit, Save on the lathe") and False)
-            return sl.receive(ser, self._progress(dlg, "Receiving…"), dlg.cancel, None, 10.0, log)
+            GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: Manual Ops, Edit, Save on the lathe")) and False)
+            return sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, 10.0, log)
 
         def done(dlg, data):
-            dlg.finish(True, f"Received {len(data)} bytes.")
+            dlg.finish(True, _("Received {n} bytes.").format(n=len(data)))
             name = datetime.now().strftime("MANOPS-%Y%m%d-%H%M.MOP")
-            fd = Gtk.FileDialog(title="Save Manual Ops Backup", initial_name=name)
+            fd = Gtk.FileDialog(title=_("Save Manual Ops Backup"), initial_name=name)
 
             def saved(d, res):
                 try:
@@ -293,14 +296,14 @@ class MachinePage(Gtk.Box):
                 target = Path(f.get_path()) if f else LOG_DIR.parent / name
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)  # raw bytes, before any decoding
-                self.window.toast(f"Backup saved to {target}")
+                self.window.toast(_("Backup saved to {path}").format(path=target))
 
             fd.save(self.window, None, saved)
 
-        self._run("Back Up Manual Ops", work, done)
+        self._run(_("Back Up Manual Ops"), work, done)
 
     def _restore_pick(self) -> None:
-        fd = Gtk.FileDialog(title="Restore Manual Ops From")
+        fd = Gtk.FileDialog(title=_("Restore Manual Ops From"))
 
         def picked(d, res):
             try:
@@ -308,10 +311,11 @@ class MachinePage(Gtk.Box):
             except GLib.Error:
                 return
             data = Path(f.get_path()).read_bytes()
-            alert = Adw.AlertDialog(heading="Restore Manual Ops?",
-                                    body=f"{Path(f.get_path()).name}, {len(data)} bytes.\n\n{STEPS_RESTORE}")
-            alert.add_response("cancel", "_Cancel")
-            alert.add_response("restore", "_Restore")
+            alert = Adw.AlertDialog(heading=_("Restore Manual Ops?"),
+                                    body=_("{name}, {size} bytes.\n\n{steps}").format(
+                                        name=Path(f.get_path()).name, size=len(data), steps=STEPS_RESTORE))
+            alert.add_response("cancel", _("_Cancel"))
+            alert.add_response("restore", _("_Restore"))
             alert.set_response_appearance("restore", Adw.ResponseAppearance.DESTRUCTIVE)
             alert.set_default_response("cancel")
             alert.set_close_response("cancel")
@@ -323,23 +327,24 @@ class MachinePage(Gtk.Box):
     def _restore(self, data: bytes) -> None:
         payload = sl.manops_load_bytes(data)
         opts = sl.SendOptions(wait_xon=self.wait_row.get_active(), char_delay_ms=self.delay_row.get_value())
-        self._run("Restore Manual Ops",
-                  lambda ser, dlg, log: sl.send(ser, payload, opts, self._progress(dlg, "Sending…"),
+        self._run(_("Restore Manual Ops"),
+                  lambda ser, dlg, log: sl.send(ser, payload, opts, self._progress(dlg, _("Sending…")),
                                                 dlg.cancel, log),
-                  lambda dlg, n: dlg.finish(True, f"Sent {n} bytes."))
+                  lambda dlg, n: dlg.finish(True, _("Sent {n} bytes.").format(n=n)))
 
     def _loopback(self) -> None:
-        self._run("Loopback Test", lambda ser, dlg, log: sl.loopback(ser),
-                  lambda dlg, r: dlg.finish(r[0], "Loopback OK: the adapter and cable work." if r[0] else
-                                            f"Loopback failed: got {r[1]!r}. Check the 2-3 bridge."))
+        self._run(_("Loopback Test"), lambda ser, dlg, log: sl.loopback(ser),
+                  lambda dlg, r: dlg.finish(r[0], _("Loopback OK: the adapter and cable work.") if r[0] else
+                                            _("Loopback failed: got {data}. Check the 2-3 bridge.").format(
+                                                data=repr(r[1]))))
 
 
 def _port_error(e: Exception) -> str:
     text = str(e)
     if "Permission denied" in text or getattr(e, "errno", None) == 13:
-        return "Permission denied: add yourself to the dialout group (sudo usermod -aG dialout $USER), then log in again"
+        return _("Permission denied: add yourself to the dialout group (sudo usermod -aG dialout $USER), then log in again")
     if "No such file" in text or "could not open port" in text:
-        return "Port not found: is the USB adapter plugged in?"
+        return _("Port not found: is the USB adapter plugged in?")
     return text
 
 
