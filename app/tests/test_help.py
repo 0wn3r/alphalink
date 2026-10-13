@@ -36,3 +36,24 @@ class Help(unittest.TestCase):
             name = {",": "comma"}.get(key, key.lower())
             self.assertRegex(src, rf"<Control>(<Shift>)?{re.escape(name)}\"", key)
         self.assertIn('"F1"', src)
+
+
+class CoreMessages(unittest.TestCase):
+    def test_core_errors_are_translated(self):
+        """Errors from the core (shown in the banner and toasts) go through the app's catalog."""
+        import gettext
+
+        from alphacam import i18n
+        from alphacam.toolpath.contour import chain
+        from alphacam_gtk.i18n import DOMAIN, LOCALE_DIR
+
+        uk = gettext.translation(DOMAIN, LOCALE_DIR, languages=["uk"])
+        i18n.set_translator(uk.gettext)
+        try:
+            with self.assertRaises(ValueError) as cm:
+                chain([])
+            self.assertEqual(str(cm.exception), "порожній контур")
+        finally:
+            from alphacam_gtk.i18n import _
+
+            i18n.set_translator(_)

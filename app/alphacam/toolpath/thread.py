@@ -7,6 +7,7 @@ last pitch (U = outer - inner + 1 on diameter: U21 for 40 -> 20, U13 for 40 -> 2
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 from dataclasses import dataclass
 
@@ -30,16 +31,16 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     if not op.towards:
         # THREAD_away: ALPHA-T only moves the start to Z-5 (inside the thread) and flips the pull-out W; the cuts
         # still run towards the chuck
-        raise NotImplementedError("threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the "
-                                  "app does not offer it; use TOWARDS")
+        raise NotImplementedError(tr("threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the "
+                                  "app does not offer it; use TOWARDS"))
     if outer.a.x != outer.b.x or inner.a.x != inner.b.x:
-        raise ValueError("thread lines must be parallel to Z")
+        raise ValueError(tr("thread lines must be parallel to Z"))
     xo, xi = outer.a.x, inner.a.x
     depth = (xo - xi) / 2
     # NO. OF CUTS mode: ALPHA-T stores the first cut rounded to 4 decimals (SD1 D4.0825)
     first = round(depth / math.sqrt(op.cuts), 4) if op.cuts > 0 else op.cut_depth
     if depth <= 0 or first <= 0:
-        raise ValueError("thread: outer diameter must be above the inner one, first cut > 0")
+        raise ValueError(tr("thread: outer diameter must be above the inner one, first cut > 0"))
     n = math.ceil(round((depth / first) ** 2, 9))
     steps = [2 * round(first * math.sqrt(k), decimals) for k in range(1, n + 1)]
     # THREAD_leadin2_leadout2: cuts start at the thread top + lead-in (default 5) and end at its end - lead-out

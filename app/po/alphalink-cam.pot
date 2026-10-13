@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-13 21:16+0300\n"
+"POT-Creation-Date: 2026-10-13 21:18+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,238 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+
+#: alphacam/drawing.py:74
+msgid "a line needs two different points"
+msgstr ""
+
+#: alphacam/drawing.py:84
+#, python-brace-format
+msgid "no element {gid}"
+msgstr ""
+
+#: alphacam/drawing.py:93
+#, python-brace-format
+msgid "X{x} Z{z} is not a corner between two lines"
+msgstr ""
+
+#: alphacam/drawing.py:111
+msgid "radius must be > 0"
+msgstr ""
+
+#: alphacam/drawing.py:119
+msgid "the lines are parallel at this point"
+msgstr ""
+
+#: alphacam/drawing.py:122
+#, python-brace-format
+msgid "radius {radius} is too large for these lines"
+msgstr ""
+
+#: alphacam/drawing.py:149
+msgid "chamfer size must be > 0"
+msgstr ""
+
+#: alphacam/drawing.py:151
+msgid "chamfer angle must be between 0 and 90 degrees"
+msgstr ""
+
+#: alphacam/drawing.py:161
+#, python-brace-format
+msgid "a {angle} degree chamfer does not fit this corner"
+msgstr ""
+
+#: alphacam/drawing.py:167
+#, python-brace-format
+msgid "chamfer {size} x {angle} deg is too large for these lines"
+msgstr ""
+
+#: alphacam/drawing.py:224
+#, python-brace-format
+msgid "{id} does not connect to the picked contour"
+msgstr ""
+
+#: alphacam/drawing.py:238
+msgid "the three points are on a line"
+msgstr ""
+
+#: alphacam/drawing.py:253
+msgid "pick two different lines"
+msgstr ""
+
+#: alphacam/drawing.py:259
+msgid "the lines are parallel"
+msgstr ""
+
+#: alphacam/drawing.py:268
+msgid "a line would shrink to a point"
+msgstr ""
+
+#: alphacam/drawing.py:435
+msgid "no text"
+msgstr ""
+
+#: alphacam/io/sd1.py:137
+#, python-brace-format
+msgid "G71 E{e} (area clear option) is not supported yet"
+msgstr ""
+
+#: alphacam/io/sd1.py:165
+msgid "threading: the thread lines are not in the drawing"
+msgstr ""
+
+#: alphacam/io/sdg.py:35
+#, python-brace-format
+msgid "SDG too short ({len_data} bytes)"
+msgstr ""
+
+#: alphacam/io/toollib.py:21
+#, python-brace-format
+msgid "not a TL1 tool library ({len_data} bytes)"
+msgstr ""
+
+#: alphacam/model/geometry.py:84
+#, python-brace-format
+msgid "contour references unknown geometry: {join_missing}"
+msgstr ""
+
+#: alphacam/model/operations.py:145
+msgid "thread pitch must be > 0"
+msgstr ""
+
+#: alphacam/model/project.py:73
+#, python-brace-format
+msgid "units must be one of {units}, not {units2}"
+msgstr ""
+
+#: alphacam/model/tools.py:27
+#, python-brace-format
+msgid "unknown tool type {type}"
+msgstr ""
+
+#: alphacam/model/tools.py:29
+#, python-brace-format
+msgid "tool hand must be R, L or N, not {hand}"
+msgstr ""
+
+#: alphacam/model/tools.py:40
+#, python-brace-format
+msgid "no tool {number}"
+msgstr ""
+
+#: alphacam/model/tools.py:99
+#, python-brace-format
+msgid "unsupported tool library format {get_format}"
+msgstr ""
+
+#: alphacam/post/alphat_prg.py:90
+#, python-brace-format
+msgid "{value} moves are not supported by the post yet"
+msgstr ""
+
+#: alphacam/post/alphat_prg.py:198
+msgid "area clear FACE with pre-finish (no sample)"
+msgstr ""
+
+#: alphacam/post/alphat_prg.py:223
+#, python-brace-format
+msgid "{type} is not supported by the post yet"
+msgstr ""
+
+#: alphacam/post/alphat_prg.py:287
+msgid "move/dwell before the first tool change is not supported"
+msgstr ""
+
+#: alphacam/post/alphat_sd1.py:236
+#, python-brace-format
+msgid "{type} is not supported by the SD1 writer yet"
+msgstr ""
+
+#: alphacam/toolpath/area.py:37
+#, python-brace-format
+msgid "area clear: no contour below X{x}"
+msgstr ""
+
+#: alphacam/toolpath/area.py:44
+msgid ""
+"area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the "
+"app does not offer it; use TOWARDS"
+msgstr ""
+
+#: alphacam/toolpath/area.py:47
+msgid "depth of cut must be > 0"
+msgstr ""
+
+#: alphacam/toolpath/contour.py:41
+msgid "empty contour"
+msgstr ""
+
+#: alphacam/toolpath/contour.py:58
+#, python-brace-format
+msgid "contour is not connected at X{x} Z{z} ({id})"
+msgstr ""
+
+#: alphacam/toolpath/contour.py:125
+msgid "arc-to-arc corners are not supported yet"
+msgstr ""
+
+#: alphacam/toolpath/drill.py:19
+msgid "drill depth must be below the start Z"
+msgstr ""
+
+#: alphacam/toolpath/face.py:31
+#, python-brace-format
+msgid "face clear: no profile at Z{z}"
+msgstr ""
+
+#: alphacam/toolpath/face.py:42
+msgid ""
+"face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the "
+"app does not offer it; use TOWARDS"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:34
+#, python-brace-format
+msgid "grooving: no profile under Z{z0}..{z1}"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:77
+msgid ""
+"grooving finish offsets: only faces and diameters (no sample with slopes/"
+"arcs)"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:105
+msgid ""
+"grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
+"profile; not supported until there is a face-groove sample"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:109
+msgid "grooving finish mode: only external, no finish offsets (no sample)"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:112
+msgid "internal grooving with pecking (no sample)"
+msgstr ""
+
+#: alphacam/toolpath/groove.py:170
+msgid "grooving finish: lines only (no sample with arcs)"
+msgstr ""
+
+#: alphacam/toolpath/thread.py:34
+msgid ""
+"threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so "
+"the app does not offer it; use TOWARDS"
+msgstr ""
+
+#: alphacam/toolpath/thread.py:37
+msgid "thread lines must be parallel to Z"
+msgstr ""
+
+#: alphacam/toolpath/thread.py:43
+msgid "thread: outer diameter must be above the inner one, first cut > 0"
+msgstr ""
 
 #: alphacam_gtk/application.py:66
 msgid "Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs."

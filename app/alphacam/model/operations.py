@@ -4,6 +4,7 @@ Values are in drawing units (unscaled). The PRG post applies the machine profile
 
 from __future__ import annotations
 
+from ..i18n import tr
 from dataclasses import dataclass, field
 
 from .geometry import Point
@@ -141,7 +142,7 @@ class Thread:
 
     def __post_init__(self):
         if self.pitch <= 0:
-            raise ValueError("thread pitch must be > 0")
+            raise ValueError(tr("thread pitch must be > 0"))
 
 
 @dataclass

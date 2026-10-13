@@ -7,6 +7,7 @@ Everything is pinned by golden tests against the ALPHA-T samples in samples/alph
 
 from __future__ import annotations
 
+from ..i18n import tr
 from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
 from ..model.project import MachineProfile, Project
 from ..model.tools import Tool, ToolLibrary, standard_library
@@ -86,7 +87,7 @@ class _Writer:
             elif m.kind is MoveKind.DWELL:
                 self.emit(f"G4P{round(m.dwell_revs * 1000)}")
             else:
-                raise NotImplementedError(f"{m.kind.value} moves are not supported by the post yet")
+                raise NotImplementedError(tr("{value} moves are not supported by the post yet", value=m.kind.value))
 
 
 def _tool(project: Project, number: int, library: ToolLibrary | None = None) -> Tool:
@@ -194,7 +195,7 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
     elif isinstance(op, AreaClear) and not op.front:
         # FACE direction: face-clear passes; #127=8 external (AREA_front_face), 7 internal (AREA_face_internal)
         if op.pre_finish:
-            raise NotImplementedError("area clear FACE with pre-finish (no sample)")
+            raise NotImplementedError(tr("area clear FACE with pre-finish (no sample)"))
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.dec, AREA_RETRACT_MM, outward=True),
                        8 if op.external else 7, limit)
     elif isinstance(op, AreaClear):
@@ -219,7 +220,7 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
         _generic_block(w, block, op, groove(op, path, r, project.units, w.dec),
                        17 if op.mode == "finish" else 9, limit)
     else:
-        raise NotImplementedError(f"{op.type} is not supported by the post yet")
+        raise NotImplementedError(tr("{type} is not supported by the post yet", type=op.type))
     return block
 
 
@@ -283,7 +284,7 @@ def post(project: Project, profile: MachineProfile | None = None, library: ToolL
             tc_feed = op.feed
             continue
         if isinstance(op, (MoveTo, Dwell)):
-            raise NotImplementedError("move/dwell before the first tool change is not supported")
+            raise NotImplementedError(tr("move/dwell before the first tool change is not supported"))
         block = _op_blocks(w, block, project, op) + 1
         # moves and dwells after an operation go into its empty block (FINISH_then_move_rapid_dwell)
         after = []

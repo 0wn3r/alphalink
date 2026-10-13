@@ -10,6 +10,7 @@ Internally everything is in (radius, Z); the API uses X as a diameter like the r
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 from dataclasses import dataclass
 
@@ -37,7 +38,7 @@ class Seg:
 def chain(elements: list[Element]) -> list[Seg]:
     """Orient picked elements into a connected path from the first element's free end."""
     if not elements:
-        raise ValueError("empty contour")
+        raise ValueError(tr("empty contour"))
 
     def seg(e: Element, reverse: bool) -> Seg:
         c = e.centre if isinstance(e, Arc) else None
@@ -54,7 +55,7 @@ def chain(elements: list[Element]) -> list[Seg]:
         elif _same(e.b, end):
             path.append(seg(e, True))
         else:
-            raise ValueError(f"contour is not connected at X{end.x:g} Z{end.z:g} ({e.id})")
+            raise ValueError(tr("contour is not connected at X{x} Z{z} ({id})", x=f"{end.x:g}", z=f"{end.z:g}", id=e.id))
     return path
 
 
@@ -121,7 +122,7 @@ def _join(s1: Seg, s2: Seg, near: Point) -> Point:
         return _pt(a1r + t * d1r, a1z + t * d1z)
     line, arc = (s1, s2) if not s1.is_arc else (s2, s1)
     if line.is_arc:
-        raise NotImplementedError("arc-to-arc corners are not supported yet")
+        raise NotImplementedError(tr("arc-to-arc corners are not supported yet"))
     (ar, az), (br, bz), (cr, cz) = _rz(line.a), _rz(line.b), _rz(arc.centre)
     radius = math.hypot(*(v - c for v, c in zip(_rz(arc.a), (cr, cz))))
     dr, dz = br - ar, bz - az

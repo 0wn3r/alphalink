@@ -9,6 +9,7 @@ Settings floats: [3] Zref, [4] Xref/2, [5] units (0 mm, 1 inch), [6] billet leng
 
 from __future__ import annotations
 
+from ..i18n import tr
 import struct
 from pathlib import Path
 
@@ -31,7 +32,7 @@ def _table(data: bytes, base: int) -> list[int]:
 
 def read_sdg(data: bytes) -> Project:
     if len(data) < 0x5740:
-        raise ValueError(f"SDG too short ({len(data)} bytes)")
+        raise ValueError(tr("SDG too short ({len_data} bytes)", len_data=len(data)))
     st = struct.unpack_from("<16f", data, 0x5700)
     zref, xr2 = st[3], st[4]
     units = "inch" if st[5] else "mm"

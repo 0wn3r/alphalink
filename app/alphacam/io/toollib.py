@@ -7,6 +7,7 @@ The .TL2 / .IM files hold the tool outlines and are not needed here."""
 
 from __future__ import annotations
 
+from ..i18n import tr
 import struct
 from pathlib import Path
 
@@ -17,7 +18,7 @@ RECORD = 256
 
 def read_tl1(data: bytes) -> ToolLibrary:
     if len(data) < 2 * RECORD or len(data) % RECORD:
-        raise ValueError(f"not a TL1 tool library ({len(data)} bytes)")
+        raise ValueError(tr("not a TL1 tool library ({len_data} bytes)", len_data=len(data)))
     tools: list[Tool] = []
     for n in range(1, len(data) // RECORD):
         rec = data[n * RECORD:(n + 1) * RECORD]

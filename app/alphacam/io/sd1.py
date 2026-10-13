@@ -23,6 +23,7 @@ and comparing with the .PRG ALPHA-T wrote (see verify())."""
 
 from __future__ import annotations
 
+from ..i18n import tr
 import re
 from pathlib import Path
 
@@ -133,7 +134,7 @@ def read_sd1(text: str, project) -> list:
                 ops.append(AreaClear(tool, start, list(contour), external=e > 0, front=abs(e) != 101,
                                      towards=abs(e) != 110, **common))
             else:
-                raise NotImplementedError(f"G71 E{e} (area clear option) is not supported yet")
+                raise NotImplementedError(tr("G71 E{e} (area clear option) is not supported yet", e=e))
             continue
         if 75 in gs:
             # L <front: 1, back: 2><datum: 1 left, 0 right><full retract: 1 yes>, negative for internal
@@ -161,7 +162,7 @@ def read_sd1(text: str, project) -> list:
             at_final = next((g for g in lines_z if abs(g.a.x - final) < 1e-6), None)
             other = next((g for g in lines_z if g is not at_final), None)
             if at_final is None or other is None:
-                raise ValueError("threading: the thread lines are not in the drawing")
+                raise ValueError(tr("threading: the thread lines are not in the drawing"))
             outer, inner = (other, at_final) if external else (at_final, other)
             ops.append(Thread(tool, start, outer.id, inner.id, pitch=w["F"], cut_depth=w.get("D", 1.0),
                               external=external, lead_in=w.get("I", 5.0), lead_out=w.get("L", 0.0),

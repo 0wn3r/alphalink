@@ -19,10 +19,10 @@ def quote(s: str) -> str:
 
 
 def main() -> int:
-    sources = sorted(str(p.relative_to(APP)) for p in (APP / "alphacam_gtk").rglob("*.py"))
+    sources = sorted(str(p.relative_to(APP)) for d in ("alphacam", "alphacam_gtk") for p in (APP / d).rglob("*.py"))
     (PO / "POTFILES").write_text("\n".join(sources) + "\n")
     subprocess.run(["xgettext", "--from-code=UTF-8", "--language=Python", "--keyword=_", "--keyword=N_",
-                    "--keyword=ngettext:1,2", "--add-comments=TRANSLATORS", "--package-name=alphalink-cam",
+                    "--keyword=ngettext:1,2", "--keyword=tr", "--add-comments=TRANSLATORS", "--package-name=alphalink-cam",
                     "--package-version=0.1.0", "--sort-by-file", "-f", "po/POTFILES", "-o", "po/alphalink-cam.pot"],
                    cwd=APP, check=True)
     pot = (PO / "alphalink-cam.pot").read_text()

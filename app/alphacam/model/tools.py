@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..i18n import tr
 from dataclasses import dataclass, field
 
 TOOL_TYPES = ("turn", "groove", "thread", "drill", "bore")
@@ -23,9 +24,9 @@ class Tool:
 
     def __post_init__(self):
         if self.type not in TOOL_TYPES:
-            raise ValueError(f"unknown tool type {self.type!r}")
+            raise ValueError(tr("unknown tool type {type}", type=repr(self.type)))
         if self.hand not in ("R", "L", "N"):
-            raise ValueError(f"tool hand must be R, L or N, not {self.hand!r}")
+            raise ValueError(tr("tool hand must be R, L or N, not {hand}", hand=repr(self.hand)))
 
 
 @dataclass
@@ -36,7 +37,7 @@ class ToolLibrary:
         for tool in self.tools:
             if tool.number == number:
                 return tool
-        raise KeyError(f"no tool {number}")
+        raise KeyError(tr("no tool {number}", number=number))
 
 
 # ALPHA-T / ALPHACAM standard library ATOOLIB (data/atoolib_v181_tools.csv): number, name, nose radius in mm.
@@ -95,5 +96,5 @@ def library_from_json(data: dict) -> ToolLibrary:
     from .serde import from_json
 
     if data.get("format") != "alcam-tools/1":
-        raise ValueError(f"unsupported tool library format {data.get('format')!r}")
+        raise ValueError(tr("unsupported tool library format {get_format}", get_format=repr(data.get('format'))))
     return ToolLibrary([from_json(Tool, t) for t in data.get("tools", [])])

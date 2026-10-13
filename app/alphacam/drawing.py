@@ -5,6 +5,7 @@ Coordinates are X diameter and Z. Geometry maths is done in (radius, Z). TOUCH.m
 
 from __future__ import annotations
 
+from .i18n import tr
 import math
 
 from .model.geometry import Arc, Line, Point, Text
@@ -70,7 +71,7 @@ def lock_direction(prev: Point, p: Point, deg: float = SNAP_LOCK_DEG) -> Point:
 
 def add_line(project, a: Point, b: Point) -> str:
     if a == b:
-        raise ValueError("a line needs two different points")
+        raise ValueError(tr("a line needs two different points"))
     gid = next_id(project)
     project.geometry.append(Line(a, b, id=gid))
     return gid
@@ -80,7 +81,7 @@ def delete_element(project, gid: str) -> None:
     before = len(project.geometry)
     project.geometry[:] = [g for g in project.geometry if g.id != gid]
     if len(project.geometry) == before:
-        raise KeyError(f"no element {gid}")
+        raise KeyError(tr("no element {gid}", gid=gid))
     for op in project.operations:  # drop it from contours that used it
         if hasattr(op, "contour"):
             op.contour = [c for c in op.contour if c != gid]
@@ -89,7 +90,7 @@ def delete_element(project, gid: str) -> None:
 def _corner(project, p: Point):
     lines = [g for g in project.geometry if isinstance(g, Line) and p in (g.a, g.b)]
     if len(lines) != 2:
-        raise ValueError(f"X{p.x:g} Z{p.z:g} is not a corner between two lines")
+        raise ValueError(tr("X{x} Z{z} is not a corner between two lines", x=f"{p.x:g}", z=f"{p.z:g}"))
     return lines
 
 
@@ -107,7 +108,7 @@ def _set_end(line: Line, p: Point, new: Point) -> None:
 def fillet(project, p: Point, radius: float) -> str:
     """Round the corner at p between two lines with an arc tangent to both (ALPHA-T 'radius/chamfer F')."""
     if radius <= 0:
-        raise ValueError("radius must be > 0")
+        raise ValueError(tr("radius must be > 0"))
     l1, l2 = _corner(project, p)
     pr, pz = p.x / 2, p.z
     u1 = _unit(_away(l1, p), p)
@@ -115,10 +116,10 @@ def fillet(project, p: Point, radius: float) -> str:
     cos_t = max(-1.0, min(1.0, u1[0] * u2[0] + u1[1] * u2[1]))
     theta = math.acos(cos_t)
     if theta < 1e-6 or abs(theta - math.pi) < 1e-6:
-        raise ValueError("the lines are parallel at this point")
+        raise ValueError(tr("the lines are parallel at this point"))
     d = radius / math.tan(theta / 2)
     if d > min(_len(l1), _len(l2)) + 1e-9:
-        raise ValueError(f"radius {radius:g} is too large for these lines")
+        raise ValueError(tr("radius {radius} is too large for these lines", radius=f"{radius:g}"))
     t1 = (pr + u1[0] * d, pz + u1[1] * d)
     t2 = (pr + u2[0] * d, pz + u2[1] * d)
     bis = _norm((u1[0] + u2[0], u1[1] + u2[1]))
@@ -145,9 +146,9 @@ def chamfer(project, p: Point, size: float, angle: float = 45.0) -> str:
     `angle` degrees between the chamfer and that line (lathe drawing style "2 x 30 deg", angle from the axis). The leg
     on the other line follows from the corner angle (law of sines; 45 deg on a square corner = size on both)."""
     if size <= 0:
-        raise ValueError("chamfer size must be > 0")
+        raise ValueError(tr("chamfer size must be > 0"))
     if not 0 < angle < 90:
-        raise ValueError("chamfer angle must be between 0 and 90 degrees")
+        raise ValueError(tr("chamfer angle must be between 0 and 90 degrees"))
     l1, l2 = _corner(project, p)
     pr, pz = p.x / 2, p.z
     u1, u2 = _unit(_away(l1, p), p), _unit(_away(l2, p), p)
@@ -157,13 +158,13 @@ def chamfer(project, p: Point, size: float, angle: float = 45.0) -> str:
     corner = math.acos(max(-1.0, min(1.0, ua[0] * ub[0] + ua[1] * ub[1])))
     theta = math.radians(angle)
     if theta + corner >= math.pi - 1e-9:
-        raise ValueError(f"a {angle:g} degree chamfer does not fit this corner")
+        raise ValueError(tr("a {angle} degree chamfer does not fit this corner", angle=f"{angle:g}"))
     other = size * math.sin(theta) / math.sin(theta + corner)
     s1, s2 = (size, other) if ref_first else (other, size)
     for line, s in ((l1, s1), (l2, s2)):
         a, b = line.a, line.b
         if s > math.hypot((a.x - b.x) / 2, a.z - b.z) + 1e-9:
-            raise ValueError(f"chamfer {size:g} x {angle:g} deg is too large for these lines")
+            raise ValueError(tr("chamfer {size} x {angle} deg is too large for these lines", size=f"{size:g}", angle=f"{angle:g}"))
     T1 = _pt((pr + u1[0] * s1, pz + u1[1] * s1))
     T2 = _pt((pr + u2[0] * s2, pz + u2[1] * s2))
     first = l1 if _is_before(project, l1, l2, p) else l2
@@ -220,7 +221,7 @@ def pick_order(project, picked: list[str]) -> list[str]:
         else:
             prv = next((e for e in remaining if start in (e.a, e.b)), None)
             if prv is None:
-                raise ValueError(f"{remaining[0].id} does not connect to the picked contour")
+                raise ValueError(tr("{id} does not connect to the picked contour", id=remaining[0].id))
             order.insert(0, prv)
             nxt = prv
         remaining.remove(nxt)
@@ -234,7 +235,7 @@ def add_arc_3p(project, a: Point, m: Point, b: Point) -> str:
     (az, ar), (mz, mr), (bz, br) = (a.z, a.x / 2), (m.z, m.x / 2), (b.z, b.x / 2)
     d = 2 * (az * (mr - br) + mz * (br - ar) + bz * (ar - mr))
     if abs(d) < 1e-9:
-        raise ValueError("the three points are on a line")
+        raise ValueError(tr("the three points are on a line"))
     s_a, s_m, s_b = az * az + ar * ar, mz * mz + mr * mr, bz * bz + br * br
     cz = (s_a * (mr - br) + s_m * (br - ar) + s_b * (ar - mr)) / d
     cr = (s_a * (bz - mz) + s_m * (az - bz) + s_b * (mz - az)) / d
@@ -249,13 +250,13 @@ def corner(project, id1: str, id2: str) -> Point:
     by_id = {g.id: g for g in project.geometry}
     l1, l2 = by_id.get(id1), by_id.get(id2)
     if not isinstance(l1, Line) or not isinstance(l2, Line) or l1 is l2:
-        raise ValueError("pick two different lines")
+        raise ValueError(tr("pick two different lines"))
     (a1r, a1z), (b1r, b1z) = (l1.a.x / 2, l1.a.z), (l1.b.x / 2, l1.b.z)
     (a2r, a2z), (b2r, b2z) = (l2.a.x / 2, l2.a.z), (l2.b.x / 2, l2.b.z)
     d1r, d1z, d2r, d2z = b1r - a1r, b1z - a1z, b2r - a2r, b2z - a2z
     den = d1r * d2z - d1z * d2r
     if abs(den) < 1e-12:
-        raise ValueError("the lines are parallel")
+        raise ValueError(tr("the lines are parallel"))
     t = ((a2r - a1r) * d2z - (a2z - a1z) * d2r) / den
     p = _pt((a1r + t * d1r, a1z + t * d1z))
     for line in (l1, l2):
@@ -264,7 +265,7 @@ def corner(project, id1: str, id2: str) -> Point:
         else:
             line.b = p
         if line.a == line.b:
-            raise ValueError("a line would shrink to a point")
+            raise ValueError(tr("a line would shrink to a point"))
     return p
 
 
@@ -431,7 +432,7 @@ def erase_drawing(project) -> None:
 
 def add_text(project, p: Point, text: str, size: float = 5.0) -> None:
     if not text.strip():
-        raise ValueError("no text")
+        raise ValueError(tr("no text"))
     project.texts.append(Text(p, text, size))
 
 

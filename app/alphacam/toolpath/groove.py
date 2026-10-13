@@ -12,6 +12,7 @@ Rules from GROOVE_metric (stepover 2, tip width 3, datum left):
 
 from __future__ import annotations
 
+from ..i18n import tr
 from ..model.operations import Groove
 from ..model.geometry import Point
 from .contour import Seg, mm, points
@@ -30,7 +31,7 @@ def _depth(boundary: list[Seg], z0: float, z1: float) -> float:
         elif min(hi, z1) - max(lo, z0) > 1e-9:
             xs.append(max(s.a.x, s.b.x))
     if not xs:
-        raise ValueError(f"grooving: no profile under Z{z0:g}..{z1:g}")
+        raise ValueError(tr("grooving: no profile under Z{z0}..{z1}", z0=f"{z0:g}", z1=f"{z1:g}"))
     return max(xs)
 
 
@@ -73,7 +74,7 @@ def _allowance(path: list[Seg], fx: float, fz: float) -> list[Seg]:
     +Z wall -Z), so the groove gets narrower and shallower. Corners are the crossings of the moved elements; the
     two ends move only across their own element."""
     if any(s.is_arc or (s.a.x != s.b.x and s.a.z != s.b.z) for s in path):
-        raise NotImplementedError("grooving finish offsets: only faces and diameters (no sample with slopes/arcs)")
+        raise NotImplementedError(tr("grooving finish offsets: only faces and diameters (no sample with slopes/arcs)"))
     lines = []  # ("x", value) for a diameter, ("z", value) for a face
     for s in path:
         if s.a.z == s.b.z:  # face: going up (x grows) has the material on the -Z side, so it moves +Z
@@ -101,14 +102,14 @@ def groove(op: Groove, path: list[Seg], nose_radius: float, units: str, decimals
         # GROOVE_back: ALPHA-T turns it into face grooving (plunges along Z, stepping in X) and on a turned profile
         # those plunges run through the part (X44..54 down to Z-50 inside the dia-60 shoulder). Needs a sample with a
         # groove drawn into a face before the app does this.
-        raise NotImplementedError("grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
-                                  "profile; not supported until there is a face-groove sample")
+        raise NotImplementedError(tr("grooving from the back (face grooving): ALPHA-T's own output gouges a turned "
+                                  "profile; not supported until there is a face-groove sample"))
     if op.mode == "finish":
         if op.finish_offset_x or op.finish_offset_z or not op.external:
-            raise NotImplementedError("grooving finish mode: only external, no finish offsets (no sample)")
+            raise NotImplementedError(tr("grooving finish mode: only external, no finish offsets (no sample)"))
         return groove_finish(op, path)
     if not op.external and op.peck_depth > 0:
-        raise NotImplementedError("internal grooving with pecking (no sample)")
+        raise NotImplementedError(tr("internal grooving with pecking (no sample)"))
     # The drawn profile, not the tip path: a groove's -Z-facing wall would move by 2r with the (-r, -r) tip shift,
     # and the sample (made with the 0.4R tool 3) plunges against the drawn walls. Grooving tools have r = 0 anyway.
     boundary = _allowance(path, op.finish_offset_x, op.finish_offset_z) \
@@ -166,7 +167,7 @@ def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:
     datum right covers Z - tip width .. Z and moves the walls where it steps up by +tip width instead (assumed by
     symmetry, no sample). Rapid to (start X, first Z), feed along the profile, feed out to the start X."""
     if any(s.is_arc for s in path):
-        raise NotImplementedError("grooving finish: lines only (no sample with arcs)")
+        raise NotImplementedError(tr("grooving finish: lines only (no sample with arcs)"))
     w = op.tip_width
     pts = points(path)
     shift = [0.0] * len(pts)

@@ -4,6 +4,7 @@ X is a **diameter**, Z is 0 at the finished face and negative into the part (ALP
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 from dataclasses import dataclass
 
@@ -80,5 +81,5 @@ class Contour:
         by_id = {g.id: g for g in geometry}
         missing = [e for e in self.elements if e not in by_id]
         if missing:
-            raise KeyError(f"contour references unknown geometry: {', '.join(missing)}")
+            raise KeyError(tr("contour references unknown geometry: {join_missing}", join_missing=', '.join(missing)))
         return [by_id[e] for e in self.elements]

@@ -10,6 +10,156 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+msgid "a line needs two different points"
+msgstr "для лінії потрібні дві різні точки"
+
+msgid "no element {gid}"
+msgstr "немає елемента {gid}"
+
+msgid "X{x} Z{z} is not a corner between two lines"
+msgstr "X{x} Z{z} — не кут між двома лініями"
+
+msgid "radius must be > 0"
+msgstr "радіус має бути > 0"
+
+msgid "the lines are parallel at this point"
+msgstr "у цій точці лінії паралельні"
+
+msgid "radius {radius} is too large for these lines"
+msgstr "радіус {radius} завеликий для цих ліній"
+
+msgid "chamfer size must be > 0"
+msgstr "розмір фаски має бути > 0"
+
+msgid "chamfer angle must be between 0 and 90 degrees"
+msgstr "кут фаски має бути між 0 і 90 градусами"
+
+msgid "a {angle} degree chamfer does not fit this corner"
+msgstr "фаска під {angle}° не вміщується в цей кут"
+
+msgid "chamfer {size} x {angle} deg is too large for these lines"
+msgstr "фаска {size} × {angle}° завелика для цих ліній"
+
+msgid "{id} does not connect to the picked contour"
+msgstr "{id} не з’єднується з вибраним контуром"
+
+msgid "the three points are on a line"
+msgstr "три точки лежать на одній прямій"
+
+msgid "pick two different lines"
+msgstr "виберіть дві різні лінії"
+
+msgid "the lines are parallel"
+msgstr "лінії паралельні"
+
+msgid "a line would shrink to a point"
+msgstr "лінія зменшилася б до точки"
+
+msgid "no text"
+msgstr "немає тексту"
+
+msgid "G71 E{e} (area clear option) is not supported yet"
+msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
+
+msgid "threading: the thread lines are not in the drawing"
+msgstr "різьба: ліній різьби немає на кресленні"
+
+msgid "SDG too short ({len_data} bytes)"
+msgstr "файл SDG закороткий ({len_data} байт)"
+
+msgid "not a TL1 tool library ({len_data} bytes)"
+msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
+
+msgid "contour references unknown geometry: {join_missing}"
+msgstr "контур посилається на невідомі елементи: {join_missing}"
+
+msgid "thread pitch must be > 0"
+msgstr "крок різьби має бути > 0"
+
+msgid "units must be one of {units}, not {units2}"
+msgstr "одиниці мають бути одним із {units}, а не {units2}"
+
+msgid "unknown tool type {type}"
+msgstr "невідомий тип інструмента {type}"
+
+msgid "tool hand must be R, L or N, not {hand}"
+msgstr "виконання інструмента має бути R, L або N, а не {hand}"
+
+msgid "no tool {number}"
+msgstr "немає інструмента {number}"
+
+msgid "unsupported tool library format {get_format}"
+msgstr "непідтримуваний формат бібліотеки інструментів {get_format}"
+
+msgid "{value} moves are not supported by the post yet"
+msgstr "переміщення {value} постпроцесор поки не підтримує"
+
+msgid "area clear FACE with pre-finish (no sample)"
+msgstr "чорнова обробка по торцю з напівчистовим проходом (немає зразка ALPHA-T)"
+
+msgid "{type} is not supported by the post yet"
+msgstr "{type} постпроцесор поки не підтримує"
+
+msgid "move/dwell before the first tool change is not supported"
+msgstr "переміщення чи витримка до першої зміни інструмента не підтримуються"
+
+msgid "{type} is not supported by the SD1 writer yet"
+msgstr "{type} поки не записується у файл SD1"
+
+msgid "area clear: no contour below X{x}"
+msgstr "чорнова обробка: немає контуру нижче X{x}"
+
+msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
+msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "depth of cut must be > 0"
+msgstr "глибина різання має бути > 0"
+
+msgid "empty contour"
+msgstr "порожній контур"
+
+msgid "contour is not connected at X{x} Z{z} ({id})"
+msgstr "контур розірваний у X{x} Z{z} ({id})"
+
+msgid "arc-to-arc corners are not supported yet"
+msgstr "кути між двома дугами поки не підтримуються"
+
+msgid "drill depth must be below the start Z"
+msgstr "дно отвору має бути нижче початкового Z"
+
+msgid "face clear: no profile at Z{z}"
+msgstr "обробка торця: немає профілю на Z{z}"
+
+msgid "face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app does not offer it; use TOWARDS"
+msgstr "обробка торця AWAY: сама ALPHA-T у цьому режимі пише лише один прохід на Z0, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "grooving: no profile under Z{z0}..{z1}"
+msgstr "канавка: немає профілю під Z{z0}..{z1}"
+
+msgid "grooving finish offsets: only faces and diameters (no sample with slopes/arcs)"
+msgstr "чистовий припуск канавки: лише торці й діаметри (немає зразка з похилими лініями чи дугами)"
+
+msgid "grooving from the back (face grooving): ALPHA-T's own output gouges a turned profile; not supported until there is a face-groove sample"
+msgstr "канавка ззаду (торцева канавка): програма самої ALPHA-T врізається в точену деталь; не підтримується, доки немає зразка з торцевою канавкою"
+
+msgid "grooving finish mode: only external, no finish offsets (no sample)"
+msgstr "чистовий режим канавки: лише зовнішня, без чистового припуску (немає зразка)"
+
+msgid "internal grooving with pecking (no sample)"
+msgstr "внутрішня канавка з врізанням кроками (немає зразка)"
+
+msgid "grooving finish: lines only (no sample with arcs)"
+msgstr "чистовий режим канавки: лише лінії (немає зразка з дугами)"
+
+msgid "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the app does not offer it; use TOWARDS"
+msgstr "різьба AWAY: сама ALPHA-T у цьому режимі починає кожен прохід усередині різьби, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "thread lines must be parallel to Z"
+msgstr "лінії різьби мають бути паралельні Z"
+
+msgid "thread: outer diameter must be above the inner one, first cut > 0"
+msgstr "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0"
+
 msgid "Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs."
 msgstr "CAM для токарного верстата Harrison Alpha 400T, що створює програми ALPHA-T."
 

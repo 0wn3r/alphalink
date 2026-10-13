@@ -22,6 +22,7 @@ Pinned against every metric sample in samples/alphat_v12 (tests/test_sd1_write.p
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 
 from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
@@ -232,7 +233,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
                             f"H{plunges}C{op.repeat + 1}A{_n(op.dwell_revs)}")
         out.put("G175")
     else:
-        raise NotImplementedError(f"{op.type} is not supported by the SD1 writer yet")
+        raise NotImplementedError(tr("{type} is not supported by the SD1 writer yet", type=op.type))
 
 
 def _moves(out: _Listing, moves) -> None:

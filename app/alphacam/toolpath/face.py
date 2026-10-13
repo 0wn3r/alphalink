@@ -15,6 +15,7 @@ area clear retract (1 mm) and the pull-off going outwards: (+2R in X, +R in Z)."
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 
 from ..model.operations import FaceClear
@@ -27,7 +28,7 @@ RETRACT_MM = 0.2  # face clear default (SD1 R0.2)
 def _end_x(boundary: list[Seg], z: float, external: bool = True) -> float:
     hits = [x_at(s, z) for s in boundary if s.a.z != s.b.z and min(s.a.z, s.b.z) <= z < max(s.a.z, s.b.z)]
     if not hits:
-        raise ValueError(f"face clear: no profile at Z{z:g}")
+        raise ValueError(tr("face clear: no profile at Z{z}", z=f"{z:g}"))
     return max(hits) if external else min(hits)
 
 
@@ -38,8 +39,8 @@ def face_clear(op: FaceClear, path: list[Seg], nose_radius: float, units: str, d
     when that is not a face (a bore starting at Z0)."""
     if not op.towards:
         # FACE_away_tool5 / _tool3_nocheck: ALPHA-T writes a single pass at Z0, still feeding towards the centre
-        raise NotImplementedError("face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app "
-                                  "does not offer it; use TOWARDS")
+        raise NotImplementedError(tr("face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app "
+                                  "does not offer it; use TOWARDS"))
     external = getattr(op, "external", True)
     side = 1 if external else -1
     # offsets translate the profile like area clear (FACE_offset: X40 -> 41, faces Z0/-25/-50 -> 0.2/-24.8/-49.8)

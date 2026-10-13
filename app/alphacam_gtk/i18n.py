@@ -32,6 +32,12 @@ def _(text: str) -> str:
     return _t.gettext(text)
 
 
+# the core's own messages (errors shown in the banner and toasts) use the same catalog
+from alphacam.i18n import set_translator  # noqa: E402
+
+set_translator(_)
+
+
 def ngettext(singular: str, plural: str, n: int) -> str:
     return _t.ngettext(singular, plural, n)
 

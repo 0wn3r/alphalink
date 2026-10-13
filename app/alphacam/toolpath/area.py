@@ -13,6 +13,7 @@ Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOL
 
 from __future__ import annotations
 
+from ..i18n import tr
 import math
 
 from ..model.operations import AreaClear
@@ -33,17 +34,17 @@ def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
         if (lo <= xq < hi) if external else (lo < xq <= hi):
             hits.append(z_at(s, xq))
     if not hits:
-        raise ValueError(f"area clear: no contour below X{x:g}")
+        raise ValueError(tr("area clear: no contour below X{x}", x=f"{x:g}"))
     return max(hits)
 
 
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:
     if not op.towards:
         # AWAY_area_tool5 and its rerun: ALPHA-T's passes end 1.6 mm past the dia-100 shoulder (its preview does not)
-        raise NotImplementedError("area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app "
-                                  "does not offer it; use TOWARDS")
+        raise NotImplementedError(tr("area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app "
+                                  "does not offer it; use TOWARDS"))
     if op.depth_of_cut <= 0:
-        raise ValueError("depth of cut must be > 0")
+        raise ValueError(tr("depth of cut must be > 0"))
     boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
     bx = [p.x for p in points(boundary)]
     step = 2 * op.depth_of_cut

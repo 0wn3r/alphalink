@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ..i18n import tr
 import json
 import re
 from dataclasses import dataclass, field
@@ -69,7 +70,7 @@ class Project:
 
     def __post_init__(self):
         if self.units not in UNITS:
-            raise ValueError(f"units must be one of {UNITS}, not {self.units!r}")
+            raise ValueError(tr("units must be one of {units}, not {units2}", units=repr(UNITS), units2=repr(self.units)))
         for i, g in enumerate(self.geometry):
             if not g.id:
                 g.id = f"g{i}"
