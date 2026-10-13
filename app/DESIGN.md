@@ -37,6 +37,7 @@ Later, as optional post-processors: DOS ALPHACAM V1.81 `.600` and AlphaWin-S `#5
 | C4 | **Scaling.** In the PRG, Z, feed (`F`, `#130`) and thread pitch are written ×2; X (diameter) is 1:1. The SD1/ISO preview is unscaled. Default `z_scale = f_scale = 2`, kept in the machine profile, **unverified on the control**. | Progress 15, 16, 25 |
 | C5 | The PRG writes the **programmed contour**, not a tool-nose-compensated path (finish pass: PRG `X40.Z0.`; SD1 `X40.8 ... Z0.4`). Nose compensation is presumably done by the macros. Keep both paths in the model. | MET2 samples |
 | C6 | Numbers always carry a decimal point (`100.`, `0.3`), with trailing zeros stripped. mm: max 3 decimals; inch: max 4. Line endings are CRLF. | samples |
+| C8 | **Manual turret with tool memory.** A tool block is an operator tool change at the tool change point; `#122` selects the control's stored offsets, so the app's tool numbers must match the control's tool memory slots. The tool library page should say which slot each tool uses. | user, 2026-10-13 |
 | C7 | Handshake: the control needs CTS/DSR (and probably CD) active. The app should show the live modem lines and refuse to start a send while DSR is off, with an override. | Progress 25 |
 
 ## 3. Architecture
