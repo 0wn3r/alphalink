@@ -205,8 +205,9 @@ class Simulation(unittest.TestCase):
         segs = segments(preview(sample_project("AREA1_metric")))
         starts = pass_starts(segs)
         passes = [(segs[i].block, segs[i].pass_no) for i in starts]
-        self.assertEqual(passes[1:27], [(20, n) for n in range(1, 27)])  # one stop per area-clear pass
-        self.assertEqual(segs[starts[1]].line, 40)  # pass 1 starts on PRG line 40 (M60 G0 ...)
+        # the tool block has no moves here, so the stops are exactly the 26 area-clear passes
+        self.assertEqual(passes, [(20, n) for n in range(1, 27)])
+        self.assertEqual(segs[starts[0]].line, 40)  # pass 1 begins with the G0 on PRG line 40
 
 
 @unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
