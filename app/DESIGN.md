@@ -178,7 +178,7 @@ gets a **fixture test** that pins it down against its sample before the generato
   `AdwViewStack` pages). An `AdwBreakpoint` collapses the sidebar below 720 px, so the layout works on a small shop laptop.
 - **Drawing page:** canvas plus a tool palette (line XZ, arc, chamfer, fillet, trim, delete). Keyboard-first entry like
   ALPHA-T: type `40,-25` then Enter in a command entry under the canvas. Snaps to end, mid, centre and grid; zoom and pan
-  with mouse, touchpad and touch. Billet and chuck are set from an `AdwDialog`.
+  with mouse, touchpad and touch (touch and multi-touch design: `app/TOUCH.md`). Billet and chuck are set from an `AdwDialog`.
 - **CAM page:** the operations list is the sidebar (`GtkListView`, drag to reorder, `AdwActionRow` with a type icon and a
   summary such as "26 passes, 2 mm"). Selecting an op opens its editor in an `AdwBottomSheet` (narrow) or a side pane
   (wide). Editors use `AdwPreferencesGroup` with `AdwSpinRow`, `AdwComboRow` and `AdwSwitchRow`. Contour, groove and
