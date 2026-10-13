@@ -119,6 +119,7 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 ## Touch and pen
 
 - One finger drags the view, two fingers pinch to zoom, double tap fits the part (again returns).
+- A faint grid follows the zoom (1, 2 or 5 × 10ⁿ mm); every fifth line is labelled at the edges, X as a diameter. Main menu ▸ Show Grid turns it off.
 - Mouse: wheel pans up and down, Shift+wheel pans sideways, Ctrl+wheel zooms, Ctrl+0 fits.
 - **Touch Lock** (padlock in the header) ignores touches, for example while coolant is running; hold it to unlock by touch. Mouse and keyboard keep working.
 - Main menu ▸ Input Layout switches between Automatic, Pointer and Touch layouts.

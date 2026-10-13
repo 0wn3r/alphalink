@@ -455,4 +455,5 @@ UK = {
 "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the app does not offer it; use TOWARDS": "різьба AWAY: сама ALPHA-T у цьому режимі починає кожен прохід усередині різьби, тому програма його не пропонує; використовуйте «До патрона»",
 "thread lines must be parallel to Z": "лінії різьби мають бути паралельні Z",
 "thread: outer diameter must be above the inner one, first cut > 0": "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0",
+"Show Grid": "Показувати сітку",
 }

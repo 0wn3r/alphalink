@@ -19,6 +19,7 @@ DEFAULTS = {
     "billet_length": 80.0,
     "first_tool": 3,
     "language": "",  # "" = follow the desktop; "en"; "uk"
+    "show_grid": True,
 }
 
 

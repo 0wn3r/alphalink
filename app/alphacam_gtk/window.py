@@ -229,6 +229,7 @@ class MainWindow(Adw.ApplicationWindow):
         header.pack_start(undo_box)
         menu = Gio.Menu()
         menu.append(_("Fit Part"), "win.fit")
+        menu.append(_("Show Grid"), "win.show-grid")
         menu.append(_("Part Settings…"), "win.part-settings")
         layout = Gio.Menu()
         for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
@@ -328,6 +329,10 @@ class MainWindow(Adw.ApplicationWindow):
         add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
         add("help", lambda *_: HelpDialog().present(self), ["F1"])
         add("part-settings", lambda *_: self.part_settings_dialog())
+        grid = Gio.SimpleAction.new_stateful("show-grid", None, GLib.Variant.new_boolean(settings()["show_grid"]))
+        grid.connect("change-state", self._show_grid)
+        self.add_action(grid)
+        self.canvas.show_grid = settings()["show_grid"]
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
@@ -707,6 +712,12 @@ class MainWindow(Adw.ApplicationWindow):
 
         alert.connect("response", response)
         alert.present(self)
+
+    def _show_grid(self, action, value) -> None:
+        action.set_state(value)
+        self.canvas.show_grid = value.get_boolean()
+        settings().set("show_grid", value.get_boolean())
+        self.canvas.queue_draw()
 
     def part_settings_dialog(self) -> None:
         """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""

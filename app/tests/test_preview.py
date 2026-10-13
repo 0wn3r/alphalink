@@ -371,6 +371,13 @@ class GtkHitKeys(unittest.TestCase):
         self.assertIsNone(out["picking"])
 
 
+class Grid(unittest.TestCase):
+    def test_nice_steps(self):
+        from alphacam_gtk.canvas.widget import LatheCanvas
+
+        self.assertEqual([LatheCanvas._nice_step(v) for v in (0.3, 1, 1.5, 3, 7, 12, 60)], [0.5, 1, 2, 5, 10, 20, 100])
+
+
 class ShiftScroll(unittest.TestCase):
     def test_shift_wheel_scrolls_sideways(self):
         from alphacam_gtk.canvas.input import shift_scroll

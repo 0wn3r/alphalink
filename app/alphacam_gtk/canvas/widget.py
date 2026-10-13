@@ -53,6 +53,7 @@ class LatheCanvas(Gtk.DrawingArea):
         self.marker: tuple | None = None  # (Point, kind)
         self.cursor = None  # ALPHA-T's cursor (a Point) while the keys move it
         self.tool = "select"
+        self.show_grid = True
         self.sim_index: int | None = None  # simulation: number of moves done (None = show everything)
         self.pointer = (0.0, 0.0)
         self._fit_pending = True
@@ -158,6 +159,8 @@ class LatheCanvas(Gtk.DrawingArea):
         if self.project is None:
             return
         v, p = self.view, self.project
+        if self.show_grid:
+            self._grid(cr, width, height)
         self._rgb(cr, "axis")
         cr.set_line_width(1)
         cr.set_dash([12, 4, 2, 4])
@@ -268,6 +271,58 @@ class LatheCanvas(Gtk.DrawingArea):
         cr.move_to(sx, sy - 7)
         cr.line_to(sx, sy + 7)
         cr.stroke()
+
+    @staticmethod
+    def _nice_step(min_units: float) -> float:
+        """The smallest 1 / 2 / 5 x 10^n at least min_units."""
+        if min_units <= 0:
+            return 1.0
+        e = math.floor(math.log10(min_units))
+        for m in (1, 2, 5, 10):
+            if m * 10 ** e >= min_units:
+                return m * 10 ** e
+        return 10 ** (e + 1)
+
+    def _grid(self, cr, width: float, height: float) -> None:
+        """A faint coordinate grid under everything: lines every 1/2/5 x 10^n (at least ~48 px apart), every 5th a
+        little stronger and labelled at the left (X, as a diameter) and bottom (Z) edges."""
+        v = self.view
+        min_px = 48.0
+        zstep = self._nice_step(min_px / v.scale)
+        xstep = self._nice_step(2 * min_px / v.scale)  # X is a diameter: 1 mm of X is half a mm on screen
+        z0, z1 = v.to_world(0, 0)[1], v.to_world(width, 0)[1]
+        xa, xb = v.to_world(0, height)[0], v.to_world(0, 0)[0]
+        cr.set_line_width(1)
+        cr.set_font_size(10)
+        labels = []
+        k = math.ceil(z0 / zstep)
+        while k * zstep <= z1:
+            z = k * zstep
+            sx = round(v.to_screen(0, z)[0]) + 0.5
+            major = k % 5 == 0
+            self._rgb(cr, "axis", 0.16 if major else 0.07)
+            cr.move_to(sx, 0)
+            cr.line_to(sx, height)
+            cr.stroke()
+            if major:
+                labels.append((f"Z{z:g}", sx + 3, height - 4))
+            k += 1
+        k = math.ceil(xa / xstep)
+        while k * xstep <= xb:
+            x = k * xstep
+            sy = round(v.to_screen(x, 0)[1]) + 0.5
+            major = k % 5 == 0
+            self._rgb(cr, "axis", 0.16 if major else 0.07)
+            cr.move_to(0, sy)
+            cr.line_to(width, sy)
+            cr.stroke()
+            if major and x != 0:
+                labels.append((f"X{x:g}", 4, sy - 3))
+            k += 1
+        self._rgb(cr, "axis", 0.55)
+        for text, lx, ly in labels:
+            cr.move_to(lx, ly)
+            cr.show_text(text)
 
     def _rect_rz(self, cr, r0: float, r1: float, z0: float, z1: float) -> None:
         """Fill the rectangle between radii r0..r1 and Z z0..z1 (model units)."""
