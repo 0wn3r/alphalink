@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 
 from alphacam.io.toollib import read_tl1
-from alphacam.model import FinishPass, Point, Tool, ToolLibrary
+from alphacam.model import Tool, ToolLibrary
 from alphacam.model.tools import library_from_json, library_to_json, standard_library
 from alphacam.post.alphat_prg import post
 

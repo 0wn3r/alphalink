@@ -37,7 +37,7 @@ from ..toolpath.face import face_clear
 from ..toolpath.groove import groove, groove_finish
 from ..toolpath.thread import plan_thread
 from ..toolpath.toolpath import MoveKind
-from .alphat_prg import AREA_RETRACT_MM, PREFINISH_LEAD_OUT_MM, _tool
+from .alphat_prg import PREFINISH_LEAD_OUT_MM, _tool
 
 DEC = 4
 G92 = (163.3803, 120.0)  # mm; constant in every sample (inch: X6.4323 Z4.7244)

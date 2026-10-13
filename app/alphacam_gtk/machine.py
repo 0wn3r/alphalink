@@ -4,7 +4,6 @@ Manual Ops, loopback test. Transfers run in a worker thread; a dialog shows prog
 from __future__ import annotations
 
 import threading
-import time
 from datetime import datetime
 from pathlib import Path
 
@@ -12,7 +11,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
+from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from alphacam.link import serial_link as sl  # noqa: E402
 
@@ -104,7 +103,7 @@ class MachinePage(Gtk.Box):
         self.delay_row.set_title(_("Delay per character (ms)"))
         self.delay_row.set_subtitle(_("2 ms works on the 400T; 0 sends at full speed"))
         self.delay_row.set_value(settings()["char_delay_ms"])
-        self.delay_row.connect("notify::value", lambda r, _p: settings().set("char_delay_ms", r.get_value()))
+        self.delay_row.connect("notify::value", self._delay_changed)
         conn.add(self.delay_row)
         self.wait_row = Adw.SwitchRow(title=_("Wait for the control (DC1)"), active=settings()["wait_xon"],
                                       subtitle=_("Nothing is sent until the lathe asks for data"))
@@ -245,7 +244,10 @@ class MachinePage(Gtk.Box):
             self._busy = False
             self.window.input_mode.set_locked(False)
             self._restart_poll()
-            path = _write_log(title, port, log)
+            try:
+                path = _write_log(title, port, log)
+            except OSError as e:  # the transfer is over either way; never leave the dialog stuck open
+                path = _("not written ({error})").format(error=e)
             if error:
                 dlg.finish(False, error)
                 dlg.detail.set_label(_("Log: {path}").format(path=path))
@@ -280,7 +282,8 @@ class MachinePage(Gtk.Box):
         alert.set_response_appearance("send", Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("cancel")
         alert.set_close_response("cancel")
-        alert.connect("response", lambda d, r: r == "send" and self._send(self.data))
+        data = self.data  # exactly the program this dialog describes, even if the part changes meanwhile
+        alert.connect("response", lambda d, r: r == "send" and self._send(data))
         alert.present(self.window)
 
     def _send(self, data: bytes) -> None:
@@ -308,10 +311,16 @@ class MachinePage(Gtk.Box):
                     f = d.save_finish(res)
                 except GLib.Error:
                     f = None
-                target = Path(f.get_path()) if f else LOG_DIR.parent / name
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)  # raw bytes, before any decoding
-                self.window.toast(_("Backup saved to {path}").format(path=target))
+                target = Path(f.get_path()) if f and f.get_path() else LOG_DIR.parent / name
+                for where in (target, LOG_DIR.parent / name):  # never lose a backup: fall back to the app folder
+                    try:
+                        where.parent.mkdir(parents=True, exist_ok=True)
+                        where.write_bytes(data)  # raw bytes, before any decoding
+                    except OSError as e:
+                        self.window.toast(_("Could not save {path}: {error}").format(path=where, error=e))
+                        continue
+                    self.window.toast(_("Backup saved to {path}").format(path=where))
+                    return
 
             fd.save(self.window, None, saved)
 
@@ -325,7 +334,14 @@ class MachinePage(Gtk.Box):
                 f = d.open_finish(res)
             except GLib.Error:
                 return
-            data = Path(f.get_path()).read_bytes()
+            try:
+                data = Path(f.get_path()).read_bytes()
+            except (OSError, TypeError) as e:
+                self.window.toast(_("Could not read the file: {error}").format(error=e))
+                return
+            if not (data.lstrip().startswith(b"%") and data.rstrip().endswith(b"%")):
+                self.window.toast(_("This is not a Manual Ops backup (it must start and end with %)."))
+                return
             alert = Adw.AlertDialog(heading=_("Restore Manual Ops?"),
                                     body=_("{name}, {size} bytes.\n\n{steps}").format(
                                         name=Path(f.get_path()).name, size=len(data), steps=STEPS_RESTORE))
@@ -347,7 +363,31 @@ class MachinePage(Gtk.Box):
                                                 dlg.cancel, log),
                   lambda dlg, n: dlg.finish(True, _("Sent {n} bytes.").format(n=n)))
 
+    def _delay_changed(self, row, _p) -> None:
+        """Save the delay once the spin row settles, not on every step."""
+        if getattr(self, "_delay_id", 0):
+            GLib.source_remove(self._delay_id)
+
+        def save():
+            self._delay_id = 0
+            settings().set("char_delay_ms", row.get_value())
+            return False
+
+        self._delay_id = GLib.timeout_add(500, save)
+
     def _loopback(self) -> None:
+        """Writes a short test text to the port: only with the cable off the lathe, so ask first."""
+        alert = Adw.AlertDialog(heading=_("Run the loopback test?"),
+                                body=_("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: "
+                                       "the test sends a short text to the port."))
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("run", _("_Run Test"))
+        alert.set_default_response("run")
+        alert.set_close_response("cancel")
+        alert.connect("response", lambda _d, r: r == "run" and self._run_loopback())
+        alert.present(self.window)
+
+    def _run_loopback(self) -> None:
         self._run(_("Loopback Test"), lambda ser, dlg, log: sl.loopback(ser),
                   lambda dlg, r: dlg.finish(r[0], _("Loopback OK: the adapter and cable work.") if r[0] else
                                             _("Loopback failed: got {data}. Check the 2-3 bridge.").format(

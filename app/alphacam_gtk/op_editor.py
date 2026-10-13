@@ -125,7 +125,11 @@ class OpEditor(Gtk.Box):
             elif name in NUMBERS:
                 lab, sub, lo, hi, step, digits = NUMBERS[name]
                 if name == "retract" and value is None:  # ALPHA-T's default: area clear 1 mm, drilling 2 mm
-                    value = round((2.0 if isinstance(op, Drill) else 1.0) / (25.4 if project.units == "inch" else 1), 4)
+                    from alphacam.toolpath.area import RETRACT_MM
+                    from alphacam.toolpath.drill import PECK_RETRACT_MM
+
+                    value = round((PECK_RETRACT_MM if isinstance(op, Drill) else RETRACT_MM)
+                                  / (25.4 if project.units == "inch" else 1), 4)
                 if name == "tool":
                     sub = self.tool_name(int(value)) or sub
                 if project.units == "inch" and digits == 3:  # inch values have 4 decimals (0.0787)
@@ -145,7 +149,7 @@ class OpEditor(Gtk.Box):
             elif name in CHOICES:
                 lab, opts = CHOICES[name]
                 row = Adw.ComboRow(title=_(lab), model=Gtk.StringList.new([_(CHOICE_LABELS[o]) for o in opts]),
-                                   selected=opts.index(value))
+                                   selected=opts.index(value) if value in opts else 0)
                 row.connect("notify::selected", self._choice_changed, name, opts)
                 group.add(row)
             elif name in ("outer_line", "inner_line"):

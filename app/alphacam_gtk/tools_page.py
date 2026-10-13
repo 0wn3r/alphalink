@@ -152,7 +152,10 @@ class ToolsPage(Gtk.Box):
         self._changed(t.number, rebuild_list=field in ("name", "nose_radius", "type", "hand"))
 
     def _changed(self, select: int | None, rebuild_list: bool = True) -> None:
-        save_library(self.lib)
+        try:
+            save_library(self.lib)
+        except OSError as e:
+            self.w.toast(_("The tool library could not be saved: {error}").format(error=e))
         if rebuild_list:
             self.fill(select)
         if self.w.project is not None:

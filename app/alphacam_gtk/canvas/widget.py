@@ -34,7 +34,6 @@ COLOURS = {
 class LatheCanvas(Gtk.DrawingArea):
     __gsignals__ = {
         "cursor-moved": (GObject.SignalFlags.RUN_FIRST, None, (float, float)),
-        "op-tapped": (GObject.SignalFlags.RUN_FIRST, None, (int,)),  # -1: tapped empty space
         # every tap: world X (dia), Z, the input's radius in mm, toolpath op (-1 none), drawing element ('' none)
         "canvas-tapped": (GObject.SignalFlags.RUN_FIRST, None, (float, float, float, int, str)),
     }
@@ -64,7 +63,9 @@ class LatheCanvas(Gtk.DrawingArea):
         self._auto_fit = True
         self.connect("resize", lambda *_: (self._fit_pending or self._auto_fit) and self.fit())
         self.router = InputRouter(self, self._user_view_change, self._tap, self.toggle_fit, self._pointer)
-        Adw.StyleManager.get_default().connect("notify::dark", lambda *_: self.queue_draw())
+        sm = Adw.StyleManager.get_default()
+        dark_id = sm.connect("notify::dark", lambda *_: self.queue_draw())
+        self.connect("destroy", lambda *_: sm.disconnect(dark_id))  # the style manager outlives the window
 
     # --- data -------------------------------------------------------------------------------------------
 

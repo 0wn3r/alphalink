@@ -30,6 +30,7 @@ class HoldButton(Gtk.Button):
         box.append(self.hint)
         box.append(self.bar)
         self.set_child(box)
+        self.update_property([Gtk.AccessibleProperty.LABEL], [label])  # the child box carries no name of its own
         self.add_css_class("hold-button")
         self._t0 = None
         self._tick = 0

@@ -109,6 +109,12 @@ msgstr "у кресленні забагато елементів для ALPHA-T
 msgid "not a TL1 tool library ({len_data} bytes)"
 msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
 
+msgid "nothing received"
+msgstr "нічого не отримано"
+
+msgid "transfer stopped after {n} bytes (no second %)"
+msgstr "передача зупинилася після {n} байт (немає другого %)"
+
 msgid "contour references unknown geometry: {join_missing}"
 msgstr "контур посилається на невідомі елементи: {join_missing}"
 
@@ -117,6 +123,15 @@ msgstr "крок різьби має бути > 0"
 
 msgid "units must be one of {units}, not {units2}"
 msgstr "одиниці мають бути одним із {units}, а не {units2}"
+
+msgid "not an AlphaLink CAM part (format {fmt}, expected {expected})"
+msgstr "це не деталь AlphaLink CAM (формат {fmt}, очікувався {expected})"
+
+msgid "unknown element or operation type {type}"
+msgstr "невідомий тип елемента чи операції {type}"
+
+msgid "{what}: unknown keys {keys}"
+msgstr "{what}: невідомі ключі {keys}"
 
 msgid "unknown tool type {type}"
 msgstr "невідомий тип інструмента {type}"
@@ -676,6 +691,9 @@ msgstr "(немає)"
 msgid "Cancelled"
 msgstr "Скасовано"
 
+msgid "not written ({error})"
+msgstr "не записано ({error})"
+
 msgid "Log: {path}"
 msgstr "Журнал: {path}"
 
@@ -718,6 +736,9 @@ msgstr "Отримано {n} байт."
 msgid "Save Manual Ops Backup"
 msgstr "Зберегти резервну копію ручних операцій"
 
+msgid "Could not save {path}: {error}"
+msgstr "Не вдалося зберегти {path}: {error}"
+
 msgid "Backup saved to {path}"
 msgstr "Резервну копію збережено: {path}"
 
@@ -726,6 +747,12 @@ msgstr "Резервне копіювання ручних операцій"
 
 msgid "Restore Manual Ops From"
 msgstr "Відновити ручні операції з файлу"
+
+msgid "Could not read the file: {error}"
+msgstr "Не вдалося прочитати файл: {error}"
+
+msgid "This is not a Manual Ops backup (it must start and end with %)."
+msgstr "Це не резервна копія ручних операцій (вона має починатися й закінчуватися знаком %)."
 
 msgid "Restore Manual Ops?"
 msgstr "Відновити ручні операції?"
@@ -738,6 +765,15 @@ msgstr "_Відновити"
 
 msgid "Sent {n} bytes."
 msgstr "Надіслано {n} байт."
+
+msgid "Run the loopback test?"
+msgstr "Запустити петльову перевірку?"
+
+msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: the test sends a short text to the port."
+msgstr "Спершу від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера: перевірка надсилає в порт короткий текст."
+
+msgid "_Run Test"
+msgstr "_Запустити"
 
 msgid "Loopback Test"
 msgstr "Петльова перевірка"
@@ -1147,6 +1183,9 @@ msgstr "БЕЗ НАЗВИ"
 msgid "Save Setup Sheet"
 msgstr "Зберегти карту наладки"
 
+msgid "Could not save {name}: {error}"
+msgstr "Не вдалося зберегти {name}: {error}"
+
 msgid "Saved {name}"
 msgstr "Збережено {name}"
 
@@ -1263,6 +1302,9 @@ msgstr "на оберт, для нових операцій"
 
 msgid "Description"
 msgstr "Опис"
+
+msgid "The tool library could not be saved: {error}"
+msgstr "Не вдалося зберегти бібліотеку інструментів: {error}"
 
 msgid "New tool"
 msgstr "Новий інструмент"
@@ -1464,6 +1506,12 @@ msgstr "Діаметр"
 
 msgid "Units"
 msgstr "Одиниці"
+
+msgid "inch"
+msgstr "дюйм"
+
+msgid "mm"
+msgstr "мм"
 
 msgid "Upper half only"
 msgstr "Лише верхня половина"

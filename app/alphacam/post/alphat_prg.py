@@ -22,7 +22,6 @@ from ..toolpath.groove import groove
 from ..toolpath.thread import plan_thread
 from ..toolpath.toolpath import Move, MoveKind, Toolpath
 
-AREA_RETRACT_MM = 1.0  # area clear RETRACT DIST default
 PREFINISH_LEAD_OUT_MM = 1.0  # area clear pre-finish block (#127=10): pull-off 1 mm instead of 0.2
 
 HEADER_LOGIC = [

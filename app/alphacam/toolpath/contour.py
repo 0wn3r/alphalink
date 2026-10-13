@@ -227,7 +227,7 @@ def z_at(seg: Seg, x: float) -> float:
             return max(seg.a.z, seg.b.z)
         t = (x - seg.a.x) / (seg.b.x - seg.a.x)
         return seg.a.z + t * (seg.b.z - seg.a.z)
-    (ar, az), (br, bz), (cr, cz) = _rz(seg.a), _rz(seg.b), _rz(seg.centre)
+    (ar, az), (_, bz), (cr, cz) = _rz(seg.a), _rz(seg.b), _rz(seg.centre)
     radius = math.hypot(ar - cr, az - cz)
     dz = math.sqrt(max(radius * radius - (x / 2 - cr) ** 2, 0.0))
     # the arc's Z range picks the branch (fine for arcs up to a quarter circle, which is what corner radii are)

@@ -4,6 +4,8 @@ Points are stored as [x, z]; polymorphic objects (geometry, operations) carry a 
 
 from __future__ import annotations
 
+from ..i18n import tr
+
 import dataclasses
 import types
 import typing
@@ -38,12 +40,12 @@ def from_json(cls, data, registry: dict[str, type] | None = None):
         try:
             cls = registry[data["type"]]
         except KeyError:
-            raise ValueError(f"unknown type {data.get('type')!r}") from None
+            raise ValueError(tr("unknown element or operation type {type}", type=repr(data.get("type")))) from None
     hints = typing.get_type_hints(cls)
     known = {f.name for f in dataclasses.fields(cls)}
     unknown = set(data) - known - {"type"}
     if unknown:
-        raise ValueError(f"{cls.__name__}: unknown keys {sorted(unknown)}")
+        raise ValueError(tr("{what}: unknown keys {keys}", what=cls.__name__, keys=sorted(unknown)))
     kwargs = {name: _convert(hints[name], value) for name, value in data.items() if name in known}
     return cls(**kwargs)
 

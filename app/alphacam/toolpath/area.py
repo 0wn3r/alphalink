@@ -15,7 +15,6 @@ Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOL
 from __future__ import annotations
 
 from ..i18n import tr
-import math
 
 from ..model.operations import AreaClear
 from ..model.geometry import Point
@@ -80,21 +79,6 @@ def _follow(boundary: list[Seg], k: int, end: Point, target: Point, feed: float,
         if stop is target:
             break
     return moves
-
-
-def _end_z(boundary: list[Seg], x: float, external: bool) -> float:
-    pts = points(boundary)
-    xq = max(x, min(p.x for p in pts)) if external else min(x, max(p.x for p in pts))
-    hits = []
-    for s in boundary:
-        lo, hi = sorted((s.a.x, s.b.x))
-        if lo == hi:
-            continue
-        if (lo <= xq < hi) if external else (lo < xq <= hi):
-            hits.append(z_at(s, xq))
-    if not hits:
-        raise ValueError(tr("area clear: no contour below X{x}", x=f"{x:g}"))
-    return max(hits)
 
 
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int) -> Toolpath:

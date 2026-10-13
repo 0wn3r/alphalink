@@ -112,7 +112,8 @@ class Project:
     def from_dict(cls, data: dict) -> "Project":
         fmt = data.get("format")
         if fmt != FORMAT:
-            raise ValueError(f"unsupported project format {fmt!r} (expected {FORMAT!r})")
+            raise ValueError(tr("not an AlphaLink CAM part (format {fmt}, expected {expected})", fmt=repr(fmt),
+                                expected=repr(FORMAT)))
         return cls(
             units=data.get("units", "mm"),
             machine=data.get("machine", "harrison-alpha-400t"),

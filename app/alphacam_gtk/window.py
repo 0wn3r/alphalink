@@ -14,6 +14,7 @@ from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
 from alphacam.io.sdg import load_sdg  # noqa: E402
 from alphacam.commands import UndoStack  # noqa: E402
+from alphacam.model.operations import OP_KIND_TOOL_CHANGE  # noqa: E402
 from alphacam.model.project import Project  # noqa: E402
 from alphacam.preview import preview  # noqa: E402
 
@@ -405,7 +406,7 @@ class MainWindow(Adw.ApplicationWindow):
                                 body=_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
         group = Adw.PreferencesGroup()
         y_row = Adw.ComboRow(title=_("DXF Y is"), model=Gtk.StringList.new([_("Radius"), _("Diameter")]))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
                              selected=1 if st["units"] == "inch" else 0)
         half = Adw.SwitchRow(title=_("Upper half only"), active=True,
                              subtitle=_("Drop the mirrored half below the axis"))
@@ -525,6 +526,9 @@ class MainWindow(Adw.ApplicationWindow):
 
     def refresh(self, fit: bool = False) -> None:
         """Re-post and redraw after any change; keeps the view and the selected operation."""
+        if self._refresh_id:  # this refresh covers the one the undo stack queued (no second post, no editor rebuild)
+            GLib.source_remove(self._refresh_id)
+            self._refresh_id = 0
         project = self.project
         selected = self.selected_index()
         self.pv = preview(project, library=self.library)
@@ -550,7 +554,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.undo_action.set_enabled(bool(self.undo and self.undo.can_undo))
         self.redo_action.set_enabled(bool(self.undo and self.undo.can_redo))
         prog = self.pv.program
-        tools = sorted({b.tool for b in prog.blocks if b.op_kind == 1}) if prog else []
+        tools = sorted({b.tool for b in prog.blocks if b.op_kind == OP_KIND_TOOL_CHANGE}) if prog else []
         self.machine.set_program(self.pv.data, _("Program {number} · {name} · tools {tools}").format(
             number=project.program_number, name=name, tools=", ".join(f"T{t}" for t in tools)))
         if selected is not None and selected < len(project.operations):
@@ -581,7 +585,6 @@ class MainWindow(Adw.ApplicationWindow):
             self.refresh()
         finally:
             self._editor_edit = False
-        self.library = load_library()
 
     def _undo(self) -> None:
         label = self.undo.undo() if self.undo else None
@@ -635,7 +638,7 @@ class MainWindow(Adw.ApplicationWindow):
         dlg = Adw.PreferencesDialog(title=_("Preferences"))
         page = Adw.PreferencesPage(title=_("General"), icon_name="preferences-system-symbolic")
         new = Adw.PreferencesGroup(title=_("New parts"))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
                              selected=1 if st["units"] == "inch" else 0)
         units.connect("notify::selected", lambda r, _p: st.set("units", "inch" if r.get_selected() else "mm"))
         new.add(units)
@@ -705,7 +708,7 @@ class MainWindow(Adw.ApplicationWindow):
         from alphacam.model.project import Billet
 
         alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]),
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
                              selected=1 if settings()["units"] == "inch" else 0)
         group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
                                                length=settings()["billet_length"]), settings()["units"] == "inch")
@@ -760,7 +763,7 @@ class MainWindow(Adw.ApplicationWindow):
         # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
         unit_keys = [None, "mm", "inch"]
         out_units = Adw.ComboRow(title=_("Program units"), subtitle=_("M71 mm / M70 inch on the control"),
-                                 model=Gtk.StringList.new([_("As the drawing"), "mm", "inch"]))
+                                 model=Gtk.StringList.new([_("As the drawing"), _("mm"), _("inch")]))
         current = self.project.output_units if self.project.output_units != self.project.units else None
         out_units.set_selected(unit_keys.index(current))
         group.add(out_units)
@@ -997,9 +1000,6 @@ class MainWindow(Adw.ApplicationWindow):
             self._row_selected(self.op_list, row)
         else:
             self.op_list.select_row(row)
-
-    def _op_tapped(self, canvas, index: int) -> None:
-        self._select_op(None if index < 0 else index)
 
     def _cursor_moved(self, canvas, x, z) -> None:
         self.readout.set_label(f"X {x:9.3f}   Z {z:9.3f}")

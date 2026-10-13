@@ -4,7 +4,7 @@ import os
 import unittest
 from pathlib import Path
 
-from alphacam.model import FinishPass, Point, Project
+from alphacam.model import Point, Project
 from alphacam.post.alphat_prg import post
 from alphacam.preview import preview
 from alphacam_gtk.canvas.hittest import hit

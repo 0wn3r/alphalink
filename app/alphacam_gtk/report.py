@@ -10,7 +10,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GLib, Gtk  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
 
 from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.tools import standard_library  # noqa: E402
@@ -148,8 +148,12 @@ class SheetPage(Gtk.Box):
                 return
             buf = self.view.get_buffer()
             text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
-            with open(f.get_path(), "w", encoding="utf-8") as fh:
-                fh.write(text + "\n")
+            try:
+                with open(f.get_path(), "w", encoding="utf-8") as fh:
+                    fh.write(text + "\n")
+            except (OSError, TypeError) as e:
+                w.toast(_("Could not save {name}: {error}").format(name=f.get_basename(), error=e))
+                return
             w.toast(_("Saved {name}").format(name=f.get_basename()))
 
         dlg.save(w, None, done)

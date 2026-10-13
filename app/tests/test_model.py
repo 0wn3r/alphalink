@@ -81,7 +81,7 @@ class ProjectJson(unittest.TestCase):
             Project.from_dict(d)
         d = met2_project().to_dict()
         d["operations"][0]["type"] = "knurl"
-        with self.assertRaisesRegex(ValueError, "unknown type"):
+        with self.assertRaisesRegex(ValueError, "unknown element or operation type"):
             Project.from_dict(d)
 
     def test_validation(self):

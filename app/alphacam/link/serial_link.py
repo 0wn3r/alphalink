@@ -10,6 +10,8 @@ without hardware. `cancel` is a threading.Event; `progress(done, total)` is call
 
 from __future__ import annotations
 
+from ..i18n import tr
+
 import time
 from dataclasses import dataclass, field
 from typing import Callable
@@ -165,10 +167,10 @@ def receive(ser, progress: Callable[[int], None] | None = None, cancel=None, fir
             if progress:
                 progress(len(out))
         elif not out and first_timeout is not None and now - t_last > first_timeout:
-            raise TransferTimeout("nothing received")
+            raise TransferTimeout(tr("nothing received"))
         elif out and idle_timeout is not None and now - t_last > idle_timeout:
             log.add(f"idle timeout after {len(out)} bytes")
-            raise TransferTimeout(f"transfer stopped after {len(out)} bytes (no second %)")
+            raise TransferTimeout(tr("transfer stopped after {n} bytes (no second %)", n=len(out)))
 
 
 def manops_load_bytes(data: bytes) -> bytes:

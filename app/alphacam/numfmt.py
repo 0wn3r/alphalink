@@ -21,7 +21,3 @@ def format_number(value: float, decimals: int) -> str:
         text += "."
     return text
 
-
-def parse_number(text: str) -> float:
-    """Parse a PRG number ("100.", "-0.8", "3000")."""
-    return float(text)

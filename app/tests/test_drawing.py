@@ -2,7 +2,7 @@ import math
 import unittest
 
 from alphacam import drawing
-from alphacam.model import Arc, Line, Point, Project
+from alphacam.model import Point, Project
 
 from .test_post import SAMPLES, sample_project
 from alphacam.io.sdg import load_sdg
