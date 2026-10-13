@@ -46,8 +46,10 @@ class DrawingTools:
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
 
+        self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text="Keypad", visible=False)
+        self.keypad_button.connect("clicked", lambda *_: self.open_keypad())
         self.bar = Gtk.Box(spacing=6, margin_start=6, margin_end=6, margin_top=6, margin_bottom=6)
-        for wdg in (self.palette, self.entry, self.done, self.delete_el):
+        for wdg in (self.palette, self.keypad_button, self.entry, self.done, self.delete_el):
             self.bar.append(wdg)
 
         # contour picking banner
@@ -178,6 +180,19 @@ class DrawingTools:
         self.c.marker = (self.points[-1], "end")
         self.c.queue_draw()
         entry.set_text("")
+
+    def open_keypad(self) -> None:
+        from .keypad import Keypad
+
+        def done(text):
+            self.entry.set_text(text)
+            self._entry_activate(self.entry)
+
+        Keypad(done, title="Next Point" if self.points else "Start Point").present(self.w)
+
+    def set_touch(self, touch: bool) -> None:
+        """Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6)."""
+        self.keypad_button.set_visible(touch)
 
     # --- select / delete ---------------------------------------------------------------------------------
 

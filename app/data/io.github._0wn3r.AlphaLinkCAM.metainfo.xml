@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github._0wn3r.AlphaLinkCAM</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>LicenseRef-proprietary</project_license>
+  <name>AlphaLink CAM</name>
+  <summary>Lathe CAM for the Harrison Alpha 400T</summary>
+  <description>
+    <p>
+      Draw a turned part, set up roughing, finishing, facing, grooving, threading and drilling, and make the
+      Alpha-T program the control's macros expect, byte for byte like the original ALPHA-T DOS CAM.
+    </p>
+    <p>Send it over RS-232 to the lathe and back up the Manual Ops. Works with touch, pen, mouse and keyboard.</p>
+  </description>
+  <launchable type="desktop-id">io.github._0wn3r.AlphaLinkCAM.desktop</launchable>
+  <url type="homepage">https://github.com/0wn3r/alphalink</url>
+  <developer id="io.github._0wn3r">
+    <name>Eduard</name>
+  </developer>
+  <content_rating type="oars-1.1"/>
+  <supports>
+    <control>touch</control>
+    <control>pointing</control>
+    <control>keyboard</control>
+  </supports>
+  <requires>
+    <display_length compare="ge">720</display_length>
+  </requires>
+  <releases>
+    <release version="0.1.0" date="2026-10-13">
+      <description>
+        <p>First version: drawing, all ALPHA-T operations, program preview and simulation, serial send and Manual Ops backup.</p>
+      </description>
+    </release>
+  </releases>
+</component>

@@ -16,6 +16,8 @@ class Segment:
     op_index: int | None  # operation the move belongs to (None: implicit tool block / empty blocks)
     line: int  # PRG line of the move
     centre: tuple[float, float] | None = None  # arcs
+    block: int = 0  # PRG block label (N10, N20 ...)
+    pass_no: int = 0  # #121 pass within the block (0 outside passes)
 
     def polyline(self, steps: int = 16) -> list[tuple[float, float]]:
         """Points along the segment (arcs sampled), for hit testing."""
@@ -48,14 +50,28 @@ def segments(preview) -> list[Segment]:
     for block in preview.program.blocks:
         if pos is None and block.start is not None:
             pos = block.start
-        for m in block.moves:
-            if m.x is None or m.z is None:
-                continue
-            end = (m.x, m.z)
-            if pos is not None and m.kind is not MoveKind.DWELL:
-                centre = (m.centre_x, m.centre_z) if m.centre_x is not None else None
-                out.append(Segment(m.kind, pos, end, owner.get(block.label), m.line, centre))
-            elif m.kind is MoveKind.DWELL:
-                out.append(Segment(m.kind, end, end, owner.get(block.label), m.line))
-            pos = end
+        for p in block.passes:
+            for m in p.moves:
+                if m.x is None or m.z is None:
+                    continue
+                end = (m.x, m.z)
+                if pos is not None and m.kind is not MoveKind.DWELL:
+                    centre = (m.centre_x, m.centre_z) if m.centre_x is not None else None
+                    out.append(Segment(m.kind, pos, end, owner.get(block.label), m.line, centre, block.label,
+                                       p.number))
+                elif m.kind is MoveKind.DWELL:
+                    out.append(Segment(m.kind, end, end, owner.get(block.label), m.line, None, block.label,
+                                       p.number))
+                pos = end
     return out
+
+
+def pass_starts(segs: list[Segment]) -> list[int]:
+    """Indices where a new pass (or block) starts: the stops of the simulation's step buttons."""
+    starts, key = [], None
+    for i, s in enumerate(segs):
+        k = (s.block, s.pass_no)
+        if k != key:
+            starts.append(i)
+            key = k
+    return starts

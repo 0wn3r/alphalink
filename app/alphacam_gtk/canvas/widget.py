@@ -52,6 +52,7 @@ class LatheCanvas(Gtk.DrawingArea):
         self.rubber: tuple | None = None
         self.marker: tuple | None = None  # (Point, kind)
         self.tool = "select"
+        self.sim_index: int | None = None  # simulation: number of moves done (None = show everything)
         self.pointer = (0.0, 0.0)
         self._fit_pending = True
         self._before_fit: ViewTransform | None = None
@@ -206,9 +207,12 @@ class LatheCanvas(Gtk.DrawingArea):
 
     def _paths(self, cr) -> None:
         sel = self.selected
-        for s in self.segs:
+        sim = self.sim_index
+        for i, s in enumerate(self.segs):
             focus = sel is None or s.op_index == sel
             alpha = 1.0 if focus else 0.15
+            if sim is not None and i >= sim:
+                alpha = 0.1  # not cut yet
             lw = 2.0 if sel is not None and focus else 1.1
             if s.kind is MoveKind.DWELL:
                 self._rgb(cr, "feed", alpha)
@@ -225,6 +229,15 @@ class LatheCanvas(Gtk.DrawingArea):
                 cr.line_to(*self.view.to_screen(*s.b))
             cr.stroke()
         cr.set_dash([])
+        if sim is not None and self.segs:
+            x, z = self.segs[max(0, min(sim, len(self.segs)) - 1)].b if sim else self.segs[0].a
+            sx, sy = self.view.to_screen(x, z)
+            self._rgb(cr, "rapid")
+            cr.arc(sx, sy, 7, 0, 2 * math.pi)
+            cr.fill()
+            self._rgb(cr, "bg")
+            cr.arc(sx, sy, 3, 0, 2 * math.pi)
+            cr.fill()
 
     def _overlay(self, cr) -> None:
         v, p = self.view, self.project

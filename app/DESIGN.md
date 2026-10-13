@@ -27,6 +27,13 @@ Status: **design draft 1** (2026-10-12).
   bar), command entry `X,Z` / `@dX,dZ`, fillet/chamfer size chips in a popover at the corner, element select +
   delete (Undo toast), "Pick Contour on the Drawing" with numbered badges, New Part dialog (units, billet).
   A part drawn in the app (MET2 + R5/R3 fillets) posts byte-identical to the ALPHA-T ARC sample.
+- Simulation and keypad (2026-10-13): transport bar under the canvas (first / previous pass / play / next pass /
+  all, scrub), not-yet-cut moves faded, tool marker, label with operation, pass and PRG line, Program page follows;
+  on-screen keypad for X,Z (ABS/INC, big keys) shown in touch mode.
+- M5 packaging (2026-10-13): `app/pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file,
+  metainfo (validated), icon, Flatpak manifest `app/build-aux/flatpak/` (GNOME 50 runtime, pyserial pinned by
+  sha256, `--device=all` for the serial port). Build: `flatpak-builder --user --install build-dir
+  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json` (not built here: no flatpak-builder on this machine).
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
