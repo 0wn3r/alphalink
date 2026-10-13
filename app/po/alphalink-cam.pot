@@ -80,6 +80,102 @@ msgstr ""
 msgid "Tap a corner between two lines"
 msgstr ""
 
+#: alphacam_gtk/drawing_tools.py
+msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Move the cursor to X,Z  then Enter"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Move the cursor by dX,dZ  then Enter"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Command aborted"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "No point to find"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "No intersection to find"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "No line to find"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "No arc to find"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "{what} found: - or Delete erases it"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "No text to erase"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Erase text"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Cursor step {step}"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Measure: tap the 1st point, or move the cursor and press Enter"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Measure: now the 2nd point"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Text"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "At X{x} Z{z}"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Height"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "_Add"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Erase All of the Drawing?"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Lines, arcs and text are erased. Operations stay, without their contours. Undo brings the drawing back."
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "_Erase"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Erase drawing"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py
+msgid "Add Operation (C)"
+msgstr ""
+
 #: alphacam_gtk/drawing_tools.py:166 alphacam_gtk/drawing_tools.py:238
 msgid "Draw line"
 msgstr ""
