@@ -13,7 +13,13 @@ from gi.repository import Gdk, GObject, Gtk  # noqa: E402
 
 
 class InputMode(GObject.Object):
-    __gsignals__ = {"changed": (GObject.SignalFlags.RUN_FIRST, None, (str,))}
+    """Also owns the touch lock (TOUCH.md 7.4): while locked, touch events are swallowed except on the widgets in
+    `lock_exempt` (the unlock button); mouse, pen and keyboard keep working."""
+
+    __gsignals__ = {
+        "changed": (GObject.SignalFlags.RUN_FIRST, None, (str,)),
+        "lock-changed": (GObject.SignalFlags.RUN_FIRST, None, (bool,)),
+    }
 
     def __init__(self, window: Gtk.Widget, preference: str = "auto"):
         super().__init__()
@@ -24,7 +30,33 @@ class InputMode(GObject.Object):
         click = Gtk.GestureClick(button=0, propagation_phase=Gtk.PropagationPhase.CAPTURE)
         click.connect("pressed", self._pressed)
         window.add_controller(click)
+        self.locked = False
+        self.lock_exempt: list[Gtk.Widget] = []
+        guard = Gtk.EventControllerLegacy(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        guard.connect("event", self._guard)
+        window.add_controller(guard)
         self._apply()
+
+    def set_locked(self, locked: bool) -> None:
+        if locked != self.locked:
+            self.locked = locked
+            self.emit("lock-changed", locked)
+
+    def _guard(self, ctl, event) -> bool:
+        if not self.locked or event.get_event_type() not in (
+                Gdk.EventType.TOUCH_BEGIN, Gdk.EventType.TOUCH_UPDATE, Gdk.EventType.TOUCH_END,
+                Gdk.EventType.BUTTON_PRESS, Gdk.EventType.BUTTON_RELEASE, Gdk.EventType.MOTION_NOTIFY):
+            return False
+        dev = event.get_device()
+        if dev is None or dev.get_source() != Gdk.InputSource.TOUCHSCREEN:
+            return False
+        ok, x, y = event.get_position()
+        target = self.window.pick(x, y, Gtk.PickFlags.DEFAULT) if ok else None
+        while target is not None:
+            if target in self.lock_exempt:
+                return False
+            target = target.get_parent()
+        return True  # swallow the touch
 
     def _pressed(self, gesture, n, x, y) -> None:
         dev = gesture.get_current_event_device()
