@@ -34,6 +34,10 @@ Status: **design draft 1** (2026-10-12).
   metainfo (validated), icon, Flatpak manifest `app/build-aux/flatpak/` (GNOME 50 runtime, pyserial pinned by
   sha256, `--device=all` for the serial port). Build: `flatpak-builder --user --install build-dir
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json` (not built here: no flatpak-builder on this machine).
+- Translations (2026-10-13): gettext domain `alphalink-cam`; all UI strings marked; Ukrainian complete
+  (`app/po/uk.po`, sources of truth `app/po/uk_translations.py`). The language follows the desktop; `ALPHALINK_LANG=uk`
+  forces it. After changing UI strings run `python3 tools/update_translations.py` (needs gettext); a test fails if
+  a string has no Ukrainian translation. Messages from the core (post errors) are still English.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`).
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a

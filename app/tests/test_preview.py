@@ -225,3 +225,25 @@ class GtkKeypad(unittest.TestCase):
         self.assertEqual(k.text(), "40,-25.")
         k._key("ABS")
         self.assertEqual(k.text(), "@40,-25.")
+
+
+class Translations(unittest.TestCase):
+    """Every marked UI string has a Ukrainian translation, and the compiled catalog matches uk.po."""
+
+    def test_ukrainian_complete(self):
+        import gettext
+        import re
+
+        from alphacam_gtk import i18n
+
+        po = (Path(__file__).resolve().parents[1] / "po" / "uk.po").read_text()
+        self.assertNotRegex(po, r'msgstr(\[\d\])? ""\n\n')  # no empty translations (the header is first)
+        self.assertNotIn("#, fuzzy", po)
+        pot = (Path(__file__).resolve().parents[1] / "po" / "alphalink-cam.pot").read_text()
+        ids = [m for m in re.findall(r'\nmsgid "(.+)"\n(?:msgstr|msgid_plural)', pot)]
+        uk = gettext.translation(i18n.DOMAIN, i18n.LOCALE_DIR, languages=["uk"])
+        untranslated = [m for m in ids if uk.gettext(m) == m and m not in ("ABS",)]
+        self.assertEqual(untranslated, [])
+        self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 21).format(n=21), "21 прохід")
+        self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 24).format(n=24), "24 проходи")
+        self.assertEqual(uk.ngettext("{n} pass", "{n} passes", 11).format(n=11), "11 проходів")

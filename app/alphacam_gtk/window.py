@@ -18,23 +18,25 @@ from alphacam.preview import preview  # noqa: E402
 from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
+from .i18n import N_, _, ngettext  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
 from .op_factory import OP_MENU, default_op  # noqa: E402
 
 OP_TITLES = {
-    "tool_change": "Tool change", "area_clear": "Area clear", "face_clear": "Face clear", "groove": "Grooving",
-    "finish": "Finish pass", "drill": "Drilling", "thread": "Threading", "dwell": "Dwell", "move": "Move / rapid",
+    "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
+    "groove": N_("Grooving"), "finish": N_("Finish pass"), "drill": N_("Drilling"), "thread": N_("Threading"),
+    "dwell": N_("Dwell"), "move": N_("Move / rapid"),
 }
 
 
 def op_title(op) -> str:
-    title = OP_TITLES.get(op.type, op.type)
+    title = _(OP_TITLES.get(op.type, op.type))
     if getattr(op, "external", True) is False:
-        title += " (internal)"
+        title = _("{title} (internal)").format(title=title)
     if getattr(op, "pre_finish", False):
-        title += " + pre-finish"
+        title = _("{title} + pre-finish").format(title=title)
     return title
 
 
@@ -43,15 +45,16 @@ def op_summary(op, pv) -> str:
     if hasattr(op, "tool"):
         parts.append(f"T{op.tool}")
     if op.type == "dwell":
-        parts.append(f"{op.revs:g} revs")
+        parts.append(_("{revs} revs").format(revs=f"{op.revs:g}"))
     elif op.type == "move":
-        parts.append(f"{'rapid' if op.rapid else 'feed'} to X{op.point.x:g} Z{op.point.z:g}")
+        parts.append((_("rapid to {point}") if op.rapid else _("feed to {point}")).format(
+            point=f"X{op.point.x:g} Z{op.point.z:g}"))
     elif op.type == "thread":
-        parts.append(f"pitch {op.pitch:g}")
+        parts.append(_("pitch {pitch}").format(pitch=f"{op.pitch:g}"))
     elif hasattr(op, "feed"):
         parts.append(f"F{op.feed:g}")
     if pv is not None and pv.passes > 1:
-        parts.append(f"{pv.passes} passes")
+        parts.append(ngettext("{n} pass", "{n} passes", pv.passes).format(n=pv.passes))
     return " · ".join(parts)
 
 
@@ -92,12 +95,12 @@ class MainWindow(Adw.ApplicationWindow):
     # --- layout -----------------------------------------------------------------------------------------
 
     def _build_empty(self) -> Gtk.Widget:
-        page = Adw.StatusPage(title="No Part Open", icon_name="document-open-symbolic",
-                              description="Open an AlphaLink part (.alcam) or an ALPHA-T drawing (.SDG)")
+        page = Adw.StatusPage(title=_("No Part Open"), icon_name="document-open-symbolic",
+                              description=_("Open an AlphaLink part (.alcam) or an ALPHA-T drawing (.SDG)"))
         btns = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
-        new = Gtk.Button(label="_New Part…", use_underline=True, action_name="win.new")
+        new = Gtk.Button(label=_("_New Part…"), use_underline=True, action_name="win.new")
         new.add_css_class("pill")
-        btn = Gtk.Button(label="_Open…", use_underline=True, action_name="win.open")
+        btn = Gtk.Button(label=_("_Open…"), use_underline=True, action_name="win.open")
         btn.add_css_class("pill")
         btn.add_css_class("suggested-action")
         btns.append(new)
@@ -123,10 +126,10 @@ class MainWindow(Adw.ApplicationWindow):
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
             add_menu.append_item(item)
         side_header.pack_start(Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
-                                              tooltip_text="Add Operation"))
+                                              tooltip_text=_("Add Operation")))
         side.add_top_bar(side_header)
         side.set_content(side_scroll)
-        side_page = Adw.NavigationPage(title="Operations", child=side)
+        side_page = Adw.NavigationPage(title=_("Operations"), child=side)
 
         # part view
         self.canvas = LatheCanvas()
@@ -134,9 +137,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,
                                 valign=Gtk.Align.END)
         self.zoom_box.add_css_class("canvas-zoom")
-        for icon, action, tip in (("zoom-in-symbolic", "win.zoom-in", "Zoom In"),
-                                  ("zoom-out-symbolic", "win.zoom-out", "Zoom Out"),
-                                  ("zoom-fit-best-symbolic", "win.fit", "Fit Part")):
+        for icon, action, tip in (("zoom-in-symbolic", "win.zoom-in", _("Zoom In")),
+                                  ("zoom-out-symbolic", "win.zoom-out", _("Zoom Out")),
+                                  ("zoom-fit-best-symbolic", "win.fit", _("Fit Part"))):
             b = Gtk.Button(icon_name=icon, action_name=action, tooltip_text=tip)
             b.add_css_class("osd")
             b.add_css_class("circular")
@@ -181,43 +184,43 @@ class MainWindow(Adw.ApplicationWindow):
                                                   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
 
         self.stack = Adw.ViewStack()
-        self.stack.add_titled_with_icon(part, "part", "Part", "view-paged-symbolic")
-        self.stack.add_titled_with_icon(prog, "program", "Program", "text-x-generic-symbolic")
+        self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
+        self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.machine = MachinePage(self)
-        self.stack.add_titled_with_icon(self.machine, "machine", "Machine", "network-wired-symbolic")
+        self.stack.add_titled_with_icon(self.machine, "machine", _("Machine"), "network-wired-symbolic")
 
         header = Adw.HeaderBar()
         self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.WIDE)
         header.set_title_widget(self.header_switcher)
         header.pack_start(Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
-                                     tooltip_text="Open (Ctrl+O)"))
+                                     tooltip_text=_("Open (Ctrl+O)")))
         header.pack_start(Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
-                                     tooltip_text="Save (Ctrl+S)"))
+                                     tooltip_text=_("Save (Ctrl+S)")))
         undo_box = Gtk.Box()
         undo_box.add_css_class("linked")
-        undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text="Undo (Ctrl+Z)"))
+        undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text=_("Undo (Ctrl+Z)")))
         undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
-                                   tooltip_text="Redo (Ctrl+Shift+Z)"))
+                                   tooltip_text=_("Redo (Ctrl+Shift+Z)")))
         header.pack_start(undo_box)
         menu = Gio.Menu()
-        menu.append("Fit Part", "win.fit")
+        menu.append(_("Fit Part"), "win.fit")
         layout = Gio.Menu()
-        for label, target in (("Automatic", "auto"), ("Pointer", "pointer"), ("Touch", "touch")):
+        for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
             item = Gio.MenuItem.new(label, None)
             item.set_action_and_target_value("win.input-layout", GLib.Variant.new_string(target))
             layout.append_item(item)
-        menu.append_section("Input Layout", layout)
+        menu.append_section(_("Input Layout"), layout)
         about = Gio.Menu()
-        about.append("About AlphaLink CAM", "app.about")
+        about.append(_("About AlphaLink CAM"), "app.about")
         menu.append_section(None, about)
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
-                                       tooltip_text="Main Menu"))
-        export = Gtk.Button(label="_Export PRG", use_underline=True, action_name="win.export",
-                            tooltip_text="Export the Alpha-T program (Ctrl+E)")
+                                       tooltip_text=_("Main Menu")))
+        export = Gtk.Button(label=_("_Export PRG"), use_underline=True, action_name="win.export",
+                            tooltip_text=_("Export the Alpha-T program (Ctrl+E)"))
         export.add_css_class("suggested-action")
         header.pack_end(export)
         self.lock_button = Gtk.ToggleButton(icon_name="changes-allow-symbolic",
-                                            tooltip_text="Touch Lock: ignore touches (hold to unlock by touch)")
+                                            tooltip_text=_("Touch Lock: ignore touches (hold to unlock by touch)"))
         header.pack_end(self.lock_button)
 
         self.banner = Adw.Banner()
@@ -239,7 +242,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.editor_split.append(self.editor_reveal)
         content.set_content(self.editor_split)
         content.add_bottom_bar(self.switcher_bar)
-        self.content_page = Adw.NavigationPage(title="Part", child=content)
+        self.content_page = Adw.NavigationPage(title=_("Part"), child=content)
 
         self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
                                              min_sidebar_width=260, max_sidebar_width=340)
@@ -263,7 +266,7 @@ class MainWindow(Adw.ApplicationWindow):
             self._lock_guard = False
             self.lock_button.set_icon_name("changes-prevent-symbolic" if locked else "changes-allow-symbolic")
             if locked:
-                self.toast("Touch locked. Hold the lock button, or click it with the mouse, to unlock.")
+                self.toast(_("Touch locked. Hold the lock button, or click it with the mouse, to unlock."))
 
         self.lock_button.connect("toggled", toggled)
         im.connect("lock-changed", lock_changed)
@@ -313,11 +316,11 @@ class MainWindow(Adw.ApplicationWindow):
 
     def open_dialog(self) -> None:
         filters = Gio.ListStore.new(Gtk.FileFilter)
-        f = Gtk.FileFilter(name="Parts and drawings")
+        f = Gtk.FileFilter(name=_("Parts and drawings"))
         for pat in ("*.alcam", "*.sdg", "*.SDG"):
             f.add_pattern(pat)
         filters.append(f)
-        dlg = Gtk.FileDialog(title="Open Part", filters=filters)
+        dlg = Gtk.FileDialog(title=_("Open Part"), filters=filters)
         dlg.open(self, None, self._opened)
 
     def _opened(self, dlg, res) -> None:
@@ -331,7 +334,7 @@ class MainWindow(Adw.ApplicationWindow):
         try:
             project = load_sdg(path) if path.suffix.lower() == ".sdg" else Project.load(path)
         except (OSError, ValueError, KeyError) as e:
-            self.toast(f"Could not open {path.name}: {e}")
+            self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
             return
         self.path = path
         self.set_project(project)
@@ -357,7 +360,7 @@ class MainWindow(Adw.ApplicationWindow):
         project = self.project
         selected = self.selected_index()
         self.pv = preview(project)
-        name = self.path.name if self.path else "Untitled"
+        name = self.path.name if self.path else _("Untitled")
         dirty = "• " if self.undo and self.undo.modified else ""
         self.set_title(f"{dirty}{name} – AlphaLink CAM")
         self.content_page.set_title(dirty + name)
@@ -369,8 +372,8 @@ class MainWindow(Adw.ApplicationWindow):
             self.canvas.update(project, self.pv)
         self.sim.reset()
         if self.pv.error:
-            n = "" if self.pv.error_op is None else f"Operation {self.pv.error_op + 1}: "
-            self.banner.set_title(f"{n}{self.pv.error}. Export is disabled.")
+            n = "" if self.pv.error_op is None else _("Operation {n}: ").format(n=self.pv.error_op + 1)
+            self.banner.set_title(_("{where}{error}. Export is disabled.").format(where=n, error=self.pv.error))
             self.banner.set_revealed(True)
         else:
             self.banner.set_revealed(False)
@@ -379,8 +382,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.redo_action.set_enabled(bool(self.undo and self.undo.can_redo))
         prog = self.pv.program
         tools = sorted({b.tool for b in prog.blocks if b.op_kind == 1}) if prog else []
-        self.machine.set_program(self.pv.data, f"Program {project.program_number} · {name} · "
-                                               f"tools {', '.join(f'T{t}' for t in tools)}")
+        self.machine.set_program(self.pv.data, _("Program {number} · {name} · tools {tools}").format(
+            number=project.program_number, name=name, tools=", ".join(f"T{t}" for t in tools)))
         if selected is not None and selected < len(project.operations):
             self._select_op(selected, rebuild_editor=not self._editor_edit)
         else:
@@ -406,12 +409,12 @@ class MainWindow(Adw.ApplicationWindow):
     def _undo(self) -> None:
         label = self.undo.undo() if self.undo else None
         if label:
-            self.toast(f"Undid {label}")
+            self.toast(_("Undid {action}").format(action=label))
 
     def _redo(self) -> None:
         label = self.undo.redo() if self.undo else None
         if label:
-            self.toast(f"Redid {label}")
+            self.toast(_("Redid {action}").format(action=label))
 
     def add_op(self, kind: str) -> None:
         if self.project is None:
@@ -419,7 +422,7 @@ class MainWindow(Adw.ApplicationWindow):
         at = self.selected_index()
         at = len(self.project.operations) if at is None else at + 1
         op = default_op(kind, self.project, at)
-        if self.apply_edit(f"Add {op_title(op)}", lambda p: p.operations.insert(at, op)):
+        if self.apply_edit(_("Add {what}").format(what=op_title(op)), lambda p: p.operations.insert(at, op)):
             self.refresh()
             self._select_op(at)
 
@@ -428,10 +431,10 @@ class MainWindow(Adw.ApplicationWindow):
         if i is None:
             return
         title = op_title(self.project.operations[i])
-        if self.apply_edit(f"Delete {title}", lambda p: p.operations.pop(i)):
+        if self.apply_edit(_("Delete {what}").format(what=title), lambda p: p.operations.pop(i)):
             self.refresh()
             self._select_op(min(i, len(self.project.operations) - 1) if self.project.operations else None)
-            toast = Adw.Toast(title=f"Deleted {title}", button_label="_Undo", action_name="win.undo", timeout=6)
+            toast = Adw.Toast(title=_("Deleted {what}").format(what=title), button_label=_("_Undo"), action_name="win.undo", timeout=6)
             self.toasts.add_toast(toast)
 
     def _move_selected(self, delta: int) -> None:
@@ -442,26 +445,26 @@ class MainWindow(Adw.ApplicationWindow):
         def move(p):
             ops = p.operations
             ops[i], ops[i + delta] = ops[i + delta], ops[i]
-        if self.apply_edit("Move operation", move):
+        if self.apply_edit(_("Move operation"), move):
             self.refresh()
             self._select_op(i + delta)
 
     def new_dialog(self) -> None:
         """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
-        alert = Adw.AlertDialog(heading="New Part", body="Billet size and units. The drawing starts empty.")
+        alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
         group = Adw.PreferencesGroup()
-        units = Adw.ComboRow(title="Units", model=Gtk.StringList.new(["mm", "inch"]))
+        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new(["mm", "inch"]))
         dia = Adw.SpinRow.new_with_range(1, 1000, 1)
-        dia.set_title("Billet diameter")
+        dia.set_title(_("Billet diameter"))
         dia.set_value(50)
         length = Adw.SpinRow.new_with_range(1, 2000, 1)
-        length.set_title("Billet length")
+        length.set_title(_("Billet length"))
         length.set_value(80)
         for r in (units, dia, length):
             group.add(r)
         alert.set_extra_child(group)
-        alert.add_response("cancel", "_Cancel")
-        alert.add_response("create", "_Create")
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("create", _("_Create"))
         alert.set_response_appearance("create", Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("create")
         alert.set_close_response("cancel")
@@ -480,7 +483,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.path = None
             self.set_project(project)
             self.drawing.set_tool("line")
-            self.toast("Draw the profile: tap points, or type X,Z and Enter")
+            self.toast(_("Draw the profile: tap points, or type X,Z and Enter"))
 
         alert.connect("response", response)
         alert.present(self)
@@ -499,7 +502,7 @@ class MainWindow(Adw.ApplicationWindow):
         if self.project is None:
             return
         stem = self.path.stem if self.path else "part"
-        dlg = Gtk.FileDialog(title="Save Part", initial_name=f"{stem}.alcam")
+        dlg = Gtk.FileDialog(title=_("Save Part"), initial_name=f"{stem}.alcam")
 
         def done(d, res):
             try:
@@ -518,22 +521,22 @@ class MainWindow(Adw.ApplicationWindow):
         try:
             self.project.save(path)
         except OSError as e:
-            self.toast(f"Could not save: {e}")
+            self.toast(_("Could not save: {error}").format(error=e))
             return False
         self.path = path
         self.undo.mark_saved()
         self.refresh()
-        self.toast(f"Saved {path.name}")
+        self.toast(_("Saved {name}").format(name=path.name))
         return True
 
     def _close_request(self, *_) -> bool:
         if not (self.undo and self.undo.modified):
             return False
-        alert = Adw.AlertDialog(heading="Save changes?",
-                                body="The part has changes that are not saved. They are lost if you close without saving.")
-        alert.add_response("cancel", "_Cancel")
-        alert.add_response("discard", "_Discard")
-        alert.add_response("save", "_Save")
+        alert = Adw.AlertDialog(heading=_("Save changes?"),
+                                body=_("The part has changes that are not saved. They are lost if you close without saving."))
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("discard", _("_Discard"))
+        alert.add_response("save", _("_Save"))
         alert.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
         alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("save")
@@ -557,7 +560,7 @@ class MainWindow(Adw.ApplicationWindow):
         if self.pv is None or self.pv.data is None:
             return
         stem = self.path.stem if self.path else "PART"
-        dlg = Gtk.FileDialog(title="Export Alpha-T Program", initial_name=f"{stem}.PRG")
+        dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{stem}.PRG")
         dlg.save(self, None, self._export_done)
 
     def _export_done(self, dlg, res) -> None:
@@ -568,9 +571,9 @@ class MainWindow(Adw.ApplicationWindow):
         try:
             Path(file.get_path()).write_bytes(self.pv.data)
         except OSError as e:
-            self.toast(f"Export failed: {e}")
+            self.toast(_("Export failed: {error}").format(error=e))
             return
-        self.toast(f"Exported {Path(file.get_path()).name} ({len(self.pv.data)} bytes)")
+        self.toast(_("Exported {name} ({size} bytes)").format(name=Path(file.get_path()).name, size=len(self.pv.data)))
 
     def toast(self, text: str) -> None:
         self.toasts.add_toast(Adw.Toast(title=GLib.markup_escape_text(text), timeout=4))
@@ -660,8 +663,9 @@ class MainWindow(Adw.ApplicationWindow):
                 self._block_lines.append((b.line, last, owner.get(b.label)))
             size = len(self.pv.data) if self.pv.data else 0
             self.program_info.set_label(
-                f"Program {prog.program_number} · {prog.units} · {len(prog.statements)} lines · {size} bytes"
-                + ("" if self.pv.data else " · incomplete (see banner)"))
+                _("Program {number} · {units} · {lines} lines · {size} bytes").format(
+                    number=prog.program_number, units=prog.units, lines=len(prog.statements), size=size)
+                + ("" if self.pv.data else " · " + _("incomplete (see banner)")))
 
     def _highlight_program(self, index: int | None) -> None:
         buf = self.program_view.get_buffer()

@@ -11,6 +11,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 from gi.repository import GLib, GObject, Gtk  # noqa: E402
+from .i18n import _  # noqa: E402
 
 
 class HoldButton(Gtk.Button):
@@ -21,7 +22,7 @@ class HoldButton(Gtk.Button):
         self.hold_seconds = hold_seconds
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
         self.label = Gtk.Label(label=label)
-        self.hint = Gtk.Label(label="Hold to start")
+        self.hint = Gtk.Label(label=_("Hold to start"))
         self.hint.add_css_class("caption")
         self.hint.add_css_class("dim-label")
         self.bar = Gtk.ProgressBar(fraction=0.0)

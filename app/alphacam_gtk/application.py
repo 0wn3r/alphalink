@@ -13,6 +13,7 @@ from gi.repository import Adw, Gdk, Gio, Gtk  # noqa: E402
 
 from . import APP_ID  # noqa: E402
 from .window import MainWindow  # noqa: E402
+from .i18n import _  # noqa: E402
 
 VERSION = "0.1.0"
 
@@ -62,7 +63,8 @@ class Application(Adw.Application):
     def _about(self):
         Adw.AboutDialog(application_name="AlphaLink CAM", application_icon="applications-engineering-symbolic",
                         version=VERSION, developer_name="Eduard",
-                        comments="Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs.",
+                        comments=_("Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs."),
+                        translator_credits=_("translator-credits"),
                         website="https://github.com/0wn3r/alphalink",
                         license_type=Gtk.License.UNKNOWN).present(self.get_active_window())
 
