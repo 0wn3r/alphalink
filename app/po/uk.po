@@ -841,6 +841,9 @@ msgstr "Сенсор"
 msgid "Input Layout"
 msgstr "Режим введення"
 
+msgid "Preferences"
+msgstr "Параметри"
+
 msgid "About AlphaLink CAM"
 msgstr "Про AlphaLink CAM"
 
@@ -910,11 +913,11 @@ msgstr "Додати: {what}"
 msgid "Move operation"
 msgstr "Перемістити операцію"
 
-msgid "Billet size and units. The drawing starts empty."
-msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
+msgid "General"
+msgstr "Загальні"
 
-msgid "New Part"
-msgstr "Нова деталь"
+msgid "New parts"
+msgstr "Нові деталі"
 
 msgid "Units"
 msgstr "Одиниці"
@@ -924,6 +927,24 @@ msgstr "Діаметр заготовки"
 
 msgid "Billet length"
 msgstr "Довжина заготовки"
+
+msgid "First tool"
+msgstr "Перший інструмент"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Takes effect after restarting the app."
+msgstr "Діє після перезапуску застосунку."
+
+msgid "Same as the desktop"
+msgstr "Як у системі"
+
+msgid "Billet size and units. The drawing starts empty."
+msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
+
+msgid "New Part"
+msgstr "Нова деталь"
 
 msgid "_Create"
 msgstr "_Створити"

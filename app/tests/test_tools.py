@@ -66,3 +66,20 @@ class ToolLibraries(unittest.TestCase):
             lib = ToolLibrary([Tool(7, "My insert", nose_radius=0.2)])
             save_library(lib, path)
             self.assertEqual(load_library(path), lib)
+
+
+class Preferences(unittest.TestCase):
+    def test_settings_round_trip(self):
+        from alphacam_gtk.settings import DEFAULTS, Settings
+
+        with tempfile.TemporaryDirectory() as d:
+            path = Path(d) / "settings.json"
+            st = Settings(path)
+            self.assertEqual(st.values, DEFAULTS)
+            st.set("serial_port", "/dev/ttyUSB1")
+            st.set("char_delay_ms", 3.5)
+            again = Settings(path)
+            self.assertEqual((again["serial_port"], again["char_delay_ms"], again["wait_xon"]),
+                             ("/dev/ttyUSB1", 3.5, True))
+            with self.assertRaises(KeyError):
+                st.set("nonsense", 1)

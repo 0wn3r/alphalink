@@ -1,5 +1,5 @@
 """Translations (gettext, domain "alphalink-cam"). The language follows the desktop (LANGUAGE / LC_MESSAGES / LANG);
-`ALPHALINK_LANG=uk` overrides it. Compiled catalogs live in alphacam_gtk/locale/<lang>/LC_MESSAGES/."""
+the Language preference or `ALPHALINK_LANG=uk` overrides it. Compiled catalogs live in alphacam_gtk/locale/<lang>/LC_MESSAGES/."""
 
 from __future__ import annotations
 
@@ -14,6 +14,10 @@ LOCALE_DIR = Path(__file__).with_name("locale")
 
 def _languages() -> list[str] | None:
     forced = os.environ.get("ALPHALINK_LANG")
+    if not forced:
+        from .settings import settings
+
+        forced = settings()["language"]
     return [forced] if forced else None  # None: gettext reads LANGUAGE, LC_ALL, LC_MESSAGES, LANG
 
 
