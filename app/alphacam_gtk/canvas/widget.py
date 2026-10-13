@@ -60,6 +60,12 @@ class LatheCanvas(Gtk.DrawingArea):
         self._fit_pending = True
         self.fit()
 
+    def update(self, project, preview) -> None:
+        """New preview after an edit: keep the view (no refit) and the selection."""
+        self.project, self.preview = project, preview
+        self.segs = segments(preview)
+        self.queue_draw()
+
     def select(self, op_index: int | None) -> None:
         self.selected = op_index
         self.queue_draw()

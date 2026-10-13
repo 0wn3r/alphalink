@@ -12,3 +12,4 @@ window.touch .canvas-zoom button { min-width: 56px; min-height: 56px; }
 .modem-line.success { background: alpha(@success_color, 0.18); }
 .hold-button { padding: 8px 16px; }
 window.touch .hold-button { min-height: 96px; }
+.editor-pane { border-left: 1px solid alpha(currentColor, 0.15); }
