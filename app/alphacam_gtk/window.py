@@ -21,6 +21,7 @@ from .canvas.widget import LatheCanvas  # noqa: E402
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
+from .help import HelpDialog  # noqa: E402
 from .tools_page import ToolsPage, load_library  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 from .settings import settings  # noqa: E402
@@ -227,6 +228,7 @@ class MainWindow(Adw.ApplicationWindow):
         menu.append_section(_("Input Layout"), layout)
         about = Gio.Menu()
         about.append(_("Preferences"), "win.preferences")
+        about.append(_("Help"), "win.help")
         about.append(_("About AlphaLink CAM"), "app.about")
         menu.append_section(None, about)
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
@@ -314,6 +316,7 @@ class MainWindow(Adw.ApplicationWindow):
         add("save", lambda *_: self.save(), ["<Control>s"])
         add("new", lambda *_: self.new_dialog(), ["<Control>n"])
         add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
+        add("help", lambda *_: HelpDialog().present(self), ["F1"])
         add("save-as", lambda *_: self.save_dialog(), ["<Control><Shift>s"])
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
