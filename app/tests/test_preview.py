@@ -775,7 +775,11 @@ class GtkChamferByKeys(unittest.TestCase):
             d.cursor_key("Return")  # the corner nearest the cursor
             spin = [s for p in find(w.canvas, Gtk.Popover) for s in find(p, Gtk.SpinButton)][-1]
             spin.set_value(2)
-            spin.emit("activate")  # Enter in the size field
+            from gi.repository import Gdk
+
+            keys = [c for c in spin.observe_controllers() if isinstance(c, Gtk.EventControllerKey)
+                    and c.get_propagation_phase() == Gtk.PropagationPhase.CAPTURE]
+            keys[-1].emit("key-pressed", Gdk.KEY_Return, 36, 0)  # Enter in the size field (tests/e2e sends a real one)
             out["n"] = len(w.project.geometry)
             app.quit()
             return False

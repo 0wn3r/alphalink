@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from ..i18n import tr
 
+import os
 import time
 from dataclasses import dataclass, field
 from typing import Callable
@@ -198,4 +199,8 @@ def list_ports() -> list[tuple[str, str]]:
         return []
     # legacy /dev/ttyS* without hardware report "n/a"; leave them out
     ports = [(p.device, p.description or p.device) for p in lp.comports() if p.description != "n/a"]
+    # end-to-end tests: only virtual ports (socat ptys) standing in for the lathe, never a real adapter (tests/e2e)
+    test = [d for d in os.environ.get("ALPHALINK_TEST_PORTS", "").split(":") if d]
+    if test:
+        return [(d, "test port") for d in test]
     return sorted(ports, key=lambda p: (not p[0].startswith("/dev/ttyUSB"), p[0]))

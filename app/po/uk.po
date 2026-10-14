@@ -1582,6 +1582,9 @@ msgstr "Додати операцію (C)"
 msgid "Operations"
 msgstr "Операції"
 
+msgid "Drawing"
+msgstr "Креслення"
+
 msgid "Part"
 msgstr "Деталь"
 

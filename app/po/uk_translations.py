@@ -677,4 +677,5 @@ UK = {
 "Tap a corner, or move the cursor near it and press Enter": "Торкніться кута або поставте біля нього курсор і натисніть Enter",
 "Tap two lines, or move the cursor to each and press Enter": "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter",
 "Open the _Training Manual": "Відкрити _навчальний посібник",
+"Drawing": "Креслення",
 }

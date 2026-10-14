@@ -1,7 +1,7 @@
 # Design Review: AlphaLink CAM
 
 Done 2026-10-14 with the Design plugin's critique, accessibility (WCAG 2.1 AA) and UX copy checklists. I looked at every page
-in English and Ukrainian, in dark and light themes, at three window sizes: wide (1368 px), the narrow layout (≤ 900 px)
+in English and Ukrainian, in dark and light themes, at three window sizes: wide (1368 px), the narrow layout (≤ 1000 px since the end-to-end tests; was 900)
 and the small layout (≤ 700 px, touch). Items marked **Fixed** are in the same commit as this file.
 
 ## Overall Impression

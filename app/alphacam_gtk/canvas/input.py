@@ -135,7 +135,10 @@ class InputRouter:
     # --- taps -------------------------------------------------------------------------------------------
 
     def _released(self, gesture, n_press, x, y):
-        if n_press == 2:
+        # GTK counts quick touch taps as a double tap wherever they land; only two taps on one spot are one (quick
+        # taps along a profile with the Line tool are points, found by tests/e2e)
+        last, self._last_tap = getattr(self, "_last_tap", None), (x, y)
+        if n_press >= 2 and last is not None and abs(last[0] - x) + abs(last[1] - y) < 24:
             self.on_fit()
             return
         offset = self._drag.get_offset()

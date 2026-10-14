@@ -178,6 +178,7 @@ class DrawingTools:
             self._toggle_pick(element)
             return
         self.cursor, self.c.cursor = Point(x, z), None
+        self.w.readout.set_label(f"X {x:9.3f}   Z {z:9.3f}")  # a tap shows where it landed, as the pointer does
         if self.construct is not None:
             self._construct_tap(Point(x, z), tol, element)
             return
@@ -677,8 +678,8 @@ class DrawingTools:
         self.c.highlight = {gid} if gid else set()
         self.delete_el.set_visible(gid is not None)
         self.edit_el.set_visible(gid is not None)
-        if gid is None:
-            self.w.readout.set_label(" ")  # not the last selected element any more
+        if gid is None and not self.w.readout.get_label().startswith("X "):
+            self.w.readout.set_label(" ")  # not the last selected element any more (a position stays)
         if gid:
             g = next(g for g in self.w.project.geometry if g.id == gid)
             kind = _("Line") if isinstance(g, Line) else _("Arc")
@@ -813,7 +814,11 @@ class DrawingTools:
             self._apply_corner(tool, corner, spin.get_value(), ang())
 
         ok.connect("clicked", apply)
-        spin.connect("activate", apply)  # keyboard: type the size, Enter applies
+        # keyboard: type the size, Enter applies (a spin button's own Enter only commits the value; capture phase
+        # gets the key before it)
+        enter = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        enter.connect("key-pressed", lambda _c, kv, *_: kv in (Gdk.KEY_Return, Gdk.KEY_KP_Enter) and (apply(), True)[1])
+        spin.add_controller(enter)
         other.append(spin)
         other.append(ok)
         box.append(other)

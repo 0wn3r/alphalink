@@ -40,7 +40,9 @@ class LatheCanvas(Gtk.DrawingArea):
     }
 
     def __init__(self):
-        super().__init__(hexpand=True, vexpand=True, focusable=True, css_classes=["lathe-canvas"])
+        # "application": an interactive surface with its own keys; a named role, so screen readers (and tests/e2e) find it
+        super().__init__(hexpand=True, vexpand=True, focusable=True, css_classes=["lathe-canvas"],
+                         accessible_role=Gtk.AccessibleRole.APPLICATION)
         self.project = None
         self.preview = None
         self.segs = []

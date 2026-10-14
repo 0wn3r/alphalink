@@ -102,11 +102,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.editor.tool_name = self._tool_name
 
         # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
-        # gets narrower, so nothing is cut off (sidebar 260 + Part page ~600 do not fit below 900)
+        # gets narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7
+        # in portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e)
         # below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it
         # is open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
         self._small = False
-        for cond, small in (("max-width: 900sp", False), ("max-width: 700sp", True)):
+        for cond, small in (("max-width: 1000sp", False), ("max-width: 700sp", True)):
             bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(cond))
             bp.add_setter(self.split, "collapsed", True)
             bp.add_setter(self.editor, "width-request", 280)
@@ -178,6 +179,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # part view
         self.canvas = LatheCanvas()
+        self.canvas.update_property([Gtk.AccessibleProperty.LABEL], [_("Drawing")])  # screen readers, tests/e2e
         self.canvas.connect("cursor-moved", self._cursor_moved)
         self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,
                                 valign=Gtk.Align.END)
@@ -322,6 +324,9 @@ class MainWindow(Adw.ApplicationWindow):
 
         self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
                                              min_sidebar_width=260, max_sidebar_width=340)
+        # a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing
+        self.split.connect("notify::collapsed", lambda sp, _p: sp.get_collapsed() and self.project is not None
+                           and sp.set_show_content(True))
         return self.split
 
     @staticmethod
