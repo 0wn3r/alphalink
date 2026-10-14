@@ -637,6 +637,9 @@ msgstr "Розділити дугу: торкніться дуги там, де 
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
 
+msgid "Standard thread: tap the diameter line to thread"
+msgstr "Стандартна різьба: торкніться лінії діаметра для різьби"
+
 msgid "The profile has no outside corner between two lines"
 msgstr "Профіль не має зовнішнього кута між двома лініями"
 
@@ -657,9 +660,6 @@ msgstr[2] "Оброблено {n} кутів"
 
 msgid "The lines at the corners are too short for that size"
 msgstr "Лінії біля кутів закороткі для такого розміру"
-
-msgid "Select the diameter line to thread (a line along Z) first"
-msgstr "Спершу виберіть лінію діаметра для різьби (лінію вздовж Z)"
 
 msgid "The thread table is metric: it needs a part in mm"
 msgstr "Таблиця різьб метрична: потрібна деталь у мм"
@@ -699,6 +699,9 @@ msgstr "Для цих елементів розв’язку немає"
 
 msgid "Tap the one you want (dashed)"
 msgstr "Торкніться потрібного варіанта (пунктир)"
+
+msgid "Tap a line along Z (a diameter)"
+msgstr "Торкніться лінії вздовж Z (діаметра)"
 
 msgid "Tap an arc"
 msgstr "Торкніться дуги"

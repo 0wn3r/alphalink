@@ -1137,7 +1137,7 @@ class DrawingTools:
     def start_construct(self, kind: str) -> None:
         if self.w.project is None:
             return
-        if kind == "thread":
+        if kind == "thread" and self._diameter_line(self.selected_element):
             self.thread_dialog(self.selected_element)
             return
         if kind.startswith("corners-"):
@@ -1157,7 +1157,8 @@ class DrawingTools:
             return
         first = {"tangent": _("Tangent: tap a point, or an arc"), "tangent-angle": _("Tangent at an angle: tap the arc"),
                  "parallel": _("Parallel line: tap the line"), "split": _("Split arc: tap the arc where to split it"),
-                 "blend": _("Blend arc: tap the 1st point, line or arc")}[kind]
+                 "blend": _("Blend arc: tap the 1st point, line or arc"),
+                 "thread": _("Standard thread: tap the diameter line to thread")}[kind]
         self.construct = {"kind": kind, "step": 0, "refs": []}
         self._prompt(first)
 
@@ -1192,15 +1193,21 @@ class DrawingTools:
 
         self._numbers(title, fields, done)
 
+    def _diameter_line(self, gid: str | None):
+        """The element gid if it is a line along Z (a diameter the thread can go on)."""
+        g = self._element(gid) if gid else None
+        if isinstance(g, Line) and abs(g.a.x - g.b.x) < 1e-9 and abs(g.a.z - g.b.z) > 1e-9:
+            return g
+        return None
+
     def thread_dialog(self, gid: str | None) -> None:
         """ISO metric thread on the selected diameter line: size and pitch from the table, the minor-diameter line
         drawn under it, a DIN 76 relief groove at its back end, and the Threading operation."""
         from alphacam.features import METRIC, ThreadSpec, add_thread, coarse, nearest_size
 
         p = self.w.project
-        g = next((e for e in p.geometry if e.id == gid), None) if gid else None
-        if not isinstance(g, Line) or abs(g.a.x - g.b.x) > 1e-9 or abs(g.a.z - g.b.z) < 1e-9:
-            self.w.toast(_("Select the diameter line to thread (a line along Z) first"))
+        g = self._diameter_line(gid)
+        if g is None:
             return
         if p.units == "inch":
             self.w.toast(_("The thread table is metric: it needs a part in mm"))
@@ -1375,6 +1382,12 @@ class DrawingTools:
             return
         kind, ref = st["kind"], self._ref_at(p, tol, element)
         try:
+            if kind == "thread":
+                if not self._diameter_line(element):
+                    raise ValueError(_("Tap a line along Z (a diameter)"))
+                self.cancel_construct()
+                self.thread_dialog(element)
+                return
             if kind == "split":
                 if ref[0] != "arc":
                     raise ValueError(_("Tap an arc"))

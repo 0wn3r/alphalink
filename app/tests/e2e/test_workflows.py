@@ -1032,3 +1032,23 @@ class StandardFeatures(Surface):
         self.press("Apply", "button")
         self.app.find("2 corners done", contains=True, showing=False)
         self.assertEqual(len(self.saved(path).geometry), len(p.geometry) + 2)
+
+    def test_standard_thread_asks_for_the_line_while_drawing(self):
+        """With the Line tool active and nothing selected, Standard Thread asks for the line; the tap picks it and
+        draws nothing."""
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        to_screen = self.calibrate()
+        self.press("Line", "radio button")
+        self.more("thread")
+        self.app.find("tap the diameter line", contains=True, showing=False)
+        time.sleep(0.4)
+        to_screen = self.calibrate()  # the banner moved the drawing down
+        self.s.click(*to_screen(40, -12))
+        self.app.find("Standard Thread", contains=True)
+        self.press("Add", "button")
+        time.sleep(0.6)
+        q = self.saved(path)
+        self.assertEqual(type(q.operations[-1]).__name__, "Thread")
+        self.assertEqual(len(q.geometry), len(p.geometry) + 3 + 1)  # the relief groove and the minor line only
