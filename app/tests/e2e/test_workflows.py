@@ -1018,9 +1018,9 @@ class StandardFeatures(Surface):
         q = self.saved(path)
         thread = q.operations[-1]
         self.assertEqual(type(thread).__name__, "Thread")
-        self.assertEqual(thread.pitch, 4.0)  # M39, the nearest size, coarse
+        self.assertEqual(thread.pitch, 3.0)  # M40, the line's size: fine pitches only, 3 first
         minor = next(g for g in q.geometry if g.id == thread.inner_line)
-        self.assertAlmostEqual(minor.a.x, 39 - 1.22687 * 4, places=2)
+        self.assertAlmostEqual(minor.a.x, 40 - 1.22687 * 3, places=2)
         self.assertEqual(len(q.geometry), len(p.geometry) + 3 + 1)  # the relief groove and the minor line
 
     def test_chamfer_every_outside_corner(self):

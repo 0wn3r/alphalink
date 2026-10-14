@@ -682,9 +682,6 @@ msgstr "Додати операцію нарізання різьби"
 msgid "Standard Thread"
 msgstr "Стандартна різьба"
 
-msgid "On {line}"
-msgstr "На {line}"
-
 msgid "Thread {name}"
 msgstr "Різьба {name}"
 

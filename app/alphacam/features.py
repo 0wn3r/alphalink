@@ -15,7 +15,14 @@ METRIC = {
     18: (2.5, 2.0, 1.5), 20: (2.5, 2.0, 1.5), 22: (2.5, 2.0, 1.5), 24: (3.0, 2.0, 1.5), 27: (3.0, 2.0, 1.5),
     30: (3.5, 2.0, 1.5), 33: (3.5, 2.0), 36: (4.0, 3.0, 2.0), 39: (4.0, 3.0), 42: (4.5, 3.0), 45: (4.5, 3.0),
     48: (5.0, 3.0), 52: (5.0, 4.0, 3.0), 56: (5.5, 4.0), 60: (5.5, 4.0), 64: (6.0, 4.0),
+    40: (3.0, 2.0, 1.5), 50: (3.0, 2.0, 1.5),  # fine pitches only (no coarse M40 or M50 in ISO 261)
 }
+METRIC = dict(sorted(METRIC.items()))
+FINE_ONLY = {40, 50}
+
+
+def coarse(d: float, pitch: float) -> bool:
+    return int(d) not in FINE_ONLY and METRIC.get(int(d), (None,))[0] == pitch
 
 
 @dataclass
@@ -45,8 +52,7 @@ class ThreadSpec:
 
     @property
     def name(self) -> str:
-        coarse = METRIC.get(int(self.d), (None,))[0] == self.pitch
-        return f"M{self.d:g}" if coarse else f"M{self.d:g} × {self.pitch:g}"
+        return f"M{self.d:g}" if coarse(self.d, self.pitch) else f"M{self.d:g} × {self.pitch:g}"
 
 
 def nearest_size(diameter: float) -> int:

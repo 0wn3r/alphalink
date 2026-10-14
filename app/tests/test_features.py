@@ -18,8 +18,9 @@ class Threads(unittest.TestCase):
         self.assertEqual(METRIC[12][0], 1.75)
 
     def test_nearest_size(self):
-        self.assertEqual(nearest_size(39.8), 39)
-        self.assertEqual(nearest_size(41), 42)
+        self.assertEqual(nearest_size(39.2), 39)
+        self.assertEqual(nearest_size(41), 40)
+        self.assertEqual(ThreadSpec(40, 3.0).name, "M40 × 3")  # M40 has fine pitches only
 
     def test_thread_with_relief(self):
         p = part(SHAFT)

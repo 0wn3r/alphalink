@@ -735,7 +735,6 @@ UK = {
 "DIN 76 relief groove": "Канавка для виходу різьби DIN 76",
 "Add a Threading operation": "Додати операцію нарізання різьби",
 "Standard Thread": "Стандартна різьба",
-"On {line}": "На {line}",
 "Thread {name}": "Різьба {name}",
 "{name}: minor Ø{minor:g}, depth {depth:g}": "{name}: внутрішній Ø{minor:g}, глибина {depth:g}",
 "Drawing Context Menu": "Контекстне меню креслення",

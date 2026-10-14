@@ -77,6 +77,7 @@ def run():
      ('13_simulation', lambda: (w._select_op(None), w.sim.goto(0), *[w.sim.step_pass(1) for _ in range(9)]), None),
      ('14_more_menu', lambda: (w.sim.goto(None), d.more.popup()), 'more'),
      ('15_part_settings', lambda: (d.more.popdown(), w.part_settings_dialog()), None),
+     ('18_thread', lambda: (close(), d.set_tool('select'), d.thread_dialog(gid(40,-1,40,-25))), None),
      ('06_pick', lambda: (close(), w._select_op(None), d.start_pick(3), [d._toggle_pick(g.id) for g in w.project.geometry[:3]]), None),
      ('07_groove_thread', lambda: (d.cancel_pick(), groove_part()), None),
      ('08_bore', lambda: bore(), None),
@@ -86,6 +87,7 @@ def run():
      ('17_preferences', lambda: w.preferences_dialog(), None),
      ('11_machine', lambda: (close(), w.stack.set_visible_child_name('machine')), None),
      ('12_send', lambda: w.machine._confirm_send(), None),
+     ('19_safety', lambda: (close(), shaft(), d.set_tool('select'), rough(), w.stack.set_visible_child_name('part'), edit(3, offset_x=-1.0), w._select_op(3)), None),
     ]
     i=[0]
     def step():
@@ -94,6 +96,7 @@ def run():
         name,fn,kind=steps[i[0]]
         try: fn()
         except Exception: print('STEP FAIL',name); traceback.print_exc()
+        w.dismiss_toasts()  # a toast from setting the part up is not what the shot shows
         def cap():
             try:
                 if kind=='more':

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 17:44+0300\n"
+"POT-Creation-Date: 2026-10-14 18:05+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -165,11 +165,11 @@ msgstr ""
 msgid "no blend arc touches this arc there"
 msgstr ""
 
-#: alphacam/features.py:64
+#: alphacam/features.py:70
 msgid "choose a line along Z (a diameter) for the thread"
 msgstr ""
 
-#: alphacam/features.py:69
+#: alphacam/features.py:75
 #, python-brace-format
 msgid "the line is too short for M{d:g} and its relief groove"
 msgstr ""
@@ -1011,11 +1011,6 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:1226
 msgid "Standard Thread"
-msgstr ""
-
-#: alphacam_gtk/drawing_tools.py:1227
-#, python-brace-format
-msgid "On {line}"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:1245

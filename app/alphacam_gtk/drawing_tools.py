@@ -1195,7 +1195,7 @@ class DrawingTools:
     def thread_dialog(self, gid: str | None) -> None:
         """ISO metric thread on the selected diameter line: size and pitch from the table, the minor-diameter line
         drawn under it, a DIN 76 relief groove at its back end, and the Threading operation."""
-        from alphacam.features import METRIC, ThreadSpec, add_thread, nearest_size
+        from alphacam.features import METRIC, ThreadSpec, add_thread, coarse, nearest_size
 
         p = self.w.project
         g = next((e for e in p.geometry if e.id == gid), None) if gid else None
@@ -1212,7 +1212,7 @@ class DrawingTools:
 
         def pitches(*_a):
             d = sizes[size_row.get_selected()]
-            labels = [(_("{p} coarse") if i == 0 else "{p}").format(p=f"{pt:g}") for i, pt in enumerate(METRIC[d])]
+            labels = [(_("{p} coarse") if coarse(d, pt) else "{p}").format(p=f"{pt:g}") for pt in METRIC[d]]
             pitch_row.set_model(Gtk.StringList.new(labels))
             pitch_row.set_selected(0)
 
@@ -1224,7 +1224,7 @@ class DrawingTools:
         for r in (size_row, pitch_row, relief, with_op):
             group.add(r)
         dlg = Adw.AlertDialog(heading=_("Standard Thread"),
-                              body=_("On {line}").format(line=self._element_label(gid)))
+                              body=self._element_label(gid))
         dlg.set_extra_child(group)
         dlg.add_response("cancel", _("_Cancel"))
         dlg.add_response("add", _("_Add"))
