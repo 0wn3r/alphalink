@@ -67,7 +67,7 @@ The tools are in the bar under the drawing.
   - **Split Arc**: tap an arc where it should be split.
   - **Blend Arc…**: tap two points, lines or arcs, give the radius, tap the arc you want.
   - **Mirror Image**: as in ALPHA-T, copies the whole drawing mirrored about the spindle axis (the lower half), then asks whether it is correct; No takes it back.
-  - **Standard Thread…**: on the selected diameter line, or tap the line when asked. Pick an ISO metric size (M6 to M64) and pitch (coarse first); the line goes to the nominal diameter, the minor-diameter line is drawn under it, a DIN 76 relief groove is cut at its back end (it can be switched off), and a Threading operation with its tool change is added.
+  - **Standard Thread…**: on the selected diameter line, or tap the line when asked. Pick the standard (ISO metric, or UNC / UNF inch threads, converted on a mm part), the size (M6 to M64, or 1/4" to 2") and the pitch (coarse first); the line goes to the nominal diameter, the minor-diameter line is drawn under it, a relief groove with DIN 76 proportions is cut at its back end (it can be switched off), and a Threading operation with its tool change is added.
   - **Chamfer Outside Corners…** / **Round Outside Corners…**: one size on every outside corner of the profile at once; change single corners afterwards with Chamfer or Fillet.
 
 ## Operations
