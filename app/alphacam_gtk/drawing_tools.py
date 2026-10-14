@@ -265,6 +265,11 @@ class DrawingTools:
         back to the drawing, so ALPHA-T's letter keys work again (after X the entry has the focus)."""
         if keyval != Gdk.KEY_Escape or self.w.get_visible_dialog() is not None:
             return False
+        bar = getattr(self.w, "program_searchbar", None)
+        if bar is not None and bar.get_search_mode() and self.w.stack.get_visible_child_name() == "program":
+            bar.set_search_mode(False)  # the Program page's search bar closes, as GNOME's do
+            self.w.program_view.grab_focus()
+            return True
         cleared = self.w.dismiss_toasts()
         handled = True
         if self.construct is not None:

@@ -906,3 +906,14 @@ class TouchMore2(Surface):
         yellow = sum(1 for x in range(0, img.width, 2) for y in range(int(80 * k), img.height, 2)
                      if (lambda c: c[0] > 240 and 200 < c[1] < 245 and c[2] < 170)(img.getpixel((x, y))))
         self.assertGreater(yellow, 40, "no highlighted match")  # the "N20" label line, in the match colour
+        from gi.repository import Atspi
+
+        def search_entries():
+            return [e for e in self.app.all(showing=True) if e.get_role_name() == "entry"
+                    and "N20" in (Atspi.Text.get_text(e, 0, -1) if e.get_text_iface() else "")]
+
+        self.assertTrue(search_entries(), "the search entry should be found while open")
+        self.s.key("Escape")  # closes the search bar, as in GNOME apps
+        time.sleep(0.6)
+        self.snap("closed")
+        self.assertFalse(search_entries(), "the search bar is still open")
