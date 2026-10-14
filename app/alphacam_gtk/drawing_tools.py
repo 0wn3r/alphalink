@@ -47,6 +47,13 @@ ENTRY_MODES = {
     "move-inc": N_("Move the cursor by dX,dZ  then Enter"),
     "move-la": N_("Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"),
 }
+# what the command entry says while no command asks for anything: how to use the active tool
+TOOL_HINTS = {
+    "select": N_("Tap an element or an operation; L or A finds the nearest line or arc"),
+    "fillet": N_("Tap a corner, or move the cursor near it and press Enter"),
+    "chamfer": N_("Tap a corner, or move the cursor near it and press Enter"),
+    "corner": N_("Tap two lines, or move the cursor to each and press Enter"),
+}
 RE_COORD = re.compile(r"\s*(@)?\s*(-?\d*\.?\d+)\s*[,; ]\s*(-?\d*\.?\d+)\s*$")
 
 
@@ -72,7 +79,7 @@ class DrawingTools:
         self.palette.set_active_name("select")
         self.palette.connect("notify::active-name", lambda *_: self._palette_changed())
 
-        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(ENTRY_MODES["point"]))
+        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(TOOL_HINTS["select"]))
         self.entry.add_css_class("command-entry")
         self.entry.connect("activate", self._entry_activate)
         entry_keys = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
@@ -145,6 +152,10 @@ class DrawingTools:
         if not isinstance(self.w.get_focus(), Gtk.Editable):
             self.c.grab_focus()  # a tool button keeps no focus: the arrows move the cursor, not between buttons
 
+    def _tool_hint(self) -> str:
+        tool = self.c.tool
+        return _(TOOL_HINTS[tool]) if tool in TOOL_HINTS else _(ENTRY_MODES["arc" if tool == "arc" else "point"])
+
     def set_tool(self, name: str) -> None:
         if self.palette.get_active_name() != name:
             self.palette.set_active_name(name)
@@ -153,7 +164,7 @@ class DrawingTools:
         self.c.tool = name
         self.done.set_visible(name in ("line", "arc"))
         if self.entry_mode == "point":
-            self.entry.set_placeholder_text(_(ENTRY_MODES["arc" if name == "arc" else "point"]))
+            self.entry.set_placeholder_text(self._tool_hint())
         self._select_element(None)
         if name != "select":
             self.w._select_op(None)
@@ -590,7 +601,7 @@ class DrawingTools:
 
     def _ask_done(self) -> None:
         self.entry_mode = "point"
-        self.entry.set_placeholder_text(_(ENTRY_MODES["arc" if self.c.tool == "arc" else "point"]))
+        self.entry.set_placeholder_text(self._tool_hint())
 
     def _entry_activate(self, entry) -> None:
         mode = self.entry_mode

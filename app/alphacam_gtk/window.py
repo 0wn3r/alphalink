@@ -133,7 +133,14 @@ class MainWindow(Adw.ApplicationWindow):
         btn.add_css_class("suggested-action")
         btns.append(new)
         btns.append(btn)
-        page.set_child(btns)
+        child = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, halign=Gtk.Align.CENTER)
+        child.append(btns)
+        # first run: the way into the exercises (a flat button, so the two pills stay the actions)
+        manual = Gtk.Button(label=_("Open the _Training Manual"), use_underline=True, action_name="win.manual-training",
+                            halign=Gtk.Align.CENTER)
+        manual.add_css_class("flat")
+        child.append(manual)
+        page.set_child(child)
         start_menu = Gio.Menu()  # what works without a part: the Machine page (Manual Ops backup), settings, help
         start_menu.append(_("New Part…"), "win.new")
         start_menu.append(_("Open…"), "win.open")
@@ -207,6 +214,8 @@ class MainWindow(Adw.ApplicationWindow):
                                          top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
         self.program_view.add_css_class("program-text")
         self._hl = self.program_view.get_buffer().create_tag("hl", paragraph_background="rgba(53,132,228,0.18)")
+        # each block starts with its label (N10, N20 ...): bold, so the blocks stand out while scrolling
+        self._block_tag = self.program_view.get_buffer().create_tag("block", weight=700)
         tap = Gtk.GestureClick()
         tap.connect("released", self._program_tapped)
         self.program_view.add_controller(tap)
@@ -1151,6 +1160,10 @@ class MainWindow(Adw.ApplicationWindow):
             for b, nxt in zip(blocks, blocks[1:] + [None]):
                 last = (nxt.line - 1) if nxt is not None else len(prog.statements)
                 self._block_lines.append((b.line, last, owner.get(b.label)))
+                ok, it = buf.get_iter_at_line(b.line - 1)  # the block's label line (not the N5xx jump targets)
+                end = it.copy()
+                end.forward_to_line_end()
+                buf.apply_tag(self._block_tag, it, end)
             size = len(self.pv.data) if self.pv.data else 0
             self.program_info.set_label(
                 _("Program {number} · {units} · {lines} lines · {size} bytes").format(

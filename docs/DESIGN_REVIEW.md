@@ -59,9 +59,8 @@ the editor pushed itself off the screen.
 - The editor shows units and meaning under each value ("Finish allowance, radius"). That is where lathe mistakes happen.
 - English and Ukrainian are complete, and both languages fit the layouts.
 
-## Priority Recommendations (open)
+## Priority Recommendations (done 2026-10-14)
 
-1. **Show the active tool's key hint on the drawing bar.** A small label like "Line: X type · D length,angle" next to the
-   entry would teach the keys without tooltips, which a touch user never sees.
-2. **First-run hint.** The empty start screen could link the Training Manual ("New to AlphaLink? Open the Training Manual").
-3. **Program page:** give the line numbers (N10, N20…) a muted colour, so the blocks stand out as you scroll. It's minor.
+1. **The command field says how to use the active tool.** For example, with Fillet it says "Tap a corner, or move the cursor near it and press Enter". Touch users see this too; they never see tooltips. Typed commands still show their own prompt.
+2. **The start screen links the Training Manual** with a flat "Open the Training Manual" button under New Part and Open.
+3. **Program page:** each block's label line (N10, N20 …) is bold, so the blocks stand out as you scroll. The N5xx jump targets stay plain. Bold was chosen over the muted colour first suggested, because a muted label is harder to find.

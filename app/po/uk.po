@@ -322,6 +322,15 @@ msgstr "Перемістити курсор на dX,dZ  і Enter"
 msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
 msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
 
+msgid "Tap an element or an operation; L or A finds the nearest line or arc"
+msgstr "Торкніться елемента або операції; L чи A знаходить найближчу лінію чи дугу"
+
+msgid "Tap a corner, or move the cursor near it and press Enter"
+msgstr "Торкніться кута або поставте біля нього курсор і натисніть Enter"
+
+msgid "Tap two lines, or move the cursor to each and press Enter"
+msgstr "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter"
+
 msgid "_Done"
 msgstr "_Готово"
 
@@ -1554,6 +1563,9 @@ msgstr "_Нова деталь…"
 
 msgid "_Open…"
 msgstr "_Відкрити…"
+
+msgid "Open the _Training Manual"
+msgstr "Відкрити _навчальний посібник"
 
 msgid "New Part…"
 msgstr "Нова деталь…"

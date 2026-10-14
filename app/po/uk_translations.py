@@ -673,4 +673,8 @@ UK = {
 "Chamfer Corner (B)": "Фаска на куті (B)",
 "Trim or Extend Two Lines to Meet (K)": "Обрізати або подовжити дві лінії до перетину (K)",
 "Delete Element (Delete)": "Видалити елемент (Delete)",
+"Tap an element or an operation; L or A finds the nearest line or arc": "Торкніться елемента або операції; L чи A знаходить найближчу лінію чи дугу",
+"Tap a corner, or move the cursor near it and press Enter": "Торкніться кута або поставте біля нього курсор і натисніть Enter",
+"Tap two lines, or move the cursor to each and press Enter": "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter",
+"Open the _Training Manual": "Відкрити _навчальний посібник",
 }
