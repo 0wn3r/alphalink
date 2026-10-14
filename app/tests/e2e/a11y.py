@@ -22,14 +22,14 @@ class App:
         self.origin = (0, 0)  # the window's top left on the screen (Wayland only gives window coordinates)
 
     @classmethod
-    def wait(cls, timeout: float = 30) -> "App":
+    def wait(cls, timeout: float = 30, names: tuple[str, ...] = APP_NAMES) -> "App":
         Atspi.init()
         end = time.time() + timeout
         while time.time() < end:
             desktop = Atspi.get_desktop(0)
             for i in range(desktop.get_child_count()):
                 a = desktop.get_child_at_index(i)
-                if a is not None and (a.get_name() or "") in APP_NAMES and a.get_child_count() > 0:
+                if a is not None and (a.get_name() or "") in names and a.get_child_count() > 0:
                     return cls(a)
             time.sleep(0.5)
         raise TimeoutError("the app did not show up in the accessibility tree")

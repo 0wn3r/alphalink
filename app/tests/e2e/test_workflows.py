@@ -14,6 +14,7 @@ import threading
 import time
 import unittest
 from pathlib import Path
+from shutil import which as shutil_which
 
 from alphacam.model import Arc, Line, Point
 from alphacam.model.project import Billet, Project
@@ -559,3 +560,157 @@ class Rotation(Surface):
         self.snap("landscape")
         tabs = self.app.all("Machine", "page tab")
         self.assertLess(self.app.rect(tabs[0])[1], 120, "the tabs should be back in the header")
+
+
+class FileDialogs(Surface):
+    """The real Open, Save As and Export dialogs: GNOME's file chooser portal (Files, in GNOME 50) answers the
+    Flatpak's requests, as on the desktop."""
+
+    def chooser(self):
+        from .a11y import App
+
+        c = App.wait(15, names=("org.gnome.Nautilus", "xdg-desktop-portal-gnome", "Nautilus"))
+        time.sleep(1.0)
+        return c
+
+    def choose(self, path: Path) -> None:
+        c = self.chooser()
+        self.snap("chooser")
+        self.s.key("ctrl+l")
+        self.s.type(str(path) + "\n")
+        time.sleep(0.8)
+        c.press("Open", "button")
+
+    def save_as(self, name: str) -> None:
+        FileDialogs.chooser(self)
+        self.snap("save-chooser")
+        self.s.key("ctrl+a")
+        self.s.type(name + "\n")
+        time.sleep(1.5)
+
+    def test_open_from_the_dialog(self):
+        path = self.part(with_op(), "opened.alcam")
+        self.launch()
+        self.s.key("ctrl+o")
+        self.choose(path)
+        self.wait_for(lambda: "opened.alcam" in (self.app.acc.get_child_at_index(0).get_name() or ""), 10,
+                      "the part to open")
+        self.snap("opened")
+
+    def test_save_as_and_export(self):
+        """Save As writes the part; Export PRG writes the program (and its .SD1) byte for byte."""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path))
+        self.s.key("shift+ctrl+s")
+        self.save_as("copy.alcam")
+        copy = self.s.root / "home/copy.alcam"
+        self.wait_for(copy.exists, 10, "copy.alcam")
+        self.assertEqual(Project.load(copy).geometry, Project.load(path).geometry)
+        self.s.key("ctrl+e")
+        self.save_as("SHAFT.PRG")
+        prg = self.s.root / "home/SHAFT.PRG"
+        self.wait_for(prg.exists, 10, "SHAFT.PRG")
+        self.assertEqual(prg.read_bytes(), post(p))
+        self.assertTrue((self.s.root / "home/SHAFT.SD1").exists())
+        self.snap("exported")
+
+
+ALPHAT = Path(os.environ.get("ALPHALINK_ALPHAT", Path.home() / "alpha-work/vendor/AlphaT"))
+SAMPLES = Path(__file__).resolve().parents[3] / "samples/alphat_v12"
+GREEN = (85, 255, 85)  # ALPHA-T draws the part profile in EGA light green
+
+
+def alphat_screen(s, drawings: dict[str, Path], name: str):
+    """ALPHA-T (the original DOS program, in DOSBox-X inside the test session, keys through libei) retrieves
+    drawing `name`; returns its 640×480 screen. `drawings`: NAME → .SDG (the .SDT next to it is copied too)."""
+    import shutil
+
+    from PIL import Image
+
+    c = s.root / "dos"
+    at = c / "ALPHA-T"
+    if not at.exists():
+        shutil.copytree(ALPHAT, at)  # a scratch copy: the vendor folder is never touched
+        for f in ("ALPHTZIP.EXE", "ATSETUP.EXE"):
+            (at / f).unlink(missing_ok=True)
+        for d in ("DRAWINGS", "MANOPS", "MACROS", "DXF"):
+            (at / d).mkdir(exist_ok=True)
+        (at / "PORT.CFG").write_text("1")
+    for n, sdg in drawings.items():
+        shutil.copy(sdg, at / f"DRAWINGS/{n}.SDG")
+        shutil.copy(sdg.with_suffix(sdg.suffix[:-1] + ("T" if sdg.suffix.isupper() else "t")), at / f"DRAWINGS/{n}.SDT")
+    conf = s.root / "dos.conf"
+    conf.write_text(f"[sdl]\noutput=surface\n[dosbox]\nmemsize=16\n[cpu]\ncycles=fixed 30000\n[mixer]\nnosound=true\n"
+                    f"[autoexec]\nmount c \"{c}\"\nc:\ncd \\\\ALPHA-T\nALPHA-T\n")
+    env = dict(s.env, SDL_VIDEODRIVER="wayland", SDL_AUDIODRIVER="dummy")
+    p = subprocess.Popen(["dosbox-x", "-conf", str(conf), "-fastlaunch"], env=env, stdin=subprocess.DEVNULL,
+                         stdout=open(s.root / "dos.log", "w"), stderr=subprocess.STDOUT, start_new_session=True)
+    try:
+        time.sleep(6)
+        s.key("Return")  # ALPHA-T: Enter retrieves a drawing
+        time.sleep(2)
+        s.type(name + "\n")
+        time.sleep(5)
+        im = s.grab().convert("RGB")
+    finally:
+        os.killpg(p.pid, 9)  # DOSBox-X does not stop on SIGTERM
+        p.wait(5)
+    w, h = im.size
+    black = Image.eval(im.crop((0, 40, w, h)).convert("L"), lambda v: 255 if v == 0 else 0)
+    x0, y0, x1, y1 = black.getbbox()  # the DOS screen is the only pure black area below the top bar
+    return im.crop((x0, y0 + 40, x0 + 640, y0 + 40 + 480))
+
+
+def green_pixels(im) -> set:
+    """The profile's pixels, relative to its own top left (the DOSBox-X window may land a pixel off)."""
+    pts = {(x, y) for x in range(im.width) for y in range(im.height)
+           if sum(abs(a - b) for a, b in zip(im.getpixel((x, y)), GREEN)) < 60}
+    if not pts:
+        return pts
+    x0, y0 = min(x for x, _ in pts), min(y for _, y in pts)
+    return {(x - x0, y - y0) for x, y in pts}
+
+
+@unittest.skipUnless(ENABLED and ALPHAT.exists() and shutil_which("dosbox-x"), "needs ALPHA-T and dosbox-x")
+class AlphaTReads(Surface):
+    """ALPHA-T itself opens what the app writes."""
+
+    def test_app_written_drawing_looks_like_alpha_t_own(self):
+        """The app's .SDG of the AREA1 shaft and ALPHA-T's own AREA1 drawing show the same part profile."""
+        from alphacam.io.sdg import load_sdg
+        from alphacam.io.sdg_write import save_sdg
+
+        own = SAMPLES / "AREA1_metric.SDG"
+        mine = save_sdg(load_sdg(own), self.s.root / "MINE.SDG")[0]
+        a = alphat_screen(self.s, {"OWN": own}, "OWN")
+        b = alphat_screen(self.s, {"MINE": mine}, "MINE")
+        self.out.mkdir(parents=True, exist_ok=True)
+        a.save(self.out / "alpha-t-own.png")
+        b.save(self.out / "alpha-t-app.png")
+        ga, gb = green_pixels(a), green_pixels(b)
+        self.assertGreater(len(ga), 100)
+        self.assertEqual(ga, gb)
+
+    def test_part_drawn_in_the_app_opens_in_alpha_t(self):
+        """Draw a part by keys, Main Menu ▸ Save as ALPHA-T Drawing… (the real file dialog), open it in ALPHA-T: the
+        profile appears and ALPHA-T's menu is up (no error)."""
+        path = self.part(Project(billet=Billet(80, 60), first_tool=3))
+        self.launch(str(path))
+        self.s.type("x0,0\n30,0\n@0,-20\n50,-20\n50,-40\n80,-40\n")
+        self.s.key("Escape")
+        self.s.type("g30,0\n")
+        self.s.type("b")
+        self.s.key("Return")
+        self.s.type("2\n")
+        self.press("Main Menu", "toggle button")
+        self.app.press(acc=self.app.menu_items()[4])  # Save as ALPHA-T Drawing…
+        FileDialogs.save_as(self, "E2EAPP.SDG")
+        sdg = self.s.root / "home/E2EAPP.SDG"
+        self.wait_for(sdg.exists, 10, "E2EAPP.SDG")
+        im = alphat_screen(self.s, {"E2EAPP": sdg}, "E2EAPP")
+        self.out.mkdir(parents=True, exist_ok=True)
+        im.save(self.out / "alpha-t.png")
+        self.assertGreater(len(green_pixels(im)), 100, "ALPHA-T shows no part profile")
+        menu = im.crop((536, 56, 632, 72))  # "CAD MENU 1": ALPHA-T is up, not stopped on an error
+        self.assertGreater(len({menu.getpixel((x, y)) for x in range(menu.width) for y in range(menu.height)}), 1)

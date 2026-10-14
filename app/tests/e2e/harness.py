@@ -45,6 +45,13 @@ class GnomeSession:
     # --- session -----------------------------------------------------------------------------------------------
 
     def __enter__(self) -> "GnomeSession":
+        try:
+            return self._start()
+        except BaseException:
+            self.__exit__(None, None, None)  # nothing of a half-started session may outlive the test
+            raise
+
+    def _start(self) -> "GnomeSession":
         r = self.root
         run = r / "run"
         for d in ("home", "config", "data", "cache", "state", "run"):
@@ -54,7 +61,8 @@ class GnomeSession:
         for name in MASKED_SERVICES:
             (services / f"{name}.service").write_text(f"[D-BUS Service]\nName={name}\nExec=/bin/false\n")
         env = {k: v for k, v in os.environ.items()
-               if not k.startswith(("DBUS_", "WAYLAND_", "DISPLAY", "XDG_", "PIPEWIRE", "GNOME_", "SESSION_"))}
+               if not k.startswith(("DBUS_", "WAYLAND_", "DISPLAY", "XDG_", "PIPEWIRE", "GNOME_", "SESSION_",
+                                    "GDK_", "GSK_"))}  # tests/__init__ points GTK at its Xvfb: not for this session
         env.update(HOME=str(r / "home"), XDG_CONFIG_HOME=str(r / "config"), XDG_DATA_HOME=str(r / "data"),
                    XDG_CACHE_HOME=str(r / "cache"), XDG_STATE_HOME=str(r / "state"), XDG_RUNTIME_DIR=str(run),
                    FLATPAK_USER_DIR=str(REAL_FLATPAK), XDG_SESSION_TYPE="wayland", XDG_CURRENT_DESKTOP="GNOME",
@@ -142,7 +150,7 @@ class GnomeSession:
             if mark in env:
                 try:
                     os.kill(int(pid), signal.SIGTERM)
-                except ProcessLookupError:
+                except (ProcessLookupError, PermissionError):  # gone, or sandboxed (the Flatpak's own bwrap)
                     pass
 
     def _spawn(self, cmd: list[str], log: str | None = None) -> subprocess.Popen:

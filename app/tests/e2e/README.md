@@ -6,8 +6,9 @@ for half the screen.
 
 ```
 flatpak-builder --user --install ...            # build and install the app first (see docs/HANDOVER.md)
-python3 -m tests.e2e.run                        # all tests, each in its own process (about 5 minutes)
+python3 -m tests.e2e.run                        # all 29 tests, each in its own process, 3 at once (about 5 minutes)
 python3 -m tests.e2e.run Touch SmallWindow      # some classes or test names
+python3 -m tests.e2e.run -j 1 FileDialogs       # one at a time
 ```
 
 Screenshots of every step go to `app/e2e-out/<test>/` (git-ignored). Set `ALPHALINK_E2E_CURSOR=1` to draw
@@ -39,6 +40,41 @@ the pointer in them.
   `ALPHALINK_TEST_PORTS=<pty>`, which makes it offer only that port, never a real adapter. The test checks that
   the program arrives byte for byte.
 
+## What they cover
+
+- **Keyboard:**
+  - Training exercise 1: drawing, chamfer and fillet by keys.
+  - The cursor keys against a resting mouse.
+  - Undo and redo.
+  - The simulation pass by pass.
+- **Mouse:**
+  - Exercise 2: the + menu, and the Program page against the posted program.
+  - The main menu order and the Keyboard Shortcuts window.
+- **Touch (libei touchscreen):**
+  - Line by taps and the on-screen keypad.
+  - Picking a contour by taps.
+  - Touch Lock.
+  - One-finger pan and two-finger pinch zoom.
+  - An editor switch.
+  - The hold-to-send button.
+- **Surface layouts:**
+  - Half screen (the editor takes the page).
+  - Portrait.
+  - The real 200 % scale (a 2736×1824 monitor).
+  - Turning the tablet while the app runs (Mutter's DisplayConfig API).
+- **Files:** the real Open, Save As and Export dialogs (GNOME's file chooser portal), with the exported program
+  checked byte for byte.
+- **The lathe, faked:**
+  - A socat pty with a fake control: the program arrives byte for byte.
+  - Nothing goes out before DC1.
+  - DC3 (0x93 and 0x13) stops the send within 10 characters (FANUC alarm 087), and DC1 resumes it.
+- **ALPHA-T itself (local only):** the DOS program in DOSBox-X inside the session, driven through libei.
+  - It opens the app's .SDG and shows the same profile as for its own drawing.
+  - A part drawn in the app and saved with Save as ALPHA-T Drawing… opens without an error.
+  - These tests need `~/alpha-work/vendor/AlphaT`, or `ALPHALINK_ALPHAT=<dir>`, and dosbox-x. They use a scratch
+    copy, so the vendor folder is never touched.
+- **English and Ukrainian.**
+
 ## Bugs these tests found (2026-10-14)
 
 - Enter in the chamfer/fillet size field did not apply the size. A spin button's Enter only commits the value.
@@ -49,3 +85,8 @@ the pointer in them.
 - With libei input: a pointer that had entered the drawing but not moved since counted as sitting at 0,0. The next
   motion event GTK sent then took the cursor back from the arrow keys, and the read-out showed the pointer while the
   cross showed the key cursor.
+- Touch Lock never blocked anything: PyGObject hands EventControllerLegacy handlers no GdkEvent, so the guard
+  raised and every touch went through.
+- Not ours, and still open upstream: GTK 4 (4.22 and the GNOME 51 runtime) leaves libadwaita's AdwSpinRow out of the
+  accessibility tree. The same happens in a minimal app. Screen readers cannot reach the editor's number rows, so the
+  tests use the rows' switches instead.
