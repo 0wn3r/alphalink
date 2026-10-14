@@ -21,18 +21,18 @@ from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action, key_char  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
 CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
-                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc… (O)"), "blend"),
+                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc… (Key O)"), "blend"),
                   (N_("Mirror Image"), "mirror")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 # tooltips with the one-letter keys (hit_keys.py)
 TOOL_TIPS = {
-    "select": N_("Select an element or an operation. L / A: select the nearest line / arc"),
-    "line": N_("Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the cursor"),
-    "arc": N_("Draw an arc: start, a point on the arc, end (W)"),
-    "fillet": N_("Round a corner. F: radius at the corner nearest the cursor"),
-    "chamfer": N_("Chamfer a corner (B)"),
-    "corner": N_("Trim or extend two lines to meet (K)"),
+    "select": N_("Select an element or an operation. Press L or A to select the nearest line or arc"),
+    "line": N_("Draw lines. Press X to type X,Z, D to type length and angle, + to draw by taps, S to start at the cursor"),
+    "arc": N_("Draw an arc: start, a point on the arc, end (key W)"),
+    "fillet": N_("Round a corner. Press F to round the corner nearest the cursor"),
+    "chamfer": N_("Chamfer a corner (key B)"),
+    "corner": N_("Trim or extend two lines to meet (key K)"),
 }
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
@@ -82,10 +82,10 @@ class DrawingTools:
                                tooltip_text=_("Finish Line (Esc)"))
         self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
-        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del or -)"),
+        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Delete or Minus Key)"),
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
-        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (E)"), visible=False)
+        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (Key E)"), visible=False)
         self.edit_el.connect("clicked", lambda *_: self.edit_selected_element())
 
         self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
@@ -306,7 +306,7 @@ class DrawingTools:
             else:
                 self.set_tool("select")
                 self._select_element(gid)
-                self.w.toast(_("{what} found: - or Delete erases it").format(what=gid))
+                self.w.toast(_("{what} found. Press Delete or minus to erase it").format(what=gid))
         elif action == "erase":
             self.delete_selected_element()
         elif action == "radius":
@@ -323,7 +323,7 @@ class DrawingTools:
             if self.selected_element:
                 self.edit_selected_element()
             else:
-                self.w.toast(_("Select a line or arc first (L / A finds the nearest)"))
+                self.w.toast(_("Select a line or arc first, or press L or A to find the nearest"))
         elif action in ("measure-xz", "measure-la"):
             self.start_measure(action[-2:])
         elif action == "text":

@@ -699,5 +699,5 @@ class GtkEditKeyAndMessages(unittest.TestCase):
         self.assertTrue(out["dialog"])
         self.assertTrue(out["esc"])
         self.assertEqual(out["left"], 0)
-        self.assertIn("(K)", out["tip"])
+        self.assertIn("(key K)", out["tip"])
         self.assertIn("blend", str(out["blend"]))

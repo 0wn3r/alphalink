@@ -156,7 +156,7 @@ class MainWindow(Adw.ApplicationWindow):
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
             add_menu.append_item(item)
         self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
-                                            tooltip_text=_("Add Operation (C)"))
+                                            tooltip_text=_("Add Operation (Key C)"))
         side_header.pack_start(self.add_op_button)
         side.add_top_bar(side_header)
         side.set_content(side_scroll)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 10:10+0300\n"
+"POT-Creation-Date: 2026-10-14 10:21+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -396,7 +396,7 @@ msgid "Tangent at an Angle…"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:24
-msgid "Blend Arc… (O)"
+msgid "Blend Arc… (Key O)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:24
@@ -439,29 +439,31 @@ msgid "Corner"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:30
-msgid "Select an element or an operation. L / A: select the nearest line / arc"
+msgid ""
+"Select an element or an operation. Press L or A to select the nearest line "
+"or arc"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:31
 msgid ""
-"Draw lines. X: type X,Z   D: length,angle   +: by taps   S: start at the "
-"cursor"
+"Draw lines. Press X to type X,Z, D to type length and angle, + to draw by "
+"taps, S to start at the cursor"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:32
-msgid "Draw an arc: start, a point on the arc, end (W)"
+msgid "Draw an arc: start, a point on the arc, end (key W)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:33
-msgid "Round a corner. F: radius at the corner nearest the cursor"
+msgid "Round a corner. Press F to round the corner nearest the cursor"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:34
-msgid "Chamfer a corner (B)"
+msgid "Chamfer a corner (key B)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:35
-msgid "Trim or extend two lines to meet (K)"
+msgid "Trim or extend two lines to meet (key K)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:43
@@ -497,11 +499,11 @@ msgid "Finish Line (Esc)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:85
-msgid "Delete Element (Del or -)"
+msgid "Delete Element (Delete or Minus Key)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:88
-msgid "Edit Element (E)"
+msgid "Edit Element (Key E)"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:91
@@ -565,11 +567,11 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:309
 #, python-brace-format
-msgid "{what} found: - or Delete erases it"
+msgid "{what} found. Press Delete or minus to erase it"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:326
-msgid "Select a line or arc first (L / A finds the nearest)"
+msgid "Select a line or arc first, or press L or A to find the nearest"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:334
@@ -2213,7 +2215,7 @@ msgid "Open Machine Page"
 msgstr ""
 
 #: alphacam_gtk/window.py:159
-msgid "Add Operation (C)"
+msgid "Add Operation (Key C)"
 msgstr ""
 
 #: alphacam_gtk/window.py:163
