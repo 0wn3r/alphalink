@@ -72,3 +72,42 @@ class Corners(unittest.TestCase):
     def test_too_big_is_skipped(self):
         p = part(SHAFT)
         self.assertEqual(all_corners(p, "chamfer", 30), 0)
+
+
+class InchThreads(unittest.TestCase):
+    def test_unified_dimensions(self):
+        from alphacam.features import nearest, sizes, spec
+
+        t = spec("UNC", "1/2", 0, "inch")
+        self.assertEqual((t.d, t.name), (0.5, "1/2-13 UNC"))
+        self.assertAlmostEqual(t.pitch, 1 / 13)
+        self.assertEqual(t.minor, round(0.5 - 1.19078 / 13, 4))
+        self.assertEqual(spec("UNF", "1/2").name, "1/2-20 UNF")
+        self.assertNotIn("2", sizes("UNF"))  # no UNF above 1-1/2
+        self.assertEqual(nearest("UNC", 12.6), "1/2")  # a mm drawing
+        self.assertEqual(nearest("UNC", 0.74, "inch"), "3/4")
+
+    def test_converted_between_units(self):
+        from alphacam.features import spec
+
+        t = spec("UNC", "1", 0, "mm")  # 1-8 UNC on a mm part
+        self.assertEqual((t.d, round(t.pitch, 6)), (25.4, 3.175))
+        m = spec("M", 40, 2, "inch")  # M40 x 1.5 on an inch part
+        self.assertEqual(m.name, "M40 × 1.5")
+        self.assertAlmostEqual(m.pitch, 1.5 / 25.4)
+
+    def test_inch_part(self):
+        from alphacam.features import spec
+        from alphacam.model.project import Billet, Project
+
+        p = Project(billet=Billet(2, 3), first_tool=3, units="inch")
+        pts = [(0, 0), (0.5, 0), (0.5, -1.0), (1.0, -1.0)]
+        p.geometry += [Line(Point(*a), Point(*b)) for a, b in zip(pts, pts[1:])]
+        for i, g in enumerate(p.geometry):
+            g.id = f"g{i}"
+        t = spec("UNC", "1/2", 0, "inch")
+        minor = add_thread(p, "g1", t)
+        m = next(g for g in p.geometry if g.id == minor)
+        self.assertEqual(m.a, Point(t.minor, 0))
+        self.assertIn(Point(t.relief_diameter, round(-1.0 + t.relief_width, 3)),
+                      [g.a for g in p.geometry] + [g.b for g in p.geometry])

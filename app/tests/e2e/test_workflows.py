@@ -1052,3 +1052,22 @@ class StandardFeatures(Surface):
         q = self.saved(path)
         self.assertEqual(type(q.operations[-1]).__name__, "Thread")
         self.assertEqual(len(q.geometry), len(p.geometry) + 3 + 1)  # the relief groove and the minor line only
+
+    def test_inch_part_gets_a_unified_thread(self):
+        p = Project(billet=Billet(2, 3), first_tool=3, units="inch")
+        pts = [(0, 0), (0.5, 0), (0.5, -1.0), (1.0, -1.0)]
+        p.geometry += [Line(Point(*a), Point(*b)) for a, b in zip(pts, pts[1:])]
+        for i, g in enumerate(p.geometry):
+            g.id = f"g{i}"
+        path = self.part(p)
+        self.launch(str(path))
+        to_screen = self.calibrate()
+        self.s.click(*to_screen(0.5, -0.5))  # selects g1, the Ø1/2 diameter
+        time.sleep(0.4)
+        self.more("thread")
+        self.app.find("Standard Thread", contains=True)
+        self.snap("dialog")
+        self.press("Add", "button")
+        self.app.find("1/2-13 UNC", contains=True, showing=False)  # the toast
+        q = self.saved(path)
+        self.assertAlmostEqual(q.operations[-1].pitch, 1 / 13, places=6)

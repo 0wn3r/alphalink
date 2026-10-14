@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 18:18+0300\n"
+"POT-Creation-Date: 2026-10-14 18:22+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -165,13 +165,13 @@ msgstr ""
 msgid "no blend arc touches this arc there"
 msgstr ""
 
-#: alphacam/features.py:70
+#: alphacam/features.py:131
 msgid "choose a line along Z (a diameter) for the thread"
 msgstr ""
 
-#: alphacam/features.py:75
+#: alphacam/features.py:136
 #, python-brace-format
-msgid "the line is too short for M{d:g} and its relief groove"
+msgid "the line is too short for {name} and its relief groove"
 msgstr ""
 
 #: alphacam/io/sd1.py:142
@@ -455,8 +455,8 @@ msgstr ""
 msgid "Circle…"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:23 alphacam_gtk/drawing_tools.py:1408
-#: alphacam_gtk/drawing_tools.py:1423
+#: alphacam_gtk/drawing_tools.py:23 alphacam_gtk/drawing_tools.py:1420
+#: alphacam_gtk/drawing_tools.py:1435
 msgid "Tangent"
 msgstr ""
 
@@ -476,7 +476,7 @@ msgstr ""
 msgid "Split Arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:1264
+#: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:1276
 msgid "Mirror Image"
 msgstr ""
 
@@ -613,8 +613,8 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:127 alphacam_gtk/drawing_tools.py:544
 #: alphacam_gtk/drawing_tools.py:564 alphacam_gtk/drawing_tools.py:973
-#: alphacam_gtk/drawing_tools.py:1236 alphacam_gtk/drawing_tools.py:1286
-#: alphacam_gtk/drawing_tools.py:1314 alphacam_gtk/machine.py:46
+#: alphacam_gtk/drawing_tools.py:1249 alphacam_gtk/drawing_tools.py:1298
+#: alphacam_gtk/drawing_tools.py:1326 alphacam_gtk/machine.py:46
 #: alphacam_gtk/machine.py:282 alphacam_gtk/machine.py:350
 #: alphacam_gtk/machine.py:385 alphacam_gtk/tools_page.py:179
 #: alphacam_gtk/window.py:511 alphacam_gtk/window.py:924
@@ -709,7 +709,7 @@ msgstr ""
 msgid "Height"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:545 alphacam_gtk/drawing_tools.py:1237
+#: alphacam_gtk/drawing_tools.py:545 alphacam_gtk/drawing_tools.py:1250
 msgid "_Add"
 msgstr ""
 
@@ -860,7 +860,7 @@ msgid "Start Z"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:956 alphacam_gtk/drawing_tools.py:1152
-#: alphacam_gtk/drawing_tools.py:1180 alphacam_gtk/drawing_tools.py:1445
+#: alphacam_gtk/drawing_tools.py:1180 alphacam_gtk/drawing_tools.py:1457
 #: alphacam_gtk/window.py:503
 msgid "Radius"
 msgstr ""
@@ -874,7 +874,7 @@ msgid "Move connected ends too"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:974 alphacam_gtk/drawing_tools.py:1053
-#: alphacam_gtk/drawing_tools.py:1315 alphacam_gtk/window.py:1005
+#: alphacam_gtk/drawing_tools.py:1327 alphacam_gtk/window.py:1005
 msgid "_Apply"
 msgstr ""
 
@@ -889,7 +889,7 @@ msgid "Radius at {point}"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:1019 alphacam_gtk/drawing_tools.py:1177
-#: alphacam_gtk/drawing_tools.py:1406
+#: alphacam_gtk/drawing_tools.py:1418
 msgid "Angle"
 msgstr ""
 
@@ -964,7 +964,7 @@ msgstr ""
 msgid "Chamfer Outside Corners"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1177 alphacam_gtk/drawing_tools.py:1216
+#: alphacam_gtk/drawing_tools.py:1177 alphacam_gtk/drawing_tools.py:1215
 msgid "Size"
 msgstr ""
 
@@ -983,113 +983,130 @@ msgstr[1] ""
 msgid "The lines at the corners are too short for that size"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1213
-msgid "The thread table is metric: it needs a part in mm"
+#: alphacam_gtk/drawing_tools.py:1212
+msgid "ISO metric"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1218 alphacam_gtk/op_editor.py:37
+#: alphacam_gtk/drawing_tools.py:1212
+msgid "UNC (inch, coarse)"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:1212
+msgid "UNF (inch, fine)"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:1213
+msgid "Standard"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:1216 alphacam_gtk/op_editor.py:37
 #: alphacam_gtk/report.py:85
 msgid "Pitch"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1222
+#: alphacam_gtk/drawing_tools.py:1230
 #, python-brace-format
 msgid "{p} coarse"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1228
-msgid "At the back end of the line"
+#: alphacam_gtk/drawing_tools.py:1233
+#, python-brace-format
+msgid "{n} threads per inch"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1228
-msgid "DIN 76 relief groove"
+#: alphacam_gtk/drawing_tools.py:1240
+msgid "DIN 76 proportions, at the back end of the line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1229
+#: alphacam_gtk/drawing_tools.py:1240
+msgid "Relief groove"
+msgstr ""
+
+#: alphacam_gtk/drawing_tools.py:1242
 msgid "Add a Threading operation"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1233
+#: alphacam_gtk/drawing_tools.py:1246
 msgid "Standard Thread"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1252
+#: alphacam_gtk/drawing_tools.py:1264
 #, python-brace-format
 msgid "Thread {name}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1255
+#: alphacam_gtk/drawing_tools.py:1267
 #, python-brace-format
 msgid "{name}: minor Ø{minor:g}, depth {depth:g}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1270
+#: alphacam_gtk/drawing_tools.py:1282
 msgid "_No, Take It Back"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1271
+#: alphacam_gtk/drawing_tools.py:1283
 msgid ""
 "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1353
+#: alphacam_gtk/drawing_tools.py:1365
 msgid "No solution for these elements"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1361
+#: alphacam_gtk/drawing_tools.py:1373
 msgid "Tap the one you want (dashed)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1387
+#: alphacam_gtk/drawing_tools.py:1399
 msgid "Tap a line along Z (a diameter)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1393 alphacam_gtk/drawing_tools.py:1405
-#: alphacam_gtk/drawing_tools.py:1419
+#: alphacam_gtk/drawing_tools.py:1405 alphacam_gtk/drawing_tools.py:1417
+#: alphacam_gtk/drawing_tools.py:1431
 msgid "Tap an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1394
+#: alphacam_gtk/drawing_tools.py:1406
 msgid "Split arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1399
+#: alphacam_gtk/drawing_tools.py:1411
 msgid "Tap a line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1400
+#: alphacam_gtk/drawing_tools.py:1412
 msgid "Distance"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1400
+#: alphacam_gtk/drawing_tools.py:1412
 msgid "Parallel Line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1402
+#: alphacam_gtk/drawing_tools.py:1414
 msgid "Parallel line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1406
+#: alphacam_gtk/drawing_tools.py:1418
 msgid "Tangent at an Angle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1411
+#: alphacam_gtk/drawing_tools.py:1423
 msgid "Tap a point or an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1414
+#: alphacam_gtk/drawing_tools.py:1426
 msgid "Tangent: now tap the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1427
+#: alphacam_gtk/drawing_tools.py:1439
 msgid "Blend arc: now the 2nd point, line or arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1443
+#: alphacam_gtk/drawing_tools.py:1455
 msgid "Blend arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1445 alphacam_gtk/shortcuts.py:35
+#: alphacam_gtk/drawing_tools.py:1457 alphacam_gtk/shortcuts.py:35
 msgid "Blend Arc"
 msgstr ""
 

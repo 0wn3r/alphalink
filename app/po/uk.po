@@ -112,8 +112,8 @@ msgstr "дуга сполучення не торкається цієї дуг�
 msgid "choose a line along Z (a diameter) for the thread"
 msgstr "для різьби виберіть лінію вздовж Z (діаметр)"
 
-msgid "the line is too short for M{d:g} and its relief groove"
-msgstr "лінія закоротка для M{d:g} і її канавки для виходу різьби"
+msgid "the line is too short for {name} and its relief groove"
+msgstr "лінія закоротка для {name} і її канавки для виходу різьби"
 
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
@@ -661,8 +661,17 @@ msgstr[2] "Оброблено {n} кутів"
 msgid "The lines at the corners are too short for that size"
 msgstr "Лінії біля кутів закороткі для такого розміру"
 
-msgid "The thread table is metric: it needs a part in mm"
-msgstr "Таблиця різьб метрична: потрібна деталь у мм"
+msgid "ISO metric"
+msgstr "Метрична ISO"
+
+msgid "UNC (inch, coarse)"
+msgstr "UNC (дюймова, основна)"
+
+msgid "UNF (inch, fine)"
+msgstr "UNF (дюймова, дрібна)"
+
+msgid "Standard"
+msgstr "Стандарт"
 
 msgid "Pitch"
 msgstr "Крок"
@@ -670,11 +679,14 @@ msgstr "Крок"
 msgid "{p} coarse"
 msgstr "{p} основний"
 
-msgid "At the back end of the line"
-msgstr "На задньому кінці лінії"
+msgid "{n} threads per inch"
+msgstr "{n} ниток на дюйм"
 
-msgid "DIN 76 relief groove"
-msgstr "Канавка для виходу різьби DIN 76"
+msgid "DIN 76 proportions, at the back end of the line"
+msgstr "Пропорції DIN 76, на задньому кінці лінії"
+
+msgid "Relief groove"
+msgstr "Канавка для виходу різьби"
 
 msgid "Add a Threading operation"
 msgstr "Додати операцію нарізання різьби"

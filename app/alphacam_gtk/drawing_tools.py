@@ -1201,34 +1201,47 @@ class DrawingTools:
         return None
 
     def thread_dialog(self, gid: str | None) -> None:
-        """ISO metric thread on the selected diameter line: size and pitch from the table, the minor-diameter line
-        drawn under it, a DIN 76 relief groove at its back end, and the Threading operation."""
-        from alphacam.features import METRIC, ThreadSpec, add_thread, coarse, nearest_size
+        """A standard thread on the selected diameter line: ISO metric, UNC or UNF, size and pitch from the table,
+        the minor-diameter line drawn under it, a relief groove at its back end, and the Threading operation."""
+        from alphacam.features import STANDARDS, add_thread, coarse, nearest, pitches, sizes, spec
 
         p = self.w.project
         g = self._diameter_line(gid)
         if g is None:
             return
-        if p.units == "inch":
-            self.w.toast(_("The thread table is metric: it needs a part in mm"))
-            return
-        sizes = sorted(METRIC)
-        size_row = Adw.ComboRow(title=_("Size"), model=Gtk.StringList.new([f"M{d}" for d in sizes]))
-        size_row.set_selected(sizes.index(nearest_size(g.a.x)))
+        names = {"M": _("ISO metric"), "UNC": _("UNC (inch, coarse)"), "UNF": _("UNF (inch, fine)")}
+        std_row = Adw.ComboRow(title=_("Standard"), model=Gtk.StringList.new([names[k] for k in STANDARDS]))
+        std_row.set_selected(1 if p.units == "inch" else 0)
+        size_row = Adw.ComboRow(title=_("Size"))
         pitch_row = Adw.ComboRow(title=_("Pitch"))
+        state = {}
 
-        def pitches(*_a):
-            d = sizes[size_row.get_selected()]
-            labels = [(_("{p} coarse") if coarse(d, pt) else "{p}").format(p=f"{pt:g}") for pt in METRIC[d]]
+        def standard_changed(*_a):
+            std = STANDARDS[std_row.get_selected()]
+            state["std"], state["sizes"] = std, sizes(std)
+            labels = [f"M{d}" if std == "M" else f'{d}"' for d in state["sizes"]]
+            size_row.set_model(Gtk.StringList.new(labels))
+            size_row.set_selected(state["sizes"].index(nearest(std, g.a.x, p.units)))
+            size_changed()
+
+        def size_changed(*_a):
+            std, size = state["std"], state["sizes"][size_row.get_selected()]
+            if std == "M":
+                labels = [(_("{p} coarse") if coarse(size, pt) else "{p}").format(p=f"{pt:g}")
+                          for pt in pitches(std, size)]
+            else:
+                labels = [_("{n} threads per inch").format(n=f"{t:g}") for t in pitches(std, size)]
             pitch_row.set_model(Gtk.StringList.new(labels))
             pitch_row.set_selected(0)
 
-        size_row.connect("notify::selected", pitches)
-        pitches()
-        relief = Adw.SwitchRow(title=_("DIN 76 relief groove"), subtitle=_("At the back end of the line"), active=True)
+        size_row.connect("notify::selected", lambda *_a: size_row.get_model() and size_changed())
+        std_row.connect("notify::selected", standard_changed)
+        standard_changed()
+        relief = Adw.SwitchRow(title=_("Relief groove"), subtitle=_("DIN 76 proportions, at the back end of the line"),
+                               active=True)
         with_op = Adw.SwitchRow(title=_("Add a Threading operation"), active=True)
         group = Adw.PreferencesGroup()
-        for r in (size_row, pitch_row, relief, with_op):
+        for r in (std_row, size_row, pitch_row, relief, with_op):
             group.add(r)
         dlg = Adw.AlertDialog(heading=_("Standard Thread"),
                               body=self._element_label(gid))
@@ -1242,18 +1255,17 @@ class DrawingTools:
         def response(_d, r):
             if r != "add":
                 return
-            d = sizes[size_row.get_selected()]
-            spec = ThreadSpec(float(d), METRIC[d][pitch_row.get_selected()])
+            t = spec(state["std"], state["sizes"][size_row.get_selected()], pitch_row.get_selected(), p.units)
 
             def edit(q):
-                add_thread(q, gid, spec, relief=relief.get_active())
+                add_thread(q, gid, t, relief=relief.get_active())
                 if with_op.get_active():
-                    self.w.insert_op(q, len(q.operations), "thread", pitch=spec.pitch)
-            if self.w.apply_edit(_("Thread {name}").format(name=spec.name), edit):
+                    self.w.insert_op(q, len(q.operations), "thread", pitch=t.pitch)
+            if self.w.apply_edit(_("Thread {name}").format(name=t.name), edit):
                 self.w.refresh()
                 self._select_element(None)
                 self.w.toast(_("{name}: minor Ø{minor:g}, depth {depth:g}").format(
-                    name=spec.name, minor=spec.minor, depth=spec.depth))
+                    name=t.name, minor=t.minor, depth=t.depth))
 
         dlg.connect("response", response)
         dlg.present(self.w)
