@@ -1121,3 +1121,22 @@ Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there
   retrieved drawing are unusable. Only freshly drawn parts give correct programs. App-written .SDG files load and
   redraw in ALPHA-T (APPMET2, APPARC, APPBIL80); a finish pass made on APPMET2 is byte-identical to the same pass on
   ALPHA-T's own MET2.
+
+## Progress 40 (2026-10-14): first Manual Ops backup from the 400T, and what a restore sends
+* Backup (lathe -> PC, the app's Back Up Manual Ops, 7E2 9600): 4871 bytes in ~40 s, 25 operations. The control
+  sends **DC2** first and **DC4** last (as the Power Mate 0 manual says for punch output) and **no '%' at all**:
+  `12 | O1001 LF ... M29 ... 25 x "G65P63A..B..C..I..J..K..I.." ... M30 | 14`. Every EOB is
+  `LF NUL NUL NUL LF LF NUL NUL NUL CR LF` (feed characters and CR from the control's EOB/feed settings). It pauses
+  after each operation (the lathe shows the program number), several seconds each. The first app version stopped
+  at a 10 s pause and threw the bytes away; the app now ends at DC4 or the second '%', has no idle limit, and keeps
+  partial data (Stop and Keep).
+* So "AMANOPS/ATMANOP stores until the 2nd '%'" cannot be the end condition on this lathe. In ATMANOP.EXE the only
+  `cmp al,25h` are in the C library's printf; there is no `cmp al,14h`. The DOS module most likely ended on a key
+  (Esc) or a timeout; not checked further.
+* Restore (PC -> lathe) sends the file as saved (ATMANOP LOAD did the same: raw bytes, parity table, LF kept).
+  FANUC reader rules (Series 21 operator's manual B-62704EN/03, ch. 12.1 and appendix A): NUL and CR are not
+  registered; codes not in the ISO table (DC2, DC4) are ignored when their parity is right (the UART adds even
+  parity on 7E2); everything before the first LF is label-skipped. The control's own output is therefore valid
+  input. Not yet seen on the machine: whether the Harrison restore stops at M30 without a '%' (reading normally
+  ends at '%'), and whether it replaces an existing O1001. Try it only with this lathe's own backup, after a fresh
+  backup, and watch the screen; Reset ends a read that waits.
