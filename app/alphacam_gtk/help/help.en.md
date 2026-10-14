@@ -117,7 +117,7 @@ The buttons under the drawing step through the toolpath: first move, previous pa
 Connect the serial cable, then on the Machine page:
 
 - **Send CAM program**: on the lathe press the CAM key, choose 4 "LOAD CAM FILE" and touch the ← arrow. Then hold **Send to the Lathe** in the app until it fills, check the summary and confirm.
-- **Back up Manual Ops**: start the backup in the app first. Then on the lathe, in Manual Ops, touch the ops file icon, choose 1 "OP. SAVE/RESTORE" and touch the → arrow.
+- **Back up Manual Ops**: start the backup in the app first. Then on the lathe, in Manual Ops, touch the ops file icon, choose 1 "OP. SAVE/RESTORE" and touch the → arrow. The lathe pauses between operations and the app waits through them; it ends at the end mark, or press **Stop and Keep** when the lathe has finished.
 - **Restore Manual Ops**: on the lathe, same menu, touch the ← arrow, then hold **Restore to the Lathe…** in the app and choose the file. Only restore files saved from this lathe.
 - **Cable Test**: unplug the cable from the lathe, bridge pins 2 and 3 of the adapter, and run the loopback test.
 

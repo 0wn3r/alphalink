@@ -301,9 +301,17 @@ class MachinePage(Gtk.Box):
     def _backup(self) -> None:
         def work(ser, dlg, log):
             GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”")) and False)
+            def quiet(seconds):
+                GLib.idle_add(lambda: dlg.state.set_label(_(
+                    "The lathe paused {s} s ago; waiting. Press Stop and Keep when it has finished.").format(
+                        s=int(seconds))) and False)
+
+            GLib.idle_add(lambda: dlg.button.set_label(_("_Stop and Keep")) and False)
             try:
-                data, complete = sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, 10.0, log), True
-            except sl.TransferTimeout as e:
+                # no time limit: the control pauses between operations; the user stops it, and keeps what arrived
+                data, complete = sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, None, log,
+                                            quiet), True
+            except (sl.TransferTimeout, sl.Cancelled) as e:
                 if not e.data:
                     raise
                 data, complete = e.data, False  # the end mark never came: keep what arrived, marked partial
@@ -321,8 +329,9 @@ class MachinePage(Gtk.Box):
             if complete:
                 dlg.finish(True, _("Received {n} bytes.").format(n=len(data)))
             else:
-                dlg.finish(False, _("Received {n} bytes, but the end mark never came, so the backup may be incomplete. "
-                                    "Save it anyway, and keep the lathe's ops until a full backup works.").format(n=len(data)))
+                dlg.finish(False, _("Received {n} bytes without the end mark. If the lathe had finished, the backup is "
+                                    "probably whole; it is saved marked PARTIAL. Keep the lathe's ops until a "
+                                    "restore of it has been checked.").format(n=len(data)))
             name = datetime.now().strftime("MANOPS-%Y%m%d-%H%M.MOP" if complete else "MANOPS-%Y%m%d-%H%M-PARTIAL.MOP")
             fd = Gtk.FileDialog(title=_("Save Manual Ops Backup"), initial_name=name)
 

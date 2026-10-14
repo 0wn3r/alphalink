@@ -25,7 +25,9 @@ EVEN_PARITY = bytes(c | (0x80 if bin(c).count("1") & 1 else 0) for c in range(12
 
 
 class Cancelled(Exception):
-    pass
+    def __init__(self, data: bytes = b""):
+        super().__init__()
+        self.data = data  # a receive stopped by the user keeps what arrived
 
 
 class TransferTimeout(Exception):
@@ -154,19 +156,27 @@ def _tail(data: bytes, n: int = 48) -> str:
 
 
 def receive(ser, progress: Callable[[int], None] | None = None, cancel=None, first_timeout: float | None = None,
-            idle_timeout: float | None = 10.0, log: TransferLog | None = None) -> bytes:
+            idle_timeout: float | None = 10.0, log: TransferLog | None = None,
+            quiet: Callable[[float], None] | None = None) -> bytes:
     """Receive until the second '%' (Manual Ops Save, as ATMANOP stores it), or the NC's DC4 end code once data has
     come. Raw bytes are returned before any decoding. first_timeout: give up if nothing arrives at all;
-    idle_timeout: give up after a pause once data flowed (the bytes so far ride on the TransferTimeout)."""
+    idle_timeout: give up after a pause once data flowed (the bytes so far ride on the TransferTimeout); None waits
+    for the end mark or the user (the control pauses between operations). quiet(seconds) is called about once a second
+    while the line is quiet after data, so the user sees the pause."""
     log = log or TransferLog()
     out = bytearray()
     percents = 0
     t_last = time.monotonic()
+    t_quiet = 0.0
     while True:
-        _check(cancel)
+        if cancel is not None and cancel.is_set():
+            log.add(f"stopped by the user after {len(out)} bytes, {percents} %; last bytes: {_tail(out)}")
+            raise Cancelled(bytes(out))
         chunk = ser.read(256)
         now = time.monotonic()
         if chunk:
+            if out and now - t_last > 2:
+                log.add(f"pause of {now - t_last:.1f} s after {len(out)} bytes")
             if not out:
                 log.add(f"first bytes: {chunk[:24].hex(' ')}")
             t_last = now
@@ -188,6 +198,9 @@ def receive(ser, progress: Callable[[int], None] | None = None, cancel=None, fir
         elif out and idle_timeout is not None and now - t_last > idle_timeout:
             log.add(f"idle timeout after {len(out)} bytes, {percents} %; last bytes: {_tail(out)}")
             raise TransferTimeout(tr("transfer stopped after {n} bytes (no second %)", n=len(out)), bytes(out))
+        elif out and quiet and now - t_last > 2 and now - t_quiet >= 1:
+            t_quiet = now
+            quiet(now - t_last)
 
 
 def manops_load_bytes(data: bytes) -> bytes:

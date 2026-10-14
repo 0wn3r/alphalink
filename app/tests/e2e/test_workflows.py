@@ -1109,12 +1109,18 @@ class BackupOverVirtualPort(VirtualPort):
         self.app.find("Received", contains=True, showing=False)
         self.assertEqual(self.saved_backup("FULL.MOP"), data)
 
-    def test_quiet_line_keeps_what_arrived(self):
-        """No end mark: after the line goes quiet the app says the backup may be incomplete and still saves it."""
+    def test_pauses_then_stop_and_keep(self):
+        """The control pauses between operations: the app waits through it and says so; with no end mark, Stop and
+        Keep saves what arrived, marked PARTIAL."""
         data = b"%\r\n:0001 STOP\r\nX40.Z-25.\r\n"
         self.start_backup()
-        self.lathe.send(data)
-        self.app.find("may be incomplete", contains=True, showing=False, timeout=20)
+        self.lathe.send(data[:10])
+        self.app.find("paused", contains=True, showing=False, timeout=10)
+        self.snap("paused")
+        self.lathe.send(data[10:])
+        time.sleep(1)
+        self.press("Stop and Keep", "button")
+        self.app.find("without the end mark", contains=True, showing=False, timeout=10)
         self.snap("partial")
         self.assertEqual(self.saved_backup("PART.MOP"), data)
         raw = list((self.s.root / "home/.var/app").glob("*/.local/state/alphalink-cam/logs/*-manops.raw"))

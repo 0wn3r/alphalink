@@ -743,5 +743,7 @@ UK = {
 "{n} threads per inch": "{n} ниток на дюйм",
 "Relief groove": "Канавка для виходу різьби",
 "DIN 76 proportions, at the back end of the line": "Пропорції DIN 76, на задньому кінці лінії",
-"Received {n} bytes, but the end mark never came, so the backup may be incomplete. Save it anyway, and keep the lathe's ops until a full backup works.": "Отримано {n} байт, але кінцевої позначки не було, тож копія може бути неповною. Усе одно збережіть її і не видаляйте операції на верстаті, доки повна копія не вдасться.",
+"Received {n} bytes without the end mark. If the lathe had finished, the backup is probably whole; it is saved marked PARTIAL. Keep the lathe's ops until a restore of it has been checked.": "Отримано {n} байт без кінцевої позначки. Якщо верстат закінчив, копія, найімовірніше, повна; її збережено з позначкою PARTIAL. Не видаляйте операції на верстаті, доки відновлення з неї не перевірено.",
+"The lathe paused {s} s ago; waiting. Press Stop and Keep when it has finished.": "Верстат зробив паузу {s} с тому; чекаємо. Коли він закінчить, натисніть «Зупинити й зберегти».",
+"_Stop and Keep": "_Зупинити й зберегти",
 }

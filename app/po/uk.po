@@ -901,14 +901,20 @@ msgstr "Надіслано {n} байт. Перевірте список про�
 msgid "Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”"
 msgstr "Очікування даних: на верстаті торкніться стрілки → у «OP. SAVE/RESTORE»"
 
+msgid "The lathe paused {s} s ago; waiting. Press Stop and Keep when it has finished."
+msgstr "Верстат зробив паузу {s} с тому; чекаємо. Коли він закінчить, натисніть «Зупинити й зберегти»."
+
+msgid "_Stop and Keep"
+msgstr "_Зупинити й зберегти"
+
 msgid "Receiving…"
 msgstr "Отримання…"
 
 msgid "Received {n} bytes."
 msgstr "Отримано {n} байт."
 
-msgid "Received {n} bytes, but the end mark never came, so the backup may be incomplete. Save it anyway, and keep the lathe's ops until a full backup works."
-msgstr "Отримано {n} байт, але кінцевої позначки не було, тож копія може бути неповною. Усе одно збережіть її і не видаляйте операції на верстаті, доки повна копія не вдасться."
+msgid "Received {n} bytes without the end mark. If the lathe had finished, the backup is probably whole; it is saved marked PARTIAL. Keep the lathe's ops until a restore of it has been checked."
+msgstr "Отримано {n} байт без кінцевої позначки. Якщо верстат закінчив, копія, найімовірніше, повна; її збережено з позначкою PARTIAL. Не видаляйте операції на верстаті, доки відновлення з неї не перевірено."
 
 msgid "Save Manual Ops Backup"
 msgstr "Зберегти резервну копію ручних операцій"

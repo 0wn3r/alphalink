@@ -97,6 +97,18 @@ class SendReceive(unittest.TestCase):
             sl.receive(self.ser, first_timeout=3, idle_timeout=0.3)
         self.assertEqual(cm.exception.data, b"%\r\nhalf")  # what arrived is kept, not thrown away
 
+    def test_receive_waits_through_pauses_and_keeps_data_on_stop(self):
+        """The control pauses between operations: with no idle limit the receive waits, reports the pause, and a stop
+        by the user keeps what arrived."""
+        cancel, quiet = threading.Event(), []
+        threading.Timer(0.05, lambda: os.write(self.ctl.master, b"%\r\nfirst\r\n")).start()
+        threading.Timer(3.5, lambda: os.write(self.ctl.master, b"second\r\n")).start()
+        threading.Timer(6.0, cancel.set).start()
+        with self.assertRaises(sl.Cancelled) as cm:
+            sl.receive(self.ser, cancel=cancel, first_timeout=3, idle_timeout=None, quiet=quiet.append)
+        self.assertEqual(cm.exception.data, b"%\r\nfirst\r\nsecond\r\n")
+        self.assertTrue(quiet and all(q > 2 for q in quiet))
+
     def test_receive_ends_at_dc4(self):
         """The NC ends its output with DC4; a backup with one % (or none) still ends there."""
         backup = b"\x12%\r\n:0001\r\nG01X1.Z-2.\r\n\x14"
