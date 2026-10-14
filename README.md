@@ -58,7 +58,7 @@ End-to-end UI tests on the installed Flatpak (real keyboard, mouse and touch thr
 
 [![Flatpak](https://github.com/0wn3r/alphalink/actions/workflows/flatpak.yml/badge.svg)](https://github.com/0wn3r/alphalink/actions/workflows/flatpak.yml)
 GitHub Actions builds the Flatpak on every push and runs the unit tests inside it. A run's page offers the bundle
-(`AlphaLinkCAM.flatpak`) for download. Install it with `flatpak install --user AlphaLinkCAM.flatpak`.
+(`AlphaLinkCAM-x86_64.flatpak`) for download. Install it with `flatpak install --user AlphaLinkCAM-x86_64.flatpak`.
 
 ## Layout
 | path | content |
