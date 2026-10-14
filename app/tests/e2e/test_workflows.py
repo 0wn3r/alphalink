@@ -714,3 +714,80 @@ class AlphaTReads(Surface):
         self.assertGreater(len(green_pixels(im)), 100, "ALPHA-T shows no part profile")
         menu = im.crop((536, 56, 632, 72))  # "CAD MENU 1": ALPHA-T is up, not stopped on an error
         self.assertGreater(len({menu.getpixel((x, y)) for x in range(menu.width) for y in range(menu.height)}), 1)
+
+
+class TouchPlacement(Surface):
+    """TOUCH.md 4, 5.1, 5.2 and 6: closing a profile, the value chip, the long-press menu, the editor's keypad."""
+
+    def start_line(self, project=None):
+        path = self.part(project or Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        self.press("Line", "radio button")
+        return path, to_screen
+
+    def test_tapping_the_first_point_closes_the_profile(self):
+        path, to_screen = self.start_line()
+        for xd, z in ((0, 0), (40, 0), (40, -25), (0, -25), (0, 0)):
+            self.s.tap(*to_screen(xd, z))
+        self.app.find("Profile closed", contains=True, showing=False)
+        self.snap("closed")
+        done = self.app.find("Done", "button")
+        from gi.repository import Atspi
+
+        self.assertFalse(done.get_state_set().contains(Atspi.StateType.SENSITIVE), "the line should be finished")
+        self.assertEqual(len(self.saved(path).geometry), 4)
+
+    def test_value_chip_corrects_the_last_point(self):
+        """Tap roughly; the chip on the segment shows its exact end; the keypad corrects it to Ø 40."""
+        path, to_screen = self.start_line()
+        self.s.tap(*to_screen(0, 0))
+        self.s.tap(*to_screen(37, 0))  # a little short
+        chip = self.app.find("Ø ", "button", contains=True)
+        self.assertNotIn("40", chip.get_name())  # the rough tap, about 37
+        self.snap("chip")
+        self.s.tap(*self.app.center(acc=chip))
+        self.app.find("✓", "button")
+        for k in ("4", "0", "✓"):
+            self.s.tap(*self.app.center(k, "button"))
+        time.sleep(0.5)
+        self.assertIn("40", self.app.find("Ø ", "button", contains=True).get_name())
+        self.press("Done", "button")
+        p = self.saved(path)
+        self.assertEqual([(g.a, g.b) for g in p.geometry], [(Point(0, 0), Point(40, 0))])
+
+    def test_long_press_menu_deletes_the_element(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        g = p.geometry[1]
+        self.s.hold(*to_screen((g.a.x + g.b.x) / 2, (g.a.z + g.b.z) / 2), 1.2, touch=True)
+        items = self.app.menu_items()
+        self.snap("menu")
+        self.assertEqual(len(items), 4)  # Edit Values…, Delete | Zoom Here, Fit Part
+        self.app.press(acc=items[1])
+        q = self.saved(path)
+        self.assertEqual([e.id for e in q.geometry], ["g0", "g2", "g3", "g4"])
+
+    def test_editor_number_opens_the_keypad(self):
+        """A finger on the Feed value opens the keypad (no system keyboard); 0.2 ✓ sets it."""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        # libadwaita's spin rows are missing from GTK's accessibility tree (README): the Feed row is the last of the
+        # four equal number rows between "5 elements" and the "Towards the chuck" switch
+        top = self.app.rect(self.app.labelled("5 elements", "list item"))
+        sw = self.app.rect(self.app.all("Towards the chuck", "switch")[0])
+        h = (sw[1] - (top[1] + top[3])) / 4
+        y = sw[1] - h / 2
+        x = sw[0] + sw[2] - 160  # the number, left of − and +
+        self.s.tap(x, y)
+        self.app.find("✓", "button")
+        self.snap("keypad")
+        for k in ("0", ".", "2", "✓"):
+            self.s.tap(*self.app.center(k, "button"))
+        q = self.saved(path)
+        self.assertAlmostEqual(q.operations[0].feed, 0.2, places=6)

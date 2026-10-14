@@ -131,6 +131,24 @@ class DrawingTools:
         self.pick_banner.connect("button-clicked", lambda *_: self.finish_pick())
 
         canvas.connect("canvas-tapped", self._tapped)
+        canvas.connect("canvas-long-pressed", self._long_pressed)
+        canvas.connect("view-changed", lambda *_: self._place_chip())
+        # the context menu's actions (TOUCH.md 4: long press)
+        self._ctx = Gio.SimpleActionGroup()
+        for name, cb in (("edit", lambda *_: self.edit_selected_element()),
+                         ("delete", lambda *_: self.delete_selected_element()),
+                         ("zoom", lambda *_: self._zoom_here())):
+            a = Gio.SimpleAction.new(name, None)
+            a.connect("activate", cb)
+            self._ctx.add_action(a)
+        self._ctx_at = (0.0, 0.0)
+        # the value chip on the last drawn segment (TOUCH.md 5.1): tap it to correct the point with the keypad
+        self.chip = Gtk.Button(visible=False, halign=Gtk.Align.START, valign=Gtk.Align.START,
+                               tooltip_text=_("Correct the Last Point"))
+        self.chip.add_css_class("osd")
+        self.chip.add_css_class("pill")
+        self.chip.add_css_class("value-chip")
+        self.chip.connect("clicked", lambda *_: self._correct_last_point())
         motion = Gtk.EventControllerMotion()
         motion.connect("motion", self._motion)
         canvas.add_controller(motion)
@@ -539,11 +557,16 @@ class DrawingTools:
             if not self.w.apply_edit(_("Draw line"), lambda p: drawing.add_line(p, prev, pt)):
                 return
             self.w.refresh()
+            if len(self.points) >= 2 and pt == self.points[0]:  # tapped the first point: the profile is closed
+                self.finish_chain()
+                self.w.toast(_("Profile closed"))
+                return
         self.points.append(pt)
         self.cursor = pt
         self.done.set_sensitive(True)
         self.c.marker = (pt, "end")
         self.c.queue_draw()
+        self._place_chip()
 
     def _arc_point(self, pt: Point) -> None:
         """Arc tool: start, a point on the arc, end (TOUCH.md 5.2). Exact points can be typed as for lines."""
@@ -592,6 +615,7 @@ class DrawingTools:
         self.c.queue_draw()
 
     def finish_chain(self) -> None:
+        self.chip.set_visible(False)
         self.arc_pts = []
         self.corner_first = None
         self.points.clear()
@@ -670,6 +694,92 @@ class DrawingTools:
     def set_touch(self, touch: bool) -> None:
         """Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6)."""
         self.keypad_button.set_visible(touch)
+        self._touch = touch
+        self._place_chip()
+
+    # --- value chip (TOUCH.md 5.1: place roughly, then correct exactly) -------------------------------------
+
+    def _place_chip(self) -> None:
+        """In touch mode, a chip at the middle of the last segment of the line being drawn shows its exact end
+        (Z for a step along Z, Ø for a face, both for a taper); tapping it opens the keypad on that point."""
+        if not getattr(self, "_touch", False) or self.c.tool != "line" or len(self.points) < 2:
+            self.chip.set_visible(False)
+            return
+        a, b = self.points[-2], self.points[-1]
+        if a.x == b.x:
+            text = f"Z {b.z:g}"
+        elif a.z == b.z:
+            text = f"Ø {b.x:g}"
+        else:
+            text = f"X{b.x:g} Z{b.z:g}"
+        self.chip.set_label(text)
+        sx, sy = self.c.view.to_screen((a.x + b.x) / 2, (a.z + b.z) / 2)
+        w = self.chip.measure(Gtk.Orientation.HORIZONTAL, -1)[1]
+        h = self.chip.measure(Gtk.Orientation.VERTICAL, -1)[1]
+        cw, ch = self.c.get_width(), self.c.get_height()
+        x = min(max(sx - w / 2, 4), max(cw - w - 4, 4))
+        y = min(max(sy - h - 12, 4), max(ch - h - 4, 4))  # above the segment, clear of the finger
+        self.chip.set_margin_start(int(x))
+        self.chip.set_margin_top(int(y))
+        self.chip.set_visible(True)
+
+    def _correct_last_point(self) -> None:
+        from .keypad import Keypad
+
+        if len(self.points) < 2:
+            return
+        prev, last = self.points[-2], self.points[-1]
+
+        def done(text):
+            m = RE_COORD.match(text)
+            if not m:
+                return
+            x, z = float(m[2]), float(m[3])
+            new = Point(prev.x + x, prev.z + z) if m[1] else Point(x, z)
+            if new == prev or new == last:
+                return
+            gid = next((g.id for g in self.w.project.geometry
+                        if isinstance(g, Line) and g.a == prev and g.b == last), None)
+            if gid and self.w.apply_edit(_("Correct point"), lambda p: drawing.edit_element(p, gid, prev, new, follow=False)):
+                self.points[-1] = new
+                self.cursor = new
+                self.c.marker = (new, "end")
+                self.w.refresh()
+                self._place_chip()
+
+        Keypad(done, title=_("Correct Point"), values={"x": f"{last.x:g}", "z": f"{last.z:g}"}).present(self.w)
+
+    # --- long press (TOUCH.md 4): a context menu at the finger ------------------------------------------------
+
+    def _long_pressed(self, canvas, x, z, sx, sy, element) -> None:
+        if self.w.project is None or self.pick_op is not None:
+            return
+        self._ctx_at = (sx, sy)
+        menu = Gio.Menu()
+        if element:
+            self._select_element(element)
+            items = Gio.Menu()
+            items.append(_("Edit Values…"), "ctx.edit")
+            items.append(_("Delete"), "ctx.delete")
+            menu.append_section(None, items)
+        view = Gio.Menu()
+        view.append(_("Zoom Here"), "ctx.zoom")
+        view.append(_("Fit Part"), "win.fit")
+        menu.append_section(None, view)
+        pop = Gtk.PopoverMenu.new_from_model(menu)
+        pop.insert_action_group("ctx", self._ctx)
+        pop.set_parent(self.c)
+        rect = Gdk.Rectangle()
+        rect.x, rect.y, rect.width, rect.height = int(sx), int(sy), 1, 1
+        pop.set_pointing_to(rect)
+        pop.set_has_arrow(True)
+        pop.connect("closed", lambda p: GLib.idle_add(lambda: (p.unparent(), False)[1]))
+        pop.popup()
+
+    def _zoom_here(self) -> None:
+        sx, sy = self._ctx_at
+        self.c.view.zoom_at(sx, sy, 2.0)
+        self.c._user_view_change()
 
     # --- select / delete ---------------------------------------------------------------------------------
 

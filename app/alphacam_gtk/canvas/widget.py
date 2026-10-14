@@ -8,7 +8,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, GObject, Gtk  # noqa: E402
+from gi.repository import GLib, Adw, GObject, Gtk  # noqa: E402
 
 from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.geometry import Arc  # noqa: E402
@@ -37,6 +37,10 @@ class LatheCanvas(Gtk.DrawingArea):
         "cursor-moved": (GObject.SignalFlags.RUN_FIRST, None, (float, float)),
         # every tap: world X (dia), Z, the input's radius in mm, toolpath op (-1 none), drawing element ('' none)
         "canvas-tapped": (GObject.SignalFlags.RUN_FIRST, None, (float, float, float, int, str)),
+        # a long press (touch): world X (dia), Z, screen x, y, drawing element under the finger ('' none)
+        "canvas-long-pressed": (GObject.SignalFlags.RUN_FIRST, None, (float, float, float, float, str)),
+        # the view moved (pan, zoom, fit, resize): overlays that follow the drawing reposition
+        "view-changed": (GObject.SignalFlags.RUN_FIRST, None, ()),
     }
 
     def __init__(self):
@@ -64,8 +68,9 @@ class LatheCanvas(Gtk.DrawingArea):
         self.set_draw_func(self._draw)
         # keep the part fitted while the user has not panned or zoomed (e.g. when the editor pane opens)
         self._auto_fit = True
-        self.connect("resize", lambda *_: (self._fit_pending or self._auto_fit) and self.fit())
-        self.router = InputRouter(self, self._user_view_change, self._tap, self.toggle_fit, self._pointer)
+        self.connect("resize", lambda *_: ((self._fit_pending or self._auto_fit) and self.fit(), self.emit("view-changed")))
+        self.router = InputRouter(self, self._user_view_change, self._tap, self.toggle_fit, self._pointer,
+                                  on_long=self._long_press)
         sm = Adw.StyleManager.get_default()
         dark_id = sm.connect("notify::dark", lambda *_: self.queue_draw())
         self.connect("destroy", lambda *_: sm.disconnect(dark_id))  # the style manager outlives the window
@@ -113,6 +118,12 @@ class LatheCanvas(Gtk.DrawingArea):
     def _user_view_change(self) -> None:
         self._auto_fit = False
         self.queue_draw()
+        self.emit("view-changed")
+
+    def _long_press(self, x, y) -> None:
+        el = hit_element(self.project, self.view, x, y, RADIUS_PX["touch"]) if self.project is not None else None
+        xd, z = self.view.to_world(x, y)
+        self.emit("canvas-long-pressed", xd, z, x, y, el or "")
 
     def fit(self) -> None:
         self._auto_fit = True
@@ -121,6 +132,7 @@ class LatheCanvas(Gtk.DrawingArea):
             self._fit_pending = True
             return
         self.view.fit(self.bounds(), w, h)
+        GLib.idle_add(lambda: self.emit("view-changed") and False)
         self._fit_pending = False
         self.queue_draw()
 

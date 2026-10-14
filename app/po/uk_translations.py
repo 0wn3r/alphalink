@@ -678,4 +678,11 @@ UK = {
 "Tap two lines, or move the cursor to each and press Enter": "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter",
 "Open the _Training Manual": "Відкрити _навчальний посібник",
 "Drawing": "Креслення",
+"Correct the Last Point": "Виправити останню точку",
+"Profile closed": "Профіль замкнено",
+"Correct point": "Виправлення точки",
+"Correct Point": "Виправити точку",
+"Edit Values…": "Змінити значення…",
+"Delete": "Видалити",
+"Zoom Here": "Збільшити тут",
 }

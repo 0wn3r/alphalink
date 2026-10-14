@@ -77,6 +77,40 @@ def fit_spin(row: Adw.SpinRow, lo: float, hi: float, digits: int) -> Adw.SpinRow
     return row
 
 
+def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
+    """A finger on the number opens the AlphaLink keypad (TOUCH.md 6) instead of the system keyboard, which covers
+    half the screen; the − and + buttons and the mouse and keyboard work as before."""
+    from .keypad import Keypad
+
+    tap = Gtk.GestureClick(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
+
+    def pressed(gesture, n, x, y):
+        target = row.pick(x, y, Gtk.PickFlags.DEFAULT)
+        w = target
+        while w is not None and w is not row:
+            if isinstance(w, Gtk.Button):
+                return  # − / +
+            if isinstance(w, Gtk.Text):
+                break
+            w = w.get_parent()
+        else:
+            return
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)  # no focus, so no system keyboard
+
+        def done(text):
+            try:
+                row.set_value(float(text))
+            except ValueError:
+                pass
+
+        Keypad(done, title=row.get_title(), values={"v": f"{row.get_value():.{row.get_digits()}f}"},
+               fields=[("v", row.get_title())]).present(row)
+
+    tap.connect("pressed", pressed)
+    row.add_controller(tap)
+    return row
+
+
 class OpEditor(Gtk.Box):
     """Shows one operation; `apply(label, fn)` is the window's undoable edit entry point."""
 
@@ -197,6 +231,7 @@ class OpEditor(Gtk.Box):
         row.set_digits(digits)
         row.set_value(value)
         row._orig = value
+        keypad_on_touch(row)
         return fit_spin(row, lo, hi, digits)
 
     def _edit(self, label, fn):

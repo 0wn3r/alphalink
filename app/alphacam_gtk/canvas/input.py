@@ -32,9 +32,11 @@ def source_name(controller: Gtk.EventController) -> str:
 
 
 class InputRouter:
-    def __init__(self, widget, on_view_changed, on_tap, on_fit, on_pointer):
+    def __init__(self, widget, on_view_changed, on_tap, on_fit, on_pointer, on_long=None):
         self.w = widget
         self.on_view_changed, self.on_tap, self.on_fit, self.on_pointer = on_view_changed, on_tap, on_fit, on_pointer
+        self.on_long = on_long
+        self._long = False  # a long press happened: the release that ends it is not a tap
         self._pinching = False
         self._fling_id = 0
 
@@ -55,6 +57,11 @@ class InputRouter:
         swipe = Gtk.GestureSwipe()
         swipe.connect("swipe", self._fling)
         widget.add_controller(swipe)
+
+        # long press (touch): the context menu at the finger (TOUCH.md 4)
+        hold = Gtk.GestureLongPress(touch_only=True)
+        hold.connect("pressed", self._long_pressed)
+        widget.add_controller(hold)
 
         click = Gtk.GestureClick()
         click.connect("pressed", lambda *_: widget.grab_focus())  # the cursor keys and letters act on the drawing
@@ -137,7 +144,15 @@ class InputRouter:
 
     # --- taps -------------------------------------------------------------------------------------------
 
+    def _long_pressed(self, gesture, x, y):
+        self._long = True
+        if self.on_long:
+            self.on_long(x, y)
+
     def _released(self, gesture, n_press, x, y):
+        if self._long:
+            self._long = False
+            return
         # GTK counts quick touch taps as a double tap wherever they land; only two taps on one spot are one (quick
         # taps along a profile with the Line tool are points, found by tests/e2e)
         last, self._last_tap = getattr(self, "_last_tap", None), (x, y)

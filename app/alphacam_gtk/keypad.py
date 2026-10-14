@@ -15,17 +15,23 @@ KEYS = [["7", "8", "9", "⌫"], ["4", "5", "6", "±"], ["1", "2", "3", "ABS"], [
 
 
 class Keypad(Adw.Dialog):
-    def __init__(self, on_done, title: str | None = None):
+    def __init__(self, on_done, title: str | None = None, values: dict[str, str] | None = None,
+                 fields: list[tuple[str, str]] | None = None):
+        """`fields`: (key, label) to fill, X Ø and Z by default (a point, "x,z" to `on_done`); one field gives
+        `on_done` that value alone (the editor's numbers). `values`: what the fields start with."""
         super().__init__(title=title or _("Point"), content_width=360)
         self.on_done = on_done
-        self.values = {"x": "", "z": ""}
-        self.active = "x"
+        self.fields = fields or [("x", "X Ø"), ("z", "Z")]
+        self.values = {k: "" for k, _l in self.fields}
+        self.values.update(values or {})
+        self.active = self.fields[0][0]
         self.incremental = False
+        self._fresh = bool(values)  # the first digit replaces a given value instead of extending it
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin_start=12, margin_end=12,
                       margin_bottom=12, margin_top=6)
         fields = Gtk.Box(spacing=8, homogeneous=True)
         self.field_buttons = {}
-        for key, label in (("x", "X Ø"), ("z", "Z")):
+        for key, label in self.fields:
             b = Gtk.Button()
             b.add_css_class("keypad-field")
             b.connect("clicked", lambda _b, k=key: self._activate(k))
@@ -42,6 +48,8 @@ class Keypad(Adw.Dialog):
                     b.add_css_class("suggested-action")
                 if k == "ABS":
                     self.abs_button = b
+                    if len(self.fields) == 1:
+                        b.set_sensitive(False)  # one number: nothing to be incremental from
                 b.connect("clicked", lambda _b, k=k: self._key(k))
                 grid.attach(b, c, r, 1, 1)
         box.append(grid)
@@ -56,9 +64,13 @@ class Keypad(Adw.Dialog):
 
     def _activate(self, key: str) -> None:
         self.active = key
+        self._fresh = False
         self._refresh()
 
     def _key(self, k: str) -> None:
+        if self._fresh and (k.isdigit() or k == "."):
+            self.values[self.active] = ""  # typing over the value shown, as in a selected field
+        self._fresh = False
         v = self.values[self.active]
         if k.isdigit():
             v += k
@@ -73,7 +85,8 @@ class Keypad(Adw.Dialog):
             self._refresh()
             return
         elif k == "→":
-            self.active = "z" if self.active == "x" else "x"
+            keys = [f for f, _l in self.fields]
+            self.active = keys[(keys.index(self.active) + 1) % len(keys)]
             self._refresh()
             return
         elif k == "✓":
@@ -99,11 +112,13 @@ class Keypad(Adw.Dialog):
         return True
 
     def text(self) -> str:
+        if len(self.fields) == 1:
+            return self.values[self.fields[0][0]]
         x, z = self.values["x"] or "0", self.values["z"] or "0"
         return f"{'@' if self.incremental else ''}{x},{z}"
 
     def _done(self) -> None:
-        if self.values["x"] in ("", "-", ".") and self.values["z"] in ("", "-", "."):
+        if all(v in ("", "-", ".") for v in self.values.values()):
             return
         self.close()
         self.on_done(self.text())

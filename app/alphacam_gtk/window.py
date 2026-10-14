@@ -198,6 +198,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.readout.add_css_class("readout")
         self.readout.add_css_class("dim-label")
         self.drawing = DrawingTools(self, self.canvas)
+        overlay.add_overlay(self.drawing.chip)  # the value chip on the last drawn segment (touch)
         part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         part.append(self.drawing.pick_banner)
         part.append(self.drawing.construct_banner)

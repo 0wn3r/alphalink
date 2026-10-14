@@ -364,6 +364,9 @@ msgstr "Скасувати вибір (Esc)"
 msgid "Tap the contour elements in cutting order"
 msgstr "Торкніться елементів контуру в порядку обробки"
 
+msgid "Correct the Last Point"
+msgstr "Виправити останню точку"
+
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
 
@@ -433,6 +436,9 @@ msgstr "Стерти креслення"
 msgid "Draw line"
 msgstr "Накреслити лінію"
 
+msgid "Profile closed"
+msgstr "Профіль замкнено"
+
 msgid "Arc: now a point on the arc"
 msgstr "Дуга: тепер точка на дузі"
 
@@ -456,6 +462,24 @@ msgstr "Наступна точка"
 
 msgid "Start Point"
 msgstr "Початкова точка"
+
+msgid "Correct point"
+msgstr "Виправлення точки"
+
+msgid "Correct Point"
+msgstr "Виправити точку"
+
+msgid "Edit Values…"
+msgstr "Змінити значення…"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "Zoom Here"
+msgstr "Збільшити тут"
+
+msgid "Fit Part"
+msgstr "Вписати деталь"
 
 msgid "Delete {what}"
 msgstr "Видалити {what}"
@@ -1275,9 +1299,6 @@ msgstr "Збільшити"
 
 msgid "Zoom Out"
 msgstr "Зменшити"
-
-msgid "Fit Part"
-msgstr "Вписати деталь"
 
 msgid "Redraw"
 msgstr "Перемалювати"

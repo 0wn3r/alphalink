@@ -1,6 +1,37 @@
 # AlphaLink CAM: touch and multi-touch design
 
-Status: **design draft 1** (2026-10-13). No code yet. Companion to `app/DESIGN.md` (section 6, user interface).
+Status: **design draft 1** (2026-10-13), mostly implemented by 2026-10-14; see the status table below. Companion to
+`app/DESIGN.md` (section 6, user interface). Target device: Surface Pro 7 (12.3", 2736×1824 at 200 %, capacitive
+multi-touch, pen).
+
+## Implementation status (2026-10-14)
+
+✓ done · ◐ partly or done differently · ✗ not yet. Every ✓ that has a 🧪 is covered by an end-to-end test with real
+touch input (libei, `app/tests/e2e`).
+
+| Section | Item | Status |
+|---|---|---|
+| 3 | InputMode: Automatic / Pointer / Touch, two presses agree; `.touch` density; per-source hit radius 6 / 10 / 24 px | ✓ |
+| 4 | Pinch zoom about the fingers, two-finger pan 🧪; one-finger pan 🧪 with fling; double tap fit and back; touchpad, wheel | ✓ |
+| 4 | On-canvas +, −, Fit in touch mode | ✓ (box-select toggle ✗) |
+| 4 | Long press: context menu at the finger (Edit Values…, Delete, Zoom Here, Fit Part) 🧪 | ✓ (Select chain ✗) |
+| 4 | Two-finger tap undo | ✗ |
+| 5.1 | Tap points, snapping to ends and grid, Z / X / 45° direction lock 🧪 | ✓ |
+| 5.1 | Value chip on the new segment, tap → keypad corrects the point 🧪 | ✓ (last segment only) |
+| 5.1 | Loupe while dragging; fine drag | ✗ (points are not dragged at all yet) |
+| 5.2 | Line: tap = point 🧪, tap the first point = close 🧪, Done | ✓ (double tap stays Fit) |
+| 5.2 | Fillet / chamfer popover with size chips and Other, Enter applies 🧪 | ✓ |
+| 5.2 | Select ambiguity popover; move point by dragging a handle | ✗ |
+| 5.3 | Pinch wins over drag; tap vs drag threshold; quick taps not taken as a double tap 🧪 | ✓ (palm rejection ✗) |
+| 6 | Keypad for points 🧪 with ABS/INC, → next, ✓ | ✓ |
+| 6 | Keypad for the editor's number fields (a finger on the value) 🧪 | ✓ (billet-limit check ✗) |
+| 7.1 | Tap a row: select, highlight, editor (side pane; the whole page below 700 px 🧪, not a bottom sheet) | ◐ |
+| 7.1 | Move up / down (editor header); delete with Undo toast; pick on drawing with Done 🧪 | ✓ (drag-handle reorder, dimming ✗) |
+| 7.2 | Transport bar 🧪 and scrub slider | ✓ (tap a toolpath to jump ✗) |
+| 7.3 | Pinch zooms the font; tap a line ↔ drawing | ✓ (GtkSourceView, long-press copy, search, go to N ✗) |
+| 7.4 | Hold to send 🧪 / restore; touch lock 🧪, automatic during a transfer | ✓ |
+| 8 | Architecture: InputRouter, ViewTransform, hit testing | ◐ (tools live in `drawing_tools.py`, no intent layer, no `snap.py` / `loupe.py`) |
+| 9 | End to end with a virtual touchscreen | ✓ libei, not uinput (see 9) |
 
 ## 1. Why touch, and where it matters
 
@@ -238,8 +269,10 @@ alphacam_gtk/widgets/keypad.py
 
 - **Unit:** tool state machines and hit testing, driven by intent sequences (no display).
 - **Recogniser:** feed recorded event sequences into the router.
-- **End to end:** a virtual multi-touch device through `uinput` (python-evdev) under a headless GNOME/mutter or weston
-  session, or `libinput record` / `libinput replay` traces captured on the real shop screen.
+- **End to end (done):** `app/tests/e2e`. It runs the installed Flatpak in a private headless GNOME Shell, with a
+  virtual multi-touch touchscreen, keyboard and pointer from Mutter's EIS socket through libei. That needs no
+  `uinput` and no root. The tests include pinch, pan, taps, long press, hold-to-send and touch lock, at the
+  Surface's 200 % scale and in portrait. `libinput record` traces from the real screen are still an option.
 - **Hardware:** a checklist run on the actual panel: pinch, pan, fling, long press, gloves, a wet screen, and touch lock.
 
 ## 10. Milestone placement
@@ -253,9 +286,9 @@ alphacam_gtk/widgets/keypad.py
 
 ## 11. Open questions
 
-1. Which screen will be next to the lathe: a capacitive panel PC, a resistive one (single touch only), a 2-in-1
-   laptop, or a tablet? This decides how much of the multi-touch layer gets used there and how big the touch targets
-   must be.
+1. ~~Which screen will be next to the lathe?~~ A Surface Pro 7: a capacitive multi-touch tablet with a pen
+   (2026-10-14). The whole multi-touch layer is used, with touch targets of at least 48 px at 200 %.
 2. Gloves at the screen: yes or no? (Capacitive needs a glove-mode panel; resistive works with gloves.)
-3. Should the two-finger tap undo be on by default?
-4. Is libadwaita 1.7 acceptable (for `AdwToggleGroup`), or do we stay on 1.6 and build the palette from toggle buttons?
+3. Should the two-finger tap undo be on by default? (Not built yet.)
+4. ~~Is libadwaita 1.7 acceptable?~~ Yes: the GNOME 51 runtime has libadwaita 1.10, and the palette is an
+   `AdwToggleGroup`.
