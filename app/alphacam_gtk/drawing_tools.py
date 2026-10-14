@@ -829,6 +829,7 @@ class DrawingTools:
         self.w.stack.set_visible_child_name("part")
         self.pick_banner.set_revealed(True)
         self.cancel_pick_btn.set_visible(True)
+        self.w._layout_editor()  # a small window shows the drawing while picking
         self.c.queue_draw()
 
     def _toggle_pick(self, gid: str) -> None:
@@ -863,6 +864,7 @@ class DrawingTools:
         self.pick_banner.set_revealed(False)
         self.cancel_pick_btn.set_visible(False)
         self.pick_banner.set_title(_("Tap the contour elements in cutting order"))
+        self.w._layout_editor()
         self.c.queue_draw()
 
     # --- construction commands (ALPHA-T manual pp. 20-34) ----------------------------------------------------

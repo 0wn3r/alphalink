@@ -20,10 +20,10 @@ from .i18n import N_, _, ngettext  # noqa: E402
 # field -> (label, subtitle, lower, upper, step, digits) for numbers
 NUMBERS = {
     "tool": (N_("Tool"), N_("Tool memory slot on the control"), 1, 99, 1, 0),
-    "feed": (N_("Feed"), N_("per revolution"), 0.001, 5, 0.01, 3),
-    "depth_of_cut": (N_("Depth of cut"), N_("per pass, radius"), 0.01, 50, 0.1, 3),
-    "offset_x": (N_("Offset X"), N_("finish allowance, radius"), -10, 10, 0.05, 3),
-    "offset_z": (N_("Offset Z"), N_("finish allowance"), -10, 10, 0.05, 3),
+    "feed": (N_("Feed"), N_("Per revolution"), 0.001, 5, 0.01, 3),
+    "depth_of_cut": (N_("Depth of cut"), N_("Per pass, radius"), 0.01, 50, 0.1, 3),
+    "offset_x": (N_("Offset X"), N_("Finish allowance, radius"), -10, 10, 0.05, 3),
+    "offset_z": (N_("Offset Z"), N_("Finish allowance"), -10, 10, 0.05, 3),
     "finish_offset_x": (N_("Finish offset X"), None, -10, 10, 0.05, 3),
     "finish_offset_z": (N_("Finish offset Z"), None, -10, 10, 0.05, 3),
     "peck_depth": (N_("Peck depth"), N_("0 = plunge in one go"), 0, 50, 0.5, 3),
@@ -31,28 +31,28 @@ NUMBERS = {
     "tip_width": (N_("Tip width"), None, 0.01, 50, 0.1, 3),
     "z_shift": (N_("Z shift"), None, -500, 500, 1, 3),
     "repeat": (N_("Repeats"), None, 0, 50, 1, 0),
-    "dwell_revs": (N_("Dwell"), N_("revolutions"), 0, 100, 1, 1),
-    "depth": (N_("Hole bottom Z"), N_("absolute"), -1000, 0, 1, 3),
+    "dwell_revs": (N_("Dwell"), N_("Revolutions"), 0, 100, 1, 1),
+    "depth": (N_("Hole bottom Z"), N_("Absolute"), -1000, 0, 1, 3),
     "peck": (N_("Peck"), N_("0 = no pecking"), 0, 100, 1, 3),
     "pitch": (N_("Pitch"), None, 0.01, 20, 0.05, 3),
-    "cut_depth": (N_("First cut depth"), N_("radius; cut n goes to first × √n"), 0.01, 5, 0.05, 3),
+    "cut_depth": (N_("First cut depth"), N_("Radius; cut n goes to first × √n"), 0.01, 5, 0.05, 3),
     "cuts": (N_("Number of cuts"), N_("0 = from the first cut depth"), 0, 500, 1, 0),
     "lead_in": (N_("Lead in"), None, 0, 50, 0.5, 3),
     "retract": (N_("Retract distance"), None, 0.01, 50, 0.1, 3),
     "lead_out": (N_("Lead out"), None, 0, 50, 0.5, 3),
-    "spring_passes": (N_("Spring passes"), N_("extra cuts at the final diameter"), 0, 9, 1, 0),
-    "angle": (N_("Infeed angle"), N_("degrees; 0 = straight in"), 0, 60, 1, 1),
-    "revs": (N_("Dwell"), N_("revolutions"), 0.1, 100, 1, 1),
+    "spring_passes": (N_("Spring passes"), N_("Extra cuts at the final diameter"), 0, 9, 1, 0),
+    "angle": (N_("Infeed angle"), N_("Degrees; 0 = straight in"), 0, 60, 1, 1),
+    "revs": (N_("Dwell"), N_("Revolutions"), 0.1, 100, 1, 1),
 }
 SWITCHES = {
-    "external": (N_("External"), N_("off = internal (boring)")),
+    "external": (N_("External"), N_("Off = internal (boring)")),
     "towards": (N_("Towards the chuck"), None),
-    "pre_finish": (N_("Pre-finish pass"), N_("a finish pass after the roughing, pulling off by the retract distance")),
+    "pre_finish": (N_("Pre-finish pass"), N_("A finish pass after the roughing, pulling off by the retract distance")),
     "full_retract": (N_("Full retract"), None),
-    "front": (N_("Front"), N_("off = FACE: across the front face")),
-    "follow": (N_("Follow contour"), N_("each pass also cleans up the step it leaves")),
-    "face": (N_("Face"), N_("finish a face: pulls off towards the axis")),
-    "rapid": (N_("Rapid"), N_("off = feed move")),
+    "front": (N_("Front"), N_("Off = FACE: across the front face")),
+    "follow": (N_("Follow contour"), N_("Each pass also cleans up the step it leaves")),
+    "face": (N_("Face"), N_("Finish a face: pulls off towards the axis")),
+    "rapid": (N_("Rapid"), N_("Off = feed move")),
 }
 CHOICES = {"datum": (N_("Datum"), ["left", "right"]), "mode": (N_("Mode"), ["area", "finish"])}
 CHOICE_LABELS = {"left": N_("left"), "right": N_("right"), "area": N_("area"), "finish": N_("finish")}
@@ -260,7 +260,7 @@ def _contour_rows(project, ids: list[str]) -> Adw.ExpanderRow:
         ends = [(g.a, g.b) for g in elems]
     exp = Adw.ExpanderRow(title=ngettext("{n} element", "{n} elements", len(ids)).format(n=len(ids)))
     if ends:
-        exp.set_subtitle(_("from {a} to {b}").format(a=_fmt_pt(ends[0][0]), b=_fmt_pt(ends[-1][1])))
+        exp.set_subtitle(_("From {a} to {b}").format(a=_fmt_pt(ends[0][0]), b=_fmt_pt(ends[-1][1])))
     for n, (g, (a, b)) in enumerate(zip(elems, ends), 1):
         kind = _("Arc") if isinstance(g, Arc) else _("Line")
         row = Adw.ActionRow(title=f"{n}. {kind}", subtitle=f"{_fmt_pt(a)}  →  {_fmt_pt(b)}")

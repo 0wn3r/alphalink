@@ -22,6 +22,7 @@ from .view import ViewTransform  # noqa: E402
 COLOURS = {
     "bg": ((0.98, 0.98, 0.97), (0.13, 0.13, 0.14)),
     "axis": ((0.55, 0.55, 0.55), (0.5, 0.5, 0.5)),
+    "label": ((0.36, 0.36, 0.36), (0.66, 0.66, 0.66)),  # grid labels: contrast >= 4.5:1 on "bg" (WCAG AA)
     "billet": ((0.6, 0.6, 0.62), (0.45, 0.45, 0.48)),
     "chuck": ((0.8, 0.8, 0.82), (0.28, 0.28, 0.31)),
     "part": ((0.1, 0.1, 0.12), (0.92, 0.92, 0.92)),
@@ -323,7 +324,7 @@ class LatheCanvas(Gtk.DrawingArea):
             if major and x != 0:
                 labels.append((f"X{x:g}", 4, sy - 3))
             k += 1
-        self._rgb(cr, "axis", 0.55)
+        self._rgb(cr, "label")
         for text, lx, ly in labels:
             cr.move_to(lx, ly)
             cr.show_text(text)

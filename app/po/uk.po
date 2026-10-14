@@ -808,26 +808,26 @@ msgstr "Номер у пам’яті інструментів ЧПК"
 msgid "Feed"
 msgstr "Подача"
 
-msgid "per revolution"
-msgstr "на оберт"
+msgid "Per revolution"
+msgstr "На оберт"
 
 msgid "Depth of cut"
 msgstr "Глибина різання"
 
-msgid "per pass, radius"
-msgstr "за прохід, на радіус"
+msgid "Per pass, radius"
+msgstr "За прохід, на радіус"
+
+msgid "Finish allowance, radius"
+msgstr "Припуск на чистову обробку, на радіус"
 
 msgid "Offset X"
 msgstr "Припуск X"
 
-msgid "finish allowance, radius"
-msgstr "припуск на чистову обробку, на радіус"
+msgid "Finish allowance"
+msgstr "Припуск на чистову обробку"
 
 msgid "Offset Z"
 msgstr "Припуск Z"
-
-msgid "finish allowance"
-msgstr "припуск на чистову обробку"
 
 msgid "Finish offset X"
 msgstr "Чистовий припуск X"
@@ -856,14 +856,14 @@ msgstr "Повтори"
 msgid "Dwell"
 msgstr "Витримка"
 
-msgid "revolutions"
-msgstr "оберти"
+msgid "Revolutions"
+msgstr "Оберти"
+
+msgid "Absolute"
+msgstr "Абсолютне"
 
 msgid "Hole bottom Z"
 msgstr "Дно отвору Z"
-
-msgid "absolute"
-msgstr "абсолютне"
 
 msgid "0 = no pecking"
 msgstr "0 = без виведення свердла"
@@ -877,8 +877,8 @@ msgstr "Крок"
 msgid "First cut depth"
 msgstr "Глибина першого проходу"
 
-msgid "radius; cut n goes to first × √n"
-msgstr "на радіус; прохід n — перший × √n"
+msgid "Radius; cut n goes to first × √n"
+msgstr "На радіус; прохід n — перший × √n"
 
 msgid "0 = from the first cut depth"
 msgstr "0 = за глибиною першого проходу"
@@ -895,32 +895,32 @@ msgstr "Відстань відведення"
 msgid "Lead out"
 msgstr "Вихід"
 
+msgid "Extra cuts at the final diameter"
+msgstr "Додаткові проходи на кінцевому діаметрі"
+
 msgid "Spring passes"
 msgstr "Зачисні проходи"
 
-msgid "extra cuts at the final diameter"
-msgstr "додаткові проходи на кінцевому діаметрі"
+msgid "Degrees; 0 = straight in"
+msgstr "Градуси; 0 = прямо"
 
 msgid "Infeed angle"
 msgstr "Кут урізання"
 
-msgid "degrees; 0 = straight in"
-msgstr "градуси; 0 = прямо"
-
 msgid "External"
 msgstr "Зовнішня"
 
-msgid "off = internal (boring)"
-msgstr "вимкнено = внутрішня (розточування)"
+msgid "Off = internal (boring)"
+msgstr "Вимкнено = внутрішня (розточування)"
 
 msgid "Towards the chuck"
 msgstr "До патрона"
 
+msgid "A finish pass after the roughing, pulling off by the retract distance"
+msgstr "Чистовий прохід після чорнової обробки з відведенням на відстань відведення"
+
 msgid "Pre-finish pass"
 msgstr "Напівчистовий прохід"
-
-msgid "a finish pass after the roughing, pulling off by the retract distance"
-msgstr "чистовий прохід після чорнової обробки з відведенням на відстань відведення"
 
 msgid "Full retract"
 msgstr "Повне відведення"
@@ -928,26 +928,26 @@ msgstr "Повне відведення"
 msgid "Front"
 msgstr "Спереду"
 
-msgid "off = FACE: across the front face"
-msgstr "вимкнено = FACE: упоперек торця"
+msgid "Off = FACE: across the front face"
+msgstr "Вимкнено = FACE: упоперек торця"
+
+msgid "Each pass also cleans up the step it leaves"
+msgstr "Кожен прохід також зачищає залишений уступ"
 
 msgid "Follow contour"
 msgstr "Йти по контуру"
 
-msgid "each pass also cleans up the step it leaves"
-msgstr "кожен прохід також зачищає залишений уступ"
-
 msgid "Face"
 msgstr "Торець"
 
-msgid "finish a face: pulls off towards the axis"
-msgstr "чистовий прохід торця: відведення до осі"
+msgid "Finish a face: pulls off towards the axis"
+msgstr "Чистовий прохід торця: відведення до осі"
+
+msgid "Off = feed move"
+msgstr "Вимкнено = переміщення з подачею"
 
 msgid "Rapid"
 msgstr "Прискорений хід"
-
-msgid "off = feed move"
-msgstr "вимкнено = переміщення з подачею"
 
 msgid "Datum"
 msgstr "Базова точка"
@@ -1030,8 +1030,8 @@ msgstr[0] "{n} елемент"
 msgstr[1] "{n} елементи"
 msgstr[2] "{n} елементів"
 
-msgid "from {a} to {b}"
-msgstr "від {a} до {b}"
+msgid "From {a} to {b}"
+msgstr "Від {a} до {b}"
 
 msgid "{id} (missing)"
 msgstr "{id} (відсутній)"
@@ -1768,8 +1768,8 @@ msgstr "Експорт"
 msgid "Also save the ALPHA-T drawing (.SDG)"
 msgstr "Також зберігати креслення ALPHA-T (.SDG)"
 
-msgid "next to the program, so DOS ALPHA-T can open the part"
-msgstr "поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
+msgid "Next to the program, so DOS ALPHA-T can open the part"
+msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
 
 msgid "Language"
 msgstr "Мова"
@@ -1783,8 +1783,8 @@ msgstr "Як у системі"
 msgid "Bore"
 msgstr "Отвір"
 
-msgid "tube billet; 0 = solid bar"
-msgstr "заготовка-труба; 0 = суцільний пруток"
+msgid "Tube billet; 0 = solid bar"
+msgstr "Заготовка-труба; 0 = суцільний пруток"
 
 msgid "Chuck jaws"
 msgstr "Кулачки патрона"
@@ -1816,14 +1816,14 @@ msgstr "Заготовка, кулачки патрона й задня бабк
 msgid "Drawing units"
 msgstr "Одиниці креслення"
 
-msgid "set when the part was made"
-msgstr "задаються під час створення деталі"
+msgid "Set when the part was made"
+msgstr "Задаються під час створення деталі"
 
 msgid "Program number"
 msgstr "Номер програми"
 
-msgid "shown on the control"
-msgstr "показується на системі керування"
+msgid "Shown on the control"
+msgstr "Показується на системі керування"
 
 msgid "M71 mm / M70 inch on the control"
 msgstr "M71 мм / M70 дюйми на системі керування"

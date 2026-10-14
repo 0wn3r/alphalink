@@ -103,15 +103,22 @@ class MainWindow(Adw.ApplicationWindow):
 
         # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
         # gets narrower, so nothing is cut off (sidebar 260 + Part page ~600 do not fit below 900)
-        bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse("max-width: 900sp"))
-        bp.add_setter(self.split, "collapsed", True)
-        bp.add_setter(self.editor, "width-request", 280)
-        bp.add_setter(self.switcher_bar, "reveal", True)
-        bp.add_setter(self.header_switcher, "visible", False)
-        # the header must fit a narrow (touch: 48 px buttons) window; these are in the main menu too
-        for wdg in (self.open_button, self.save_button, self.undo_box):
-            bp.add_setter(wdg, "visible", False)
-        self.add_breakpoint(bp)
+        # below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it
+        # is open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
+        self._small = False
+        for cond, small in (("max-width: 900sp", False), ("max-width: 700sp", True)):
+            bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(cond))
+            bp.add_setter(self.split, "collapsed", True)
+            bp.add_setter(self.editor, "width-request", 280)
+            bp.add_setter(self.switcher_bar, "reveal", True)
+            bp.add_setter(self.header_switcher, "visible", False)
+            # the header must fit a narrow (touch: 48 px buttons) window; these are in the main menu too
+            for wdg in (self.open_button, self.save_button, self.undo_box):
+                bp.add_setter(wdg, "visible", False)
+            if small:
+                bp.connect("apply", lambda *_: self._set_small(True))
+                bp.connect("unapply", lambda *_: self._set_small(False))
+            self.add_breakpoint(bp)
 
     # --- layout -----------------------------------------------------------------------------------------
 
@@ -221,7 +228,7 @@ class MainWindow(Adw.ApplicationWindow):
         # size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the width of
         # the Part page with the editor open
         self.stack = Adw.ViewStack(hhomogeneous=False)
-        self.stack.connect("notify::visible-child-name", lambda *_: self._focus_drawing())
+        self.stack.connect("notify::visible-child-name", lambda *_: (self._layout_editor(), self._focus_drawing()))
         self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
         self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
@@ -299,6 +306,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack.set_hexpand(True)
         self.editor_split.append(self.stack)
         self.editor_split.append(self.editor_reveal)
+        self.editor_reveal.connect("notify::reveal-child", lambda *_: self._layout_editor())
         content.set_content(self.editor_split)
         content.add_bottom_bar(self.switcher_bar)
         self.content_page = Adw.NavigationPage(title=_("Part"), child=content)
@@ -558,7 +566,25 @@ class MainWindow(Adw.ApplicationWindow):
         self.root.set_visible_child_name("main")
         self.editor_reveal.set_reveal_child(False)
         self.refresh(fit=True)
+        if self.split.get_collapsed():
+            self.split.set_show_content(True)  # a narrow window opens on the drawing; Back shows the operations
         GLib.idle_add(self._focus_drawing)
+
+    def _set_small(self, small: bool) -> None:
+        self._small = small
+        self._layout_editor()
+
+    def _layout_editor(self) -> None:
+        """The operation editor belongs to the Part and Program pages; in a small window it takes the whole page
+        while it is open (closing it, or picking a contour, brings the drawing back)."""
+        if not hasattr(self, "editor_reveal") or not hasattr(self, "drawing"):
+            return
+        page = self.stack.get_visible_child_name()
+        here = page in ("part", "program")
+        self.editor_reveal.set_visible(here)
+        alone = self._small and here and self.editor_reveal.get_reveal_child() and self.drawing.pick_op is None
+        self.stack.set_visible(not alone)
+        self.editor_reveal.set_hexpand(alone)
 
     def _focus_drawing(self) -> bool:
         """The drawing takes the keyboard on the Part page, so ALPHA-T's cursor keys work without a click first."""
@@ -710,7 +736,7 @@ class MainWindow(Adw.ApplicationWindow):
         page.add(new)
         export = Adw.PreferencesGroup(title=_("Export"))
         sdg = Adw.SwitchRow(title=_("Also save the ALPHA-T drawing (.SDG)"),
-                            subtitle=_("next to the program, so DOS ALPHA-T can open the part"),
+                            subtitle=_("Next to the program, so DOS ALPHA-T can open the part"),
                             active=bool(st["export_sdg"]))
         sdg.connect("notify::active", lambda r, _p: st.set("export_sdg", r.get_active()))
         export.add(sdg)
@@ -753,7 +779,7 @@ class MainWindow(Adw.ApplicationWindow):
         rows = {}
         for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 0.01, 1000),
                                        ("length", _("Billet length"), None, 0.01, 2000),
-                                       ("bore", _("Bore"), _("tube billet; 0 = solid bar"), 0, 1000)):
+                                       ("bore", _("Bore"), _("Tube billet; 0 = solid bar"), 0, 1000)):
             r = Adw.SpinRow.new_with_range(lo, hi, 1)
             r.set_title(title)
             if sub:
@@ -832,13 +858,13 @@ class MainWindow(Adw.ApplicationWindow):
         group, rows = self._billet_rows(self.project.billet, self.project.units == "inch")
         group.set_title(_("Billet"))
         group.set_description(_("Billet, chuck jaws and tailstock only change the picture."))
-        drawing = Adw.ActionRow(title=_("Drawing units"), subtitle=_("set when the part was made"))
+        drawing = Adw.ActionRow(title=_("Drawing units"), subtitle=_("Set when the part was made"))
         drawing.add_suffix(Gtk.Label(label=_("mm") if self.project.units == "mm" else _("inch")))
         program = Adw.PreferencesGroup(title=_("Program"))
         # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
         number = Adw.SpinRow.new_with_range(1, 9999, 1)
         number.set_title(_("Program number"))
-        number.set_subtitle(_("shown on the control"))
+        number.set_subtitle(_("Shown on the control"))
         number.set_value(self.project.program_number)
         program.add(number)
         # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing

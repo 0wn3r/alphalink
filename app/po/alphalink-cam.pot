@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 10:35+0300\n"
+"POT-Creation-Date: 2026-10-14 10:44+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -386,8 +386,8 @@ msgstr ""
 msgid "Circle…"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:23 alphacam_gtk/drawing_tools.py:1028
-#: alphacam_gtk/drawing_tools.py:1043
+#: alphacam_gtk/drawing_tools.py:23 alphacam_gtk/drawing_tools.py:1036
+#: alphacam_gtk/drawing_tools.py:1051
 msgid "Tangent"
 msgstr ""
 
@@ -407,7 +407,7 @@ msgstr ""
 msgid "Split Arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:890
+#: alphacam_gtk/drawing_tools.py:25 alphacam_gtk/drawing_tools.py:898
 msgid "Mirror Image"
 msgstr ""
 
@@ -520,12 +520,12 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:109 alphacam_gtk/drawing_tools.py:481
 #: alphacam_gtk/drawing_tools.py:501 alphacam_gtk/drawing_tools.py:714
-#: alphacam_gtk/drawing_tools.py:912 alphacam_gtk/drawing_tools.py:940
+#: alphacam_gtk/drawing_tools.py:920 alphacam_gtk/drawing_tools.py:948
 #: alphacam_gtk/machine.py:46 alphacam_gtk/machine.py:282
 #: alphacam_gtk/machine.py:350 alphacam_gtk/machine.py:385
-#: alphacam_gtk/tools_page.py:179 alphacam_gtk/window.py:459
-#: alphacam_gtk/window.py:793 alphacam_gtk/window.py:872
-#: alphacam_gtk/window.py:972
+#: alphacam_gtk/tools_page.py:179 alphacam_gtk/window.py:467
+#: alphacam_gtk/window.py:819 alphacam_gtk/window.py:898
+#: alphacam_gtk/window.py:998
 msgid "_Cancel"
 msgstr ""
 
@@ -537,7 +537,7 @@ msgstr ""
 msgid "Cancel Picking (Esc)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:121 alphacam_gtk/drawing_tools.py:859
+#: alphacam_gtk/drawing_tools.py:121 alphacam_gtk/drawing_tools.py:866
 msgid "Tap the contour elements in cutting order"
 msgstr ""
 
@@ -670,17 +670,17 @@ msgstr ""
 msgid "Start Point"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:678 alphacam_gtk/window.py:667
+#: alphacam_gtk/drawing_tools.py:678 alphacam_gtk/window.py:693
 #, python-brace-format
 msgid "Delete {what}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:681 alphacam_gtk/window.py:670
+#: alphacam_gtk/drawing_tools.py:681 alphacam_gtk/window.py:696
 #, python-brace-format
 msgid "Deleted {what}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:681 alphacam_gtk/window.py:670
+#: alphacam_gtk/drawing_tools.py:681 alphacam_gtk/window.py:696
 msgid "_Undo"
 msgstr ""
 
@@ -709,8 +709,8 @@ msgstr ""
 msgid "Start Z"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:697 alphacam_gtk/drawing_tools.py:875
-#: alphacam_gtk/drawing_tools.py:1065 alphacam_gtk/window.py:451
+#: alphacam_gtk/drawing_tools.py:697 alphacam_gtk/drawing_tools.py:883
+#: alphacam_gtk/drawing_tools.py:1073 alphacam_gtk/window.py:459
 msgid "Radius"
 msgstr ""
 
@@ -723,7 +723,7 @@ msgid "Move connected ends too"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:715 alphacam_gtk/drawing_tools.py:794
-#: alphacam_gtk/drawing_tools.py:941 alphacam_gtk/window.py:874
+#: alphacam_gtk/drawing_tools.py:949 alphacam_gtk/window.py:900
 msgid "_Apply"
 msgstr ""
 
@@ -737,7 +737,7 @@ msgstr ""
 msgid "Radius at {point}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:760 alphacam_gtk/drawing_tools.py:1026
+#: alphacam_gtk/drawing_tools.py:760 alphacam_gtk/drawing_tools.py:1034
 msgid "Angle"
 msgstr ""
 
@@ -747,122 +747,122 @@ msgid ""
 "line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:809
+#: alphacam_gtk/drawing_tools.py:815
 #, python-brace-format
 msgid "Fillet R{size}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:812
+#: alphacam_gtk/drawing_tools.py:818
 #, python-brace-format
 msgid "Chamfer {size}"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:836
+#: alphacam_gtk/drawing_tools.py:843
 #, python-brace-format
 msgid "{n} picked — tap again to remove, then Done"
 msgid_plural "{n} picked — tap again to remove, then Done"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/drawing_tools.py:850
+#: alphacam_gtk/drawing_tools.py:857
 msgid "Pick contour"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:874
+#: alphacam_gtk/drawing_tools.py:882
 msgid "Centre X (Ø)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:874
+#: alphacam_gtk/drawing_tools.py:882
 msgid "Centre Z"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:874 alphacam_gtk/drawing_tools.py:876
+#: alphacam_gtk/drawing_tools.py:882 alphacam_gtk/drawing_tools.py:884
 msgid "Circle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:881
+#: alphacam_gtk/drawing_tools.py:889
 msgid "Tangent at an angle: tap the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:881
+#: alphacam_gtk/drawing_tools.py:889
 msgid "Tangent: tap a point, or an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:882
+#: alphacam_gtk/drawing_tools.py:890
 msgid "Parallel line: tap the line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:882
+#: alphacam_gtk/drawing_tools.py:890
 msgid "Split arc: tap the arc where to split it"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:883
+#: alphacam_gtk/drawing_tools.py:891
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:896
+#: alphacam_gtk/drawing_tools.py:904
 msgid "_No, Take It Back"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:897
+#: alphacam_gtk/drawing_tools.py:905
 msgid ""
 "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:979
+#: alphacam_gtk/drawing_tools.py:987
 msgid "No solution for these elements"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:987
+#: alphacam_gtk/drawing_tools.py:995
 msgid "Tap the one you want (dashed)"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1013 alphacam_gtk/drawing_tools.py:1025
-#: alphacam_gtk/drawing_tools.py:1039
+#: alphacam_gtk/drawing_tools.py:1021 alphacam_gtk/drawing_tools.py:1033
+#: alphacam_gtk/drawing_tools.py:1047
 msgid "Tap an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1014
+#: alphacam_gtk/drawing_tools.py:1022
 msgid "Split arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1019
+#: alphacam_gtk/drawing_tools.py:1027
 msgid "Tap a line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1020
+#: alphacam_gtk/drawing_tools.py:1028
 msgid "Distance"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1020
+#: alphacam_gtk/drawing_tools.py:1028
 msgid "Parallel Line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1022
+#: alphacam_gtk/drawing_tools.py:1030
 msgid "Parallel line"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1026
+#: alphacam_gtk/drawing_tools.py:1034
 msgid "Tangent at an Angle"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1031
+#: alphacam_gtk/drawing_tools.py:1039
 msgid "Tap a point or an arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1034
+#: alphacam_gtk/drawing_tools.py:1042
 msgid "Tangent: now tap the arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1047
+#: alphacam_gtk/drawing_tools.py:1055
 msgid "Blend arc: now the 2nd point, line or arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1063
+#: alphacam_gtk/drawing_tools.py:1071
 msgid "Blend arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1065 alphacam_gtk/shortcuts.py:34
+#: alphacam_gtk/drawing_tools.py:1073 alphacam_gtk/shortcuts.py:34
 msgid "Blend Arc"
 msgstr ""
 
@@ -872,7 +872,7 @@ msgid "Could not open the manual: {error}"
 msgstr ""
 
 #: alphacam_gtk/help.py:85 alphacam_gtk/shortcuts.py:15
-#: alphacam_gtk/window.py:323
+#: alphacam_gtk/window.py:331
 msgid "Help"
 msgstr ""
 
@@ -1205,7 +1205,7 @@ msgid "Feed"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:23
-msgid "per revolution"
+msgid "Per revolution"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:24
@@ -1213,23 +1213,23 @@ msgid "Depth of cut"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:24
-msgid "per pass, radius"
+msgid "Per pass, radius"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:25
+msgid "Finish allowance, radius"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:25 alphacam_gtk/report.py:71
 msgid "Offset X"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:25
-msgid "finish allowance, radius"
+#: alphacam_gtk/op_editor.py:26
+msgid "Finish allowance"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:26 alphacam_gtk/report.py:72
 msgid "Offset Z"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:26
-msgid "finish allowance"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:27
@@ -1270,15 +1270,15 @@ msgid "Dwell"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:34 alphacam_gtk/op_editor.py:45
-msgid "revolutions"
+msgid "Revolutions"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:35
+msgid "Absolute"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:35
 msgid "Hole bottom Z"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:35
-msgid "absolute"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:36
@@ -1298,7 +1298,7 @@ msgid "First cut depth"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:38
-msgid "radius; cut n goes to first × √n"
+msgid "Radius; cut n goes to first × √n"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:39
@@ -1322,19 +1322,19 @@ msgid "Lead out"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:43
-msgid "Spring passes"
+msgid "Extra cuts at the final diameter"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:43
-msgid "extra cuts at the final diameter"
+msgid "Spring passes"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:44
+msgid "Degrees; 0 = straight in"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:44
 msgid "Infeed angle"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:44
-msgid "degrees; 0 = straight in"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:48
@@ -1342,7 +1342,7 @@ msgid "External"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:48
-msgid "off = internal (boring)"
+msgid "Off = internal (boring)"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:49
@@ -1350,11 +1350,11 @@ msgid "Towards the chuck"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:50
-msgid "Pre-finish pass"
+msgid "A finish pass after the roughing, pulling off by the retract distance"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:50
-msgid "a finish pass after the roughing, pulling off by the retract distance"
+msgid "Pre-finish pass"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:51
@@ -1366,15 +1366,15 @@ msgid "Front"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:52
-msgid "off = FACE: across the front face"
+msgid "Off = FACE: across the front face"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:53
+msgid "Each pass also cleans up the step it leaves"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:53
 msgid "Follow contour"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:53
-msgid "each pass also cleans up the step it leaves"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:54
@@ -1382,15 +1382,15 @@ msgid "Face"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:54
-msgid "finish a face: pulls off towards the axis"
+msgid "Finish a face: pulls off towards the axis"
+msgstr ""
+
+#: alphacam_gtk/op_editor.py:55
+msgid "Off = feed move"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:55
 msgid "Rapid"
-msgstr ""
-
-#: alphacam_gtk/op_editor.py:55
-msgid "off = feed move"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:57
@@ -1511,7 +1511,7 @@ msgstr[1] ""
 
 #: alphacam_gtk/op_editor.py:263
 #, python-brace-format
-msgid "from {a} to {b}"
+msgid "From {a} to {b}"
 msgstr ""
 
 #: alphacam_gtk/op_editor.py:275 alphacam_gtk/op_editor.py:282
@@ -1738,26 +1738,26 @@ msgstr ""
 msgid "Could not save {name}: {error}"
 msgstr ""
 
-#: alphacam_gtk/report.py:157 alphacam_gtk/window.py:964
+#: alphacam_gtk/report.py:157 alphacam_gtk/window.py:990
 #, python-brace-format
 msgid "Saved {name}"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:690
+#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:716
 msgid "General"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:138
-#: alphacam_gtk/window.py:275
+#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:145
+#: alphacam_gtk/window.py:282
 msgid "Main Menu"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:321
-#: alphacam_gtk/window.py:689
+#: alphacam_gtk/shortcuts.py:14 alphacam_gtk/window.py:329
+#: alphacam_gtk/window.py:715
 msgid "Preferences"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:15 alphacam_gtk/window.py:322
+#: alphacam_gtk/shortcuts.py:15 alphacam_gtk/window.py:330
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -1773,7 +1773,7 @@ msgstr ""
 msgid "Files"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:17 alphacam_gtk/window.py:785
+#: alphacam_gtk/shortcuts.py:17 alphacam_gtk/window.py:811
 msgid "New Part"
 msgstr ""
 
@@ -1781,7 +1781,7 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:17 alphacam_gtk/window.py:252
+#: alphacam_gtk/shortcuts.py:17 alphacam_gtk/window.py:259
 msgid "Save"
 msgstr ""
 
@@ -1797,11 +1797,11 @@ msgstr ""
 msgid "Editing"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:19 alphacam_gtk/window.py:258
+#: alphacam_gtk/shortcuts.py:19 alphacam_gtk/window.py:265
 msgid "Redo"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:19 alphacam_gtk/window.py:257
+#: alphacam_gtk/shortcuts.py:19 alphacam_gtk/window.py:264
 msgid "Undo"
 msgstr ""
 
@@ -1825,16 +1825,16 @@ msgstr ""
 msgid "View"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:22 alphacam_gtk/window.py:171
+#: alphacam_gtk/shortcuts.py:22 alphacam_gtk/window.py:178
 msgid "Zoom In"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:22 alphacam_gtk/window.py:172
+#: alphacam_gtk/shortcuts.py:22 alphacam_gtk/window.py:179
 msgid "Zoom Out"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:23 alphacam_gtk/window.py:173
-#: alphacam_gtk/window.py:261
+#: alphacam_gtk/shortcuts.py:23 alphacam_gtk/window.py:180
+#: alphacam_gtk/window.py:268
 msgid "Fit Part"
 msgstr ""
 
@@ -2218,492 +2218,492 @@ msgid_plural "{n} passes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/window.py:119
+#: alphacam_gtk/window.py:126
 msgid "No Part Open"
 msgstr ""
 
-#: alphacam_gtk/window.py:120
+#: alphacam_gtk/window.py:127
 msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
 msgstr ""
 
-#: alphacam_gtk/window.py:122
+#: alphacam_gtk/window.py:129
 msgid "_New Part…"
 msgstr ""
 
-#: alphacam_gtk/window.py:124
+#: alphacam_gtk/window.py:131
 msgid "_Open…"
 msgstr ""
 
-#: alphacam_gtk/window.py:131 alphacam_gtk/window.py:250
+#: alphacam_gtk/window.py:138 alphacam_gtk/window.py:257
 msgid "New Part…"
 msgstr ""
 
-#: alphacam_gtk/window.py:132 alphacam_gtk/window.py:251
+#: alphacam_gtk/window.py:139 alphacam_gtk/window.py:258
 msgid "Open…"
 msgstr ""
 
-#: alphacam_gtk/window.py:133
+#: alphacam_gtk/window.py:140
 msgid "Open Machine Page"
 msgstr ""
 
-#: alphacam_gtk/window.py:159
+#: alphacam_gtk/window.py:166
 msgid "Add Operation (Key C)"
 msgstr ""
 
-#: alphacam_gtk/window.py:163
+#: alphacam_gtk/window.py:170
 msgid "Operations"
 msgstr ""
 
-#: alphacam_gtk/window.py:225 alphacam_gtk/window.py:304
+#: alphacam_gtk/window.py:232 alphacam_gtk/window.py:312
 msgid "Part"
 msgstr ""
 
-#: alphacam_gtk/window.py:226 alphacam_gtk/window.py:837
+#: alphacam_gtk/window.py:233 alphacam_gtk/window.py:863
 msgid "Program"
 msgstr ""
 
-#: alphacam_gtk/window.py:228
+#: alphacam_gtk/window.py:235
 msgid "Sheet"
 msgstr ""
 
-#: alphacam_gtk/window.py:230
+#: alphacam_gtk/window.py:237
 msgid "Tools"
 msgstr ""
 
-#: alphacam_gtk/window.py:232
+#: alphacam_gtk/window.py:239
 msgid "Machine"
 msgstr ""
 
-#: alphacam_gtk/window.py:238
+#: alphacam_gtk/window.py:245
 msgid "Open (Ctrl+O)"
 msgstr ""
 
-#: alphacam_gtk/window.py:240
+#: alphacam_gtk/window.py:247
 msgid "Save (Ctrl+S)"
 msgstr ""
 
-#: alphacam_gtk/window.py:244
+#: alphacam_gtk/window.py:251
 msgid "Undo (Ctrl+Z)"
 msgstr ""
 
-#: alphacam_gtk/window.py:246
+#: alphacam_gtk/window.py:253
 msgid "Redo (Ctrl+Shift+Z)"
 msgstr ""
 
-#: alphacam_gtk/window.py:253
+#: alphacam_gtk/window.py:260
 msgid "Save As…"
 msgstr ""
 
-#: alphacam_gtk/window.py:254
+#: alphacam_gtk/window.py:261
 msgid "Save as ALPHA-T Drawing…"
 msgstr ""
 
-#: alphacam_gtk/window.py:262
+#: alphacam_gtk/window.py:269
 msgid "Show Grid"
 msgstr ""
 
-#: alphacam_gtk/window.py:263 alphacam_gtk/window.py:831
+#: alphacam_gtk/window.py:270 alphacam_gtk/window.py:857
 msgid "Part Settings"
 msgstr ""
 
-#: alphacam_gtk/window.py:264
+#: alphacam_gtk/window.py:271
 msgid "Clear Messages"
 msgstr ""
 
-#: alphacam_gtk/window.py:267
+#: alphacam_gtk/window.py:274
 msgid "Automatic"
 msgstr ""
 
-#: alphacam_gtk/window.py:267
+#: alphacam_gtk/window.py:274
 msgid "Pointer"
 msgstr ""
 
-#: alphacam_gtk/window.py:267
+#: alphacam_gtk/window.py:274
 msgid "Touch"
 msgstr ""
 
-#: alphacam_gtk/window.py:271
+#: alphacam_gtk/window.py:278
 msgid "Input Layout"
 msgstr ""
 
-#: alphacam_gtk/window.py:277
+#: alphacam_gtk/window.py:284
 msgid "_Export PRG"
 msgstr ""
 
-#: alphacam_gtk/window.py:279
+#: alphacam_gtk/window.py:286
 msgid "Export ALPHA-T Program (Ctrl+E)"
 msgstr ""
 
-#: alphacam_gtk/window.py:282
+#: alphacam_gtk/window.py:289
 msgid "Touch Lock (Hold to Unlock by Touch)"
 msgstr ""
 
-#: alphacam_gtk/window.py:313
+#: alphacam_gtk/window.py:321
 msgid "Training Manual"
 msgstr ""
 
-#: alphacam_gtk/window.py:314
+#: alphacam_gtk/window.py:322
 msgid "Reference Manual"
 msgstr ""
 
-#: alphacam_gtk/window.py:324
+#: alphacam_gtk/window.py:332
 msgid "About AlphaLink CAM"
 msgstr ""
 
-#: alphacam_gtk/window.py:345
+#: alphacam_gtk/window.py:353
 msgid ""
 "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr ""
 
-#: alphacam_gtk/window.py:410
+#: alphacam_gtk/window.py:418
 msgid "Parts and drawings"
 msgstr ""
 
-#: alphacam_gtk/window.py:414
+#: alphacam_gtk/window.py:422
 msgid "Open Part"
 msgstr ""
 
-#: alphacam_gtk/window.py:437
+#: alphacam_gtk/window.py:445
 #, python-brace-format
 msgid "the file is damaged or not this kind of file ({error})"
 msgstr ""
 
-#: alphacam_gtk/window.py:438 alphacam_gtk/window.py:472
+#: alphacam_gtk/window.py:446 alphacam_gtk/window.py:480
 #, python-brace-format
 msgid "Could not open {name}: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:448
+#: alphacam_gtk/window.py:456
 msgid "Import DXF"
 msgstr ""
 
-#: alphacam_gtk/window.py:449
+#: alphacam_gtk/window.py:457
 #, python-brace-format
 msgid "{name}: the DXF X axis becomes Z. How is Y drawn?"
 msgstr ""
 
-#: alphacam_gtk/window.py:451
+#: alphacam_gtk/window.py:459
 msgid "DXF Y is"
 msgstr ""
 
-#: alphacam_gtk/window.py:451
+#: alphacam_gtk/window.py:459
 msgid "Diameter"
 msgstr ""
 
-#: alphacam_gtk/window.py:452 alphacam_gtk/window.py:692
-#: alphacam_gtk/window.py:786
+#: alphacam_gtk/window.py:460 alphacam_gtk/window.py:718
+#: alphacam_gtk/window.py:812
 msgid "Units"
 msgstr ""
 
-#: alphacam_gtk/window.py:452 alphacam_gtk/window.py:692
-#: alphacam_gtk/window.py:786 alphacam_gtk/window.py:836
-#: alphacam_gtk/window.py:847
+#: alphacam_gtk/window.py:460 alphacam_gtk/window.py:718
+#: alphacam_gtk/window.py:812 alphacam_gtk/window.py:862
+#: alphacam_gtk/window.py:873
 msgid "inch"
 msgstr ""
 
-#: alphacam_gtk/window.py:452 alphacam_gtk/window.py:692
-#: alphacam_gtk/window.py:786 alphacam_gtk/window.py:836
-#: alphacam_gtk/window.py:847
+#: alphacam_gtk/window.py:460 alphacam_gtk/window.py:718
+#: alphacam_gtk/window.py:812 alphacam_gtk/window.py:862
+#: alphacam_gtk/window.py:873
 msgid "mm"
 msgstr ""
 
-#: alphacam_gtk/window.py:454
+#: alphacam_gtk/window.py:462
 msgid "Upper half only"
 msgstr ""
 
-#: alphacam_gtk/window.py:455
+#: alphacam_gtk/window.py:463
 msgid "Drop the mirrored half below the axis"
 msgstr ""
 
-#: alphacam_gtk/window.py:460
+#: alphacam_gtk/window.py:468
 msgid "_Import"
 msgstr ""
 
-#: alphacam_gtk/window.py:481
+#: alphacam_gtk/window.py:489
 #, python-brace-format
 msgid "Imported {n} element from {name}."
 msgid_plural "Imported {n} elements from {name}."
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/window.py:484
+#: alphacam_gtk/window.py:492
 #, python-brace-format
 msgid "Skipped: {what}."
 msgstr ""
 
-#: alphacam_gtk/window.py:493
+#: alphacam_gtk/window.py:501
 #, python-brace-format
 msgid "{name}: drawing only, no .SD1 found next to it, so no operations."
 msgstr ""
 
-#: alphacam_gtk/window.py:494
+#: alphacam_gtk/window.py:502
 msgid "_Choose .SD1…"
 msgstr ""
 
-#: alphacam_gtk/window.py:501
+#: alphacam_gtk/window.py:509
 msgid "ALPHA-T program listing (.SD1)"
 msgstr ""
 
-#: alphacam_gtk/window.py:505
+#: alphacam_gtk/window.py:513
 #, python-brace-format
 msgid "Choose the .SD1 for {name}"
 msgstr ""
 
-#: alphacam_gtk/window.py:515 alphacam_gtk/window.py:542
+#: alphacam_gtk/window.py:523 alphacam_gtk/window.py:550
 #, python-brace-format
 msgid "Operations not rebuilt from {name}: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:517
+#: alphacam_gtk/window.py:525
 #, python-brace-format
 msgid "Operations from {name}"
 msgstr ""
 
-#: alphacam_gtk/window.py:520 alphacam_gtk/window.py:551
+#: alphacam_gtk/window.py:528 alphacam_gtk/window.py:559
 #, python-brace-format
 msgid "Rebuilt {n} operation from {name}."
 msgid_plural "Rebuilt {n} operations from {name}."
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/window.py:525 alphacam_gtk/window.py:548
+#: alphacam_gtk/window.py:533 alphacam_gtk/window.py:556
 #, python-brace-format
 msgid "The program matches ALPHA-T's {name} byte for byte."
 msgstr ""
 
-#: alphacam_gtk/window.py:526 alphacam_gtk/window.py:550
+#: alphacam_gtk/window.py:534 alphacam_gtk/window.py:558
 #, python-brace-format
 msgid "The program differs from ALPHA-T's {name}: check before sending."
 msgstr ""
 
-#: alphacam_gtk/window.py:586
+#: alphacam_gtk/window.py:612
 msgid "Untitled"
 msgstr ""
 
-#: alphacam_gtk/window.py:599
+#: alphacam_gtk/window.py:625
 #, python-brace-format
 msgid "Operation {n}: "
 msgstr ""
 
-#: alphacam_gtk/window.py:600
+#: alphacam_gtk/window.py:626
 #, python-brace-format
 msgid "{where}{error}. Export is disabled."
 msgstr ""
 
-#: alphacam_gtk/window.py:609
+#: alphacam_gtk/window.py:635
 #, python-brace-format
 msgid "Program {number} · {name} · tools {tools}"
 msgstr ""
 
-#: alphacam_gtk/window.py:644
+#: alphacam_gtk/window.py:670
 #, python-brace-format
 msgid "Undid {action}"
 msgstr ""
 
-#: alphacam_gtk/window.py:650
+#: alphacam_gtk/window.py:676
 #, python-brace-format
 msgid "Redid {action}"
 msgstr ""
 
-#: alphacam_gtk/window.py:658
+#: alphacam_gtk/window.py:684
 #, python-brace-format
 msgid "Add {what}"
 msgstr ""
 
-#: alphacam_gtk/window.py:681
+#: alphacam_gtk/window.py:707
 msgid "Move operation"
 msgstr ""
 
-#: alphacam_gtk/window.py:691
+#: alphacam_gtk/window.py:717
 msgid "New parts"
 msgstr ""
 
-#: alphacam_gtk/window.py:698 alphacam_gtk/window.py:754
+#: alphacam_gtk/window.py:724 alphacam_gtk/window.py:780
 msgid "Billet diameter"
 msgstr ""
 
-#: alphacam_gtk/window.py:699 alphacam_gtk/window.py:755
+#: alphacam_gtk/window.py:725 alphacam_gtk/window.py:781
 msgid "Billet length"
 msgstr ""
 
-#: alphacam_gtk/window.py:700
+#: alphacam_gtk/window.py:726
 msgid "First tool"
 msgstr ""
 
-#: alphacam_gtk/window.py:711
+#: alphacam_gtk/window.py:737
 msgid "Export"
 msgstr ""
 
-#: alphacam_gtk/window.py:712
+#: alphacam_gtk/window.py:738
 msgid "Also save the ALPHA-T drawing (.SDG)"
 msgstr ""
 
-#: alphacam_gtk/window.py:713
-msgid "next to the program, so DOS ALPHA-T can open the part"
+#: alphacam_gtk/window.py:739
+msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr ""
 
-#: alphacam_gtk/window.py:718 alphacam_gtk/window.py:721
+#: alphacam_gtk/window.py:744 alphacam_gtk/window.py:747
 msgid "Language"
 msgstr ""
 
-#: alphacam_gtk/window.py:718
+#: alphacam_gtk/window.py:744
 msgid "Takes effect after restarting the app."
 msgstr ""
 
-#: alphacam_gtk/window.py:720
+#: alphacam_gtk/window.py:746
 msgid "Same as the desktop"
 msgstr ""
 
-#: alphacam_gtk/window.py:756
+#: alphacam_gtk/window.py:782
 msgid "Bore"
 msgstr ""
 
-#: alphacam_gtk/window.py:756
-msgid "tube billet; 0 = solid bar"
+#: alphacam_gtk/window.py:782
+msgid "Tube billet; 0 = solid bar"
 msgstr ""
 
-#: alphacam_gtk/window.py:765
+#: alphacam_gtk/window.py:791
 msgid "Chuck jaws"
 msgstr ""
 
-#: alphacam_gtk/window.py:766
+#: alphacam_gtk/window.py:792
 msgid "In the bore"
 msgstr ""
 
-#: alphacam_gtk/window.py:766
+#: alphacam_gtk/window.py:792
 msgid "On the outside"
 msgstr ""
 
-#: alphacam_gtk/window.py:768
+#: alphacam_gtk/window.py:794
 msgid "Show tailstock"
 msgstr ""
 
-#: alphacam_gtk/window.py:785
+#: alphacam_gtk/window.py:811
 msgid "Billet size and units. The drawing starts empty."
 msgstr ""
 
-#: alphacam_gtk/window.py:794
+#: alphacam_gtk/window.py:820
 msgid "_Create"
 msgstr ""
 
-#: alphacam_gtk/window.py:815
+#: alphacam_gtk/window.py:841
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr ""
 
-#: alphacam_gtk/window.py:833
+#: alphacam_gtk/window.py:859
 msgid "Billet"
 msgstr ""
 
-#: alphacam_gtk/window.py:834
+#: alphacam_gtk/window.py:860
 msgid "Billet, chuck jaws and tailstock only change the picture."
 msgstr ""
 
-#: alphacam_gtk/window.py:835
+#: alphacam_gtk/window.py:861
 msgid "Drawing units"
 msgstr ""
 
-#: alphacam_gtk/window.py:835
-msgid "set when the part was made"
+#: alphacam_gtk/window.py:861
+msgid "Set when the part was made"
 msgstr ""
 
-#: alphacam_gtk/window.py:840
+#: alphacam_gtk/window.py:866
 msgid "Program number"
 msgstr ""
 
-#: alphacam_gtk/window.py:841
-msgid "shown on the control"
+#: alphacam_gtk/window.py:867
+msgid "Shown on the control"
 msgstr ""
 
-#: alphacam_gtk/window.py:846
+#: alphacam_gtk/window.py:872
 msgid "M71 mm / M70 inch on the control"
 msgstr ""
 
-#: alphacam_gtk/window.py:846
+#: alphacam_gtk/window.py:872
 msgid "Program units"
 msgstr ""
 
-#: alphacam_gtk/window.py:847
+#: alphacam_gtk/window.py:873
 msgid "As the drawing"
 msgstr ""
 
-#: alphacam_gtk/window.py:868
+#: alphacam_gtk/window.py:894
 msgid "Part settings"
 msgstr ""
 
-#: alphacam_gtk/window.py:907
+#: alphacam_gtk/window.py:933
 msgid "Save as ALPHA-T Drawing"
 msgstr ""
 
-#: alphacam_gtk/window.py:919
+#: alphacam_gtk/window.py:945
 #, python-brace-format
 msgid "Saving the drawing failed: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:921
+#: alphacam_gtk/window.py:947
 #, python-brace-format
 msgid "Saved {files}."
 msgstr ""
 
-#: alphacam_gtk/window.py:923
+#: alphacam_gtk/window.py:949
 msgid "ALPHA-T needs a name of at most 8 characters."
 msgstr ""
 
-#: alphacam_gtk/window.py:940
+#: alphacam_gtk/window.py:966
 msgid "Save Part"
 msgstr ""
 
-#: alphacam_gtk/window.py:959
+#: alphacam_gtk/window.py:985
 #, python-brace-format
 msgid "Could not save: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:970
+#: alphacam_gtk/window.py:996
 msgid "Save changes?"
 msgstr ""
 
-#: alphacam_gtk/window.py:971
+#: alphacam_gtk/window.py:997
 msgid ""
 "The part has changes that are not saved. They are lost if you close without "
 "saving."
 msgstr ""
 
-#: alphacam_gtk/window.py:973
+#: alphacam_gtk/window.py:999
 msgid "_Discard"
 msgstr ""
 
-#: alphacam_gtk/window.py:974
+#: alphacam_gtk/window.py:1000
 msgid "_Save"
 msgstr ""
 
-#: alphacam_gtk/window.py:998
+#: alphacam_gtk/window.py:1024
 msgid "Export Alpha-T Program"
 msgstr ""
 
-#: alphacam_gtk/window.py:1019
+#: alphacam_gtk/window.py:1045
 #, python-brace-format
 msgid "Export failed: {error}"
 msgstr ""
 
-#: alphacam_gtk/window.py:1022
+#: alphacam_gtk/window.py:1048
 #, python-brace-format
 msgid "Exported {name} ({size} bytes), {listing} and the drawing {drawing}"
 msgstr ""
 
-#: alphacam_gtk/window.py:1026
+#: alphacam_gtk/window.py:1052
 #, python-brace-format
 msgid "Exported {name} ({size} bytes) and {listing}"
 msgstr ""
 
-#: alphacam_gtk/window.py:1029
+#: alphacam_gtk/window.py:1055
 #, python-brace-format
 msgid "Exported {name} ({size} bytes)"
 msgstr ""
 
-#: alphacam_gtk/window.py:1130
+#: alphacam_gtk/window.py:1156
 #, python-brace-format
 msgid "Program {number} · {units} · {lines} lines · {size} bytes"
 msgstr ""
 
-#: alphacam_gtk/window.py:1133
+#: alphacam_gtk/window.py:1159
 msgid "incomplete (see banner)"
 msgstr ""
