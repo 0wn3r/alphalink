@@ -113,6 +113,20 @@ class Remote:
         if shift:
             self.keysym(Gdk.KEY_Shift_L, False)
 
+    # --- display (scale, rotation) --------------------------------------------------------------------------------------
+
+    def display(self, scale: float = 1.0, transform: int = 0) -> None:
+        """Set the (only) monitor's scale and rotation (transform 0 normal, 1 = 90°, 3 = 270°), as GNOME Settings does,
+        through Mutter's DisplayConfig API. The mode stays; the logical size is the mode / scale, swapped when
+        rotated."""
+        dc = "org.gnome.Mutter.DisplayConfig"
+        serial, monitors, _logical, _props = self._call(dc, "/org/gnome/Mutter/DisplayConfig", dc, "GetCurrentState")
+        (connector, *_), modes, _mprops = monitors[0]
+        mode = next(m for m in modes if m[6].get("is-current")) if any(m[6].get("is-current") for m in modes) else modes[0]
+        cfg = [(0, 0, scale, transform, True, [(connector, mode[0], {})])]
+        self._call(dc, "/org/gnome/Mutter/DisplayConfig", dc, "ApplyMonitorsConfig",
+                   GLib.Variant("(uua(iiduba(ssa{sv}))a{sv})", (serial, 1, cfg, {})))
+
     # --- screen ---------------------------------------------------------------------------------------------------------
 
     def grab(self):

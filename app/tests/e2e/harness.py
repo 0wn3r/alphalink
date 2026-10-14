@@ -32,8 +32,11 @@ MASKED_SERVICES = ("org.freedesktop.secrets", "org.gnome.keyring", "org.freedesk
 
 
 class GnomeSession:
-    def __init__(self, width: int, height: int, keep: bool = False):
-        self.width, self.height, self.keep = width, height, keep
+    def __init__(self, width: int, height: int, keep: bool = False, scale: float = 1.0):
+        """`width` × `height` logical pixels; `scale` 2 gives a monitor of twice that, at 200 % (the Surface)."""
+        self.width, self.height, self.keep, self.scale = width, height, keep, scale
+        self.mode = (width, height)  # logical size unrotated
+        self.display_name = f"alphalink-e2e-{os.getpid()}"  # several sessions may run at once
         self.procs: list[subprocess.Popen] = []
         self.root = Path(tempfile.mkdtemp(prefix="alphalink-e2e-"))
         self.env: dict[str, str] = {}
@@ -78,14 +81,19 @@ class GnomeSession:
         for cmd in (["pipewire"], ["wireplumber"]):
             self._spawn(cmd)
             time.sleep(0.5)
-        self._spawn(["gnome-shell", "--headless", "--wayland", "--no-x11", "--wayland-display", "alphalink-e2e",
-                     "--virtual-monitor", f"{self.width}x{self.height}"], log="shell.log")
-        env["WAYLAND_DISPLAY"] = "alphalink-e2e"
+        self._spawn(["gnome-shell", "--headless", "--wayland", "--no-x11", "--wayland-display", self.display_name,
+                     "--virtual-monitor", f"{int(self.width * self.scale)}x{int(self.height * self.scale)}"],
+                    log="shell.log")
+        env["WAYLAND_DISPLAY"] = self.display_name
         self._apply_env()
         self._wait_name("org.gnome.Mutter.RemoteDesktop", 30)
         from .remote import Remote  # noqa: needs the session's bus in os.environ first
 
         self.remote = Remote()  # screen grabs, and the session libei connects through
+        if self.scale != 1.0:
+            self.remote.display(self.scale)
+            time.sleep(1.0)
+            self.remote = Remote()  # a new monitor configuration ends the old screen cast stream
         self.input = self._input()
         time.sleep(1.0)
         self.key("Escape")  # GNOME starts in the Activities overview
@@ -116,12 +124,31 @@ class GnomeSession:
                 p.wait(5)
             except subprocess.TimeoutExpired:
                 os.killpg(p.pid, signal.SIGKILL)
+        self._kill_strays()
         if not self.keep:
             shutil.rmtree(self.root, ignore_errors=True)
 
+    def _kill_strays(self) -> None:
+        """Services the session bus started on demand (gvfs, evolution, ibus, at-spi, portals...) are not in our
+        process groups: end every process that lives in this session's runtime directory."""
+        mark = f"XDG_RUNTIME_DIR={self.root / 'run'}".encode()
+        for pid in os.listdir("/proc"):
+            if not pid.isdigit() or int(pid) == os.getpid():
+                continue
+            try:
+                env = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+            except OSError:
+                continue
+            if mark in env:
+                try:
+                    os.kill(int(pid), signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+
     def _spawn(self, cmd: list[str], log: str | None = None) -> subprocess.Popen:
         out = open(self.root / (log or f"{cmd[0]}.log"), "w")
-        p = subprocess.Popen(cmd, env=self.env, stdout=out, stderr=subprocess.STDOUT, start_new_session=True)
+        p = subprocess.Popen(cmd, env=self.env, stdin=subprocess.DEVNULL, stdout=out, stderr=subprocess.STDOUT,
+                             start_new_session=True)
         self.procs.append(p)
         return p
 
@@ -161,13 +188,26 @@ class GnomeSession:
     def _find_top(self) -> int:
         """Height of the top bar: the first row whose colour differs from the bar's (an empty spot of it)."""
         img = self.grab()
-        x = int(self.width * 0.3)
+        k = img.width / self.width  # physical pixels per logical one
+        x = int(img.width * 0.3)
         bar = img.getpixel((x, 2))[:3]
-        for y in range(3, min(80, img.height)):
+        for y in range(3, min(int(80 * k), img.height)):
             px = img.getpixel((x, y))[:3]
             if sum(abs(a - b) for a, b in zip(px, bar)) > 40:
-                return y
+                return round(y / k)
         return 0
+
+    def rotate(self, transform: int) -> None:
+        """Turn the monitor (1 = 90°: a landscape Surface held in portrait); width and height swap."""
+        from .remote import Remote
+
+        self.remote.display(self.scale, transform)
+        w, h = self.mode
+        self.width, self.height = (h, w) if transform in (1, 3) else (w, h)
+        time.sleep(1.5)
+        # the new monitor configuration ends the screen cast stream, and with it the input devices
+        self.remote = Remote()
+        self.input = self._input()
 
     # --- input (real events) -------------------------------------------------------------------------------------
 

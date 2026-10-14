@@ -80,6 +80,24 @@ class Surface(unittest.TestCase):
         self.snap("timeout")
         self.fail(f"timed out waiting for {what}")
 
+    def calibrate(self):
+        """Screen → drawing coordinates from the pointer read-out at two spots (the view is linear). The pointer is
+        moved in small steps: GTK reads the first event over a widget as entering it, not as a motion."""
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        pts = []
+        for fx, fy in ((0.2, 0.2), (0.8, 0.8)):
+            sx, sy = x + w * fx, y + h * fy
+            for d in (6, 3, 0):
+                self.s.move(sx + d, sy + d)
+                time.sleep(0.1)
+            name = self.app.readout().split()
+            pts.append((sx, sy, float(name[1]), float(name[3])))
+        (sx0, sy0, x0, z0), (sx1, sy1, x1, z1) = pts
+        kz, kx = (z1 - z0) / (sx1 - sx0), (x1 - x0) / (sy1 - sy0)
+        self.mm_per_px = abs(kz)
+        self.to_world = lambda sx, sy: (x0 + (sy - sy0) * kx, z0 + (sx - sx0) * kz)
+        return lambda xd, z: (sx0 + (z - z0) / kz, sy0 + (xd - x0) / kx)
+
     def saved(self, path: Path) -> Project:
         self.s.key("ctrl+s")
         time.sleep(1.0)
@@ -177,24 +195,6 @@ class Mouse(Surface):
 
 
 class Touch(Surface):
-    def calibrate(self):
-        """Screen → drawing coordinates from the pointer read-out at two spots (the view is linear). The pointer is
-        moved in small steps: GTK reads the first event over a widget as entering it, not as a motion."""
-        x, y, w, h = self.app.rect(self.app.find("Drawing"))
-        pts = []
-        for fx, fy in ((0.2, 0.2), (0.8, 0.8)):
-            sx, sy = x + w * fx, y + h * fy
-            for d in (6, 3, 0):
-                self.s.move(sx + d, sy + d)
-                time.sleep(0.1)
-            name = self.app.readout().split()
-            pts.append((sx, sy, float(name[1]), float(name[3])))
-        (sx0, sy0, x0, z0), (sx1, sy1, x1, z1) = pts
-        kz, kx = (z1 - z0) / (sx1 - sx0), (x1 - x0) / (sy1 - sy0)
-        self.mm_per_px = abs(kz)
-        self.to_world = lambda sx, sy: (x0 + (sy - sy0) * kx, z0 + (sx - sx0) * kz)
-        return lambda xd, z: (sx0 + (z - z0) / kz, sy0 + (xd - x0) / kx)
-
     def test_pinch_zoom_keeps_the_spot_between_the_fingers(self):
         """Two fingers (libei multi-touch): spreading them 100 → 400 px zooms in about 4× around their midpoint."""
         self.launch(str(self.part(shaft())), "--touch")
@@ -284,6 +284,31 @@ class Ukrainian(Surface):
         self.snap("part")
 
 
+class FakeLathe:
+    """The control's end of a socat pty pair, acting as the FANUC-based Alpha 400T does: DC1 (0x11) asks for data,
+    DC3 (0x13, 0x93 from some drivers) pauses it; the sender must stop within 10 characters (FANUC alarm 087)."""
+
+    def __init__(self, path: str):
+        self.fd = os.open(path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK)
+        self.got = bytearray()
+
+    def close(self) -> None:
+        os.close(self.fd)
+
+    def send(self, b: bytes) -> None:
+        os.write(self.fd, b)
+
+    def read_for(self, seconds: float, until: int | None = None) -> int:
+        """Collect what arrives for `seconds` (or until `until` bytes in all); returns the number of new bytes."""
+        n0, end = len(self.got), time.time() + seconds
+        while time.time() < end and (until is None or len(self.got) < until):
+            try:
+                self.got.extend(os.read(self.fd, 65536))
+            except BlockingIOError:
+                time.sleep(0.01)
+        return len(self.got) - n0
+
+
 @unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class SendOverVirtualPort(Surface):
     """The whole send, over a socat pty pair standing in for the lathe (the app is given only that port)."""
@@ -293,39 +318,21 @@ class SendOverVirtualPort(Surface):
         self.pty = self.s.root / "lathe"
         self.socat = subprocess.Popen(["socat", f"pty,raw,echo=0,link={self.pty}-app",
                                        f"pty,raw,echo=0,link={self.pty}-lathe"],
-                                      stderr=subprocess.DEVNULL, start_new_session=True)
+                                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                      start_new_session=True)
         for _ in range(50):
             if Path(f"{self.pty}-lathe").exists():
                 break
             time.sleep(0.1)
+        self.lathe = FakeLathe(f"{self.pty}-lathe")
 
     def tearDown(self):
+        self.lathe.close()
         self.socat.terminate()
         super().tearDown()
 
-    def test_program_arrives_byte_for_byte(self):
-        p = shaft()
-        from alphacam_gtk.op_factory import default_op
-
-        p.operations.append(default_op("finish", p, 0))
-        expected = post(p)
-        got = bytearray()
-
-        def lathe():
-            fd = os.open(f"{self.pty}-lathe", os.O_RDWR | os.O_NOCTTY)
-            try:
-                end = time.time() + 60
-                os.set_blocking(fd, False)
-                while time.time() < end and len(got) < len(expected):
-                    os.write(fd, b"\x11")  # DC1: the control asks for data
-                    time.sleep(0.2)
-                    try:
-                        got.extend(os.read(fd, 65536))
-                    except BlockingIOError:
-                        pass
-            finally:
-                os.close(fd)
-
+    def start_send(self, p: Project) -> bytes:
+        """Open the part with only the virtual port, hold Send to the Lathe and confirm; returns the program."""
         port = os.path.realpath(f"{self.pty}-app")
         self.app = self.s.launch_app("en", args=(str(self.part(p)),), env={"ALPHALINK_TEST_PORTS": port})
         time.sleep(1.0)
@@ -337,9 +344,218 @@ class SendOverVirtualPort(Surface):
         self.s.hold(x, y, 2.5)  # hold to start (1.5 s)
         self.snap("confirm")
         self.press("Send", "button")
-        t = threading.Thread(target=lathe, daemon=True)
-        t.start()
-        self.wait_for(lambda: self.app.exists("Sent ", contains=True), 60, "the send to finish")
-        t.join(5)
+        return post(p)
+
+    def big_part(self) -> Project:
+        p = shaft()
+        from alphacam_gtk.op_factory import default_op
+
+        p.operations += [default_op("area_clear", p, 0), default_op("finish", p, 1)]
+        return p
+
+    def test_program_arrives_byte_for_byte(self):
+        expected = self.start_send(self.big_part())
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(expected))
+        self.wait_for(lambda: self.app.exists("Sent ", contains=True), 20, "the send to finish")
         self.snap("sent")
-        self.assertEqual(bytes(got[:len(expected)]), expected)
+        self.assertEqual(bytes(self.lathe.got), expected)
+
+    def test_nothing_is_sent_before_dc1(self):
+        """With "Wait for the control (DC1)" on, not a byte goes out until the lathe asks."""
+        expected = self.start_send(self.big_part())
+        self.assertEqual(self.lathe.read_for(3.0), 0, "bytes sent before DC1")
+        self.snap("waiting")
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)
+
+    def dc3_pauses_and_dc1_resumes(self, xoff: int) -> None:
+        expected = self.start_send(self.big_part())
+        self.assertGreater(len(expected), 1500)
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(30, until=400)
+        self.lathe.send(bytes([xoff]))
+        on_the_way = self.lathe.read_for(0.3)
+        self.assertLessEqual(on_the_way, 10, "more than 10 characters after DC3 (FANUC alarm 087)")
+        late = self.lathe.read_for(2.0)
+        self.snap(f"paused-{xoff:02x}")
+        self.assertEqual(late, 0, "still sending 0.3 s after DC3")
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)
+
+    def test_dc3_0x93_pauses_and_dc1_resumes(self):
+        self.dc3_pauses_and_dc1_resumes(0x93)
+
+    def test_dc3_0x13_pauses_and_dc1_resumes(self):
+        self.dc3_pauses_and_dc1_resumes(0x13)
+
+def with_op(kind: str = "area_clear") -> Project:
+    p = shaft()
+    from alphacam_gtk.op_factory import default_op
+
+    p.operations.append(default_op(kind, p, 0))
+    return p
+
+
+class TouchMore(Surface):
+    """More touch workflows (libei touchscreen)."""
+
+    def element_point(self, to_screen, g: Line) -> tuple[float, float]:
+        return to_screen((g.a.x + g.b.x) / 2, (g.a.z + g.b.z) / 2)
+
+    def test_keypad_enters_points(self):
+        """Touch: the Keypad button opens the on-screen keypad; X 0 → Z 0 ✓, then X 40 → Z 0 ✓ draws a line."""
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path), "--touch")
+        self.press("Line", "radio button")
+        for keys in (("0", "→", "0", "✓"), ("4", "0", "→", "0", "✓")):
+            self.s.tap(*self.app.center("Keypad", "button"))
+            self.app.find("✓", "button")
+            self.snap("keypad")
+            for k in keys:
+                self.s.tap(*self.app.center(k, "button"))
+            time.sleep(0.4)
+        self.press("Done", "button")
+        p = self.saved(path)
+        self.assertEqual([(g.a, g.b) for g in p.geometry], [(Point(0, 0), Point(40, 0))])
+
+    def test_pick_contour_by_taps(self):
+        """Touch: Pick Contour on the Drawing, tap three elements, Done; the operation keeps them in that order."""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        self.s.tap(*self.app.center("Pick Contour on the Drawing", "button"))
+        time.sleep(0.5)
+        to_screen = self.calibrate()  # the editor pane and the picking banner moved the drawing
+        for g in p.geometry[:3]:
+            self.s.tap(*self.element_point(to_screen, g))
+        self.snap("picked")
+        self.press("Done", "button")
+        q = self.saved(path)
+        self.assertEqual(q.operations[0].contour, ["g0", "g1", "g2"])
+
+    def test_touch_lock_ignores_taps_until_held(self):
+        """Touch Lock: taps do nothing while locked; holding the lock button unlocks."""
+        self.launch(str(self.part(shaft())), "--touch")
+        lock = self.app.find("Touch Lock", "toggle button", contains=True)
+        self.s.tap(*self.app.center(acc=lock))
+        self.assertTrue(self.app.checked(lock), "the lock should be on")
+        line = self.app.find("Line", "radio button")
+        self.s.tap(*self.app.center(acc=line))
+        self.assertFalse(self.app.checked(line), "a tap went through the lock")
+        self.snap("locked")
+        self.s.hold(*self.app.center(acc=lock), 2.5, touch=True)
+        self.assertFalse(self.app.checked(lock), "holding should unlock")
+        self.s.tap(*self.app.center(acc=line))
+        self.assertTrue(self.app.checked(line))
+
+    def test_one_finger_drag_pans(self):
+        """Dragging one finger over the drawing moves it with the finger."""
+        self.launch(str(self.part(shaft())), "--touch")
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        self.calibrate()
+        sx, sy = x + w * 0.5, y + h * 0.5
+        before = self.to_world(sx, sy)
+        self.s.input.touches([(sx, sy)], [(sx + 200, sy)], steps=15)
+        time.sleep(0.5)
+        self.calibrate()
+        after = self.to_world(sx, sy)
+        # the drawing follows the finger to within a few pixels (GTK starts a touch drag after a small threshold)
+        self.assertAlmostEqual(after[1] - before[1], -200 * self.mm_per_px, delta=10 * self.mm_per_px)
+        self.assertAlmostEqual(after[0], before[0], delta=10 * self.mm_per_px)
+
+    def test_editor_switch_by_touch(self):
+        """A tap on an editor switch (Towards the chuck) changes the operation; the part keeps it.
+        (The number rows cannot be reached this way: GTK 4 does not put libadwaita's spin rows in the
+        accessibility tree, see README.)"""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        before = p.operations[0].towards
+        sw = [a for a in self.app.all("Towards the chuck", "switch")]
+        self.s.tap(*self.app.center(acc=sw[-1]))
+        self.snap("switched")
+        q = self.saved(path)
+        self.assertEqual(q.operations[0].towards, not before)
+
+class KeyboardMore(Surface):
+    def test_undo_and_redo(self):
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path))
+        self.s.type("x0,0\n40,0\n40,-20\n")
+        self.s.key("Escape")
+        self.assertEqual(len(self.saved(path).geometry), 2)
+        self.s.key("ctrl+z")
+        self.assertEqual(len(self.saved(path).geometry), 1)
+        self.s.key("shift+ctrl+z")
+        self.assertEqual(len(self.saved(path).geometry), 2)
+
+    def test_simulation_steps_through_passes(self):
+        """Next Pass walks the area clear pass by pass; the label names the move, operation and program line."""
+        self.launch(str(self.part(with_op())))
+        self.press("First Move", "button")
+        for _ in range(3):
+            self.press("Next Pass", "button")
+        label = self.app.find("/", "label", contains=True).get_name()
+        self.assertRegex(label, r"\d+/\d+ · .* · line \d+")
+        self.snap("simulation")
+        self.press("Show All", "button")
+        self.app.find("moves", "label", contains=True)
+
+
+class Scale200(Surface):
+    """The Surface's real scale: a 2736×1824 monitor at 200 % (1368×912 logical)."""
+
+    def setUp(self):
+        from .harness import GnomeSession
+
+        self.s = GnomeSession(*LANDSCAPE, scale=2.0).__enter__()
+        self.out = OUT / f"{self.__class__.__name__}-{self._testMethodName}"
+        self.n = 0
+
+    def test_hidpi_drawing_and_keys(self):
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path))
+        self.assertEqual(self.s.grab().width, 2736)
+        self.s.type("x0,0\n40,0\n40,-25\n")
+        self.s.key("Escape")
+        self.snap("hidpi")
+        self.assertEqual(len(self.saved(path).geometry), 2)
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        self.assertGreater(w, 900)  # logical size, as at 100 %
+
+    def test_hidpi_touch_line(self):
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        self.press("Line", "radio button")
+        for xd, z in ((0, 0), (40, 0)):
+            self.s.tap(*to_screen(xd, z))
+        self.press("Done", "button")
+        p = self.saved(path)
+        self.assertEqual([(round(g.a.x), round(g.a.z), round(g.b.x), round(g.b.z)) for g in p.geometry], [(0, 0, 40, 0)])
+
+
+class Rotation(Surface):
+    def test_turning_the_tablet_switches_the_layout(self):
+        """Landscape → portrait while running: the page tabs move to the bottom, the drawing stays; and back."""
+        self.launch(str(self.part(shaft())))
+        self.assertTrue(self.app.exists("Operations", contains=True))
+        self.s.rotate(1)
+        time.sleep(1.0)
+        self.app.origin = (0, self.s._find_top())
+        self.snap("portrait")
+        self.app.find("Drawing")
+        tabs = self.app.all("Machine", "page tab")
+        self.assertTrue(tabs)
+        self.assertGreater(self.app.rect(tabs[0])[1], self.s.height / 2, "the tabs should be at the bottom")
+        self.s.rotate(0)
+        time.sleep(1.0)
+        self.snap("landscape")
+        tabs = self.app.all("Machine", "page tab")
+        self.assertLess(self.app.rect(tabs[0])[1], 120, "the tabs should be back in the header")

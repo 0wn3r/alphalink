@@ -9,7 +9,7 @@ import gi
 gi.require_version("Atspi", "2.0")
 from gi.repository import Atspi  # noqa: E402
 
-APP_NAMES = ("alphalink-cam", "AlphaLink CAM", "io.github._0wn3r.AlphaLinkCAM", "python3")
+APP_NAMES = ("alphalink-cam", "AlphaLink CAM", "io.github._0wn3r.AlphaLinkCAM", "python3", "__main__.py")
 
 
 class NotFound(LookupError):

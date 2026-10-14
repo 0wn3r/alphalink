@@ -43,6 +43,10 @@ class InputMode(GObject.Object):
             self.emit("lock-changed", locked)
 
     def _guard(self, ctl, event) -> bool:
+        if event is None:  # PyGObject does not hand GdkEvent (a fundamental type) to the handler: ask the controller
+            event = ctl.get_current_event()
+        if event is None:
+            return False
         if not self.locked or event.get_event_type() not in (
                 Gdk.EventType.TOUCH_BEGIN, Gdk.EventType.TOUCH_UPDATE, Gdk.EventType.TOUCH_END,
                 Gdk.EventType.BUTTON_PRESS, Gdk.EventType.BUTTON_RELEASE, Gdk.EventType.MOTION_NOTIFY):

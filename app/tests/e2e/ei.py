@@ -94,11 +94,21 @@ class EI:
                     for cap in (CAP_KEYBOARD, CAP_POINTER_ABSOLUTE, CAP_TOUCH, CAP_BUTTON):
                         if _lib.ei_device_has_capability(dev, cap):
                             self.devices[cap] = dev
+                elif t in (DEVICE_REMOVED, DEVICE_PAUSED):  # e.g. the monitor's scale changed: new devices follow
+                    dev = _lib.ei_event_get_device(ev)
+                    for cap in [c for c, d in self.devices.items() if d and _lib.ei_device_has_capability(dev, c)]:
+                        self.devices.pop(cap, None)
                 elif t == DISCONNECT:
                     raise RuntimeError("libei: the compositor disconnected")
                 _lib.ei_event_unref(ev)
             if done() or time.time() > end:
                 return
+
+    def _device(self, cap: int):
+        """The device for `cap`, waiting for it after the compositor replaced its devices."""
+        if not self.devices.get(cap):
+            self._pump(lambda: bool(self.devices.get(cap)), 5)
+        return self.devices[cap]
 
     def _frame(self, dev) -> None:
         _lib.ei_device_frame(dev, _lib.ei_now(self.ei))
@@ -107,7 +117,7 @@ class EI:
     # --- devices ---------------------------------------------------------------------------------------------------
 
     def key(self, name: str, pressed: bool) -> None:
-        dev = self.devices[CAP_KEYBOARD]
+        dev = self._device(CAP_KEYBOARD)
         _lib.ei_device_keyboard_key(dev, KEY[name], pressed)
         self._frame(dev)
 
@@ -139,19 +149,19 @@ class EI:
             self.key("Shift_L", False)
 
     def pointer_to(self, x: float, y: float) -> None:
-        dev = self.devices[CAP_POINTER_ABSOLUTE]
+        dev = self._device(CAP_POINTER_ABSOLUTE)
         _lib.ei_device_pointer_motion_absolute(dev, x, y)
         self._frame(dev)
 
     def button(self, button: int, pressed: bool) -> None:
-        dev = self.devices.get(CAP_BUTTON) or self.devices[CAP_POINTER_ABSOLUTE]
+        dev = self.devices.get(CAP_BUTTON) or self._device(CAP_POINTER_ABSOLUTE)
         _lib.ei_device_button_button(dev, button, pressed)
         self._frame(dev)
 
     def touches(self, start: list[tuple[float, float]], end: list[tuple[float, float]] | None = None,
                 steps: int = 10, hold: float = 0.06) -> None:
         """Fingers down at `start`, moved together to `end` in `steps` frames (a pinch or a drag), then up."""
-        dev = self.devices[CAP_TOUCH]
+        dev = self._device(CAP_TOUCH)
         ts = [_lib.ei_device_touch_new(dev) for _ in start]
         for t, (x, y) in zip(ts, start):
             _lib.ei_touch_down(t, x, y)

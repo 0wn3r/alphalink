@@ -3,6 +3,7 @@ per process; AT-SPI cannot switch buses):
 
     python3 -m tests.e2e.run                 # all
     python3 -m tests.e2e.run Keyboard Touch  # some classes
+    python3 -m tests.e2e.run -j 1            # one at a time (default: 3 at once)
 """
 
 import os
@@ -29,17 +30,30 @@ def ids(names: list[str]) -> list[str]:
 
 
 def main() -> int:
+    """`-j N` runs N tests at once (each has its own GNOME session; default 3)."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    args = sys.argv[1:]
+    jobs = 3
+    if "-j" in args:
+        i = args.index("-j")
+        jobs = int(args[i + 1])
+        del args[i:i + 2]
     env = dict(os.environ, ALPHALINK_E2E="1")
-    failed = []
-    tests = ids(sys.argv[1:])
-    for i, test in enumerate(tests, 1):
-        print(f"[{i}/{len(tests)}] {test}", flush=True)
+    tests = ids(args)
+
+    def one(test):
         r = subprocess.run([sys.executable, "-m", "unittest", test], env=env, capture_output=True, text=True)
-        tail = r.stderr.strip().splitlines()[-1:] if r.stderr else []
-        print("    " + (tail[0] if tail else "?"), flush=True)
-        if r.returncode:
-            failed.append(test)
-            print("\n".join("    " + line for line in r.stderr.splitlines()[-25:]), flush=True)
+        return test, r
+
+    failed = []
+    with ThreadPoolExecutor(jobs) as pool:
+        for i, (test, r) in enumerate(pool.map(one, tests), 1):
+            tail = r.stderr.strip().splitlines()[-1:] if r.stderr else []
+            print(f"[{i}/{len(tests)}] {test}\n    {tail[0] if tail else '?'}", flush=True)
+            if r.returncode:
+                failed.append(test)
+                print("\n".join("    " + line for line in r.stderr.splitlines()[-25:]), flush=True)
     print(f"\n{len(tests) - len(failed)} passed, {len(failed)} failed")
     return 1 if failed else 0
 
