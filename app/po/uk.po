@@ -1276,6 +1276,27 @@ msgstr "Збільшити біля курсора"
 msgid "Recall View"
 msgstr "Повернути вигляд"
 
+msgid "Cursor (Drawing Has the Focus)"
+msgstr "Курсор (фокус на кресленні)"
+
+msgid "Move the Cursor by the Step"
+msgstr "Зсунути курсор на крок"
+
+msgid "Step ×10"
+msgstr "Крок ×10"
+
+msgid "Cursor to the Middle of the View"
+msgstr "Курсор у центр вигляду"
+
+msgid "Step ÷10"
+msgstr "Крок ÷10"
+
+msgid "Cursor to X0 Z0"
+msgstr "Курсор у X0 Z0"
+
+msgid "Use the Cursor as the Point"
+msgstr "Взяти курсор як точку"
+
 msgid "Drawing Keys (Part Page)"
 msgstr "Клавіші креслення (сторінка «Деталь»)"
 

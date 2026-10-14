@@ -660,4 +660,11 @@ UK = {
 "Blend Arc… (Key O)": "Дуга сполучення… (клавіша O)",
 "{what} found. Press Delete or minus to erase it": "Знайдено {what}. Натисніть Delete або мінус, щоб стерти",
 "Select a line or arc first, or press L or A to find the nearest": "Спершу виберіть лінію чи дугу або натисніть L чи A, щоб знайти найближчу",
+"Cursor (Drawing Has the Focus)": "Курсор (фокус на кресленні)",
+"Move the Cursor by the Step": "Зсунути курсор на крок",
+"Step ×10": "Крок ×10",
+"Step ÷10": "Крок ÷10",
+"Cursor to the Middle of the View": "Курсор у центр вигляду",
+"Cursor to X0 Z0": "Курсор у X0 Z0",
+"Use the Cursor as the Point": "Взяти курсор як точку",
 }

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-14 10:21+0300\n"
+"POT-Creation-Date: 2026-10-14 10:24+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -413,7 +413,7 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:26 alphacam_gtk/drawing_tools.py:647
 #: alphacam_gtk/op_editor.py:265 alphacam_gtk/op_editor.py:291
-#: alphacam_gtk/shortcuts.py:29
+#: alphacam_gtk/shortcuts.py:33
 msgid "Arc"
 msgstr ""
 
@@ -430,7 +430,7 @@ msgstr ""
 msgid "Select"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:27 alphacam_gtk/shortcuts.py:30
+#: alphacam_gtk/drawing_tools.py:27 alphacam_gtk/shortcuts.py:34
 msgid "Chamfer"
 msgstr ""
 
@@ -858,7 +858,7 @@ msgstr ""
 msgid "Blend arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1038 alphacam_gtk/shortcuts.py:30
+#: alphacam_gtk/drawing_tools.py:1038 alphacam_gtk/shortcuts.py:34
 msgid "Blend Arc"
 msgstr ""
 
@@ -1847,78 +1847,106 @@ msgid "Recall View"
 msgstr ""
 
 #: alphacam_gtk/shortcuts.py:25
+msgid "Cursor (Drawing Has the Focus)"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:26
+msgid "Move the Cursor by the Step"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:26
+msgid "Step ×10"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:27
+msgid "Cursor to the Middle of the View"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:27
+msgid "Step ÷10"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:28
+msgid "Cursor to X0 Z0"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:28
+msgid "Use the Cursor as the Point"
+msgstr ""
+
+#: alphacam_gtk/shortcuts.py:29
 msgid "Drawing Keys (Part Page)"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:26
+#: alphacam_gtk/shortcuts.py:30
 msgid "Find Nearest Arc"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:26
+#: alphacam_gtk/shortcuts.py:30
 msgid "Find Nearest Line"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:26
+#: alphacam_gtk/shortcuts.py:30
 msgid "Find Nearest Point"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:27
+#: alphacam_gtk/shortcuts.py:31
 msgid "Draw Line by X,Z"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:27
+#: alphacam_gtk/shortcuts.py:31
 msgid "Find Nearest Intersection"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:28
+#: alphacam_gtk/shortcuts.py:32
 msgid "Draw Line by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:28
+#: alphacam_gtk/shortcuts.py:32
 msgid "Draw Line by Taps"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:29
+#: alphacam_gtk/shortcuts.py:33
 msgid "Radius at the Nearest Corner"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:29
+#: alphacam_gtk/shortcuts.py:33
 msgid "Start at the Cursor"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:30
+#: alphacam_gtk/shortcuts.py:34
 msgid "Trim Corner"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:31
+#: alphacam_gtk/shortcuts.py:35
 msgid "Move Cursor by dX,dZ"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:31
+#: alphacam_gtk/shortcuts.py:35
 msgid "Move Cursor to X,Z"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:32
+#: alphacam_gtk/shortcuts.py:36
 msgid "Measure by X,Z"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:32
+#: alphacam_gtk/shortcuts.py:36
 msgid "Move Cursor by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:33
+#: alphacam_gtk/shortcuts.py:37
 msgid "Add Text"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:33
+#: alphacam_gtk/shortcuts.py:37
 msgid "Erase Text"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:33
+#: alphacam_gtk/shortcuts.py:37
 msgid "Measure by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/shortcuts.py:34
+#: alphacam_gtk/shortcuts.py:38
 msgid "Erase the Whole Drawing"
 msgstr ""
 

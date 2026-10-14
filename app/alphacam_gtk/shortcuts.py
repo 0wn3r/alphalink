@@ -22,6 +22,10 @@ SECTIONS = [
     (N_("View"), [(N_("Zoom In"), "<Control>plus"), (N_("Zoom Out"), "<Control>minus"),
                   (N_("Fit Part"), "<Control>0"), (N_("Zoom In at the Cursor"), "z"), (N_("Redraw"), "r"),
                   (N_("Recall View"), "v")]),
+    (N_("Cursor (Drawing Has the Focus)"), [
+        (N_("Move the Cursor by the Step"), "Left Right Up Down"), (N_("Step ×10"), "Page_Up"),
+        (N_("Step ÷10"), "Page_Down"), (N_("Cursor to the Middle of the View"), "Home"),
+        (N_("Cursor to X0 Z0"), "End"), (N_("Use the Cursor as the Point"), "Return")]),
     (N_("Drawing Keys (Part Page)"), [
         (N_("Find Nearest Line"), "l"), (N_("Find Nearest Arc"), "a"), (N_("Find Nearest Point"), "p"),
         (N_("Find Nearest Intersection"), "i"), (N_("Draw Line by X,Z"), "x"),
