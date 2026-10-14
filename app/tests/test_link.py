@@ -93,8 +93,16 @@ class SendReceive(unittest.TestCase):
 
     def test_receive_idle_timeout(self):
         threading.Timer(0.05, lambda: os.write(self.ctl.master, b"%\r\nhalf")).start()
-        with self.assertRaises(sl.TransferTimeout):
+        with self.assertRaises(sl.TransferTimeout) as cm:
             sl.receive(self.ser, first_timeout=3, idle_timeout=0.3)
+        self.assertEqual(cm.exception.data, b"%\r\nhalf")  # what arrived is kept, not thrown away
+
+    def test_receive_ends_at_dc4(self):
+        """The NC ends its output with DC4; a backup with one % (or none) still ends there."""
+        backup = b"\x12%\r\n:0001\r\nG01X1.Z-2.\r\n\x14"
+        threading.Timer(0.1, lambda: os.write(self.ctl.master, backup + b"trailing")).start()
+        got = sl.receive(self.ser, first_timeout=3, idle_timeout=2)
+        self.assertEqual(got, backup)
 
 
 class Pure(unittest.TestCase):

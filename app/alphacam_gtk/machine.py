@@ -301,11 +301,29 @@ class MachinePage(Gtk.Box):
     def _backup(self) -> None:
         def work(ser, dlg, log):
             GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”")) and False)
-            return sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, 10.0, log)
+            try:
+                data, complete = sl.receive(ser, self._progress(dlg, _("Receiving…")), dlg.cancel, None, 10.0, log), True
+            except sl.TransferTimeout as e:
+                if not e.data:
+                    raise
+                data, complete = e.data, False  # the end mark never came: keep what arrived, marked partial
+            try:  # the raw bytes next to the log, whatever happens to the save dialog
+                LOG_DIR.mkdir(parents=True, exist_ok=True)
+                raw = LOG_DIR / datetime.now().strftime("%Y%m%d-%H%M%S-manops.raw")
+                raw.write_bytes(data)
+                log.add(f"raw bytes kept in {raw}")
+            except OSError as err:
+                log.add(f"raw bytes not kept: {err}")
+            return data, complete
 
-        def done(dlg, data):
-            dlg.finish(True, _("Received {n} bytes.").format(n=len(data)))
-            name = datetime.now().strftime("MANOPS-%Y%m%d-%H%M.MOP")
+        def done(dlg, result):
+            data, complete = result
+            if complete:
+                dlg.finish(True, _("Received {n} bytes.").format(n=len(data)))
+            else:
+                dlg.finish(False, _("Received {n} bytes, but the end mark never came, so the backup may be incomplete. "
+                                    "Save it anyway, and keep the lathe's ops until a full backup works.").format(n=len(data)))
+            name = datetime.now().strftime("MANOPS-%Y%m%d-%H%M.MOP" if complete else "MANOPS-%Y%m%d-%H%M-PARTIAL.MOP")
             fd = Gtk.FileDialog(title=_("Save Manual Ops Backup"), initial_name=name)
 
             def saved(d, res):

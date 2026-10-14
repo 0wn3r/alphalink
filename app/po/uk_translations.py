@@ -743,4 +743,5 @@ UK = {
 "{n} threads per inch": "{n} ниток на дюйм",
 "Relief groove": "Канавка для виходу різьби",
 "DIN 76 proportions, at the back end of the line": "Пропорції DIN 76, на задньому кінці лінії",
+"Received {n} bytes, but the end mark never came, so the backup may be incomplete. Save it anyway, and keep the lathe's ops until a full backup works.": "Отримано {n} байт, але кінцевої позначки не було, тож копія може бути неповною. Усе одно збережіть її і не видаляйте операції на верстаті, доки повна копія не вдасться.",
 }

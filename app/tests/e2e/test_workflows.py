@@ -310,9 +310,8 @@ class FakeLathe:
         return len(self.got) - n0
 
 
-@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
-class SendOverVirtualPort(Surface):
-    """The whole send, over a socat pty pair standing in for the lathe (the app is given only that port)."""
+class VirtualPort(Surface):
+    """A socat pty pair standing in for the lathe's line (the app is given only its end)."""
 
     def setUp(self):
         super().setUp()
@@ -331,6 +330,11 @@ class SendOverVirtualPort(Surface):
         self.lathe.close()
         self.socat.terminate()
         super().tearDown()
+
+
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
+class SendOverVirtualPort(VirtualPort):
+    """The whole send, over the virtual port."""
 
     def start_send(self, p: Project) -> bytes:
         """Open the part with only the virtual port, hold Send to the Lathe and confirm; returns the program."""
@@ -1071,3 +1075,47 @@ class StandardFeatures(Surface):
         self.app.find("1/2-13 UNC", contains=True, showing=False)  # the toast
         q = self.saved(path)
         self.assertAlmostEqual(q.operations[-1].pitch, 1 / 13, places=6)
+
+
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
+class BackupOverVirtualPort(VirtualPort):
+    """Manual Ops backup (lathe -> app) over the virtual port; the fake lathe plays the control's punch output."""
+
+    def start_backup(self):
+        port = os.path.realpath(f"{self.pty}-app")
+        self.app = self.s.launch_app("en", args=(str(self.part(shaft())),), env={"ALPHALINK_TEST_PORTS": port})
+        time.sleep(1.0)
+        self.press("Machine", "page tab")
+        time.sleep(0.5)
+        x, y = self.app.center(acc=self.app.labelled("Back Up Manual Ops from the Lathe…", "button"))
+        for d in (6, 3, 0):  # GTK takes the first event over a widget as entering it
+            self.s.move(x + d, y)
+            time.sleep(0.1)
+        self.s.click(x, y)
+        self.app.find("Waiting for data", contains=True)
+
+    def saved_backup(self, name: str) -> bytes:
+        FileDialogs.chooser(self)
+        self.s.key("ctrl+a")
+        self.s.type(name + "\n")
+        path = self.s.root / "home" / name
+        self.wait_for(path.exists, 10, name)
+        return path.read_bytes()
+
+    def test_backup_ends_at_dc4(self):
+        data = b"\x12%\r\n:0001 STOP\r\nX40.Z-25.\r\n\x14"
+        self.start_backup()
+        self.lathe.send(data)
+        self.app.find("Received", contains=True, showing=False)
+        self.assertEqual(self.saved_backup("FULL.MOP"), data)
+
+    def test_quiet_line_keeps_what_arrived(self):
+        """No end mark: after the line goes quiet the app says the backup may be incomplete and still saves it."""
+        data = b"%\r\n:0001 STOP\r\nX40.Z-25.\r\n"
+        self.start_backup()
+        self.lathe.send(data)
+        self.app.find("may be incomplete", contains=True, showing=False, timeout=20)
+        self.snap("partial")
+        self.assertEqual(self.saved_backup("PART.MOP"), data)
+        raw = list((self.s.root / "home/.var/app").glob("*/.local/state/alphalink-cam/logs/*-manops.raw"))
+        self.assertEqual([r.read_bytes() for r in raw], [data])

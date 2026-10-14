@@ -29,7 +29,9 @@ class Cancelled(Exception):
 
 
 class TransferTimeout(Exception):
-    pass
+    def __init__(self, message: str = "", data: bytes = b""):
+        super().__init__(message)
+        self.data = data  # what arrived before the line went quiet: never thrown away
 
 
 @dataclass
@@ -144,10 +146,18 @@ def send(ser, data: bytes, opts: SendOptions | None = None, progress: Callable[[
     return i
 
 
+DC2, DC4 = 0x12, 0x14  # the NC's punch start and end codes (FANUC: DC2 before the data, DC4 after it)
+
+
+def _tail(data: bytes, n: int = 48) -> str:
+    return data[-n:].hex(" ")
+
+
 def receive(ser, progress: Callable[[int], None] | None = None, cancel=None, first_timeout: float | None = None,
             idle_timeout: float | None = 10.0, log: TransferLog | None = None) -> bytes:
-    """Receive until the second '%' (Manual Ops Save). Raw bytes are returned before any decoding.
-    first_timeout: give up if nothing arrives at all; idle_timeout: give up after a pause once data flowed."""
+    """Receive until the second '%' (Manual Ops Save, as ATMANOP stores it), or the NC's DC4 end code once data has
+    come. Raw bytes are returned before any decoding. first_timeout: give up if nothing arrives at all;
+    idle_timeout: give up after a pause once data flowed (the bytes so far ride on the TransferTimeout)."""
     log = log or TransferLog()
     out = bytearray()
     percents = 0
@@ -157,21 +167,27 @@ def receive(ser, progress: Callable[[int], None] | None = None, cancel=None, fir
         chunk = ser.read(256)
         now = time.monotonic()
         if chunk:
+            if not out:
+                log.add(f"first bytes: {chunk[:24].hex(' ')}")
             t_last = now
             for b in chunk:
                 out.append(b)
                 if b & 0x7F == 0x25:
                     percents += 1
+                    log.add(f"% at byte {len(out)}")
                     if percents == 2:
                         log.add(f"second % after {len(out)} bytes")
                         return bytes(out)
+                elif b & 0x7F == DC4 and len(out) > 1:
+                    log.add(f"DC4 (end) after {len(out)} bytes, {percents} %; last bytes: {_tail(out)}")
+                    return bytes(out)
             if progress:
                 progress(len(out))
         elif not out and first_timeout is not None and now - t_last > first_timeout:
             raise TransferTimeout(tr("nothing received"))
         elif out and idle_timeout is not None and now - t_last > idle_timeout:
-            log.add(f"idle timeout after {len(out)} bytes")
-            raise TransferTimeout(tr("transfer stopped after {n} bytes (no second %)", n=len(out)))
+            log.add(f"idle timeout after {len(out)} bytes, {percents} %; last bytes: {_tail(out)}")
+            raise TransferTimeout(tr("transfer stopped after {n} bytes (no second %)", n=len(out)), bytes(out))
 
 
 def manops_load_bytes(data: bytes) -> bytes:

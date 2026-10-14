@@ -907,6 +907,9 @@ msgstr "Отримання…"
 msgid "Received {n} bytes."
 msgstr "Отримано {n} байт."
 
+msgid "Received {n} bytes, but the end mark never came, so the backup may be incomplete. Save it anyway, and keep the lathe's ops until a full backup works."
+msgstr "Отримано {n} байт, але кінцевої позначки не було, тож копія може бути неповною. Усе одно збережіть її і не видаляйте операції на верстаті, доки повна копія не вдасться."
+
 msgid "Save Manual Ops Backup"
 msgstr "Зберегти резервну копію ручних операцій"
 
