@@ -24,20 +24,26 @@ So the lathe's Harrison macros treat the app's programs as ALPHA-T programs.
 
 * **Drawing**: lines and arcs by typed X,Z / @dX,dZ or by taps with snapping and a grid; fillets, chamfers (any
   angle), corners; ALPHA-T's construction commands under **More** (circle, tangents, parallel line, split arc,
-  blend arc, Mirror Image); Edit Element to retype end points; ALPHA-T's one-letter keys (X, D, F, K, L, A, ...),
-  also with the Ukrainian keyboard layout; DXF import.
+  blend arc, Mirror Image); Edit Element to retype end points, or drag a point's handle; standard threads (ISO
+  metric, UNC, UNF) with the minor line, a relief groove and the threading operation in one step; chamfer or round
+  every outside corner at once; ALPHA-T's one-letter keys (X, D, F, K, L, A, ...), also with the Ukrainian keyboard
+  layout; right click (or Shift+F10) and long press open the element menu; DXF import.
 * **Operations** (every ALPHA-T option that gives a usable program): area clear (internal, face direction, follow
   contour, retract distance, pre-finish), finish pass (internal, face), face clear, grooving (radial, internal, face
   grooving, pecking, finish mode, datum, Z shift and repeats), threading (pitch, cuts, lead in/out, infeed angle,
   spring passes), drilling (peck, dwell, full retract, retract distance), tool change, dwell, move / rapid.
-  ALPHA-T's AWAY programs are unsafe on real parts, so the app refuses AWAY and says why.
-* **Checking**: pass-by-pass simulation linked to the program lines, the program exactly as sent, and ALPHA-T's
-  setup sheet.
+  ALPHA-T's AWAY programs are unsafe on real parts, so the app refuses AWAY and says why. New operations take the
+  outer profile (grooves and threads their own lines) and bring their own tool change; operations can be duplicated
+  and reordered by dragging.
+* **Checking**: pass-by-pass simulation linked to the program lines (speed, jump to an operation or a tapped
+  toolpath), the program exactly as sent (search, go to N10), ALPHA-T's setup sheet with restart numbers, tool
+  warnings, and a safety check before export (gouges, rapids through the part, chuck jaws, tailstock, dives steeper
+  than the tool clears); warnings never block a deliberate program.
 * **Files**: parts as .alcam; opens ALPHA-T drawings (.SDG, operations rebuilt from the .SD1) and DXF; exports
   .PRG + .SD1, optionally in other units than the drawing; saves ALPHA-T drawings (.SDG) so DOS ALPHA-T can open
   them.
-* **Machine**: sending with the control's XON handshake, Manual Ops backup and restore, loopback cable test; the app
-  never starts a cycle.
+* **Machine**: sending with the control's XON handshake, Manual Ops backup (the 400T's DC2 ... DC4 output, waiting
+  through its pauses, partial data always kept) and restore, loopback cable test; the app never starts a cycle.
 * **Touch**: thumb-sized bars, number pad, touch lock while coolant runs. English and Ukrainian, in-app help (F1),
   and a Training and a Reference Manual (PDF, both languages) from the main menu.
 

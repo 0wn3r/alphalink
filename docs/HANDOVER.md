@@ -1,4 +1,4 @@
-# Handover: AlphaLink / Harrison Alpha 400T (2026-10-13)
+# Handover: AlphaLink / Harrison Alpha 400T (2026-10-14)
 
 Repo `github.com/0wn3r/alphalink`; work is pushed straight to `main` (the user allows it, no PRs).
 
@@ -10,7 +10,9 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 | Track | Status |
 |---|---|
 | Lathe link | Works with the manual's cable and bridges. Programs load and run (Progress 29). Details in `docs/ALPHA-T_STATUS.md`. |
-| GNOME app | `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Status and design in `app/DESIGN.md`. |
+| GNOME app | `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Since 2026-10-14: touch work from `app/TOUCH.md`, the workflow improvements' quick wins, a safety check before export, standard threads (metric, UNC, UNF) and corners in one go, right-click menu. Status and design in `app/DESIGN.md`. |
+| Manual Ops | First real backup works (25 ops, O1001, DC2 ... DC4, no %; RE_NOTES Progress 40). Restore of such a file not yet tried on the machine. |
+| Workflow plan | Claude Doc https://claude.ai/code/artifact/8b56ba44-0ceb-4639-bdd9-9030c2ce306a (steps 1-3 done; next: job templates). |
 | Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample (`app/tests`) except the 7 refused AWAY samples and 3 that differ on purpose (chuck-end picks, GROOVE_back); sub-micron differences on FACE_slope/FACE_arcs and two inch samples. All listed in `app/tests/test_post.py`. |
 | Options | Every ALPHA-T option is sampled. AWAY (area, face, thread) is refused on purpose (ALPHA-T's own output is unsafe); contours picked from the chuck end are cut as if picked from the front. |
 
@@ -21,6 +23,10 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 
 ## Build and test
 - Tests: `cd app && python3 -m unittest discover -s tests -t .`
+- End-to-end tests on the installed Flatpak (headless GNOME session, input through libei, Surface Pro 7 sizes,
+  DOSBox-X running ALPHA-T, socat ports for the lathe): `cd app && python3 -m tests.e2e.run -j 3`
+  (`app/tests/e2e/README.md`). GitHub Actions builds the Flatpak on every push.
+- Follow the GNOME HIG for every UI change; every UI string needs a Ukrainian translation.
 - Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`
 - After UI string changes: `python3 tools/update_translations.py` (Ukrainian strings in `app/po/uk_translations.py`).
