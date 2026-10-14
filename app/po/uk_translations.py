@@ -709,4 +709,12 @@ UK = {
 "Playback Speed": "Швидкість відтворення",
 "Tool change to T{n} added: {name}": "Додано зміну інструмента на T{n}: {name}",
 "Duplicate {what}": "Дублювання: {what}",
+"moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})": "заходить у кулачки патрона (Z{z:g}, за довжиною заготовки {l:g})",
+"moves into the tailstock centre (X{x:g} Z{z:g})": "заходить у центр задньої бабки (X{x:g} Z{z:g})",
+"a rapid move passes through the part at X{x:g} Z{z:g}": "швидке переміщення проходить крізь деталь у X{x:g} Z{z:g}",
+"cuts into the part at X{x:g} Z{z:g}": "врізається в деталь у X{x:g} Z{z:g}",
+"dives at {a:.0f}°, steeper than T{n} clears (Invalid tip angle)": "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n} (недопустимий кут вершини)",
+"Safety check: {where}{what}": "Перевірка безпеки: {where}{what}",
+"_Show": "_Показати",
+("Safety check: {where}{what} (and {n} more)", "Safety check: {where}{what} (and {n} more)"): ["Перевірка безпеки: {where}{what} (і ще {n})"] * 3,
 }

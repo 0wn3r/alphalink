@@ -329,6 +329,7 @@ class MainWindow(Adw.ApplicationWindow):
         header.pack_end(self.lock_button)
 
         self.banner = Adw.Banner()
+        self.banner.connect("button-clicked", lambda *_: self._show_finding())
         self.switcher_bar = Adw.ViewSwitcherBar(stack=self.stack)
         content = Adw.ToolbarView()
         content.add_top_bar(header)
@@ -652,6 +653,10 @@ class MainWindow(Adw.ApplicationWindow):
         project = self.project
         selected = self.selected_index()
         self.pv = preview(project, library=self.library)
+        from alphacam.safety import check as safety_check
+
+        # the safety check before export: warnings, never a block (alphacam/safety.py)
+        self.findings = safety_check(project, self.pv, self.library) if self.pv.data is not None else []
         name = self.path.name if self.path else _("Untitled")
         dirty = "• " if self.undo and self.undo.modified else ""
         self.set_title(f"{dirty}{name} – AlphaLink CAM")
@@ -667,9 +672,21 @@ class MainWindow(Adw.ApplicationWindow):
         if self.pv.error:
             n = "" if self.pv.error_op is None else _("Operation {n}: ").format(n=self.pv.error_op + 1)
             self.banner.set_title(_("{where}{error}. Export is disabled.").format(where=n, error=self.pv.error))
+            self.banner.set_button_label(None)
+            self.banner.set_revealed(True)
+        elif self.findings:
+            f = self.findings[0]
+            where = "" if f.op_index is None else _("Operation {n}: ").format(n=f.op_index + 1)
+            more = len(self.findings) - 1
+            self.banner.set_title(ngettext("Safety check: {where}{what} (and {n} more)",
+                                           "Safety check: {where}{what} (and {n} more)", more).format(
+                where=where, what=f.message, n=more) if more else
+                _("Safety check: {where}{what}").format(where=where, what=f.message))
+            self.banner.set_button_label(_("_Show"))
             self.banner.set_revealed(True)
         else:
             self.banner.set_revealed(False)
+        self.canvas.alerts = [(f.x, f.z) for f in self.findings]
         self.export_action.set_enabled(self.pv.data is not None)
         self.undo_action.set_enabled(bool(self.undo and self.undo.can_undo))
         self.redo_action.set_enabled(bool(self.undo and self.undo.can_redo))
@@ -1158,6 +1175,9 @@ class MainWindow(Adw.ApplicationWindow):
         from alphacam.checks import tool_warnings
 
         warnings = tool_warnings(self.project, self.library)
+        for f in getattr(self, "findings", []):
+            if f.op_index is not None:
+                warnings.setdefault(f.op_index, []).append(f.message)
         for i, op in enumerate(self.project.operations):
             pv = self.pv.for_op(i)
             row = Adw.ActionRow(title=op_title(op), subtitle=op_summary(op, pv), activatable=True)
@@ -1287,6 +1307,18 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack.set_visible_child_name("program")
         self.program_searchbar.set_search_mode(True)
         self.program_search.grab_focus()
+
+    def _show_finding(self) -> None:
+        """The banner's Show: the first warning's operation, and the drawing centred on the place."""
+        if not getattr(self, "findings", None):
+            return
+        f = self.findings[0]
+        self.stack.set_visible_child_name("part")
+        if f.op_index is not None:
+            self._select_op(f.op_index)
+        sx, sy = self.canvas.view.to_screen(f.x, f.z)
+        self.canvas.view.pan(self.canvas.get_width() / 2 - sx, self.canvas.get_height() / 2 - sy)
+        self.canvas._user_view_change()
 
     def _program_find(self, text: str, step: int) -> None:
         """Highlight the next (step 1), previous (-1) or first (0) match from the last one; "N10" or "10" alone goes to

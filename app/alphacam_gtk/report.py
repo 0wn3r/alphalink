@@ -51,6 +51,11 @@ def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
     from alphacam.checks import tool_warnings
 
     warnings = tool_warnings(project, library)
+    from alphacam.safety import check as safety_check
+
+    for f in safety_check(project, pv, library) if pv.data is not None else []:
+        if f.op_index is not None:
+            warnings.setdefault(f.op_index, []).append(f.message)
     for op in pv.ops:
         for block in op.blocks:
             name = block.op_name

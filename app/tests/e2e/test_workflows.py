@@ -957,3 +957,25 @@ class QuickWinsUI(Surface):
         label = self.app.find("/", "label", contains=True).get_name()
         self.assertIn("op 2", label)  # the simulation stands at the finish pass
         self.snap("at-finish")
+
+
+class SafetyCheck(Surface):
+    def test_banner_marks_and_still_exports(self):
+        """A finish pass with a negative allowance cuts into the part: the banner says where, Show goes there, the
+        drawing marks it, the operation carries the warning, and Export PRG still works."""
+        from alphacam.model import FinishPass
+
+        p = shaft()
+        p.operations.append(FinishPass(3, Point(120, 5), [g.id for g in p.geometry], offset_x=-1.0))
+        self.launch(str(self.part(p)))
+        banner = self.app.find("Safety check:", contains=True, showing=False)
+        self.assertIn("cuts into the part", banner.get_name())
+        self.snap("banner")
+        self.press("Show", "button")
+        time.sleep(0.5)
+        self.snap("shown")
+        from gi.repository import Atspi
+
+        export = self.app.find("Export PRG", "button")
+        self.assertTrue(export.get_state_set().contains(Atspi.StateType.SENSITIVE), "export must stay possible")
+        self.assertTrue(self.app.exists("cuts into the part", contains=True, showing=False))  # the row's icon

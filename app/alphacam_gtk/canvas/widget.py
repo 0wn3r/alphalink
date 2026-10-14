@@ -59,6 +59,7 @@ class LatheCanvas(Gtk.DrawingArea):
         self.marker: tuple | None = None  # (Point, kind)
         self.previews: list = []  # construction choices: ("line", a, b) | ("arc", a, centre, b); tap picks one
         self.handles: list = []  # end points of the selected element, draggable (TOUCH.md 5.2)
+        self.alerts: list = []  # (X, Z) where the safety check found a problem: red rings
         self.handle_px = 6.0  # drawn radius; 12 in touch mode
         self.ghost: list = []  # (a, b) lines showing where a dragged point takes its elements
         self.loupe: tuple | None = None  # (finger x, y) while a finger drags a point: magnifier above it (5.1)
@@ -485,6 +486,17 @@ class LatheCanvas(Gtk.DrawingArea):
             cr.line_to(*v.to_screen(b.x, b.z))
             cr.stroke()
             cr.set_dash([])
+        for ax, az in self.alerts:  # the safety check's places
+            sx, sy = v.to_screen(ax, az)
+            cr.set_source_rgba(0.88, 0.11, 0.14, 0.9)
+            cr.set_line_width(2.5)
+            cr.arc(sx, sy, 10, 0, 2 * math.pi)
+            cr.stroke()
+            cr.move_to(sx - 1.5, sy - 5)
+            cr.line_to(sx - 1.5, sy + 1)
+            cr.stroke()
+            cr.arc(sx - 1.5, sy + 4.5, 1.3, 0, 2 * math.pi)
+            cr.fill()
         for h in self.handles:  # the selected element's ends: drag them to move them
             sx, sy = v.to_screen(h.x, h.z)
             self._rgb(cr, "bg")

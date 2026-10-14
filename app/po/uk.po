@@ -184,6 +184,21 @@ msgstr "переміщення чи витримка до першої змін�
 msgid "{type} is not supported by the SD1 writer yet"
 msgstr "{type} поки не записується у файл SD1"
 
+msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
+msgstr "заходить у кулачки патрона (Z{z:g}, за довжиною заготовки {l:g})"
+
+msgid "moves into the tailstock centre (X{x:g} Z{z:g})"
+msgstr "заходить у центр задньої бабки (X{x:g} Z{z:g})"
+
+msgid "a rapid move passes through the part at X{x:g} Z{z:g}"
+msgstr "швидке переміщення проходить крізь деталь у X{x:g} Z{z:g}"
+
+msgid "cuts into the part at X{x:g} Z{z:g}"
+msgstr "врізається в деталь у X{x:g} Z{z:g}"
+
+msgid "dives at {a:.0f}°, steeper than T{n} clears (Invalid tip angle)"
+msgstr "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n} (недопустимий кут вершини)"
+
 msgid "area clear: no contour below X{x}"
 msgstr "чорнова обробка: немає контуру нижче X{x}"
 
@@ -1833,6 +1848,18 @@ msgstr "Операція {n}: "
 
 msgid "{where}{error}. Export is disabled."
 msgstr "{where}{error}. Експорт вимкнено."
+
+msgid "Safety check: {where}{what} (and {n} more)"
+msgid_plural "Safety check: {where}{what} (and {n} more)"
+msgstr[0] "Перевірка безпеки: {where}{what} (і ще {n})"
+msgstr[1] "Перевірка безпеки: {where}{what} (і ще {n})"
+msgstr[2] "Перевірка безпеки: {where}{what} (і ще {n})"
+
+msgid "Safety check: {where}{what}"
+msgstr "Перевірка безпеки: {where}{what}"
+
+msgid "_Show"
+msgstr "_Показати"
 
 msgid "Program {number} · {name} · tools {tools}"
 msgstr "Програма {number} · {name} · інструменти {tools}"
