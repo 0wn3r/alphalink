@@ -200,6 +200,7 @@ class GtkDrawing(unittest.TestCase):
         self.assertEqual(out["prg"], (SAMPLES / "ARC_finish_metric.PRG").read_bytes())
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkChamferAngle(unittest.TestCase):
     def test_popup_angle_sets_chips_and_geometry(self):
         import gi
@@ -248,6 +249,7 @@ class GtkChamferAngle(unittest.TestCase):
         self.assertAlmostEqual(out["chamfer"].a.x, 40 - 4 * 0.57735, places=3)
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkLineTool(unittest.TestCase):
     def test_done_shown_and_esc_ends_line(self):
         import gi
@@ -507,6 +509,7 @@ class GtkArcCorner(unittest.TestCase):
         self.assertEqual(out["corner"], (Point(40, -25), Point(40, -25)))
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkConstruct(unittest.TestCase):
     def test_parallel_line_by_taps(self):
         import gi
@@ -549,6 +552,7 @@ class GtkConstruct(unittest.TestCase):
         self.assertFalse(out["banner"])
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkEditElement(unittest.TestCase):
     def test_edit_dialog_moves_line_and_neighbours(self):
         import gi
@@ -610,6 +614,7 @@ class GtkEditElement(unittest.TestCase):
         self.assertEqual(out["geom"][2][0], Point(44, -25))
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkLetterKeys(unittest.TestCase):
     def test_a_from_entry_and_ukrainian_layout(self):
         import gi
@@ -653,6 +658,7 @@ class GtkLetterKeys(unittest.TestCase):
         self.assertEqual(out["uk_sel"], out["arc"])
 
 
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
 class GtkEditKeyAndMessages(unittest.TestCase):
     def test_e_edits_and_esc_clears_messages(self):
         import gi

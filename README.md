@@ -53,6 +53,12 @@ flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-cl
 flatpak run io.github._0wn3r.AlphaLinkCAM
 ```
 Tests: `cd app && python3 -m unittest discover -s tests -t .` (the GTK tests use a private Xvfb display when Xvfb is installed).
+End-to-end UI tests on the installed Flatpak (real keyboard, mouse and touch through libei, at Surface Pro 7 sizes):
+`cd app && python3 -m tests.e2e.run`, see [app/tests/e2e/README.md](app/tests/e2e/README.md).
+
+[![Flatpak](https://github.com/0wn3r/alphalink/actions/workflows/flatpak.yml/badge.svg)](https://github.com/0wn3r/alphalink/actions/workflows/flatpak.yml)
+GitHub Actions builds the Flatpak on every push and runs the unit tests inside it. A run's page offers the bundle
+(`AlphaLinkCAM.flatpak`) for download. Install it with `flatpak install --user AlphaLinkCAM.flatpak`.
 
 ## Layout
 | path | content |

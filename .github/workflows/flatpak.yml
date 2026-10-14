@@ -1,0 +1,25 @@
+# Builds the Flatpak on every push and pull request, runs the unit tests inside it (the manifest's test-commands:
+# the ALPHA-T golden posts and the rest; the GTK widget tests need a display and are skipped here), and keeps the
+# bundle as a download on the run's page.
+name: Flatpak
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  flatpak:
+    name: Build and test
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v7
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
+        with:
+          bundle: AlphaLinkCAM.flatpak
+          manifest-path: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
+          cache-key: flatpak-builder-${{ github.sha }}
