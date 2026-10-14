@@ -398,7 +398,8 @@ class DrawingTools:
         self.c.queue_draw()
 
     def accept_cursor(self) -> bool:
-        """Enter on the drawing: the cursor is the next measuring point or the next point of the line."""
+        """Enter on the drawing: the cursor is the next measuring point or the next point of the line or arc;
+        with Fillet or Chamfer it picks the corner nearest the cursor, with Corner the nearest line."""
         if self.cursor is None:
             return False
         if self.measure is not None:
@@ -407,6 +408,18 @@ class DrawingTools:
             self.add_point(self.cursor)
         elif self.c.tool == "arc":
             self._arc_point(self.cursor)
+        elif self.c.tool in ("fillet", "chamfer"):
+            corner = self._corner_near(self.cursor, float("inf"))
+            if corner is None:
+                self.w.toast(_("No corner between two lines"))
+            else:
+                self._size_popover(self.c.tool, corner)
+        elif self.c.tool == "corner":
+            gid = drawing.nearest_element(self.w.project, self.cursor, Line)
+            if gid is None:
+                self.w.toast(_("No line to find"))
+            else:
+                self._corner_pick(gid)
         else:
             return False
         return True
@@ -780,13 +793,22 @@ class DrawingTools:
         spin.set_value(0.04 if inch else 1)
         ok = Gtk.Button(label=_("_Apply"), use_underline=True)
         ok.add_css_class("suggested-action")
-        ok.connect("clicked", lambda *_: (pop.popdown(), self._apply_corner(tool, corner, spin.get_value(), ang())))
+
+        def apply(*_a) -> None:
+            spin.update()  # a typed value not yet committed
+            pop.popdown()
+            self._apply_corner(tool, corner, spin.get_value(), ang())
+
+        ok.connect("clicked", apply)
+        spin.connect("activate", apply)  # keyboard: type the size, Enter applies
         other.append(spin)
         other.append(ok)
         box.append(other)
         pop.set_child(box)
-        pop.connect("closed", lambda p: p.unparent())
+        pop.connect("closed", lambda p: (p.unparent(), self.c.grab_focus()))
         pop.popup()
+        spin.grab_focus()
+        spin.select_region(0, -1)
 
     def _apply_corner(self, tool: str, corner: Point, size: float, angle: float = 45.0) -> None:
         if tool == "fillet":

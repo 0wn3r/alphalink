@@ -667,4 +667,5 @@ UK = {
 "Cursor to the Middle of the View": "Курсор у центр вигляду",
 "Cursor to X0 Z0": "Курсор у X0 Z0",
 "Use the Cursor as the Point": "Взяти курсор як точку",
+"No corner between two lines": "Немає кута між двома лініями",
 }

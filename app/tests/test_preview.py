@@ -736,3 +736,50 @@ class GtkCursorKeysVsPointer(unittest.TestCase):
         app.run([])
         self.assertEqual(out["kept"], Point(20, 0))
         self.assertNotEqual(out["mouse"], Point(20, 0))
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkChamferByKeys(unittest.TestCase):
+    def test_enter_picks_the_corner_and_enter_applies_the_typed_size(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib, Gtk
+
+        from alphacam.model import Line
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def find(root, kind):
+            res, c = [], root.get_first_child()
+            while c:
+                if isinstance(c, kind):
+                    res.append(c)
+                res += find(c, kind)
+                c = c.get_next_sibling()
+            return res
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(60, 50), first_tool=3))
+            w.apply_edit("lines", lambda q: q.geometry.extend([Line(Point(0, 0), Point(40, 0)),
+                                                                Line(Point(40, 0), Point(40, -30))]))
+            w.refresh()
+            d = w.drawing
+            d.hit_key("b")  # Chamfer tool
+            d.move_cursor(Point(38, -2))
+            d.cursor_key("Return")  # the corner nearest the cursor
+            spin = [s for p in find(w.canvas, Gtk.Popover) for s in find(p, Gtk.SpinButton)][-1]
+            spin.set_value(2)
+            spin.emit("activate")  # Enter in the size field
+            out["n"] = len(w.project.geometry)
+            app.quit()
+            return False
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["n"], 3)  # the two lines and the chamfer

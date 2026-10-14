@@ -388,6 +388,9 @@ msgstr "Стерти текст"
 msgid "Cursor step {step}"
 msgstr "Крок курсора {step}"
 
+msgid "No corner between two lines"
+msgstr "Немає кута між двома лініями"
+
 msgid "Measure: tap the 1st point, or move the cursor and press Enter"
 msgstr "Вимірювання: торкніться 1-ї точки або поставте курсор і натисніть Enter"
 
