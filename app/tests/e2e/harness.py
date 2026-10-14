@@ -224,6 +224,14 @@ class GnomeSession:
         self.input.touches([(cx - start / 2, cy), (cx + start / 2, cy)], [(cx - end / 2, cy), (cx + end / 2, cy)], 20)
         time.sleep(0.4)
 
+    def scroll(self, x: float, y: float, clicks: int) -> None:
+        """The mouse wheel over (x, y): positive scrolls down."""
+        self.move(x + 3, y + 3)
+        self.move(x, y)
+        time.sleep(0.1)
+        self.input.scroll(clicks)
+        time.sleep(0.4)
+
     def move(self, x: float, y: float) -> None:
         self.input.pointer_to(x, y)
 

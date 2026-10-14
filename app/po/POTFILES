@@ -1,5 +1,6 @@
 alphacam/__init__.py
 alphacam/__main__.py
+alphacam/checks.py
 alphacam/commands.py
 alphacam/drawing.py
 alphacam/i18n.py

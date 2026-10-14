@@ -31,6 +31,7 @@ for name, res, args in (
         ("ei_device_keyboard_key", None, [P, C.c_uint32, C.c_bool]),
         ("ei_device_pointer_motion_absolute", None, [P, C.c_double, C.c_double]),
         ("ei_device_button_button", None, [P, C.c_uint32, C.c_bool]),
+        ("ei_device_scroll_discrete", None, [P, C.c_int32, C.c_int32]),
         ("ei_device_touch_new", P, [P]), ("ei_touch_down", None, [P, C.c_double, C.c_double]),
         ("ei_touch_motion", None, [P, C.c_double, C.c_double]), ("ei_touch_up", None, [P]), ("ei_touch_unref", P, [P]),
         ("ei_unref", P, [P])):
@@ -91,7 +92,7 @@ class EI:
                     dev = _lib.ei_device_ref(_lib.ei_event_get_device(ev))
                     self.sequence += 1
                     _lib.ei_device_start_emulating(dev, self.sequence)
-                    for cap in (CAP_KEYBOARD, CAP_POINTER_ABSOLUTE, CAP_TOUCH, CAP_BUTTON):
+                    for cap in (CAP_KEYBOARD, CAP_POINTER_ABSOLUTE, CAP_TOUCH, CAP_BUTTON, CAP_SCROLL):
                         if _lib.ei_device_has_capability(dev, cap):
                             self.devices[cap] = dev
                 elif t in (DEVICE_REMOVED, DEVICE_PAUSED):  # e.g. the monitor's scale changed: new devices follow
@@ -156,6 +157,12 @@ class EI:
     def button(self, button: int, pressed: bool) -> None:
         dev = self.devices.get(CAP_BUTTON) or self._device(CAP_POINTER_ABSOLUTE)
         _lib.ei_device_button_button(dev, button, pressed)
+        self._frame(dev)
+
+    def scroll(self, clicks: int) -> None:
+        """Wheel clicks at the pointer: positive scrolls down (120 per click, as libei counts)."""
+        dev = self.devices.get(CAP_SCROLL) or self._device(CAP_POINTER_ABSOLUTE)
+        _lib.ei_device_scroll_discrete(dev, 0, 120 * clicks)
         self._frame(dev)
 
     def touches(self, start: list[tuple[float, float]], end: list[tuple[float, float]] | None = None,

@@ -30,7 +30,7 @@ from .settings import settings  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
-from .op_factory import OP_MENU, default_op  # noqa: E402
+from .op_factory import OP_MENU, default_op, find_tool, tool_for  # noqa: E402
 
 OP_TITLES = {
     "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
@@ -70,6 +70,14 @@ def op_summary(op, pv) -> str:
     return " · ".join(parts)
 
 
+def alphat_name(stem: str) -> str:
+    """A DOS 8.3 name as ALPHA-T and the control expect: upper case, letters, digits, - and _, 8 at most."""
+    import re as _re
+
+    name = _re.sub(r"[^A-Z0-9_-]", "", stem.upper())[:8]
+    return name or "PART"
+
+
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app, title="AlphaLink CAM", default_width=1280, default_height=820)
@@ -99,6 +107,7 @@ class MainWindow(Adw.ApplicationWindow):
         self._setup_lock()
         self._install_actions()
         self.editor.on_pick = self.drawing.start_pick
+        self.editor.on_duplicate = self._duplicate_selected
         self.editor.tool_name = self._tool_name
 
         # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
@@ -715,9 +724,39 @@ class MainWindow(Adw.ApplicationWindow):
         at = self.selected_index()
         at = len(self.project.operations) if at is None else at + 1
         op = default_op(kind, self.project, at)
+        tool = tool_for(kind, self.project, at, self.library)
+        if tool is not None:  # the tool in use does not suit this operation: change to one that does, first
+            tc = default_op("tool_change", self.project, at)
+            tc.tool = tool
+            op.tool = tool
+            t = find_tool(self.project, tool, self.library)
+            if t is not None:
+                op.feed = round(t.default_feed / 25.4, 4) if self.project.units == "inch" else t.default_feed
+                if kind == "groove" and t.width > 0:
+                    op.tip_width = round(t.width / 25.4, 4) if self.project.units == "inch" else t.width
+
+            def add(p):
+                p.operations.insert(at, tc)
+                p.operations.insert(at + 1, op)
+            if self.apply_edit(_("Add {what}").format(what=op_title(op)), add):
+                self.refresh()
+                self._select_op(at + 1)
+                self.toast(_("Tool change to T{n} added: {name}").format(n=tool, name=self._tool_name(tool)))
+            return
         if self.apply_edit(_("Add {what}").format(what=op_title(op)), lambda p: p.operations.insert(at, op)):
             self.refresh()
             self._select_op(at)
+
+    def _duplicate_selected(self) -> None:
+        import copy
+
+        i = self.selected_index()
+        if i is None:
+            return
+        op = copy.deepcopy(self.project.operations[i])
+        if self.apply_edit(_("Duplicate {what}").format(what=op_title(op)), lambda p: p.operations.insert(i + 1, op)):
+            self.refresh()
+            self._select_op(i + 1)
 
     def _delete_selected(self) -> None:
         i = self.selected_index()
@@ -1055,7 +1094,10 @@ class MainWindow(Adw.ApplicationWindow):
         if self.pv is None or self.pv.data is None:
             return
         stem = self.path.stem if self.path else getattr(self, "import_name", None) or "PART"
-        dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{stem}.PRG")
+        dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{alphat_name(stem)}.PRG")
+        last = settings()["export_dir"]
+        if last and Path(last).is_dir():  # back to the same USB stick or folder
+            dlg.set_initial_folder(Gio.File.new_for_path(last))
         dlg.save(self, None, self._export_done)
 
     def _export_done(self, dlg, res) -> None:
@@ -1064,6 +1106,8 @@ class MainWindow(Adw.ApplicationWindow):
         except GLib.Error:
             return
         prg = Path(file.get_path())
+        if not str(prg.parent).startswith("/run/user/"):  # a portal's document folder is not a place to go back to
+            settings().set("export_dir", str(prg.parent))
         # ALPHA-T writes the .SD1 listing next to the .PRG; so do we (same name, same case of the extension)
         listing = prg.with_suffix(".sd1" if prg.suffix.islower() else ".SD1") if self.pv.sd1 is not None else None
         drawing = []
@@ -1111,6 +1155,9 @@ class MainWindow(Adw.ApplicationWindow):
         self._select_guard = True
         self.op_list.remove_all()
         self._select_guard = False
+        from alphacam.checks import tool_warnings
+
+        warnings = tool_warnings(self.project, self.library)
         for i, op in enumerate(self.project.operations):
             pv = self.pv.for_op(i)
             row = Adw.ActionRow(title=op_title(op), subtitle=op_summary(op, pv), activatable=True)
@@ -1124,6 +1171,11 @@ class MainWindow(Adw.ApplicationWindow):
                 row.add_suffix(icon)
                 if i == self.pv.error_op:
                     row.set_subtitle(self.pv.error or "")
+            elif i in warnings:  # a tool that does not look right for the job: a warning, the program is still written
+                icon = Gtk.Image(icon_name="dialog-warning-symbolic", tooltip_text="\n".join(warnings[i]))
+                icon.add_css_class("warning")
+                icon.update_property([Gtk.AccessibleProperty.LABEL], ["; ".join(warnings[i])])
+                row.add_suffix(icon)
             row.add_suffix(self._drag_handle(row, i))
             self.op_list.append(row)
 
@@ -1165,6 +1217,7 @@ class MainWindow(Adw.ApplicationWindow):
             return
         index = None if row is None else row.get_index()
         self.canvas.select(index)
+        self.sim.select_op(index)
         self._highlight_program(index)
         if index is None:
             self.editor_reveal.set_reveal_child(False)
@@ -1178,6 +1231,7 @@ class MainWindow(Adw.ApplicationWindow):
         if index is None:
             self.op_list.unselect_all()
             self.canvas.select(None)
+            self.sim.select_op(None)
             self.editor_reveal.set_reveal_child(False)
             return
         row = self.op_list.get_row_at_index(index)
@@ -1188,6 +1242,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.op_list.select_row(row)
             self._select_guard = False
             self.canvas.select(index)
+            self.sim.select_op(index)
             self._highlight_program(index)
             return
         if self.op_list.get_selected_row() is row:

@@ -86,3 +86,70 @@ class Regressions(unittest.TestCase):
         self.assertAlmostEqual(area.start.x, 1.5 + 20 / 25.4, places=3)
         groove = default_op("groove", p, 0)
         self.assertLess(groove.tip_width, 0.2)
+
+
+class SmarterDefaults(unittest.TestCase):
+    """Workflow quick wins: new operations pick the outer profile, the groove, the thread lines."""
+
+    def groove_part(self):
+        from alphacam.model import Line, Point
+        from alphacam.model.project import Billet, Project
+
+        p = Project(billet=Billet(60, 60))
+        pts = [(0, 0), (40, 0), (40, -20), (34, -20), (34, -26), (40, -26), (40, -40), (60, -40)]
+        p.geometry += [Line(Point(*a), Point(*b)) for a, b in zip(pts, pts[1:])]
+        p.geometry.append(Line(Point(38.2, 0), Point(38.2, -18)))  # the thread's minor diameter, loose
+        for i, g in enumerate(p.geometry):
+            g.id = f"g{i}"
+        return p
+
+    def test_area_clear_takes_only_the_profile(self):
+        from alphacam_gtk.op_factory import default_op
+
+        op = default_op("area_clear", self.groove_part(), 0)
+        self.assertEqual(op.contour, [f"g{i}" for i in range(7)])
+
+    def test_groove_preselects_the_groove_and_its_neighbours(self):
+        from alphacam_gtk.op_factory import default_op
+
+        op = default_op("groove", self.groove_part(), 0)
+        self.assertEqual(op.contour, ["g1", "g2", "g3", "g4", "g5"])
+
+    def test_thread_takes_the_major_and_minor_lines(self):
+        from alphacam_gtk.op_factory import default_op
+
+        op = default_op("thread", self.groove_part(), 0)
+        self.assertEqual((op.outer_line, op.inner_line), ("g1", "g7"))
+
+
+class QuickWins(unittest.TestCase):
+    def test_tool_for_picks_a_grooving_tool_and_a_thread_tool(self):
+        from alphacam.model.tools import standard_library
+        from alphacam_gtk.op_factory import tool_for
+
+        p = SmarterDefaults().groove_part()
+        lib = standard_library()
+        self.assertEqual(lib.get(tool_for("groove", p, 0)).type, "groove")
+        self.assertEqual(lib.get(tool_for("thread", p, 0)).type, "thread")
+        self.assertIsNone(tool_for("area_clear", p, 0))  # T1 turns: no change needed
+
+    def test_tool_warnings(self):
+        from alphacam.checks import tool_warnings
+        from alphacam.model import ToolChange
+        from alphacam_gtk.op_factory import default_op
+
+        p = SmarterDefaults().groove_part()
+        p.operations += [default_op("groove", p, 0)]  # T1, a turning tool
+        w = tool_warnings(p)
+        self.assertTrue(any("not a grooving tool" in m for m in w[0]))
+        p.operations.insert(0, ToolChange(14))
+        p.operations[1].tool = 14
+        p.operations[1].tip_width = 9.0
+        w = tool_warnings(p)
+        self.assertTrue(any("tip width" in m for m in w[1]), w)
+
+    def test_alphat_name(self):
+        from alphacam_gtk.window import alphat_name
+
+        self.assertEqual(alphat_name("shaft v2.final"), "SHAFTV2F")
+        self.assertEqual(alphat_name("вал"), "PART")

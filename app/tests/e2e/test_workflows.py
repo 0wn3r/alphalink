@@ -917,3 +917,43 @@ class TouchMore2(Surface):
         time.sleep(0.6)
         self.snap("closed")
         self.assertFalse(search_entries(), "the search bar is still open")
+
+
+class QuickWinsUI(Surface):
+    """The workflow document's quick wins, through the UI."""
+
+    def test_grooving_brings_its_own_tool_change_and_duplicates(self):
+        p = shaft()
+        p.first_tool = 3
+        path = self.part(p)
+        self.launch(str(path))
+        self.menu("Add Operation (C)", 3)  # OP_MENU: Area Clear, Finish Pass, Face Clear, Grooving
+        time.sleep(0.6)
+        self.app.find("Tool change to T", contains=True, showing=False)
+        self.snap("grooving")
+        q = self.saved(path)
+        self.assertEqual([type(o).__name__ for o in q.operations], ["ToolChange", "Groove"])
+        self.assertEqual(q.operations[0].tool, q.operations[1].tool)
+        self.assertEqual(q.operations[1].tool, 16)  # 2mm Groove/Parting: external, like the operation
+        self.s.scroll(self.s.width - 200, 400, 15)  # the button is at the end of the editor
+        dup = self.app.labelled("Duplicate Operation", "button")
+        self.s.click(*self.app.center(acc=dup))
+        time.sleep(0.5)
+        q = self.saved(path)
+        self.assertEqual([type(o).__name__ for o in q.operations], ["ToolChange", "Groove", "Groove"])
+
+    def test_simulation_speed_and_start_of_operation(self):
+        p = with_op("area_clear")
+        from alphacam_gtk.op_factory import default_op
+
+        p.operations.append(default_op("finish", p, 1))
+        self.launch(str(self.part(p)))
+        speed = self.app.find("1×", "button")
+        self.app.press(acc=speed)
+        self.app.find("2×", "button")
+        self.s.click(*self.app.center(acc=self.app.labelled("Finish pass", "list item")))
+        time.sleep(0.4)
+        self.press("Start of the Selected Operation", "button")
+        label = self.app.find("/", "label", contains=True).get_name()
+        self.assertIn("op 2", label)  # the simulation stands at the finish pass
+        self.snap("at-finish")

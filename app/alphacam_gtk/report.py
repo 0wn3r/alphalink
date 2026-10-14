@@ -48,6 +48,9 @@ def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
     if prog is None:
         return "\n".join(out + [_("  (no program)")])
     op_no = 0
+    from alphacam.checks import tool_warnings
+
+    warnings = tool_warnings(project, library)
     for op in pv.ops:
         for block in op.blocks:
             name = block.op_name
@@ -78,6 +81,13 @@ def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
                 else:
                     line += f"     {_('Feed')} : {block.feed:g}"
                 out.append(line)
+            for msg in warnings.get(op.op_index, []) if name != "tool_change" else []:
+                out.append(f"  ! {msg}")
+            restarts = [ps.restart[0] for ps in block.passes if ps.restart]
+            if restarts:  # where the control can pick the program up again (a broken tool replaced, say)
+                span = f"{restarts[0]}" if len(restarts) == 1 else f"{restarts[0]}–{restarts[-1]}"
+                out.append(f"  {_('Block')} : N{block.label:<5} {_('Restart #140')} : {span}"
+                           + ("" if len(restarts) == 1 else f"  ({_('one per pass')})"))
             out.append(RULE)
             if moves:
                 out += _moves(block)

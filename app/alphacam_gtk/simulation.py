@@ -14,6 +14,7 @@ from .canvas.paths import pass_starts  # noqa: E402
 from .i18n import _, ngettext  # noqa: E402
 
 MOVES_PER_SECOND = 25
+SPEEDS = (1, 2, 5, 10, 0.5)  # playback speed, cycled by the speed button
 
 
 class SimulationBar(Gtk.Box):
@@ -43,6 +44,20 @@ class SimulationBar(Gtk.Box):
         self.scale = Gtk.Scale(hexpand=True, draw_value=False, adjustment=Gtk.Adjustment(upper=1, step_increment=1))
         self.scale.connect("value-changed", self._scrubbed)
         self.append(self.scale)
+        # the selected operation's first move ("run to operation"), and the playback speed
+        self.to_op = Gtk.Button(icon_name="find-location-symbolic", tooltip_text=_("Start of the Selected Operation"),
+                                sensitive=False)
+        self.to_op.add_css_class("flat")
+        self.to_op.connect("clicked", lambda *_: self.goto_op(self.selected_op))
+        self._buttons.append(self.to_op)
+        self.append(self.to_op)
+        self.speed = 1
+        self.speed_button = Gtk.Button(label="1×", tooltip_text=_("Playback Speed"))
+        self.speed_button.add_css_class("flat")
+        self.speed_button.add_css_class("numeric")
+        self.speed_button.connect("clicked", lambda *_: self.next_speed())
+        self.append(self.speed_button)
+        self.selected_op = None
         self.label = Gtk.Label(width_chars=12, max_width_chars=40, xalign=0, ellipsize=Pango.EllipsizeMode.END)
         self.label.add_css_class("caption")
         self.label.add_css_class("numeric")
@@ -57,6 +72,8 @@ class SimulationBar(Gtk.Box):
         self.scale.get_adjustment().configure(n, 0, n, 1, 10, 0)
         self._guard = False
         self.c.sim_index = None
+        if hasattr(self, "to_op"):
+            self.select_op(self.selected_op)  # new moves: is the selected operation still in them
         self._label()
 
     def goto(self, index: int | None) -> None:
@@ -77,6 +94,23 @@ class SimulationBar(Gtk.Box):
             nxt = next((s for s in reversed(starts) if s < cur), 0)
         self.goto(nxt)
 
+    def select_op(self, index: int | None) -> None:
+        self.selected_op = index
+        self.to_op.set_sensitive(index is not None and any(sg.op_index == index for sg in self.c.segs))
+
+    def goto_op(self, index: int | None) -> None:
+        """Jump to the operation's first move (shown and named in the label); Play or Next Pass runs on from it."""
+        first = next((i for i, sg in enumerate(self.c.segs) if sg.op_index == index), None)
+        if first is not None:
+            self.goto(first + 1)
+
+    def next_speed(self) -> None:
+        self.speed = SPEEDS[(SPEEDS.index(self.speed) + 1) % len(SPEEDS)]
+        self.speed_button.set_label(f"{self.speed:g}×")
+        if self._play:  # playing: carry on at the new speed
+            GLib.source_remove(self._play)
+            self._play = GLib.timeout_add(max(1, int(1000 / (MOVES_PER_SECOND * self.speed))), self._tick)
+
     def toggle_play(self) -> None:
         if self._play:
             self.stop()
@@ -84,7 +118,7 @@ class SimulationBar(Gtk.Box):
         if self.c.sim_index is None:
             self.goto(0)
         self.play_button.set_icon_name("media-playback-pause-symbolic")
-        self._play = GLib.timeout_add(int(1000 / MOVES_PER_SECOND), self._tick)
+        self._play = GLib.timeout_add(max(1, int(1000 / (MOVES_PER_SECOND * self.speed))), self._tick)
 
     def stop(self) -> None:
         if self._play:

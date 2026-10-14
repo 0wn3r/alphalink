@@ -716,3 +716,86 @@ def add_blend(project, start: Point, centre: Point, end: Point) -> str:
     d = (tb - ta + math.pi) % (2 * math.pi) - math.pi  # signed shortest sweep
     tm = ta + d / 2
     return add_arc_3p(project, start, _pt((cr + rad * math.sin(tm), cz + rad * math.cos(tm))), end)
+
+
+# --- default contours for new operations (workflow quick win: "smarter default contour") -----------------------------
+
+def components(project) -> list[list[str]]:
+    """Element ids grouped by connection (elements that share an end point), each group in drawing order."""
+    elems = [g for g in project.geometry if isinstance(g, (Line, Arc))]
+    parent = {g.id: g.id for g in elems}
+
+    def find(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    at: dict[Point, str] = {}
+    for g in elems:
+        for p in (g.a, g.b):
+            if p in at:
+                parent[find(g.id)] = find(at[p])
+            else:
+                at[p] = g.id
+    groups: dict[str, list[str]] = {}
+    for g in elems:
+        groups.setdefault(find(g.id), []).append(g.id)
+    return list(groups.values())
+
+
+def outer_profile(project) -> list[str]:
+    """The part's profile: the connected chain that starts on the axis at the front (X0 at the largest Z), or else the
+    longest chain; thread minor-diameter lines and other loose construction lines are left out."""
+    groups = components(project)
+    if not groups:
+        return []
+    by_id = {g.id: g for g in project.geometry}
+
+    def front_axis(group):
+        zs = [p.z for i in group for p in (by_id[i].a, by_id[i].b) if abs(p.x) < 1e-9]
+        return max(zs) if zs else -math.inf
+
+    def length(group):
+        return sum(by_id[i].a.distance(by_id[i].b) for i in group)
+
+    best = max(groups, key=lambda g: (front_axis(g) > -math.inf, front_axis(g), length(g)))
+    try:
+        return pick_order(project, best)
+    except (ValueError, KeyError):
+        return best
+
+
+def groove_elements(project, profile: list[str]) -> list[str]:
+    """A groove in the profile: two faces going in and out with a bottom between them, plus the line on each side
+    (what the Grooving operation picks in the Training manual); [] when there is none."""
+    by_id = {g.id: g for g in project.geometry}
+    elems = [by_id[i] for i in profile if i in by_id]
+    for k in range(1, len(elems) - 3):
+        down, bottom, up = elems[k], elems[k + 1], elems[k + 2]
+        if not all(isinstance(e, Line) for e in (down, bottom, up)):
+            continue
+        is_face = lambda e: abs(e.a.z - e.b.z) < 1e-9 and abs(e.a.x - e.b.x) > 1e-9  # noqa: E731
+        if is_face(down) and is_face(up) and abs(bottom.a.x - bottom.b.x) < 1e-9:
+            if bottom.a.x < min(down.a.x, down.b.x, up.a.x, up.b.x) + 1e-9:
+                return [e.id for e in elems[k - 1:k + 4]]
+    return []
+
+
+def thread_lines(project, profile: list[str]) -> tuple[str, str] | None:
+    """(outer, inner) for a thread: a loose line along Z under a profile line along Z that it overlaps in Z (the drawn
+    minor diameter under the major one), the closest pair."""
+    by_id = {g.id: g for g in project.geometry}
+    on_profile = set(profile)
+    along_z = [g for g in project.geometry if isinstance(g, Line) and abs(g.a.x - g.b.x) < 1e-9
+               and abs(g.a.z - g.b.z) > 1e-9]
+    best = None
+    for inner in (g for g in along_z if g.id not in on_profile):
+        lo_i, hi_i = sorted((inner.a.z, inner.b.z))
+        for outer in (g for g in along_z if g.id in on_profile and g.a.x > inner.a.x):
+            lo_o, hi_o = sorted((outer.a.z, outer.b.z))
+            if min(hi_i, hi_o) - max(lo_i, lo_o) > 1e-9:
+                d = outer.a.x - inner.a.x
+                if best is None or d < best[0]:
+                    best = (d, outer.id, inner.id)
+    return (best[1], best[2]) if best else None

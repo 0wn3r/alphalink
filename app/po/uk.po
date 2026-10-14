@@ -10,6 +10,27 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
+msgid "uses T{op} but T{cur} is in the turret: add a Tool Change"
+msgstr "використовує T{op}, а в револьверній голівці T{cur}: додайте зміну інструмента"
+
+msgid "T{n} is not a threading tool"
+msgstr "T{n} — не різьбовий інструмент"
+
+msgid "T{n} is not a grooving tool"
+msgstr "T{n} — не канавковий інструмент"
+
+msgid "tip width {w:g} differs from T{n}'s {tw:g}"
+msgstr "ширина {w:g} відрізняється від ширини T{n} ({tw:g})"
+
+msgid "T{n} is not a drill"
+msgstr "T{n} — не свердло"
+
+msgid "an internal operation with an external tool (T{n})"
+msgstr "внутрішня операція із зовнішнім інструментом (T{n})"
+
+msgid "an external operation with a boring tool (T{n})"
+msgstr "зовнішня операція з розточувальним інструментом (T{n})"
+
 msgid "a line needs two different points"
 msgstr "для лінії потрібні дві різні точки"
 
@@ -1066,6 +1087,9 @@ msgstr "Торцеві канавки: врізання вздовж -Z із к�
 msgid "Grooving follows the drawn profile; the tool reference is the tip's -Z corner."
 msgstr "Точіння канавок іде за накресленим профілем; базова точка інструмента — кут різця з боку -Z."
 
+msgid "_Duplicate Operation"
+msgstr "_Дублювати операцію"
+
 msgid "Change {what}"
 msgstr "Змінити: {what}"
 
@@ -1203,6 +1227,15 @@ msgstr "Проходів"
 
 msgid "Depth Of Cut"
 msgstr "Глибина різання"
+
+msgid "Block"
+msgstr "Блок"
+
+msgid "Restart #140"
+msgstr "Перезапуск #140"
+
+msgid "one per pass"
+msgstr "по одному на прохід"
 
 msgid "Pass No."
 msgstr "Прохід №"
@@ -1419,6 +1452,12 @@ msgstr "Показати все"
 
 msgid "Play / Pause"
 msgstr "Відтворити / пауза"
+
+msgid "Start of the Selected Operation"
+msgstr "Початок вибраної операції"
+
+msgid "Playback Speed"
+msgstr "Швидкість відтворення"
 
 msgid "no moves"
 msgstr "немає переміщень"
@@ -1806,6 +1845,12 @@ msgstr "Повторено: «{action}»"
 
 msgid "Add {what}"
 msgstr "Додати: {what}"
+
+msgid "Tool change to T{n} added: {name}"
+msgstr "Додано зміну інструмента на T{n}: {name}"
+
+msgid "Duplicate {what}"
+msgstr "Дублювання: {what}"
 
 msgid "Move operation"
 msgstr "Перемістити операцію"

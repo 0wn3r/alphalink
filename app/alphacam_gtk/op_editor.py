@@ -118,6 +118,7 @@ class OpEditor(Gtk.Box):
         super().__init__(orientation=Gtk.Orientation.VERTICAL)
         self._apply, self.index, self._building = apply, None, False
         self.on_pick = None  # set by the window: start contour picking for operation n
+        self.on_duplicate = None  # set by the window: copy the operation below itself
         self.tool_name = lambda n: ""  # set by the window: name of tool n in the library
         self.title = Adw.WindowTitle(title=_("Operation"))
         header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False, show_back_button=False)
@@ -212,6 +213,12 @@ class OpEditor(Gtk.Box):
         elif isinstance(op, Groove):
             group.set_description(_("Grooving follows the drawn profile; the tool reference is the tip's -Z corner."))
         self._building = False
+        if self.on_duplicate is not None:  # copy it (a second finish pass, the same groove elsewhere) instead of retyping
+            more = Adw.PreferencesGroup()
+            dup = Adw.ButtonRow(title=_("_Duplicate Operation"), use_underline=True, start_icon_name="edit-copy-symbolic")
+            dup.connect("activated", lambda *_: self.on_duplicate())
+            more.add(dup)
+            page.add(more)
         self.scroll.set_child(page)
 
     # --- rows -------------------------------------------------------------------------------------------

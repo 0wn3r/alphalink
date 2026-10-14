@@ -81,6 +81,9 @@ class Remote:
         for i in range(len(start)):
             self.touch_up(i)
 
+    def scroll(self, clicks: int) -> None:
+        self._rd("NotifyPointerAxisDiscrete", "(ui)", 0, clicks)  # axis 0: vertical
+
     def key(self, name: str, pressed: bool) -> None:
         self.keysym(Gdk.keyval_from_name(name), pressed)
 
