@@ -18,7 +18,6 @@ alphacam/model/operations.py
 alphacam/model/project.py
 alphacam/model/serde.py
 alphacam/model/tools.py
-alphacam/model/units.py
 alphacam/numfmt.py
 alphacam/post/__init__.py
 alphacam/post/alphat_prg.py
@@ -54,6 +53,7 @@ alphacam_gtk/op_editor.py
 alphacam_gtk/op_factory.py
 alphacam_gtk/report.py
 alphacam_gtk/settings.py
+alphacam_gtk/shortcuts.py
 alphacam_gtk/simulation.py
 alphacam_gtk/tools_page.py
 alphacam_gtk/window.py

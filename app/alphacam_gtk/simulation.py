@@ -23,11 +23,11 @@ class SimulationBar(Gtk.Box):
         self.c, self.on_move = canvas, on_move
         self._play = 0
         self._buttons = []
-        buttons = [("media-skip-backward-symbolic", _("First move"), lambda: self.goto(0)),
-                   ("media-seek-backward-symbolic", _("Previous pass"), lambda: self.step_pass(-1)),
+        buttons = [("media-skip-backward-symbolic", _("First Move"), lambda: self.goto(0)),
+                   ("media-seek-backward-symbolic", _("Previous Pass"), lambda: self.step_pass(-1)),
                    (None, None, None),
-                   ("media-seek-forward-symbolic", _("Next pass"), lambda: self.step_pass(1)),
-                   ("media-skip-forward-symbolic", _("Show all"), lambda: self.goto(None))]
+                   ("media-seek-forward-symbolic", _("Next Pass"), lambda: self.step_pass(1)),
+                   ("media-skip-forward-symbolic", _("Show All"), lambda: self.goto(None))]
         for icon, tip, cb in buttons:
             if icon is None:
                 self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play / Pause"))

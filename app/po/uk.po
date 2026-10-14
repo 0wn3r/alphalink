@@ -325,7 +325,7 @@ msgstr "Перемістити курсор на довжину,кут  і Enter
 msgid "_Done"
 msgstr "_Готово"
 
-msgid "Finish the line (Esc)"
+msgid "Finish Line (Esc)"
 msgstr "Завершити лінію (Esc)"
 
 msgid "Delete Element (Del or -)"
@@ -340,7 +340,7 @@ msgstr "Цифрова клавіатура"
 msgid "More"
 msgstr "Ще"
 
-msgid "More drawing commands"
+msgid "More Drawing Commands"
 msgstr "Інші команди креслення"
 
 msgid "_Cancel"
@@ -349,8 +349,8 @@ msgstr "_Скасувати"
 msgid "Cancel Picking"
 msgstr "Скасувати вибір"
 
-msgid "Leave the contour as it was (Esc)"
-msgstr "Залишити контур як був (Esc)"
+msgid "Cancel Picking (Esc)"
+msgstr "Скасувати вибір (Esc)"
 
 msgid "Tap the contour elements in cutting order"
 msgstr "Торкніться елементів контуру в порядку обробки"
@@ -475,11 +475,11 @@ msgstr "Початок Z"
 msgid "Radius"
 msgstr "Радіус"
 
+msgid "Keeps the profile joined"
+msgstr "Профіль залишається з’єднаним"
+
 msgid "Move connected ends too"
 msgstr "Переміщати й з’єднані кінці"
-
-msgid "keeps the profile joined"
-msgstr "профіль залишається з’єднаним"
 
 msgid "_Apply"
 msgstr "_Застосувати"
@@ -1003,8 +1003,8 @@ msgstr "(немає ліній)"
 msgid "Contour, in cutting order"
 msgstr "Контур, у порядку обробки"
 
-msgid "Element ids, e.g. g0 g1 g2"
-msgstr "Ідентифікатори елементів, напр. g0 g1 g2"
+msgid "Element IDs, for example g0 g1 g2"
+msgstr "Ідентифікатори елементів, наприклад g0 g1 g2"
 
 msgid "Pick Contour on the Drawing"
 msgstr "Вибрати контур на кресленні"
@@ -1198,16 +1198,151 @@ msgstr "Не вдалося зберегти {name}: {error}"
 msgid "Saved {name}"
 msgstr "Збережено {name}"
 
-msgid "First move"
+msgid "General"
+msgstr "Загальні"
+
+msgid "Main Menu"
+msgstr "Головне меню"
+
+msgid "Preferences"
+msgstr "Параметри"
+
+msgid "Keyboard Shortcuts"
+msgstr "Клавіатурні скорочення"
+
+msgid "Close Window"
+msgstr "Закрити вікно"
+
+msgid "Quit"
+msgstr "Вийти"
+
+msgid "Files"
+msgstr "Файли"
+
+msgid "New Part"
+msgstr "Нова деталь"
+
+msgid "Open"
+msgstr "Відкрити"
+
+msgid "Save"
+msgstr "Зберегти"
+
+msgid "Export PRG"
+msgstr "Експорт PRG"
+
+msgid "Save As"
+msgstr "Зберегти як"
+
+msgid "Editing"
+msgstr "Редагування"
+
+msgid "Redo"
+msgstr "Повторити"
+
+msgid "Undo"
+msgstr "Відмінити"
+
+msgid "Add Operation"
+msgstr "Додати операцію"
+
+msgid "Delete Element"
+msgstr "Видалити елемент"
+
+msgid "Edit Element"
+msgstr "Редагувати елемент"
+
+msgid "Deselect or Cancel"
+msgstr "Зняти вибір або скасувати"
+
+msgid "View"
+msgstr "Вигляд"
+
+msgid "Zoom In"
+msgstr "Збільшити"
+
+msgid "Zoom Out"
+msgstr "Зменшити"
+
+msgid "Fit Part"
+msgstr "Вписати деталь"
+
+msgid "Redraw"
+msgstr "Перемалювати"
+
+msgid "Zoom In at the Cursor"
+msgstr "Збільшити біля курсора"
+
+msgid "Recall View"
+msgstr "Повернути вигляд"
+
+msgid "Drawing Keys (Part Page)"
+msgstr "Клавіші креслення (сторінка «Деталь»)"
+
+msgid "Find Nearest Arc"
+msgstr "Знайти найближчу дугу"
+
+msgid "Find Nearest Line"
+msgstr "Знайти найближчу лінію"
+
+msgid "Find Nearest Point"
+msgstr "Знайти найближчу точку"
+
+msgid "Draw Line by X,Z"
+msgstr "Лінія за X,Z"
+
+msgid "Find Nearest Intersection"
+msgstr "Знайти найближчий перетин"
+
+msgid "Draw Line by Length and Angle"
+msgstr "Лінія за довжиною й кутом"
+
+msgid "Draw Line by Taps"
+msgstr "Лінія дотиками"
+
+msgid "Radius at the Nearest Corner"
+msgstr "Радіус у найближчому куті"
+
+msgid "Start at the Cursor"
+msgstr "Почати від курсора"
+
+msgid "Trim Corner"
+msgstr "Обрізати кут"
+
+msgid "Move Cursor by dX,dZ"
+msgstr "Зсунути курсор на dX,dZ"
+
+msgid "Move Cursor to X,Z"
+msgstr "Перемістити курсор у X,Z"
+
+msgid "Measure by X,Z"
+msgstr "Виміряти за X,Z"
+
+msgid "Move Cursor by Length and Angle"
+msgstr "Зсунути курсор за довжиною й кутом"
+
+msgid "Add Text"
+msgstr "Додати текст"
+
+msgid "Erase Text"
+msgstr "Стерти текст"
+
+msgid "Measure by Length and Angle"
+msgstr "Виміряти за довжиною й кутом"
+
+msgid "Erase the Whole Drawing"
+msgstr "Стерти все креслення"
+
+msgid "First Move"
 msgstr "Перше переміщення"
 
-msgid "Previous pass"
+msgid "Previous Pass"
 msgstr "Попередній прохід"
 
-msgid "Next pass"
+msgid "Next Pass"
 msgstr "Наступний прохід"
 
-msgid "Show all"
+msgid "Show All"
 msgstr "Показати все"
 
 msgid "Play / Pause"
@@ -1402,38 +1537,14 @@ msgstr "Нова деталь…"
 msgid "Open…"
 msgstr "Відкрити…"
 
-msgid "Machine Page (Manual Ops backup)"
-msgstr "Сторінка «Верстат» (резервна копія ручних операцій)"
-
-msgid "Preferences"
-msgstr "Параметри"
-
-msgid "Training Manual"
-msgstr "Навчальний посібник"
-
-msgid "Reference Manual"
-msgstr "Довідковий посібник"
-
-msgid "About AlphaLink CAM"
-msgstr "Про AlphaLink CAM"
-
-msgid "Main Menu"
-msgstr "Головне меню"
+msgid "Open Machine Page"
+msgstr "Відкрити сторінку «Верстат»"
 
 msgid "Add Operation (C)"
 msgstr "Додати операцію (C)"
 
 msgid "Operations"
 msgstr "Операції"
-
-msgid "Zoom In"
-msgstr "Збільшити"
-
-msgid "Zoom Out"
-msgstr "Зменшити"
-
-msgid "Fit Part"
-msgstr "Вписати деталь"
 
 msgid "Part"
 msgstr "Деталь"
@@ -1462,26 +1573,17 @@ msgstr "Відмінити (Ctrl+Z)"
 msgid "Redo (Ctrl+Shift+Z)"
 msgstr "Повторити (Ctrl+Shift+Z)"
 
-msgid "Save"
-msgstr "Зберегти"
-
 msgid "Save As…"
 msgstr "Зберегти як…"
 
 msgid "Save as ALPHA-T Drawing…"
 msgstr "Зберегти креслення ALPHA-T…"
 
-msgid "Undo"
-msgstr "Відмінити"
-
-msgid "Redo"
-msgstr "Повторити"
-
 msgid "Show Grid"
 msgstr "Показувати сітку"
 
-msgid "Part Settings…"
-msgstr "Параметри деталі…"
+msgid "Part Settings"
+msgstr "Параметри деталі"
 
 msgid "Clear Messages"
 msgstr "Прибрати повідомлення"
@@ -1501,11 +1603,20 @@ msgstr "Режим введення"
 msgid "_Export PRG"
 msgstr "_Експорт PRG"
 
-msgid "Export the Alpha-T program (Ctrl+E)"
-msgstr "Експортувати програму Alpha-T (Ctrl+E)"
+msgid "Export ALPHA-T Program (Ctrl+E)"
+msgstr "Експортувати програму ALPHA-T (Ctrl+E)"
 
-msgid "Touch Lock: ignore touches (hold to unlock by touch)"
-msgstr "Блокування сенсора: ігнорувати дотики (утримуйте, щоб розблокувати дотиком)"
+msgid "Touch Lock (Hold to Unlock by Touch)"
+msgstr "Блокування сенсора (утримуйте, щоб розблокувати дотиком)"
+
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
+
+msgid "About AlphaLink CAM"
+msgstr "Про AlphaLink CAM"
 
 msgid "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr "Сенсор заблоковано. Утримуйте кнопку замка або клацніть її мишею, щоб розблокувати."
@@ -1615,9 +1726,6 @@ msgstr "Додати: {what}"
 msgid "Move operation"
 msgstr "Перемістити операцію"
 
-msgid "General"
-msgstr "Загальні"
-
 msgid "New parts"
 msgstr "Нові деталі"
 
@@ -1669,17 +1777,11 @@ msgstr "Показувати задню бабку"
 msgid "Billet size and units. The drawing starts empty."
 msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
 
-msgid "New Part"
-msgstr "Нова деталь"
-
 msgid "_Create"
 msgstr "_Створити"
 
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr "Накресліть профіль: торкайтеся точок або вводьте X,Z і Enter"
-
-msgid "Part Settings"
-msgstr "Параметри деталі"
 
 msgid "Billet"
 msgstr "Заготовка"

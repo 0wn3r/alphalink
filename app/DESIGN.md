@@ -91,13 +91,17 @@ app/
     link/
       serial_link.py        port open, 7E2, XON/XOFF, char/line delay, modem lines (from tools/alphalink.py)
       transfers.py          SendProgram, ReceiveManOps, LoadManOps, Loopback, Listen
-  alphacam_gtk/             GTK4 / libadwaita front end
-    application.py          Adw.Application, actions, shortcuts
-    window.py               main window (section 6)
-    canvas/                 lathe view widget (Gtk.Widget + snapshot / cairo)
-    pages/                  drawing.py cam.py program.py machine.py tools.py
-    dialogs/                op editors, billet, preferences, transfer progress
-    resources/              .blp UI files (Blueprint), icons, gresource
+  alphacam_gtk/             GTK4 / libadwaita front end, built in Python code (no Blueprint or .ui files: most
+                            of the UI, such as the operation editor rows and the drawing popups, is generated)
+    application.py          Adw.Application, app actions, About
+    window.py               main window (section 6), menus, window actions and shortcuts
+    shortcuts.py            Keyboard Shortcuts dialog (Ctrl+?)
+    canvas/                 lathe view widget (Gtk.Widget + snapshot / cairo), hit testing, touch input
+    drawing_tools.py        drawing bar, ALPHA-T construction commands; hit_keys.py the one-letter keys
+    op_editor.py            operation editor pane; op_factory.py new operations
+    simulation.py report.py tools_page.py machine.py   simulation bar, Sheet, Tools and Machine pages
+    help.py help/ manuals/  F1 help (Markdown) and the Training / Reference Manual PDFs
+    settings.py i18n.py locale/ style.css   preferences, translations, styling
   tests/                    golden + unit tests
   data/                     desktop file, metainfo, gschema, icons
   build-aux/flatpak/        manifest

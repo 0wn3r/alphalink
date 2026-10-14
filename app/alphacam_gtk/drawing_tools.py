@@ -79,7 +79,7 @@ class DrawingTools:
         self.entry.add_controller(entry_keys)
         # shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
         self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False, sensitive=False,
-                               tooltip_text=_("Finish the line (Esc)"))
+                               tooltip_text=_("Finish Line (Esc)"))
         self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
         self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Del or -)"),
@@ -100,7 +100,7 @@ class DrawingTools:
             item = Gio.MenuItem.new(_(label), None)
             item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
             more.append_item(item)
-        self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More drawing commands"))
+        self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More Drawing Commands"))
         construct = Gio.SimpleAction.new("construct", GLib.VariantType.new("s"))
         construct.connect("activate", lambda _a, v: self.start_construct(v.get_string()))
         window.add_action(construct)
@@ -109,7 +109,7 @@ class DrawingTools:
         self.construct_banner.connect("button-clicked", lambda *_: self._banner_button())
         # picking a contour: a way out without applying it (the banner has room for one button only)
         self.cancel_pick_btn = Gtk.Button(label=_("Cancel Picking"), visible=False,
-                                          tooltip_text=_("Leave the contour as it was (Esc)"))
+                                          tooltip_text=_("Cancel Picking (Esc)"))
         self.cancel_pick_btn.connect("clicked", lambda *_: self.cancel_pick())
         for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.cancel_pick_btn,
                     self.edit_el,
@@ -683,7 +683,7 @@ class DrawingTools:
             rows.append(r)
         if isinstance(g, Arc):
             rows[-1].get_adjustment().set_lower(0.001)
-        follow = Adw.SwitchRow(title=_("Move connected ends too"), subtitle=_("keeps the profile joined"),
+        follow = Adw.SwitchRow(title=_("Move connected ends too"), subtitle=_("Keeps the profile joined"),
                                active=True)
         group.add(follow)
         dlg.set_extra_child(group)

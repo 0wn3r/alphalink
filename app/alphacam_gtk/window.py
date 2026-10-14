@@ -23,6 +23,7 @@ from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
 from .help import MANUALS, HelpDialog, open_manual  # noqa: E402
+from .shortcuts import shortcuts_dialog  # noqa: E402
 from .tools_page import ToolsPage, load_library  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 from .settings import settings  # noqa: E402
@@ -129,14 +130,9 @@ class MainWindow(Adw.ApplicationWindow):
         start_menu = Gio.Menu()  # what works without a part: the Machine page (Manual Ops backup), settings, help
         start_menu.append(_("New Part…"), "win.new")
         start_menu.append(_("Open…"), "win.open")
-        start_menu.append(_("Machine Page (Manual Ops backup)"), "win.machine-page")
-        more = Gio.Menu()
-        more.append(_("Preferences"), "win.preferences")
-        more.append(_("Help"), "win.help")
-        more.append(_("Training Manual"), "win.manual-training")
-        more.append(_("Reference Manual"), "win.manual-reference")
-        more.append(_("About AlphaLink CAM"), "app.about")
-        start_menu.append_section(None, more)
+        start_menu.append(_("Open Machine Page"), "win.machine-page")
+        start_menu.append_section(None, self._manuals_menu())
+        start_menu.append_section(None, self._standard_menu())
         header = Adw.HeaderBar()
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=start_menu, primary=True,
                                        tooltip_text=_("Main Menu")))
@@ -244,7 +240,6 @@ class MainWindow(Adw.ApplicationWindow):
         header.pack_start(self.open_button)
         header.pack_start(self.save_button)
         undo_box = self.undo_box = Gtk.Box()
-        undo_box.add_css_class("linked")
         undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text=_("Undo (Ctrl+Z)")))
         undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
                                    tooltip_text=_("Redo (Ctrl+Shift+Z)")))
@@ -264,7 +259,7 @@ class MainWindow(Adw.ApplicationWindow):
         view_menu = Gio.Menu()
         view_menu.append(_("Fit Part"), "win.fit")
         view_menu.append(_("Show Grid"), "win.show-grid")
-        view_menu.append(_("Part Settings…"), "win.part-settings")
+        view_menu.append(_("Part Settings"), "win.part-settings")
         view_menu.append(_("Clear Messages"), "win.clear-messages")
         menu.append_section(None, view_menu)
         layout = Gio.Menu()
@@ -273,21 +268,17 @@ class MainWindow(Adw.ApplicationWindow):
             item.set_action_and_target_value("win.input-layout", GLib.Variant.new_string(target))
             layout.append_item(item)
         menu.append_section(_("Input Layout"), layout)
-        about = Gio.Menu()
-        about.append(_("Preferences"), "win.preferences")
-        about.append(_("Help"), "win.help")
-        about.append(_("Training Manual"), "win.manual-training")
-        about.append(_("Reference Manual"), "win.manual-reference")
-        about.append(_("About AlphaLink CAM"), "app.about")
-        menu.append_section(None, about)
+        menu.append_section(None, self._manuals_menu())
+        menu.append_section(None, self._standard_menu())
         header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
                                        tooltip_text=_("Main Menu")))
-        export = Gtk.Button(label=_("_Export PRG"), use_underline=True, action_name="win.export",
-                            tooltip_text=_("Export the Alpha-T program (Ctrl+E)"))
-        export.add_css_class("suggested-action")
+        # HIG header bars: icon and label, no suggested style
+        export = Gtk.Button(child=Adw.ButtonContent(icon_name="document-send-symbolic", label=_("_Export PRG"),
+                                                    use_underline=True),
+                            action_name="win.export", tooltip_text=_("Export ALPHA-T Program (Ctrl+E)"))
         header.pack_end(export)
         self.lock_button = Gtk.ToggleButton(icon_name="changes-allow-symbolic",
-                                            tooltip_text=_("Touch Lock: ignore touches (hold to unlock by touch)"))
+                                            tooltip_text=_("Touch Lock (Hold to Unlock by Touch)"))
         header.pack_end(self.lock_button)
 
         self.banner = Adw.Banner()
@@ -314,6 +305,23 @@ class MainWindow(Adw.ApplicationWindow):
         self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
                                              min_sidebar_width=260, max_sidebar_width=340)
         return self.split
+
+    @staticmethod
+    def _manuals_menu() -> Gio.Menu:
+        m = Gio.Menu()
+        m.append(_("Training Manual"), "win.manual-training")
+        m.append(_("Reference Manual"), "win.manual-reference")
+        return m
+
+    @staticmethod
+    def _standard_menu() -> Gio.Menu:
+        """The HIG's last group of a main menu, in its order."""
+        m = Gio.Menu()
+        m.append(_("Preferences"), "win.preferences")
+        m.append(_("Keyboard Shortcuts"), "win.shortcuts")
+        m.append(_("Help"), "win.help")
+        m.append(_("About AlphaLink CAM"), "app.about")
+        return m
 
     # --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
 
@@ -366,6 +374,8 @@ class MainWindow(Adw.ApplicationWindow):
         add("new", lambda *_: self.new_dialog(), ["<Control>n"])
         add("preferences", lambda *_: self.preferences_dialog(), ["<Control>comma"])
         add("help", lambda *_: HelpDialog().present(self), ["F1"])
+        add("shortcuts", lambda *_: shortcuts_dialog().present(self), ["<Control>question"])
+        add("close", lambda *_: self.close(), ["<Control>w"])
         for kind in MANUALS:
             add(f"manual-{kind}", lambda *_, kind=kind: open_manual(self, kind))
         add("part-settings", lambda *_: self.part_settings_dialog())

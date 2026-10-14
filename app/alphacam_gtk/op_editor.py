@@ -165,7 +165,7 @@ class OpEditor(Gtk.Box):
                 group.add(row)
             elif name == "contour":
                 row = Adw.EntryRow(title=_("Contour, in cutting order"), text=" ".join(value),
-                                   show_apply_button=True, tooltip_text=_("Element ids, e.g. g0 g1 g2"))
+                                   show_apply_button=True, tooltip_text=_("Element IDs, for example g0 g1 g2"))
                 row.connect("apply", self._contour_applied)
                 group.add(row)
                 pick = Adw.ButtonRow(title=_("Pick Contour on the Drawing"), start_icon_name="find-location-symbolic")

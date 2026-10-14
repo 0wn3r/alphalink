@@ -144,7 +144,7 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - Ctrl+0 fit, Ctrl++ zoom in, Ctrl+- zoom out.
 - Esc finishes the line being drawn, cancels contour picking or a command, or deselects, and takes the keyboard out of the X,Z entry.
 - Delete removes the selected drawing element.
-- Ctrl+, preferences, F1 this help, Ctrl+Q quit.
+- Ctrl+, preferences, Ctrl+? all keyboard shortcuts, F1 this help, Ctrl+W close the window, Ctrl+Q quit.
 - Main menu ▸ Training Manual and Reference Manual open the full manuals (PDF) in the PDF viewer.
 
 ### ALPHA-T keys
@@ -171,7 +171,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 ## Part settings
 
-Main menu ▸ Part Settings… changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program in mm (M71) or inch (M70) whatever the drawing's units (the .SD1 stays in the drawing's units, as ALPHA-T keeps it), like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
+Main menu ▸ Part Settings changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program in mm (M71) or inch (M70) whatever the drawing's units (the .SD1 stays in the drawing's units, as ALPHA-T keeps it), like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
 ## Preferences
 
