@@ -668,4 +668,9 @@ UK = {
 "Cursor to X0 Z0": "Курсор у X0 Z0",
 "Use the Cursor as the Point": "Взяти курсор як точку",
 "No corner between two lines": "Немає кута між двома лініями",
+"Blend Arc…": "Дуга сполучення…",
+"Draw Arc Through Three Points (W)": "Дуга через три точки (W)",
+"Chamfer Corner (B)": "Фаска на куті (B)",
+"Trim or Extend Two Lines to Meet (K)": "Обрізати або подовжити дві лінії до перетину (K)",
+"Delete Element (Delete)": "Видалити елемент (Delete)",
 }

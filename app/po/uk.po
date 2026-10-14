@@ -256,8 +256,8 @@ msgstr "Дотична"
 msgid "Tangent at an Angle…"
 msgstr "Дотична під кутом…"
 
-msgid "Blend Arc… (Key O)"
-msgstr "Дуга сполучення… (клавіша O)"
+msgid "Blend Arc…"
+msgstr "Дуга сполучення…"
 
 msgid "Parallel Line…"
 msgstr "Паралельна лінія…"
@@ -292,17 +292,17 @@ msgstr "Вибрати елемент або операцію. Натисніт�
 msgid "Draw lines. Press X to type X,Z, D to type length and angle, + to draw by taps, S to start at the cursor"
 msgstr "Креслити лінії. Натисніть X, щоб ввести X,Z; D, щоб ввести довжину й кут; +, щоб креслити дотиками; S, щоб почати від курсора"
 
-msgid "Draw an arc: start, a point on the arc, end (key W)"
-msgstr "Креслити дугу: початок, точка на дузі, кінець (клавіша W)"
+msgid "Draw Arc Through Three Points (W)"
+msgstr "Дуга через три точки (W)"
 
 msgid "Round a corner. Press F to round the corner nearest the cursor"
 msgstr "Скруглити кут. Натисніть F, щоб скруглити кут, найближчий до курсора"
 
-msgid "Chamfer a corner (key B)"
-msgstr "Зняти фаску на куті (клавіша B)"
+msgid "Chamfer Corner (B)"
+msgstr "Фаска на куті (B)"
 
-msgid "Trim or extend two lines to meet (key K)"
-msgstr "Обрізати або подовжити дві лінії до перетину (клавіша K)"
+msgid "Trim or Extend Two Lines to Meet (K)"
+msgstr "Обрізати або подовжити дві лінії до перетину (K)"
 
 msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
 msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
@@ -328,11 +328,11 @@ msgstr "_Готово"
 msgid "Finish Line (Esc)"
 msgstr "Завершити лінію (Esc)"
 
-msgid "Delete Element (Delete or Minus Key)"
-msgstr "Видалити елемент (клавіша Delete або мінус)"
+msgid "Delete Element (Delete)"
+msgstr "Видалити елемент (Delete)"
 
-msgid "Edit Element (Key E)"
-msgstr "Редагувати елемент (клавіша E)"
+msgid "Edit Element (E)"
+msgstr "Редагувати елемент (E)"
 
 msgid "Keypad"
 msgstr "Цифрова клавіатура"
@@ -1564,8 +1564,8 @@ msgstr "Відкрити…"
 msgid "Open Machine Page"
 msgstr "Відкрити сторінку «Верстат»"
 
-msgid "Add Operation (Key C)"
-msgstr "Додати операцію (клавіша C)"
+msgid "Add Operation (C)"
+msgstr "Додати операцію (C)"
 
 msgid "Operations"
 msgstr "Операції"

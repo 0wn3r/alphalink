@@ -20,8 +20,8 @@ window.touch .command-entry { min-height: 48px; }
 .sim-bar button { min-width: 36px; }
 window.touch .sim-bar button { min-width: 56px; min-height: 56px; }
 
-/* the drawing has the keyboard (ALPHA-T cursor keys and letters): a thin accent frame */
-.lathe-canvas:focus {
+/* the drawing has the keyboard (ALPHA-T cursor keys and letters): the GNOME focus ring, shown once keys are used */
+.lathe-canvas:focus-visible {
   outline: 2px solid alpha(var(--accent-color), 0.6);
   outline-offset: -2px;
 }

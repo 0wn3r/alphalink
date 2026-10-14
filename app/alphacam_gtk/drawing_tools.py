@@ -20,19 +20,19 @@ from alphacam.model.geometry import Arc, Line, Point  # noqa: E402
 from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action, key_char  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
 
-CONSTRUCT_MENU = [(N_("Circle…"), "circle"), (N_("Tangent"), "tangent"), (N_("Tangent at an Angle…"), "tangent-angle"),
-                  (N_("Parallel Line…"), "parallel"), (N_("Split Arc"), "split"), (N_("Blend Arc… (Key O)"), "blend"),
-                  (N_("Mirror Image"), "mirror")]
+CONSTRUCT_MENU = [(N_("Circle…"), "circle", None), (N_("Tangent"), "tangent", None), (N_("Tangent at an Angle…"), "tangent-angle", None),
+                  (N_("Parallel Line…"), "parallel", None), (N_("Split Arc"), "split", None), (N_("Blend Arc…"), "blend", "o"),
+                  (N_("Mirror Image"), "mirror", None)]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 # tooltips with the one-letter keys (hit_keys.py)
 TOOL_TIPS = {
     "select": N_("Select an element or an operation. Press L or A to select the nearest line or arc"),
     "line": N_("Draw lines. Press X to type X,Z, D to type length and angle, + to draw by taps, S to start at the cursor"),
-    "arc": N_("Draw an arc: start, a point on the arc, end (key W)"),
+    "arc": N_("Draw Arc Through Three Points (W)"),
     "fillet": N_("Round a corner. Press F to round the corner nearest the cursor"),
-    "chamfer": N_("Chamfer a corner (key B)"),
-    "corner": N_("Trim or extend two lines to meet (key K)"),
+    "chamfer": N_("Chamfer Corner (B)"),
+    "corner": N_("Trim or Extend Two Lines to Meet (K)"),
 }
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
@@ -83,10 +83,10 @@ class DrawingTools:
                                tooltip_text=_("Finish Line (Esc)"))
         self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
-        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Delete or Minus Key)"),
+        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Delete)"),
                                     visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
-        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (Key E)"), visible=False)
+        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (E)"), visible=False)
         self.edit_el.connect("clicked", lambda *_: self.edit_selected_element())
 
         self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
@@ -97,8 +97,10 @@ class DrawingTools:
                                margin_bottom=6, justify=Adw.JustifyMode.FILL, justify_last_line=True)
         # ALPHA-T's other drawing commands (German manual pp. 20-34): circle, tangents, parallel, split, mirror, blend
         more = Gio.Menu()
-        for label, kind in CONSTRUCT_MENU:
+        for label, kind, key in CONSTRUCT_MENU:
             item = Gio.MenuItem.new(_(label), None)
+            if key:  # shown at the right of the item, as GTK shows shortcuts (the key itself is handled in hit_keys)
+                item.set_attribute_value("accel", GLib.Variant.new_string(key))
             item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
             more.append_item(item)
         self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More Drawing Commands"))

@@ -17,7 +17,7 @@ the editor pushed itself off the screen.
 | Small window (≤ 700 px): opening an operation squeezed the drawing and pushed the editor, the main menu and the Machine tab off the screen | 🔴 Critical | **Fixed:** below 700 px the editor takes the whole page while it is open. Close (×) or Pick Contour brings the drawing back |
 | Narrow window opened on the operations list with no menu and no page tabs, so it looked like the drawing was missing | 🟡 Moderate | **Fixed:** a narrow window opens on the drawing, and Back shows the operations |
 | The operation editor stayed open beside the Sheet, Tools and Machine pages, where it does nothing and takes a third of the width | 🟡 Moderate | **Fixed:** the editor shows only on the Part and Program pages (on Program it follows the highlighted block) |
-| Keyboard: the arrows did nothing until the drawing had the focus, and nothing showed which widget had it | 🟡 Moderate | **Fixed** earlier today: the drawing takes the focus, and an accent frame shows it |
+| Keyboard: the arrows did nothing until the drawing had the focus, and nothing showed which widget had it | 🟡 Moderate | **Fixed** earlier today: the drawing takes the focus, and the GNOME focus ring shows it once keys are used |
 | Keyboard: Enter did nothing with Chamfer, Fillet or Corner | 🟡 Moderate | **Fixed** earlier today |
 | Serial port row truncates "(not present)" | 🟢 Minor | Leave: the subtitle below says "Port not found…", which carries the meaning |
 | Restore Manual Ops explains a lot in a small subtitle | 🟢 Minor | Leave: it is a warning about corrupting the control's macros; it must be read once |
@@ -34,7 +34,7 @@ the editor pushed itself off the screen.
 | Element | Issue | Recommendation |
 |---|---|---|
 | Row subtitles | Half started lower case ("per revolution", "off = internal"), the Machine page used sentences | **Fixed:** all subtitles use sentence capitalization, in both languages (HIG) |
-| Key hints | "D: length,angle" did not read as a key | **Fixed** earlier today: "Press D to …", "(key B)" |
+| Key hints | "D: length,angle" did not read as a key | **Fixed** earlier today: "Press D to …" in the long tooltips; single keys in the GNOME form "Chamfer Corner (B)", and Blend Arc shows O at the right of the menu like any shortcut |
 | Header bar | Suggested-style label button, linked undo/redo | **Fixed** earlier today (HIG pass) |
 
 ## Accessibility
