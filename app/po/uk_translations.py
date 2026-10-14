@@ -685,4 +685,13 @@ UK = {
 "Edit Values…": "Змінити значення…",
 "Delete": "Видалити",
 "Zoom Here": "Збільшити тут",
+"Arc R{r}": "Дуга R{r}",
+"Line Ø{x}": "Лінія Ø{x}",
+"Line Z{z}": "Лінія Z{z}",
+"Line X{x1} Z{z1} → X{x2} Z{z2}": "Лінія X{x1} Z{z1} → X{x2} Z{z2}",
+"Move point": "Переміщення точки",
+"Search, or N10 to go to a block": "Пошук або N10, щоб перейти до блоку",
+"Search (Ctrl+F)": "Пошук (Ctrl+F)",
+"Drag to Reorder": "Перетягніть, щоб змінити порядок",
+"Search the Program": "Пошук у програмі",
 }

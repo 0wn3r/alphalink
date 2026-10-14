@@ -13,7 +13,7 @@ from gi.repository import GLib, Adw, GObject, Gtk  # noqa: E402
 from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.geometry import Arc  # noqa: E402
 
-from .hittest import RADIUS_PX, element_polyline, hit, hit_element  # noqa: E402
+from .hittest import RADIUS_PX, element_polyline, hit, hit_element, hit_elements  # noqa: E402
 from .input import InputRouter  # noqa: E402
 from .paths import segments  # noqa: E402
 from .view import ViewTransform  # noqa: E402
@@ -58,6 +58,12 @@ class LatheCanvas(Gtk.DrawingArea):
         self.rubber: tuple | None = None
         self.marker: tuple | None = None  # (Point, kind)
         self.previews: list = []  # construction choices: ("line", a, b) | ("arc", a, centre, b); tap picks one
+        self.handles: list = []  # end points of the selected element, draggable (TOUCH.md 5.2)
+        self.handle_px = 6.0  # drawn radius; 12 in touch mode
+        self.ghost: list = []  # (a, b) lines showing where a dragged point takes its elements
+        self.loupe: tuple | None = None  # (finger x, y) while a finger drags a point: magnifier above it (5.1)
+        self.handle_hooks = None  # set by the drawing tools: begin(x, y, source) -> bool, drag(x, y), end(), cancel()
+        self._in_loupe = False
         self.cursor = None  # ALPHA-T's cursor (a Point) while the keys move it
         self.tool = "select"
         self.show_grid = True
@@ -161,6 +167,10 @@ class LatheCanvas(Gtk.DrawingArea):
         el = hit_element(self.project, self.view, x, y, r) if self.project is not None else None
         xd, z = self.view.to_world(x, y)
         self.last_tap_screen = (x, y)
+        self.last_tap_segment = s
+        # a finger is wide: elements equally close to it are offered in a list (a mouse is precise enough)
+        self.last_tap_candidates = (hit_elements(self.project, self.view, x, y, r)
+                                    if self.project is not None and source == "touch" else [])
         self.emit("canvas-tapped", xd, z, r / self.view.scale, -1 if s is None or s.op_index is None else s.op_index,
                   el or "")
 
@@ -172,6 +182,35 @@ class LatheCanvas(Gtk.DrawingArea):
         cr.set_source_rgba(r, g, b, alpha)
 
     def _draw(self, area, cr, width, height) -> None:
+        self._draw_scene(area, cr, width, height)
+        if self.loupe is not None and self.marker is not None and not self._in_loupe:
+            self._draw_loupe(area, cr, width, height)
+
+    def _draw_loupe(self, area, cr, width, height) -> None:
+        """A x4 magnifier 80 px above the finger, centred on the dragged point: the finger never hides it."""
+        fx, fy = self.loupe
+        r = 56.0
+        lx, ly = min(max(fx, r + 4), width - r - 4), max(fy - 80 - r, r + 4)
+        pt = self.marker[0]
+        saved = self.view
+        z = saved.copy()
+        z.scale = saved.scale * 4
+        z.ox, z.oy = lx - pt.z * z.scale, ly + pt.x / 2 * z.scale
+        cr.save()
+        cr.arc(lx, ly, r, 0, 2 * math.pi)
+        cr.clip()
+        self.view, self._in_loupe = z, True
+        try:
+            self._draw_scene(area, cr, width, height)
+        finally:
+            self.view, self._in_loupe = saved, False
+        cr.restore()
+        self._rgb(cr, "rapid")
+        cr.set_line_width(2)
+        cr.arc(lx, ly, r, 0, 2 * math.pi)
+        cr.stroke()
+
+    def _draw_scene(self, area, cr, width, height) -> None:
         self._rgb(cr, "bg")
         cr.paint()
         if self.project is None:
@@ -438,6 +477,22 @@ class LatheCanvas(Gtk.DrawingArea):
                     cr.line_to(*v.to_screen(*q))
             cr.stroke()
             cr.set_dash([])
+        for a, b in self.ghost:  # a dragged point: where its elements go
+            self._rgb(cr, "rapid", 0.9)
+            cr.set_line_width(2)
+            cr.set_dash([6, 4])
+            cr.move_to(*v.to_screen(a.x, a.z))
+            cr.line_to(*v.to_screen(b.x, b.z))
+            cr.stroke()
+            cr.set_dash([])
+        for h in self.handles:  # the selected element's ends: drag them to move them
+            sx, sy = v.to_screen(h.x, h.z)
+            self._rgb(cr, "bg")
+            cr.arc(sx, sy, self.handle_px, 0, 2 * math.pi)
+            cr.fill_preserve()
+            self._rgb(cr, "rapid")
+            cr.set_line_width(2)
+            cr.stroke()
         if self.rubber is not None:
             a, b = self.rubber
             self._rgb(cr, "part", 0.7)

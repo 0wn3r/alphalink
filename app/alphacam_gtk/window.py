@@ -8,7 +8,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gio, GLib, Gtk, Pango  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
 
 from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
@@ -229,10 +229,28 @@ class MainWindow(Adw.ApplicationWindow):
         self.program_info = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)  # never widens the window
         self.program_info.add_css_class("readout")
         self.program_info.add_css_class("dim-label")
+        # search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
+        self.program_search = Gtk.SearchEntry(placeholder_text=_("Search, or N10 to go to a block"), hexpand=True)
+        self.program_search.connect("search-changed", lambda e: self._program_find(e.get_text(), 0))
+        self.program_search.connect("activate", lambda e: self._program_find(e.get_text(), 1))
+        self.program_search.connect("next-match", lambda e: self._program_find(e.get_text(), 1))
+        self.program_search.connect("previous-match", lambda e: self._program_find(e.get_text(), -1))
+        self.program_searchbar = Gtk.SearchBar(child=self.program_search, show_close_button=True)
+        self.program_searchbar.connect_entry(self.program_search)
+        self._found = self.program_view.get_buffer().create_tag("found", background="rgba(246,211,45,0.55)")
         prog = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        prog.append(self.program_searchbar)
         prog.append(Gtk.ScrolledWindow(child=self.program_view, vexpand=True))
         prog.append(Gtk.Separator())
-        prog.append(self.program_info)
+        info = Gtk.Box()
+        info.append(self.program_info)
+        self.program_info.set_hexpand(True)
+        find = Gtk.ToggleButton(icon_name="edit-find-symbolic", tooltip_text=_("Search (Ctrl+F)"))
+        find.add_css_class("flat")
+        find.bind_property("active", self.program_searchbar, "search-mode-enabled",
+                           GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
+        info.append(find)
+        prog.append(info)
         self._font_css = Gtk.CssProvider()
         Gtk.StyleContext.add_provider_for_display(self.get_display(), self._font_css,
                                                   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
@@ -405,6 +423,7 @@ class MainWindow(Adw.ApplicationWindow):
         add("part-settings", lambda *_: self.part_settings_dialog())
         add("save-sdg", lambda *_: self.save_sdg_dialog())
         add("clear-messages", lambda *_: self.dismiss_toasts())
+        add("find", lambda *_: self._open_find(), ["<Control>f"])
         grid = Gio.SimpleAction.new_stateful("show-grid", None, GLib.Variant.new_boolean(settings()["show_grid"]))
         grid.connect("change-state", self._show_grid)
         self.add_action(grid)
@@ -1105,7 +1124,37 @@ class MainWindow(Adw.ApplicationWindow):
                 row.add_suffix(icon)
                 if i == self.pv.error_op:
                     row.set_subtitle(self.pv.error or "")
+            row.add_suffix(self._drag_handle(row, i))
             self.op_list.append(row)
+
+    def _drag_handle(self, row: Gtk.Widget, i: int) -> Gtk.Widget:
+        """Reorder by dragging the handle only (TOUCH.md 7.1): a drag anywhere else in the list scrolls it. The row
+        is the drop target; the operation lands in its place."""
+        handle = Gtk.Image(icon_name="list-drag-handle-symbolic", tooltip_text=_("Drag to Reorder"))
+        handle.add_css_class("dim-label")
+        handle.add_css_class("drag-handle")
+        src = Gtk.DragSource(actions=Gdk.DragAction.MOVE)
+        src.connect("prepare", lambda *_: Gdk.ContentProvider.new_for_value(GObject.Value(GObject.TYPE_INT, i)))
+        src.connect("drag-begin", lambda s, drag: Gtk.DragIcon.get_for_drag(drag).set_child(
+            Gtk.Label(label=op_title(self.project.operations[i]), css_classes=["drag-label", "card"])))
+        handle.add_controller(src)
+        drop = Gtk.DropTarget.new(GObject.TYPE_INT, Gdk.DragAction.MOVE)
+        drop.connect("drop", lambda t, value, x, y: self.move_op(int(value), i))
+        row.add_controller(drop)
+        return handle
+
+    def move_op(self, i: int, j: int) -> bool:
+        """Operation i to place j (dragging its handle); the moved operation stays selected."""
+        n = len(self.project.operations)
+        if i == j or not (0 <= i < n and 0 <= j < n):
+            return False
+
+        def move(p):
+            p.operations.insert(j, p.operations.pop(i))
+        if self.apply_edit(_("Move operation"), move):
+            self.refresh()
+            self._select_op(j)
+        return True
 
     def selected_index(self) -> int | None:
         row = self.op_list.get_selected_row()
@@ -1178,6 +1227,51 @@ class MainWindow(Adw.ApplicationWindow):
                     number=prog.program_number, units=self.project.output_units or prog.units,
                     lines=len(prog.statements), size=size)
                 + ("" if self.pv.data else " · " + _("incomplete (see banner)")))
+
+    def _open_find(self) -> None:
+        self.stack.set_visible_child_name("program")
+        self.program_searchbar.set_search_mode(True)
+        self.program_search.grab_focus()
+
+    def _program_find(self, text: str, step: int) -> None:
+        """Highlight the next (step 1), previous (-1) or first (0) match from the last one; "N10" or "10" alone goes to
+        that block's label line."""
+        import re as _re
+
+        buf = self.program_view.get_buffer()
+        buf.remove_tag(self._found, buf.get_start_iter(), buf.get_end_iter())
+        text = text.strip()
+        if not text:
+            return
+        m = _re.fullmatch(r"[Nn]?(\d+)", text)
+        if m:
+            lines = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False).split("\n")
+            hit = next((i for i, line in enumerate(lines) if line.strip() == f"N{m[1]}"), None)
+            if hit is not None:
+                ok, a = buf.get_iter_at_line(hit)
+                b = a.copy()
+                b.forward_to_line_end()
+                self._show_found(buf, a, b)
+                return
+        start = getattr(self, "_find_at", None)
+        if step == 0 or start is None:
+            it = buf.get_start_iter()
+        else:
+            it = buf.get_iter_at_offset(start + (1 if step > 0 else 0))
+        flags = Gtk.TextSearchFlags.CASE_INSENSITIVE
+        res = it.forward_search(text, flags, None) if step >= 0 else it.backward_search(text, flags, None)
+        if not res:  # wrap around
+            res = (buf.get_start_iter().forward_search(text, flags, None) if step >= 0
+                   else buf.get_end_iter().backward_search(text, flags, None))
+        if res:
+            self._show_found(buf, res[0], res[1])
+
+    def _show_found(self, buf, a, b) -> None:
+        buf.apply_tag(self._found, a, b)
+        self._find_at = a.get_offset()
+        mark = buf.get_mark("found") or buf.create_mark("found", a, True)
+        buf.move_mark(mark, a)
+        self.program_view.scroll_to_mark(mark, 0.1, True, 0, 0.3)
 
     def _highlight_program(self, index: int | None) -> None:
         buf = self.program_view.get_buffer()

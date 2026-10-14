@@ -142,6 +142,8 @@ class DrawingTools:
             a.connect("activate", cb)
             self._ctx.add_action(a)
         self._ctx_at = (0.0, 0.0)
+        canvas.handle_hooks = self  # begin / drag / end / cancel: moving a selected element's end (TOUCH.md 5.2)
+        self._move = None
         # the value chip on the last drawn segment (TOUCH.md 5.1): tap it to correct the point with the keypad
         self.chip = Gtk.Button(visible=False, halign=Gtk.Align.START, valign=Gtk.Align.START,
                                tooltip_text=_("Correct the Last Point"))
@@ -208,9 +210,16 @@ class DrawingTools:
             if op_index >= 0:
                 self._select_element(None)
                 self.w._select_op(op_index)
+                seg = getattr(self.c, "last_tap_segment", None)
+                if seg is not None and seg in self.c.segs:  # the simulation jumps to the tapped move (TOUCH.md 7.2)
+                    self.w.sim.goto(self.c.segs.index(seg) + 1)
             elif element:
                 self.w._select_op(None)
-                self._select_element(element)
+                close = getattr(self.c, "last_tap_candidates", [])
+                if len(close) > 1:
+                    self._choose_element(close)  # equally close (a corner): ask which
+                else:
+                    self._select_element(element)
             else:
                 self.w._select_op(None)
                 self._select_element(None)
@@ -694,6 +703,7 @@ class DrawingTools:
     def set_touch(self, touch: bool) -> None:
         """Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6)."""
         self.keypad_button.set_visible(touch)
+        self.c.handle_px = 12.0 if touch else 6.0
         self._touch = touch
         self._place_chip()
 
@@ -749,6 +759,35 @@ class DrawingTools:
 
         Keypad(done, title=_("Correct Point"), values={"x": f"{last.x:g}", "z": f"{last.z:g}"}).present(self.w)
 
+    def _element_label(self, gid: str) -> str:
+        g = next(e for e in self.w.project.geometry if e.id == gid)
+        if isinstance(g, Arc):
+            return _("Arc R{r}").format(r=f"{g.radius():g}")
+        if g.a.x == g.b.x:
+            return _("Line Ø{x}").format(x=f"{g.a.x:g}")
+        if g.a.z == g.b.z:
+            return _("Line Z{z}").format(z=f"{g.a.z:g}")
+        return _("Line X{x1} Z{z1} → X{x2} Z{z2}").format(x1=f"{g.a.x:g}", z1=f"{g.a.z:g}", x2=f"{g.b.x:g}",
+                                                           z2=f"{g.b.z:g}")
+
+    def _choose_element(self, gids: list[str]) -> None:
+        """Two or more elements equally close to the tap (a corner): a small popover lists them (TOUCH.md 5.2)."""
+        pop = Gtk.Popover()
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
+        for gid in gids:
+            b = Gtk.Button(label=self._element_label(gid))
+            b.add_css_class("flat")
+            b.connect("clicked", lambda _b, gid=gid: (pop.popdown(), self._select_element(gid)))
+            box.append(b)
+        pop.set_child(box)
+        pop.set_parent(self.c)
+        sx, sy = getattr(self.c, "last_tap_screen", (0, 0))
+        rect = Gdk.Rectangle()
+        rect.x, rect.y, rect.width, rect.height = int(sx), int(sy), 1, 1
+        pop.set_pointing_to(rect)
+        pop.connect("closed", lambda p: GLib.idle_add(lambda: (p.unparent(), False)[1]))
+        pop.popup()
+
     # --- long press (TOUCH.md 4): a context menu at the finger ------------------------------------------------
 
     def _long_pressed(self, canvas, x, z, sx, sy, element) -> None:
@@ -776,6 +815,78 @@ class DrawingTools:
         pop.connect("closed", lambda p: GLib.idle_add(lambda: (p.unparent(), False)[1]))
         pop.popup()
 
+    # --- moving an end point by dragging its handle (TOUCH.md 5.1 loupe and fine drag, 5.2 move point) --------------
+
+    def begin(self, x: float, y: float, source: str) -> bool:
+        """A drag starts: True when it starts on a handle of the selected element (then it moves that point)."""
+        from .canvas.hittest import RADIUS_PX
+
+        if self.c.tool != "select" or not self.selected_element or not self.c.handles:
+            return False
+        r = RADIUS_PX[source]
+        best = None
+        for h in self.c.handles:
+            sx, sy = self.c.view.to_screen(h.x, h.z)
+            d = ((sx - x) ** 2 + (sy - y) ** 2) ** 0.5
+            if d <= r and (best is None or d < best[0]):
+                best = (d, h, sx, sy)
+        if best is None:
+            return False
+        _d, h, sx, sy = best
+        self._move = {"orig": h, "cur": [sx, sy], "last": (x, y), "touch": source == "touch", "new": h}
+        return True
+
+    def drag(self, x: float, y: float) -> None:
+        m = self._move
+        if m is None:
+            return
+        lx, ly = m["last"]
+        dx, dy = x - lx, y - ly
+        m["last"] = (x, y)
+        fine = (dx * dx + dy * dy) ** 0.5 < 2.0  # slow finger: 1:4, for sub-grid adjustments
+        gain = 0.25 if fine else 1.0
+        m["cur"][0] += dx * gain
+        m["cur"][1] += dy * gain
+        xd, z = self.c.view.to_world(*m["cur"])
+        p = self.w.project
+        tol = 10 / self.c.view.scale
+        grid = 1.0 if p.units == "mm" else 0.05
+        pt, kind = drawing.snap(p, Point(xd, z), tol, grid=0.0 if fine else grid)
+        if kind == "end" and pt == m["orig"]:  # its own old place does not hold it
+            pt, kind = drawing.snap(p, Point(xd, z), 0.0, grid=0.0 if fine else grid)
+        if kind == "free":
+            pt = Point(round(pt.x, 3), round(pt.z, 3))
+        m["new"] = pt
+        o = m["orig"]
+        self.c.ghost = [((g.b if g.a == o else g.a), pt) for g in p.geometry if o in (g.a, g.b)]
+        self.c.marker = (pt, "end")
+        self.c.loupe = (x, y) if m["touch"] else None
+        self.w.readout.set_label(f"X {pt.x:9.3f}   Z {pt.z:9.3f}")
+        self.c.queue_draw()
+
+    def end(self) -> None:
+        m, self._move = self._move, None
+        self.c.ghost, self.c.loupe = [], None
+        if m is None or m["new"] == m["orig"]:
+            self.c.queue_draw()
+            return
+        gid, o, new = self.selected_element, m["orig"], m["new"]
+        g = next((e for e in self.w.project.geometry if e.id == gid), None)
+        if g is None:
+            return
+        a, b = (new, g.b) if g.a == o else (g.a, new)
+        radius = g.radius() if isinstance(g, Arc) else None
+        if self.w.apply_edit(_("Move point"), lambda p: drawing.edit_element(p, gid, a, b, radius, follow=True)):
+            self.w.refresh()
+            self._select_element(gid)
+        self.c.marker = None
+        self.c.queue_draw()
+
+    def cancel(self) -> None:
+        self._move = None
+        self.c.ghost, self.c.loupe, self.c.marker = [], None, None
+        self.c.queue_draw()
+
     def _zoom_here(self) -> None:
         sx, sy = self._ctx_at
         self.c.view.zoom_at(sx, sy, 2.0)
@@ -786,6 +897,8 @@ class DrawingTools:
     def _select_element(self, gid: str | None) -> None:
         self.selected_element = gid
         self.c.highlight = {gid} if gid else set()
+        g = next((e for e in self.w.project.geometry if e.id == gid), None) if gid and self.w.project else None
+        self.c.handles = [g.a, g.b] if g is not None else []
         self.delete_el.set_visible(gid is not None)
         self.edit_el.set_visible(gid is not None)
         if gid is None and not self.w.readout.get_label().startswith("X "):

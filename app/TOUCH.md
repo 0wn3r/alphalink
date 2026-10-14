@@ -18,17 +18,18 @@ touch input (libei, `app/tests/e2e`).
 | 4 | Two-finger tap undo | ✗ |
 | 5.1 | Tap points, snapping to ends and grid, Z / X / 45° direction lock 🧪 | ✓ |
 | 5.1 | Value chip on the new segment, tap → keypad corrects the point 🧪 | ✓ (last segment only) |
-| 5.1 | Loupe while dragging; fine drag | ✗ (points are not dragged at all yet) |
+| 5.1 | Loupe (x4, 80 px above the finger) while dragging a point 🧪; fine drag 1:4 when the finger moves slowly | ✓ |
 | 5.2 | Line: tap = point 🧪, tap the first point = close 🧪, Done | ✓ (double tap stays Fit) |
 | 5.2 | Fillet / chamfer popover with size chips and Other, Enter applies 🧪 | ✓ |
-| 5.2 | Select ambiguity popover; move point by dragging a handle | ✗ |
+| 5.2 | Select: equally close elements (a corner) offered in a popover, touch only 🧪 | ✓ |
+| 5.2 | Move a point: drag the selected element's end handle, with snapping; neighbours follow 🧪 | ✓ |
 | 5.3 | Pinch wins over drag; tap vs drag threshold; quick taps not taken as a double tap 🧪 | ✓ (palm rejection ✗) |
 | 6 | Keypad for points 🧪 with ABS/INC, → next, ✓ | ✓ |
 | 6 | Keypad for the editor's number fields (a finger on the value) 🧪 | ✓ (billet-limit check ✗) |
 | 7.1 | Tap a row: select, highlight, editor (side pane; the whole page below 700 px 🧪, not a bottom sheet) | ◐ |
-| 7.1 | Move up / down (editor header); delete with Undo toast; pick on drawing with Done 🧪 | ✓ (drag-handle reorder, dimming ✗) |
-| 7.2 | Transport bar 🧪 and scrub slider | ✓ (tap a toolpath to jump ✗) |
-| 7.3 | Pinch zooms the font; tap a line ↔ drawing | ✓ (GtkSourceView, long-press copy, search, go to N ✗) |
+| 7.1 | Reorder by the row's drag handle 🧪; move up / down; delete with Undo toast; pick on drawing with Done 🧪 | ✓ (dimming ✗) |
+| 7.2 | Transport bar 🧪, scrub slider, tap a toolpath to jump the simulation there 🧪 | ✓ |
+| 7.3 | Pinch zooms the font; tap a line ↔ drawing; search and Go to N-block (Ctrl+F, or the search button) 🧪 | ✓ (GtkSourceView, long-press copy ✗) |
 | 7.4 | Hold to send 🧪 / restore; touch lock 🧪, automatic during a transfer | ✓ |
 | 8 | Architecture: InputRouter, ViewTransform, hit testing | ◐ (tools live in `drawing_tools.py`, no intent layer, no `snap.py` / `loupe.py`) |
 | 9 | End to end with a virtual touchscreen | ✓ libei, not uinput (see 9) |

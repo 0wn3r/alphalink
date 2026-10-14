@@ -43,6 +43,8 @@ class InputRouter:
         drag = Gtk.GestureDrag()
         drag.connect("drag-begin", self._drag_begin)
         drag.connect("drag-update", self._drag_update)
+        drag.connect("drag-end", self._drag_end)
+        self._editing = False  # this drag moves a point (a handle was under it) instead of panning
         widget.add_controller(drag)
         self._drag = drag
         self._last_drag = (0.0, 0.0)
@@ -84,8 +86,15 @@ class InputRouter:
     def _drag_begin(self, gesture, x, y):
         self._stop_fling()
         self._last_drag = (0.0, 0.0)
+        hooks = self.w.handle_hooks
+        # decided at press time by the hit test with the event's source radius (5.3): a handle moves, space pans
+        self._editing = bool(hooks and hooks.begin(x, y, source_name(gesture)))
+        self._start = (x, y)
 
     def _drag_update(self, gesture, dx, dy):
+        if self._editing:
+            self.w.handle_hooks.drag(self._start[0] + dx, self._start[1] + dy)
+            return
         if self._pinching:
             return
         lx, ly = self._last_drag
@@ -93,9 +102,18 @@ class InputRouter:
         self.w.view.pan(dx - lx, dy - ly)
         self.on_view_changed()
 
+    def _drag_end(self, gesture, dx, dy):
+        if self._editing:
+            self._editing = False
+            self._edited = True  # the swipe that ends it is no fling
+            self.w.handle_hooks.end()
+
     # --- pinch ------------------------------------------------------------------------------------------
 
     def _zoom_begin(self, gesture, sequence):
+        if self._editing:  # a second finger: the half-made move is dropped, pinch wins (5.3)
+            self._editing = False
+            self.w.handle_hooks.cancel()
         self._pinching = True
         self._stop_fling()
         self._drag.reset()  # pinch always wins (5.3)
@@ -116,6 +134,9 @@ class InputRouter:
     # --- fling ------------------------------------------------------------------------------------------
 
     def _fling(self, gesture, vx, vy):
+        if self._editing or getattr(self, "_edited", False):
+            self._edited = False
+            return
         if self._pinching or (abs(vx) < FLING_MIN and abs(vy) < FLING_MIN):
             return
         self._stop_fling()

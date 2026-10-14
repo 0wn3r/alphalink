@@ -791,3 +791,118 @@ class TouchPlacement(Surface):
             self.s.tap(*self.app.center(k, "button"))
         q = self.saved(path)
         self.assertAlmostEqual(q.operations[0].feed, 0.2, places=6)
+
+
+class TouchMovePoint(Surface):
+    """TOUCH.md 5.1/5.2: drag a selected element's end handle; the loupe shows the point; the profile stays joined."""
+
+    def test_drag_a_handle_moves_the_point_and_its_neighbour(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        g1 = p.geometry[1]  # X40 from Z0 to Z-25
+        self.s.tap(*to_screen(40, -12))  # select it: handles at its ends
+        time.sleep(0.4)
+        sx, sy = to_screen(40, -25)
+        tx, ty = to_screen(40, -30)
+        self.s.input.touches([(sx, sy)], [(tx, ty)], steps=12, hold=0.4)
+        time.sleep(0.6)
+        self.snap("moved")
+        q = self.saved(path)
+        geo = {g.id: g for g in q.geometry}
+        self.assertEqual(geo["g1"].b, Point(40, -30))
+        self.assertEqual(geo["g2"].a, Point(40, -30))  # the step that met it followed
+        self.assertEqual(geo["g1"].a, g1.a)
+
+    def test_loupe_shows_while_dragging(self):
+        p = shaft()
+        self.launch(str(self.part(p)), "--touch")
+        to_screen = self.calibrate()
+        self.s.tap(*to_screen(40, -12))
+        time.sleep(0.4)
+        sx, sy = to_screen(40, -25)
+        dev = self.s.input
+        from .ei import _lib
+
+        d = dev._device(8)
+        t = _lib.ei_device_touch_new(d)
+        _lib.ei_touch_down(t, sx, sy)
+        dev._frame(d)
+        for k in range(1, 8):
+            _lib.ei_touch_motion(t, sx - 6 * k, sy)
+            dev._frame(d)
+            time.sleep(0.03)
+        time.sleep(0.4)
+        img = self.s.grab()
+        self.snap("loupe")
+        # the loupe's ring is drawn in the rapid colour about 136 px above the finger
+        k = img.width / self.s.width
+        ring = [img.getpixel((int((sx - 42) * k + dx), int((sy - 80 - 56 * 2) * k))) for dx in range(-60, 60)]
+        _lib.ei_touch_up(t)
+        dev._frame(d)
+        _lib.ei_touch_unref(t)
+        self.assertTrue(any(r > 200 and g < 160 and b < 100 for r, g, b in [c[:3] for c in ring]), "no loupe ring")
+
+
+class TouchMore2(Surface):
+    """TOUCH.md 5.2 ambiguity popover, 7.1 drag-handle reorder, 7.2 tap a toolpath, 7.3 search and Go to N."""
+
+    def test_corner_tap_offers_both_lines(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        self.s.tap(*to_screen(40, -25))  # the corner between g1 (Ø40) and g2 (Z-25)
+        a = self.app.find("Line Ø40", "button")
+        self.assertTrue(self.app.exists("Line Z-25", "button"))
+        self.snap("choose")
+        self.s.tap(*self.app.center(acc=a))
+        time.sleep(0.4)
+        self.app.find("g1 ", "label", contains=True, showing=False)  # the read-out describes the chosen line
+
+    def test_drag_handle_reorders_operations(self):
+        p = with_op("area_clear")
+        from alphacam_gtk.op_factory import default_op
+
+        p.operations.append(default_op("finish", p, 1))
+        path = self.part(p)
+        self.launch(str(path))
+        handles = self.app.all("Drag to Reorder")
+        self.assertEqual(len(handles), 2)
+        hx, hy = self.app.center(acc=handles[1])
+        tx, ty = self.app.center(acc=self.app.labelled("Area clear", "list item"))
+        self.s.move(hx + 3, hy + 3)
+        self.s.move(hx, hy)
+        self.s.input.button(0x110, True)
+        for k in range(1, 11):
+            self.s.move(hx + (tx - hx) * k / 10, hy + (ty - hy) * k / 10)
+            time.sleep(0.05)
+        time.sleep(0.3)
+        self.s.input.button(0x110, False)
+        time.sleep(0.6)
+        self.snap("reordered")
+        q = self.saved(path)
+        self.assertEqual([type(o).__name__ for o in q.operations], ["FinishPass", "AreaClear"])
+
+    def test_tap_a_toolpath_jumps_the_simulation(self):
+        self.launch(str(self.part(with_op("finish"))), "--touch")
+        to_screen = self.calibrate()
+        self.s.tap(*to_screen(60, -40))  # on the finish pass along Ø60
+        time.sleep(0.5)
+        label = self.app.find("/", "label", contains=True).get_name()
+        self.assertRegex(label, r"\d+/\d+ · ")
+        self.snap("jumped")
+
+    def test_search_and_go_to_block(self):
+        self.launch(str(self.part(with_op("area_clear"))))
+        self.s.key("ctrl+f")
+        time.sleep(0.5)
+        self.s.type("N20")
+        time.sleep(0.6)
+        img = self.s.grab().convert("RGB")
+        self.snap("found")
+        k = img.width / self.s.width
+        yellow = sum(1 for x in range(0, img.width, 2) for y in range(int(80 * k), img.height, 2)
+                     if (lambda c: c[0] > 240 and 200 < c[1] < 245 and c[2] < 170)(img.getpixel((x, y))))
+        self.assertGreater(yellow, 40, "no highlighted match")  # the "N20" label line, in the match colour

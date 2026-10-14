@@ -25,3 +25,12 @@ window.touch .sim-bar button { min-width: 56px; min-height: 56px; }
   outline: 2px solid alpha(var(--accent-color), 0.6);
   outline-offset: -2px;
 }
+
+/* the reorder handle of an operation row: big enough for a finger in touch mode */
+.touch .drag-handle {
+  min-width: 32px;
+  min-height: 32px;
+}
+.drag-label {
+  padding: 8px 16px;
+}

@@ -469,6 +469,18 @@ msgstr "Виправлення точки"
 msgid "Correct Point"
 msgstr "Виправити точку"
 
+msgid "Arc R{r}"
+msgstr "Дуга R{r}"
+
+msgid "Line Ø{x}"
+msgstr "Лінія Ø{x}"
+
+msgid "Line Z{z}"
+msgstr "Лінія Z{z}"
+
+msgid "Line X{x1} Z{z1} → X{x2} Z{z2}"
+msgstr "Лінія X{x1} Z{z1} → X{x2} Z{z2}"
+
 msgid "Edit Values…"
 msgstr "Змінити значення…"
 
@@ -480,6 +492,9 @@ msgstr "Збільшити тут"
 
 msgid "Fit Part"
 msgstr "Вписати деталь"
+
+msgid "Move point"
+msgstr "Переміщення точки"
 
 msgid "Delete {what}"
 msgstr "Видалити {what}"
@@ -1303,6 +1318,9 @@ msgstr "Зменшити"
 msgid "Redraw"
 msgstr "Перемалювати"
 
+msgid "Search the Program"
+msgstr "Пошук у програмі"
+
 msgid "Zoom In at the Cursor"
 msgstr "Збільшити біля курсора"
 
@@ -1605,6 +1623,12 @@ msgstr "Операції"
 
 msgid "Drawing"
 msgstr "Креслення"
+
+msgid "Search, or N10 to go to a block"
+msgstr "Пошук або N10, щоб перейти до блоку"
+
+msgid "Search (Ctrl+F)"
+msgstr "Пошук (Ctrl+F)"
 
 msgid "Part"
 msgstr "Деталь"
@@ -1917,6 +1941,9 @@ msgstr "Експортовано {name} ({size} байт) і {listing}"
 
 msgid "Exported {name} ({size} bytes)"
 msgstr "Експортовано {name} ({size} байт)"
+
+msgid "Drag to Reorder"
+msgstr "Перетягніть, щоб змінити порядок"
 
 msgid "Program {number} · {units} · {lines} lines · {size} bytes"
 msgstr "Програма {number} · {units} · рядків: {lines} · {size} байт"

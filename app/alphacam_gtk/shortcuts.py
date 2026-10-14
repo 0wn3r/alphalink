@@ -20,7 +20,7 @@ SECTIONS = [
                      (N_("Add Operation"), "c"), (N_("Edit Element"), "e"), (N_("Delete Element"), "Delete"),
                      (N_("Deselect or Cancel"), "Escape")]),
     (N_("View"), [(N_("Zoom In"), "<Control>plus"), (N_("Zoom Out"), "<Control>minus"),
-                  (N_("Fit Part"), "<Control>0"), (N_("Zoom In at the Cursor"), "z"), (N_("Redraw"), "r"),
+                  (N_("Fit Part"), "<Control>0"), (N_("Search the Program"), "<Control>f"), (N_("Zoom In at the Cursor"), "z"), (N_("Redraw"), "r"),
                   (N_("Recall View"), "v")]),
     (N_("Cursor (Drawing Has the Focus)"), [
         (N_("Move the Cursor by the Step"), "Left Right Up Down"), (N_("Step ×10"), "Page_Up"),

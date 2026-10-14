@@ -52,3 +52,16 @@ def hit_element(project, view: ViewTransform, sx: float, sy: float, radius_px: f
             if d <= best_d:
                 best, best_d = g.id, d
     return best
+
+
+def hit_elements(project, view: ViewTransform, sx: float, sy: float, radius_px: float, near_px: float = 3.0):
+    """Ids of the elements within radius_px whose distance is within near_px of the nearest one (a corner gives two:
+    the Select tool then asks which one, TOUCH.md 5.2), nearest first."""
+    found = []
+    for g in project.geometry:
+        pts = [view.to_screen(*p) for p in element_polyline(g)]
+        d = min((_dist_point_segment((sx, sy), a, b) for a, b in zip(pts, pts[1:])), default=math.inf)
+        if d <= radius_px:
+            found.append((d, g.id))
+    found.sort()
+    return [gid for d, gid in found if d - found[0][0] <= near_px]
