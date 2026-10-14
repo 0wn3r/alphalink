@@ -57,6 +57,7 @@ class InputRouter:
         widget.add_controller(swipe)
 
         click = Gtk.GestureClick()
+        click.connect("pressed", lambda *_: widget.grab_focus())  # the cursor keys and letters act on the drawing
         click.connect("released", self._released)
         widget.add_controller(click)
 

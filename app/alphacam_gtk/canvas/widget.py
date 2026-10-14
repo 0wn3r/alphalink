@@ -39,7 +39,7 @@ class LatheCanvas(Gtk.DrawingArea):
     }
 
     def __init__(self):
-        super().__init__(hexpand=True, vexpand=True, focusable=True)
+        super().__init__(hexpand=True, vexpand=True, focusable=True, css_classes=["lathe-canvas"])
         self.project = None
         self.preview = None
         self.segs = []

@@ -69,7 +69,7 @@ class DrawingTools:
         for name, label in TOOLS:
             self.palette.add(Adw.Toggle(name=name, label=_(label), tooltip=_(TOOL_TIPS[name])))
         self.palette.set_active_name("select")
-        self.palette.connect("notify::active-name", lambda *_: self.set_tool(self.palette.get_active_name()))
+        self.palette.connect("notify::active-name", lambda *_: self._palette_changed())
 
         self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(ENTRY_MODES["point"]))
         self.entry.add_css_class("command-entry")
@@ -136,6 +136,11 @@ class DrawingTools:
         window.add_controller(hit)
 
     # --- tools ------------------------------------------------------------------------------------------
+
+    def _palette_changed(self) -> None:
+        self.set_tool(self.palette.get_active_name())
+        if not isinstance(self.w.get_focus(), Gtk.Editable):
+            self.c.grab_focus()  # a tool button keeps no focus: the arrows move the cursor, not between buttons
 
     def set_tool(self, name: str) -> None:
         if self.palette.get_active_name() != name:

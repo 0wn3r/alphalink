@@ -221,6 +221,7 @@ class MainWindow(Adw.ApplicationWindow):
         # size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the width of
         # the Part page with the editor open
         self.stack = Adw.ViewStack(hhomogeneous=False)
+        self.stack.connect("notify::visible-child-name", lambda *_: self._focus_drawing())
         self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
         self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
@@ -557,6 +558,13 @@ class MainWindow(Adw.ApplicationWindow):
         self.root.set_visible_child_name("main")
         self.editor_reveal.set_reveal_child(False)
         self.refresh(fit=True)
+        GLib.idle_add(self._focus_drawing)
+
+    def _focus_drawing(self) -> bool:
+        """The drawing takes the keyboard on the Part page, so ALPHA-T's cursor keys work without a click first."""
+        if self.project is not None and self.stack.get_visible_child_name() == "part" and not self.get_visible_dialog():
+            self.canvas.grab_focus()
+        return False
 
     def _schedule_refresh(self) -> None:
         if not self._refresh_id:
