@@ -3,6 +3,7 @@ alphacam/__main__.py
 alphacam/checks.py
 alphacam/commands.py
 alphacam/drawing.py
+alphacam/features.py
 alphacam/i18n.py
 alphacam/io/__init__.py
 alphacam/io/dxf.py

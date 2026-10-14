@@ -65,6 +65,11 @@ class InputRouter:
         hold.connect("pressed", self._long_pressed)
         widget.add_controller(hold)
 
+        # right click: the same context menu as a long press (HIG: Menu key and Shift+F10 too, drawing_tools)
+        menu = Gtk.GestureClick(button=3)
+        menu.connect("pressed", lambda g, n, x, y: (widget.grab_focus(), self.on_long and self.on_long(x, y)))
+        widget.add_controller(menu)
+
         click = Gtk.GestureClick()
         click.connect("pressed", lambda *_: widget.grab_focus())  # the cursor keys and letters act on the drawing
         click.connect("released", self._released)

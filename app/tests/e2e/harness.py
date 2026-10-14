@@ -27,6 +27,7 @@ from pathlib import Path
 APP_ID = "io.github._0wn3r.AlphaLinkCAM"
 REAL_FLATPAK = Path.home() / ".local/share/flatpak"
 BTN_LEFT = 0x110
+BTN_RIGHT = 0x111
 # services the private session must not start: the keyring would ask for a password
 MASKED_SERVICES = ("org.freedesktop.secrets", "org.gnome.keyring", "org.freedesktop.impl.portal.Secret")
 

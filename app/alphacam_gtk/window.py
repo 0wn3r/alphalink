@@ -764,6 +764,21 @@ class MainWindow(Adw.ApplicationWindow):
             self.refresh()
             self._select_op(at)
 
+    def insert_op(self, project, at: int, kind: str, **values) -> int:
+        """Add a `kind` operation at `at` inside an edit (project is the edit's copy), with a tool change first when
+        the tool in use does not suit it; returns the operation's index."""
+        op = default_op(kind, project, at)
+        for k, v in values.items():
+            setattr(op, k, v)
+        tool = tool_for(kind, project, at, self.library)
+        if tool is not None:
+            tc = default_op("tool_change", project, at)
+            tc.tool = op.tool = tool
+            project.operations.insert(at, tc)
+            at += 1
+        project.operations.insert(at, op)
+        return at
+
     def _duplicate_selected(self) -> None:
         import copy
 

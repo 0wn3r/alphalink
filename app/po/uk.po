@@ -109,6 +109,12 @@ msgstr "немає чого відображати"
 msgid "no blend arc touches this arc there"
 msgstr "дуга сполучення не торкається цієї дуги в цьому місці"
 
+msgid "choose a line along Z (a diameter) for the thread"
+msgstr "для різьби виберіть лінію вздовж Z (діаметр)"
+
+msgid "the line is too short for M{d:g} and its relief groove"
+msgstr "лінія закоротка для M{d:g} і її канавки для виходу різьби"
+
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
 
@@ -303,6 +309,15 @@ msgstr "Розділити дугу"
 
 msgid "Mirror Image"
 msgstr "Дзеркальне відображення"
+
+msgid "Chamfer Outside Corners…"
+msgstr "Фаски на зовнішніх кутах…"
+
+msgid "Standard Thread…"
+msgstr "Стандартна різьба…"
+
+msgid "Round Outside Corners…"
+msgstr "Заокруглити зовнішні кути…"
 
 msgid "Arc"
 msgstr "Дуга"
@@ -621,6 +636,60 @@ msgstr "Розділити дугу: торкніться дуги там, де 
 
 msgid "Blend arc: tap the 1st point, line or arc"
 msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
+
+msgid "The profile has no outside corner between two lines"
+msgstr "Профіль не має зовнішнього кута між двома лініями"
+
+msgid "Chamfer Outside Corners"
+msgstr "Фаски на зовнішніх кутах"
+
+msgid "Size"
+msgstr "Розмір"
+
+msgid "Round Outside Corners"
+msgstr "Заокруглити зовнішні кути"
+
+msgid "{n} corner done"
+msgid_plural "{n} corners done"
+msgstr[0] "Оброблено {n} кут"
+msgstr[1] "Оброблено {n} кути"
+msgstr[2] "Оброблено {n} кутів"
+
+msgid "The lines at the corners are too short for that size"
+msgstr "Лінії біля кутів закороткі для такого розміру"
+
+msgid "Select the diameter line to thread (a line along Z) first"
+msgstr "Спершу виберіть лінію діаметра для різьби (лінію вздовж Z)"
+
+msgid "The thread table is metric: it needs a part in mm"
+msgstr "Таблиця різьб метрична: потрібна деталь у мм"
+
+msgid "Pitch"
+msgstr "Крок"
+
+msgid "{p} coarse"
+msgstr "{p} основний"
+
+msgid "At the back end of the line"
+msgstr "На задньому кінці лінії"
+
+msgid "DIN 76 relief groove"
+msgstr "Канавка для виходу різьби DIN 76"
+
+msgid "Add a Threading operation"
+msgstr "Додати операцію нарізання різьби"
+
+msgid "Standard Thread"
+msgstr "Стандартна різьба"
+
+msgid "On {line}"
+msgstr "На {line}"
+
+msgid "Thread {name}"
+msgstr "Різьба {name}"
+
+msgid "{name}: minor Ø{minor:g}, depth {depth:g}"
+msgstr "{name}: внутрішній Ø{minor:g}, глибина {depth:g}"
 
 msgid "_No, Take It Back"
 msgstr "_Ні, повернути"
@@ -954,9 +1023,6 @@ msgstr "0 = без виведення свердла"
 
 msgid "Peck"
 msgstr "Крок свердління"
-
-msgid "Pitch"
-msgstr "Крок"
 
 msgid "First cut depth"
 msgstr "Глибина першого проходу"
@@ -1395,6 +1461,9 @@ msgstr "Курсор у X0 Z0"
 
 msgid "Use the Cursor as the Point"
 msgstr "Взяти курсор як точку"
+
+msgid "Drawing Context Menu"
+msgstr "Контекстне меню креслення"
 
 msgid "Drawing Keys (Part Page)"
 msgstr "Клавіші креслення (сторінка «Деталь»)"

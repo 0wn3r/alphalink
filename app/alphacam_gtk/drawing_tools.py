@@ -23,6 +23,9 @@ from .i18n import N_, _, ngettext  # noqa: E402
 CONSTRUCT_MENU = [(N_("Circle…"), "circle", None), (N_("Tangent"), "tangent", None), (N_("Tangent at an Angle…"), "tangent-angle", None),
                   (N_("Parallel Line…"), "parallel", None), (N_("Split Arc"), "split", None), (N_("Blend Arc…"), "blend", "o"),
                   (N_("Mirror Image"), "mirror", None)]
+# feature helpers (workflow improvements, step 3): a section of their own in the More menu
+FEATURE_MENU = [(N_("Standard Thread…"), "thread"), (N_("Chamfer Outside Corners…"), "corners-chamfer"),
+                (N_("Round Outside Corners…"), "corners-round")]
 TOOLS = [("select", N_("Select")), ("line", N_("Line")), ("arc", N_("Arc")), ("fillet", N_("Fillet")),
          ("chamfer", N_("Chamfer")), ("corner", N_("Corner"))]
 # tooltips with the one-letter keys (hit_keys.py)
@@ -110,6 +113,12 @@ class DrawingTools:
                 item.set_attribute_value("accel", GLib.Variant.new_string(key))
             item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
             more.append_item(item)
+        features = Gio.Menu()
+        for label, kind in FEATURE_MENU:
+            item = Gio.MenuItem.new(_(label), None)
+            item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
+            features.append_item(item)
+        more.append_section(None, features)
         self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More Drawing Commands"))
         construct = Gio.SimpleAction.new("construct", GLib.VariantType.new("s"))
         construct.connect("activate", lambda _a, v: self.start_construct(v.get_string()))
@@ -294,6 +303,14 @@ class DrawingTools:
         return handled
 
     def _key(self, ctl, keyval, code, state) -> bool:
+        if keyval == Gdk.KEY_Menu or (keyval == Gdk.KEY_F10 and state & Gdk.ModifierType.SHIFT_MASK):
+            # the context menu from the keyboard, at the ALPHA-T cursor (or the middle of the drawing)
+            if self.cursor is not None:
+                sx, sy = self.c.view.to_screen(self.cursor.x, self.cursor.z)
+            else:
+                sx, sy = self.c.get_width() / 2, self.c.get_height() / 2
+            self.c._long_press(sx, sy)
+            return True
         if keyval == Gdk.KEY_Escape and (self.points or self.pick_op is not None):
             self.cancel_pick() if self.pick_op is not None else self.finish_chain()
             return True
@@ -1120,6 +1137,12 @@ class DrawingTools:
     def start_construct(self, kind: str) -> None:
         if self.w.project is None:
             return
+        if kind == "thread":
+            self.thread_dialog(self.selected_element)
+            return
+        if kind.startswith("corners-"):
+            self.corners_dialog(kind.split("-")[1])
+            return
         self.cancel_pick() if self.pick_op is not None else None
         self.finish_chain()
         self.set_tool("select")
@@ -1137,6 +1160,96 @@ class DrawingTools:
                  "blend": _("Blend arc: tap the 1st point, line or arc")}[kind]
         self.construct = {"kind": kind, "step": 0, "refs": []}
         self._prompt(first)
+
+    # --- feature helpers (workflow improvements, step 3) -------------------------------------------------------
+
+    def corners_dialog(self, kind: str) -> None:
+        """Chamfer or round every outside corner of the profile with one size; single ones can be changed after."""
+        from alphacam.features import all_corners, outside_corners
+
+        n = len(outside_corners(self.w.project))
+        if n == 0:
+            self.w.toast(_("The profile has no outside corner between two lines"))
+            return
+        if kind == "chamfer":
+            title = _("Chamfer Outside Corners")
+            fields = [(_("Size"), self._mm(1), 0.001, 100), (_("Angle"), 45.0, 1, 89)]
+        else:
+            title = _("Round Outside Corners")
+            fields = [(_("Radius"), self._mm(1), 0.001, 100)]
+
+        def done(v):
+            count = {}
+
+            def edit(p):
+                count["n"] = all_corners(p, "chamfer" if kind == "chamfer" else "fillet", v[0],
+                                         v[1] if kind == "chamfer" else 45.0)
+            if self.w.apply_edit(title, edit):
+                self.w.refresh()
+                n = count["n"]
+                self.w.toast(ngettext("{n} corner done", "{n} corners done", n).format(n=n) if n
+                             else _("The lines at the corners are too short for that size"))
+
+        self._numbers(title, fields, done)
+
+    def thread_dialog(self, gid: str | None) -> None:
+        """ISO metric thread on the selected diameter line: size and pitch from the table, the minor-diameter line
+        drawn under it, a DIN 76 relief groove at its back end, and the Threading operation."""
+        from alphacam.features import METRIC, ThreadSpec, add_thread, nearest_size
+
+        p = self.w.project
+        g = next((e for e in p.geometry if e.id == gid), None) if gid else None
+        if not isinstance(g, Line) or abs(g.a.x - g.b.x) > 1e-9 or abs(g.a.z - g.b.z) < 1e-9:
+            self.w.toast(_("Select the diameter line to thread (a line along Z) first"))
+            return
+        if p.units == "inch":
+            self.w.toast(_("The thread table is metric: it needs a part in mm"))
+            return
+        sizes = sorted(METRIC)
+        size_row = Adw.ComboRow(title=_("Size"), model=Gtk.StringList.new([f"M{d}" for d in sizes]))
+        size_row.set_selected(sizes.index(nearest_size(g.a.x)))
+        pitch_row = Adw.ComboRow(title=_("Pitch"))
+
+        def pitches(*_a):
+            d = sizes[size_row.get_selected()]
+            labels = [(_("{p} coarse") if i == 0 else "{p}").format(p=f"{pt:g}") for i, pt in enumerate(METRIC[d])]
+            pitch_row.set_model(Gtk.StringList.new(labels))
+            pitch_row.set_selected(0)
+
+        size_row.connect("notify::selected", pitches)
+        pitches()
+        relief = Adw.SwitchRow(title=_("DIN 76 relief groove"), subtitle=_("At the back end of the line"), active=True)
+        with_op = Adw.SwitchRow(title=_("Add a Threading operation"), active=True)
+        group = Adw.PreferencesGroup()
+        for r in (size_row, pitch_row, relief, with_op):
+            group.add(r)
+        dlg = Adw.AlertDialog(heading=_("Standard Thread"),
+                              body=_("On {line}").format(line=self._element_label(gid)))
+        dlg.set_extra_child(group)
+        dlg.add_response("cancel", _("_Cancel"))
+        dlg.add_response("add", _("_Add"))
+        dlg.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
+        dlg.set_default_response("add")
+        dlg.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "add":
+                return
+            d = sizes[size_row.get_selected()]
+            spec = ThreadSpec(float(d), METRIC[d][pitch_row.get_selected()])
+
+            def edit(q):
+                add_thread(q, gid, spec, relief=relief.get_active())
+                if with_op.get_active():
+                    self.w.insert_op(q, len(q.operations), "thread", pitch=spec.pitch)
+            if self.w.apply_edit(_("Thread {name}").format(name=spec.name), edit):
+                self.w.refresh()
+                self._select_element(None)
+                self.w.toast(_("{name}: minor Ø{minor:g}, depth {depth:g}").format(
+                    name=spec.name, minor=spec.minor, depth=spec.depth))
+
+        dlg.connect("response", response)
+        dlg.present(self.w)
 
     def mirror_image(self) -> None:
         """ALPHA-T MIRROR IMAGE: mirror the whole drawing about the axis at once, show it, then ask whether it is

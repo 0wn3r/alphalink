@@ -979,3 +979,56 @@ class SafetyCheck(Surface):
         export = self.app.find("Export PRG", "button")
         self.assertTrue(export.get_state_set().contains(Atspi.StateType.SENSITIVE), "export must stay possible")
         self.assertTrue(self.app.exists("cuts into the part", contains=True, showing=False))  # the row's icon
+
+
+class StandardFeatures(Surface):
+    """Workflow improvements step 3 (a standard thread, every outside corner at once) and the right-click menu."""
+
+    def more(self, kind: str) -> None:
+        from alphacam_gtk.drawing_tools import CONSTRUCT_MENU, FEATURE_MENU
+
+        self.menu("More", len(CONSTRUCT_MENU) + [k for _l, k in FEATURE_MENU].index(kind))
+
+    def test_right_click_opens_the_element_menu(self):
+        from .harness import BTN_RIGHT
+
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        to_screen = self.calibrate()
+        self.s.click(*to_screen(50, -25), button=BTN_RIGHT)  # the step face, g2
+        items = self.app.menu_items()
+        self.snap("menu")
+        self.assertEqual(len(items), 4)  # Edit Values…, Delete | Zoom Here, Fit Part
+        self.app.press(acc=items[1])
+        self.assertEqual([e.id for e in self.saved(path).geometry], ["g0", "g1", "g3", "g4"])
+
+    def test_standard_thread_on_the_selected_line(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        to_screen = self.calibrate()
+        self.s.click(*to_screen(40, -12))  # selects g1, the Ø40 diameter
+        time.sleep(0.4)
+        self.more("thread")
+        self.app.find("Standard Thread", contains=True)
+        self.snap("dialog")
+        self.press("Add", "button")
+        time.sleep(0.6)
+        q = self.saved(path)
+        thread = q.operations[-1]
+        self.assertEqual(type(thread).__name__, "Thread")
+        self.assertEqual(thread.pitch, 4.0)  # M39, the nearest size, coarse
+        minor = next(g for g in q.geometry if g.id == thread.inner_line)
+        self.assertAlmostEqual(minor.a.x, 39 - 1.22687 * 4, places=2)
+        self.assertEqual(len(q.geometry), len(p.geometry) + 3 + 1)  # the relief groove and the minor line
+
+    def test_chamfer_every_outside_corner(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        self.more("corners-chamfer")
+        self.app.find("Chamfer Outside Corners")
+        self.press("Apply", "button")
+        self.app.find("2 corners done", contains=True, showing=False)
+        self.assertEqual(len(self.saved(path).geometry), len(p.geometry) + 2)
