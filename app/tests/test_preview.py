@@ -701,3 +701,38 @@ class GtkEditKeyAndMessages(unittest.TestCase):
         self.assertEqual(out["left"], 0)
         self.assertIn("(key K)", out["tip"])
         self.assertIn("blend", str(out["blend"]))
+
+
+@unittest.skipUnless(os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY"), "needs a display")
+class GtkCursorKeysVsPointer(unittest.TestCase):
+    def test_keys_keep_the_cursor_until_the_mouse_really_moves(self):
+        import gi
+
+        gi.require_version("Gtk", "4.0")
+        from gi.repository import GLib
+
+        from alphacam.model.project import Billet
+        from alphacam_gtk.application import Application
+        from alphacam_gtk.window import MainWindow
+
+        app = Application()
+        out = {}
+
+        def run():
+            w = MainWindow(app)
+            w.set_project(Project(billet=Billet(120, 100), first_tool=3))
+            d, c = w.drawing, w.canvas
+            c.pointer = (300.0, 200.0)
+            d.cursor_key("End")
+            d.cursor_key("Up")
+            d._motion(None, 302.0, 201.0)  # a redraw or a jitter: the key cursor stays
+            out["kept"] = d.cursor
+            d._motion(None, 340.0, 260.0)  # a real move: the mouse is the cursor again
+            out["mouse"] = d.cursor
+            app.quit()
+            return False
+
+        app.connect("activate", lambda *_: GLib.idle_add(run))
+        app.run([])
+        self.assertEqual(out["kept"], Point(20, 0))
+        self.assertNotEqual(out["mouse"], Point(20, 0))

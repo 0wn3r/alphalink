@@ -60,6 +60,7 @@ class DrawingTools:
         self.corner_first: str | None = None  # corner tool: first line
         self.cursor: Point | None = None  # ALPHA-T's cursor: the pointer's last place, or where the keys put it
         self.step = 10.0  # cursor key step (radius / Z)
+        self._key_pointer: tuple[float, float] | None = None  # where the pointer was when the keys moved the cursor
         self.entry_mode = "point"
         self.measure: tuple[str, Point | None] | None = None
         self._prev_view = None
@@ -199,6 +200,10 @@ class DrawingTools:
     def _motion(self, ctl, sx, sy) -> None:
         if self.w.project is None:
             return
+        kp = self._key_pointer
+        if self.c.cursor is not None and kp is not None and abs(sx - kp[0]) + abs(sy - kp[1]) < 6:
+            return  # the keys put the cursor; a motion event without a real move (a redraw, a jitter) keeps it
+        self._key_pointer = None
         x, z = self.c.view.to_world(sx, sy)
         self.cursor = Point(x, z)  # the mouse is ALPHA-T's cursor too
         if self.c.cursor is not None:
@@ -381,6 +386,7 @@ class DrawingTools:
         self.cursor = pt
         self.c.cursor = pt
         self.c.marker = (pt, "end")
+        self._key_pointer = self.c.pointer  # the mouse takes the cursor back only when it really moves
         self.w.readout.set_label(f"X {pt.x:9.3f}   Z {pt.z:9.3f}")
         if start:
             self._line_tool()
