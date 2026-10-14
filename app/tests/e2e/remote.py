@@ -67,6 +67,23 @@ class Remote:
     def touch_up(self, slot: int) -> None:
         self._rd("NotifyTouchUp", "(u)", slot)
 
+    def touches(self, start, end=None, steps: int = 10, hold: float = 0.06) -> None:
+        import time
+
+        for i, (x, y) in enumerate(start):
+            self.touch_down(i, x, y)
+        if end:
+            for k in range(1, steps + 1):
+                for i, ((x0, y0), (x1, y1)) in enumerate(zip(start, end)):
+                    self.touch_move(i, x0 + (x1 - x0) * k / steps, y0 + (y1 - y0) * k / steps)
+                time.sleep(0.016)
+        time.sleep(hold)
+        for i in range(len(start)):
+            self.touch_up(i)
+
+    def key(self, name: str, pressed: bool) -> None:
+        self.keysym(Gdk.keyval_from_name(name), pressed)
+
     def keysym(self, sym: int, pressed: bool) -> None:
         self._rd("NotifyKeyboardKeysym", "(ub)", sym, pressed)
 

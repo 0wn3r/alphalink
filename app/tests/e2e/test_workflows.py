@@ -191,7 +191,23 @@ class Touch(Surface):
             pts.append((sx, sy, float(name[1]), float(name[3])))
         (sx0, sy0, x0, z0), (sx1, sy1, x1, z1) = pts
         kz, kx = (z1 - z0) / (sx1 - sx0), (x1 - x0) / (sy1 - sy0)
+        self.mm_per_px = abs(kz)
+        self.to_world = lambda sx, sy: (x0 + (sy - sy0) * kx, z0 + (sx - sx0) * kz)
         return lambda xd, z: (sx0 + (z - z0) / kz, sy0 + (xd - x0) / kx)
+
+    def test_pinch_zoom_keeps_the_spot_between_the_fingers(self):
+        """Two fingers (libei multi-touch): spreading them 100 → 400 px zooms in about 4× around their midpoint."""
+        self.launch(str(self.part(shaft())), "--touch")
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        cx, cy = x + w * 0.55, y + h * 0.5
+        self.calibrate()
+        before, spot = self.mm_per_px, self.to_world(cx, cy)
+        self.s.pinch(cx, cy, 100, 400)
+        self.snap("pinched")
+        self.calibrate()
+        self.assertAlmostEqual(before / self.mm_per_px, 4.0, delta=0.6)
+        after = self.to_world(cx, cy)
+        self.assertLess(abs(after[0] - spot[0]) + abs(after[1] - spot[1]), 3 * before, (spot, after))
 
     def test_line_tool_by_taps(self):
         """Touch: tap Line, tap three points on the grid, Done; the line snaps to the 1 mm grid."""

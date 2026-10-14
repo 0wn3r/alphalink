@@ -85,16 +85,25 @@ class GnomeSession:
         self._wait_name("org.gnome.Mutter.RemoteDesktop", 30)
         from .remote import Remote  # noqa: needs the session's bus in os.environ first
 
-        self.remote = Remote()
+        self.remote = Remote()  # screen grabs, and the session libei connects through
+        self.input = self._input()
         time.sleep(1.0)
         self.key("Escape")  # GNOME starts in the Activities overview
         time.sleep(0.5)
-        # the first touch event makes Mutter create its virtual touchscreen and is lost: spend it on the desktop
-        self.remote.touch_down(0, self.width / 2, self.height / 2)
-        time.sleep(0.1)
-        self.remote.touch_up(0)
+        # with the D-Bus input the first touch makes Mutter create its virtual touchscreen and is lost: spend it on
+        # the desktop (harmless with libei, whose touchscreen exists from the start)
+        self.input.touches([(self.width / 2, self.height / 2)])
         time.sleep(0.5)
         return self
+
+    def _input(self):
+        """libei (the default: real virtual devices from Mutter's EIS socket, evdev key codes, multi-touch), or the
+        older remote desktop Notify* D-Bus calls with ALPHALINK_E2E_INPUT=dbus."""
+        if os.environ.get("ALPHALINK_E2E_INPUT", "ei") == "dbus":
+            return self.remote
+        from .ei import EI
+
+        return EI(self.remote.bus, self.remote.rd)
 
     def __exit__(self, *exc) -> None:
         for p in reversed(self.procs):
@@ -162,59 +171,57 @@ class GnomeSession:
 
     # --- input (real events) -------------------------------------------------------------------------------------
 
+    def pinch(self, cx: float, cy: float, start: float, end: float) -> None:
+        """Two fingers on a horizontal line through (cx, cy), from `start` to `end` pixels apart."""
+        self.input.touches([(cx - start / 2, cy), (cx + start / 2, cy)], [(cx - end / 2, cy), (cx + end / 2, cy)], 20)
+        time.sleep(0.4)
+
     def move(self, x: float, y: float) -> None:
-        self.remote.pointer_to(x, y)
+        self.input.pointer_to(x, y)
 
     def click(self, x: float, y: float, button: int = BTN_LEFT) -> None:
         # approach in two steps: GTK takes the first event over a widget as entering it, not as a motion
-        self.remote.pointer_to(x + 4, y + 4)
+        self.input.pointer_to(x + 4, y + 4)
         time.sleep(0.08)
-        self.remote.pointer_to(x, y)
+        self.input.pointer_to(x, y)
         time.sleep(0.08)
-        self.remote.button(button, True)
+        self.input.button(button, True)
         time.sleep(0.05)
-        self.remote.button(button, False)
+        self.input.button(button, False)
         time.sleep(0.25)
 
     def tap(self, x: float, y: float) -> None:
-        self.remote.touch_down(0, x, y)
-        time.sleep(0.06)
-        self.remote.touch_up(0)
+        self.input.touches([(x, y)])
         time.sleep(0.3)
 
     def hold(self, x: float, y: float, seconds: float, touch: bool = False) -> None:
         if touch:
-            self.remote.touch_down(0, x, y)
-            time.sleep(seconds)
-            self.remote.touch_up(0)
+            self.input.touches([(x, y)], hold=seconds)
         else:
-            self.remote.pointer_to(x + 4, y + 4)
+            self.input.pointer_to(x + 4, y + 4)
             time.sleep(0.08)
-            self.remote.pointer_to(x, y)
+            self.input.pointer_to(x, y)
             time.sleep(0.08)
-            self.remote.button(BTN_LEFT, True)
+            self.input.button(BTN_LEFT, True)
             time.sleep(seconds)
-            self.remote.button(BTN_LEFT, False)
+            self.input.button(BTN_LEFT, False)
         time.sleep(0.3)
 
     def hold_key(self, combo: str, seconds: float) -> None:
         """Hold a key down (a hold-to-start button by keyboard)."""
-        from gi.repository import Gdk
-
-        sym = Gdk.keyval_from_name(combo)
-        self.remote.keysym(sym, True)
+        self.input.key(combo, True)
         time.sleep(seconds)
-        self.remote.keysym(sym, False)
+        self.input.key(combo, False)
         time.sleep(0.3)
 
     def key(self, combo: str) -> None:
         """A key or a combination: "Return", "ctrl+z", "super+Up", "shift+ctrl+s"."""
-        self.remote.combo(combo)
+        self.input.combo(combo)
         time.sleep(0.15)
 
     def type(self, text: str) -> None:
         for ch in text:
-            self.remote.char(ch)
+            self.input.char(ch)
             time.sleep(0.03)
         time.sleep(0.2)
 

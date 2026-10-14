@@ -1146,6 +1146,8 @@ class MainWindow(Adw.ApplicationWindow):
             self.op_list.select_row(row)
 
     def _cursor_moved(self, canvas, x, z) -> None:
+        if self.canvas.cursor is not None and self.drawing._key_pointer is not None:
+            return  # the keys put the cursor; the read-out shows it until the mouse really moves (drawing_tools)
         self.readout.set_label(f"X {x:9.3f}   Z {z:9.3f}")
 
     # --- program view -----------------------------------------------------------------------------------

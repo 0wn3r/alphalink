@@ -67,6 +67,9 @@ class InputRouter:
 
         motion = Gtk.EventControllerMotion()
         motion.connect("motion", lambda c, x, y: self.on_pointer(x, y))
+        # the pointer's place is known from entering too: a pointer that came in and has not moved since must not
+        # look like it sits at 0,0 (the cursor keys compare against it; found by tests/e2e with libei input)
+        motion.connect("enter", lambda c, x, y: self.on_pointer(x, y))
         widget.add_controller(motion)
 
     # --- pan --------------------------------------------------------------------------------------------

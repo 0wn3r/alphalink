@@ -20,8 +20,16 @@ the pointer in them.
   layout is US.
   - The app starts with default settings every time.
   - Your desktop, keyring and app settings are never touched. Only the Flatpak installation is shared, read only.
-- **`remote.py`** sends real keyboard, pointer and touch events through Mutter's remote desktop D-Bus API, and grabs
-  the screen through its screen cast API and PipeWire.
+- **`ei.py`** sends input through [libei](https://gitlab.freedesktop.org/libinput/libei), the input emulation
+  protocol of GNOME and other Wayland compositors. Mutter's remote desktop session hands out an EIS socket
+  (`ConnectToEIS`), and the client gets real virtual devices from it:
+  - a keyboard that sends evdev key codes;
+  - an absolute pointer with buttons;
+  - a multi-touch touchscreen, which makes two-finger pinch tests possible.
+
+  It uses ctypes over the system's libei.so.1, so it needs no headers and no Python bindings.
+- **`remote.py`** grabs the screen through Mutter's screen cast API and PipeWire. It also keeps the older remote
+  desktop `Notify*` D-Bus input as a fallback (`ALPHALINK_E2E_INPUT=dbus`).
 - **`a11y.py`** finds widgets by their accessible name (AT-SPI), as a screen reader does. A test therefore also checks
   that controls have names.
   - Buttons and menu items are pressed through their accessible action. GTK 4 reports header bar widgets' positions a
@@ -38,3 +46,6 @@ the pointer in them.
 - A narrow window opened on the operations list when a part was given at start (before the breakpoint applied).
 - In portrait (912 px wide) the page tabs were cut to "Prog…" and "Mac…", so the narrow layout now starts at 1000.
 - The drawing had no accessible name, and a tap with the Select tool did not show its position in the read-out.
+- With libei input: a pointer that had entered the drawing but not moved since counted as sitting at 0,0. The next
+  motion event GTK sent then took the cursor back from the arrow keys, and the read-out showed the pointer while the
+  cross showed the key cursor.
