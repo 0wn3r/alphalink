@@ -141,16 +141,20 @@ class GnomeSession:
         """Services the session bus started on demand (gvfs, evolution, ibus, at-spi, portals...) are not in our
         process groups: end every process that lives in this session's runtime directory."""
         mark = f"XDG_RUNTIME_DIR={self.root / 'run'}".encode()
+        root = str(self.root).encode()
         for pid in os.listdir("/proc"):
             if not pid.isdigit() or int(pid) == os.getpid():
                 continue
             try:
-                env = Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
+                # a program with file capabilities (DOSBox-X) hides its environment, but its command line names our
+                # root; it ignores SIGTERM
+                cmd = Path(f"/proc/{pid}/cmdline").read_bytes()
+                env = [] if root in cmd else Path(f"/proc/{pid}/environ").read_bytes().split(b"\0")
             except OSError:
                 continue
-            if mark in env:
+            if root in cmd or mark in env:
                 try:
-                    os.kill(int(pid), signal.SIGTERM)
+                    os.kill(int(pid), signal.SIGKILL if root in cmd else signal.SIGTERM)
                 except (ProcessLookupError, PermissionError):  # gone, or sandboxed (the Flatpak's own bwrap)
                     pass
 
