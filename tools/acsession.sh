@@ -28,6 +28,8 @@ cd \\ALPHACAM
 $*
 EOC
 export SDL_AUDIODRIVER=dummy DISPLAY=:97
+# DOSBox-X asks "Quit DOSBox-X?" through zenity; without this the question pops up on the real desktop
+unset WAYLAND_DISPLAY
 Xvfb :97 -screen 0 1024x768x24 >/dev/null 2>&1 & XV=$!; sleep 1
 "$W/tools-bin/dosbox-x" -conf $C -fastlaunch >/dev/null 2>&1 & DB=$!
 sleep 4

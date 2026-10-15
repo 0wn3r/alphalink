@@ -21,6 +21,8 @@ c:
 $1
 EOC
 export SDL_AUDIODRIVER=dummy DISPLAY=:98
+# DOSBox-X asks "Quit DOSBox-X?" through zenity; without this the question pops up on the real desktop
+unset WAYLAND_DISPLAY
 Xvfb :98 -screen 0 1024x768x24 >/dev/null 2>&1 & XV=$!; sleep 1
 "$W/tools-bin/dosbox-x" -conf $C -fastlaunch >/dev/null 2>&1 & DB=$!
 sleep ${3:-8}; import -window root -crop 720x420+0+0 "$S/$4.png"; kill $DB; sleep 0.5; kill -9 $DB 2>/dev/null; kill $XV; rm -f $C
