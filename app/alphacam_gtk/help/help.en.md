@@ -189,7 +189,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 Main menu ▸ Part Settings changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program in mm (M71) or inch (M70) whatever the drawing's units (the .SD1 stays in the drawing's units, as ALPHA-T keeps it), like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
-**Turn Part Around…** (main menu) makes the second setup for the other end of the part: the drawing turned end for end, its back face on Z0, no operations, the next program number. It opens as a new part to save under its own name; the first setup stays as it was.
+**Turn Part Around…** (main menu) makes setup 2 for the other end of the part, in the same file: setup 1's drawing turned end for end, its back face on Z0, no operations, the next program number. The Setup 1 / Setup 2 switch above the operations changes between them; each has its own drawing, operations, program number and undo history, and Export PRG and Send work on the setup shown. **Remove This Setup…** takes setup 2 out again.
 
 ## Preferences
 

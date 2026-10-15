@@ -1157,6 +1157,7 @@ class WorkflowSteps456(Surface):
         self.assertTrue(pdf.read_bytes().startswith(b"%PDF"))
 
     def test_turn_part_around(self):
+        """Setup 2 in the same file: the switch above the operations, each setup with its own program."""
         p = shaft()
         path = self.part(p)
         self.launch(str(path))
@@ -1165,10 +1166,17 @@ class WorkflowSteps456(Surface):
         self.app.find("Turn Part Around", contains=True)  # Part Settings, Turn Part Around…
         self.snap("dialog")
         self.press("Turn Around", "button")
-        self.app.find("Second setup", contains=True, showing=False)
-        self.snap("turned")
-        self.s.key("ctrl+s")
-        FileDialogs.save_as(self, "part-2.alcam")
-        q = Project.load(self.s.root / "home/part-2.alcam")
-        self.assertEqual(q.program_number, p.program_number + 1)
-        self.assertIn(Point(100, 0), [g.b for g in q.geometry] + [g.a for g in q.geometry])
+        self.app.find("Setup 2, program", contains=True, showing=False)
+        self.snap("setup-2")
+        self.menu("Add Operation (C)", 0)  # an area clear in setup 2
+        time.sleep(0.5)
+        q = self.saved(path)  # Ctrl+S: the part's own file, both setups
+        self.assertEqual(len(q.setups), 1)
+        two = q.setups[0]
+        self.assertEqual((two.program_number, len(two.operations), len(q.operations)), (p.program_number + 1, 1, 0))
+        self.assertIn(Point(100, 0), [g.b for g in two.geometry] + [g.a for g in two.geometry])
+        self.s.click(*self.app.center(acc=self.app.labelled("Setup 1")))
+        time.sleep(0.5)
+        self.app.find("Setup 1", contains=True)
+        self.assertFalse(self.app.exists("Area clear", contains=True))  # setup 1 has no operations
+        self.snap("setup-1")

@@ -25,14 +25,14 @@ class UndoStack:
         self.limit = limit
         self._undo: list[Command] = []
         self._redo: list[Command] = []
-        self._saved: dict = project.to_dict()
+        self._saved: dict = project.to_dict(with_setups=False)
 
     def apply(self, label: str, mutate: Callable[[Project], None]) -> None:
         """Run `mutate(project)` as one undoable step. If it raises, the project is left unchanged."""
-        before = self.project.to_dict()
+        before = self.project.to_dict(with_setups=False)  # each setup has its own stack
         trial = Project.from_dict(before)
         mutate(trial)
-        after = trial.to_dict()
+        after = trial.to_dict(with_setups=False)
         if after == before:
             return
         self._set(after)
@@ -66,10 +66,10 @@ class UndoStack:
 
     @property
     def modified(self) -> bool:
-        return self.project.to_dict() != self._saved
+        return self.project.to_dict(with_setups=False) != self._saved
 
     def mark_saved(self) -> None:
-        self._saved = self.project.to_dict()
+        self._saved = self.project.to_dict(with_setups=False)
 
     def mark_unsaved(self) -> None:
         """For a part that exists only in memory (e.g. a fresh DXF import)."""
@@ -77,6 +77,7 @@ class UndoStack:
 
     def _set(self, data: dict) -> None:
         fresh = Project.from_dict(data)
+        fresh.setups = self.project.setups  # the other setups are not part of this stack's history
         # keep the same Project object so views holding a reference stay valid
         self.project.__dict__.update(fresh.__dict__)
         if self.on_change:

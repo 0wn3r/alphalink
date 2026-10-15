@@ -191,6 +191,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
                                             tooltip_text=_("Add Operation (C)"))
         side_header.pack_start(self.add_op_button)
+        # setups of the part (setup 2: turned around), shown when there is more than one
+        self.side_header = side_header
+        self.setup_switch = Adw.ToggleGroup(css_classes=["round"])
+        self.setup_switch.connect("notify::active", self._setup_switched)
+        self._switching = False
         side.add_top_bar(side_header)
         side.set_content(side_scroll)
         side_page = Adw.NavigationPage(title=_("Operations"), child=side)
@@ -317,6 +322,7 @@ class MainWindow(Adw.ApplicationWindow):
         view_menu.append(_("Show Grid"), "win.show-grid")
         view_menu.append(_("Part Settings"), "win.part-settings")
         view_menu.append(_("Turn Part Around…"), "win.turn-around")
+        view_menu.append(_("Remove This Setup…"), "win.remove-setup")
         view_menu.append(_("Clear Messages"), "win.clear-messages")
         menu.append_section(None, view_menu)
         layout = Gio.Menu()
@@ -456,6 +462,8 @@ class MainWindow(Adw.ApplicationWindow):
         add("apply-template", lambda a, v: self.apply_template(v.get_string()), param=GLib.VariantType.new("s"))
         add("save-template", lambda *_: self.save_template_dialog())
         add("turn-around", lambda *_: self.turn_around_dialog())
+        self.remove_setup_action = add("remove-setup", lambda *_: self.remove_setup_dialog())
+        self.remove_setup_action.set_enabled(False)
         self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
                                                GLib.Variant.new_string(settings()["input_layout"]))
@@ -626,15 +634,57 @@ class MainWindow(Adw.ApplicationWindow):
             n=n, name=sd1.name) + check
 
     def set_project(self, project: Project) -> None:
-        self.project = project
-        self.readout.set_label(" ")  # nothing selected in the new part
-        self.undo = UndoStack(project, lambda p: self._schedule_refresh())
+        """A part (file) opens: its first setup is shown; each setup keeps its own undo history."""
+        self.doc = project
+        self.undos = [UndoStack(p, lambda _p: self._schedule_refresh()) for p in [project] + project.setups]
         self.root.set_visible_child_name("main")
-        self.editor_reveal.set_reveal_child(False)
-        self.refresh(fit=True)
+        self._update_setups()
+        self._activate(0)
         if self.split.get_collapsed():
             self.split.set_show_content(True)  # a narrow window opens on the drawing; Back shows the operations
         GLib.idle_add(self._focus_drawing)
+
+    def setups(self) -> list[Project]:
+        return [self.doc] + self.doc.setups
+
+    def _activate(self, index: int) -> None:
+        self.setup_index = index
+        self.project = self.setups()[index]
+        self.undo = self.undos[index]
+        self.readout.set_label(" ")  # nothing selected
+        self.editor_reveal.set_reveal_child(False)
+        if hasattr(self, "drawing"):  # element ids repeat between setups: nothing carries over
+            self.drawing.finish_chain()
+            self.drawing._select_element(None)
+        self.refresh(fit=True)
+        self._switching = True
+        try:
+            if len(self.setups()) > 1:
+                self.setup_switch.set_active(index)
+        finally:
+            self._switching = False
+        self.remove_setup_action.set_enabled(index > 0)
+
+    def _update_setups(self) -> None:
+        """The Setup 1 / Setup 2 switch above the operations, when the part has more than one setup."""
+        self._switching = True
+        try:
+            self.setup_switch.remove_all()
+            for n in range(len(self.setups())):
+                self.setup_switch.add(Adw.Toggle(label=_("Setup {n}").format(n=n + 1)))
+        finally:
+            self._switching = False
+        self.side_header.set_title_widget(self.setup_switch if len(self.setups()) > 1 else None)
+
+    def _setup_switched(self, group, _p) -> None:
+        if not self._switching and group.get_active() != getattr(self, "setup_index", 0) \
+                and group.get_active() < len(self.setups()):
+            self.drawing.finish_chain() if hasattr(self, "drawing") else None
+            self._activate(group.get_active())
+
+    def modified(self) -> bool:
+        """Any setup changed since the part was saved."""
+        return any(u.modified for u in getattr(self, "undos", []))
 
     def _set_small(self, small: bool) -> None:
         self._small = small
@@ -680,7 +730,9 @@ class MainWindow(Adw.ApplicationWindow):
         # the safety check before export: warnings, never a block (alphacam/safety.py)
         self.findings = safety_check(project, self.pv, self.library) if self.pv.data is not None else []
         name = self.path.name if self.path else _("Untitled")
-        dirty = "• " if self.undo and self.undo.modified else ""
+        if len(self.setups()) > 1:
+            name += " – " + _("Setup {n}").format(n=self.setup_index + 1)
+        dirty = "• " if self.modified() else ""
         self.set_title(f"{dirty}{name} – AlphaLink CAM")
         self.content_page.set_title(dirty + name)
         self._fill_ops()
@@ -910,55 +962,83 @@ class MainWindow(Adw.ApplicationWindow):
     # --- second setup (workflow improvements, step 6) --------------------------------------------------------------
 
     def turn_around_dialog(self) -> None:
+        """Setup 2 of the part, in the same file: the first setup's drawing turned end for end."""
         from alphacam.setups import part_length, turn_around
 
         if self.project is None:
             return
-        if self.undo and self.undo.modified:
-            self.toast(_("Save the part first: the second setup becomes a part of its own"))
-            return
-        inch = self.project.units == "inch"
+        first = self.doc
+        inch = first.units == "inch"
         length = Adw.SpinRow.new_with_range(0.001, 5000, 1)
         length.set_title(_("Part length"))
         length.set_subtitle(_("Its back face becomes Z0"))
         length.set_digits(4 if inch else 3)
-        length.set_value(part_length(self.project) or self.project.billet.length)
+        length.set_value(part_length(first) or first.billet.length)
         from .op_editor import fit_spin
 
         fit_spin(length, 0.001, 5000, 4 if inch else 3)  # room for "50.000", not "0.000" cut short
         prog = Adw.SpinRow.new_with_range(1, 9999, 1)
         prog.set_title(_("Program number"))
         prog.set_subtitle(_("Of the second setup"))
-        prog.set_value(min(self.project.program_number + 1, 9999))
+        prog.set_value(min(first.program_number + 1, 9999))
         group = Adw.PreferencesGroup()
         group.add(length)
         group.add(prog)
-        alert = Adw.AlertDialog(heading=_("Turn Part Around"),
-                                body=_("A second setup for the other end: the drawing is turned end for end, its back "
-                                       "face on Z0, without operations. It opens as a new part; this one stays as "
-                                       "it is."))
+        replacing = bool(first.setups)
+        body = _("Setup 2 machines the other end: setup 1's drawing turned end for end, its back face on Z0, without "
+                 "operations. Both setups are kept in this part's file.")
+        if replacing:
+            body += "\n\n" + _("This replaces the current setup 2 and its operations.")
+        alert = Adw.AlertDialog(heading=_("Turn Part Around"), body=body)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("turn", _("_Turn Around"))
-        alert.set_response_appearance("turn", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("turn")
+        alert.add_response("turn", _("_Replace Setup 2") if replacing else _("_Turn Around"))
+        alert.set_response_appearance("turn", Adw.ResponseAppearance.DESTRUCTIVE if replacing
+                                      else Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("cancel" if replacing else "turn")
         alert.set_close_response("cancel")
 
         def response(_d, r):
             if r != "turn":
                 return
             try:
-                new = turn_around(self.project, length.get_value(), int(prog.get_value()))
+                new = turn_around(first, length.get_value(), int(prog.get_value()))
             except ValueError as e:
                 self.toast(str(e))
                 return
-            stem = self.path.stem if self.path else (getattr(self, "import_name", None) or "part")
-            self.path, self.import_name = None, f"{stem}-2"
-            self.set_project(new)
-            self.undo.mark_unsaved()
-            self.refresh()
-            self.toast(_("Second setup: {name}, program {n}. Add its operations and save it.").format(
-                name=f"{stem}-2", n=new.program_number))
+            first.setups = [new]
+            self.undos[1:] = [UndoStack(new, lambda _p: self._schedule_refresh())]
+            self.undos[1].mark_unsaved()
+            self._update_setups()
+            self._activate(1)
+            self.toast(_("Setup 2, program {n}: add its operations, then save the part.").format(
+                n=new.program_number))
+
+        alert.connect("response", response)
+        alert.present(self)
+
+    def remove_setup_dialog(self) -> None:
+        if getattr(self, "setup_index", 0) == 0:
+            return
+        n = self.setup_index + 1
+        alert = Adw.AlertDialog(heading=_("Remove Setup {n}?").format(n=n),
+                                body=_("Its drawing and operations are removed from the part. This cannot be undone, "
+                                       "but the file on disk keeps it until you save."))
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("remove", _("_Remove"))
+        alert.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
+        alert.set_default_response("cancel")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "remove":
+                return
+            i = self.setup_index
+            del self.doc.setups[i - 1]
+            del self.undos[i]
+            self.undos[0].mark_unsaved()  # the file still has it until saved
+            self._update_setups()
+            self._activate(0)
 
         alert.connect("response", response)
         alert.present(self)
@@ -1249,18 +1329,19 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _write(self, path: Path) -> bool:
         try:
-            self.project.save(path)
+            self.doc.save(path)  # every setup, in one file
         except OSError as e:
             self.toast(_("Could not save: {error}").format(error=e))
             return False
         self.path = path
-        self.undo.mark_saved()
+        for u in self.undos:
+            u.mark_saved()
         self.refresh()
         self.toast(_("Saved {name}").format(name=path.name))
         return True
 
     def _close_request(self, *_args) -> bool:
-        if not (self.undo and self.undo.modified):
+        if not self.modified():
             return False
         alert = Adw.AlertDialog(heading=_("Save changes?"),
                                 body=_("The part has changes that are not saved. They are lost if you close without saving."))
@@ -1274,7 +1355,8 @@ class MainWindow(Adw.ApplicationWindow):
 
         def response(_d, r):
             if r == "discard":
-                self.undo.mark_saved()
+                for u in self.undos:
+                    u.mark_saved()
                 self.close()
             elif r == "save":
                 if self.path is not None and self.path.suffix.lower() == ".alcam":
@@ -1290,7 +1372,10 @@ class MainWindow(Adw.ApplicationWindow):
         if self.pv is None or self.pv.data is None:
             return
         stem = self.path.stem if self.path else getattr(self, "import_name", None) or "PART"
-        dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{alphat_name(stem)}.PRG")
+        base = alphat_name(stem)
+        if self.setup_index > 0:  # setup 2 of NAME: NAME2 (ALPHA-T names have 8 characters at most)
+            base = base[:7] + str(self.setup_index + 1)
+        dlg = Gtk.FileDialog(title=_("Export Alpha-T Program"), initial_name=f"{base}.PRG")
         last = settings()["export_dir"]
         if last and Path(last).is_dir():  # back to the same USB stick or folder
             dlg.set_initial_folder(Gio.File.new_for_path(last))

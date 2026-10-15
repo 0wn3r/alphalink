@@ -285,7 +285,10 @@ class SheetPage(Gtk.Box):
 
     def _title(self) -> str:
         w = self.window
-        return w.path.stem.upper() if w.path else (getattr(w, "import_name", None) or _("UNTITLED")).upper()
+        title = w.path.stem.upper() if w.path else (getattr(w, "import_name", None) or _("UNTITLED")).upper()
+        if len(w.setups()) > 1:
+            title += " " + _("SETUP {n}").format(n=w.setup_index + 1)
+        return title
 
     def _notes_changed(self) -> None:
         w = self.window

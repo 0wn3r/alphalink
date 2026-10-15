@@ -3,7 +3,7 @@
 The drawing is mirrored about the middle of the part's length, so the back face becomes the new front face at Z0 and
 the old front face lands at Z-length. X (diameters) stays. Arcs change direction with the mirror. The new setup has
 no operations (its own roughing and finishing are added to it) and the next program number, so both programs can sit
-in the control side by side."""
+in the control side by side. The app keeps it in the same .alcam as setup 2 (Project.setups)."""
 
 from __future__ import annotations
 
@@ -38,6 +38,7 @@ def turn_around(project, length: float | None = None, program_number: int | None
     for t in new.texts:
         t.p = flip(t.p)
     new.operations = []
+    new.setups = []
     new.billet.length = round(length, 6)
     new.program_number = (project.program_number + 1) if program_number is None else program_number
     return new

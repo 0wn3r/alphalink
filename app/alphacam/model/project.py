@@ -69,6 +69,9 @@ class Project:
     operations: list[Operation] = field(default_factory=list)
     texts: list[Text] = field(default_factory=list)
     notes: str = ""  # for the operator, printed on the setup sheet
+    # further setups of the same part in the same file (setup 2: the part turned around), each a project of its own
+    # with its drawing, billet, operations and program number; this project is setup 1
+    setups: list["Project"] = field(default_factory=list)
 
     def __post_init__(self):
         if self.units not in UNITS:
@@ -85,7 +88,7 @@ class Project:
 
     # --- JSON -----------------------------------------------------------------------------------------
 
-    def to_dict(self) -> dict:
+    def to_dict(self, with_setups: bool = True) -> dict:
         return {
             "format": FORMAT,
             "units": self.units,
@@ -100,6 +103,7 @@ class Project:
             "operations": serde.to_json(self.operations),
         } | ({"texts": serde.to_json(self.texts)} if self.texts else {}) \
             | ({"notes": self.notes} if self.notes else {}) \
+            | ({"setups": [s.to_dict(with_setups=False) for s in self.setups]} if with_setups and self.setups else {}) \
             | ({"output_units": self.output_units} if self.output_units not in (None, self.units) else {})
 
     @classmethod
@@ -122,6 +126,7 @@ class Project:
             operations=[serde.from_json(None, _legacy_op(o), OPERATION_TYPES) for o in data.get("operations", [])],
             texts=[serde.from_json(Text, t) for t in data.get("texts", [])],
             notes=str(data.get("notes", "")),
+            setups=[cls.from_dict(s) for s in data.get("setups", [])],
         )
 
     def dumps(self) -> str:

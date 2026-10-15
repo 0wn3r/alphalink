@@ -1423,6 +1423,9 @@ msgstr "Примітки для оператора"
 msgid "UNTITLED"
 msgstr "БЕЗ НАЗВИ"
 
+msgid "SETUP {n}"
+msgstr "ВСТАНОВЛЕННЯ {n}"
+
 msgid "There is no program to print yet"
 msgstr "Ще немає програми для друку"
 
@@ -1897,6 +1900,9 @@ msgstr "Параметри деталі"
 msgid "Turn Part Around…"
 msgstr "Перевернути деталь…"
 
+msgid "Remove This Setup…"
+msgstr "Видалити це встановлення…"
+
 msgid "Clear Messages"
 msgstr "Прибрати повідомлення"
 
@@ -2044,6 +2050,9 @@ msgstr "Програма побайтово збігається з {name} ві�
 msgid "The program differs from ALPHA-T's {name}: check before sending."
 msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
 
+msgid "Setup {n}"
+msgstr "Встановлення {n}"
+
 msgid "Untitled"
 msgstr "Без назви"
 
@@ -2116,9 +2125,6 @@ msgstr "Шаблон"
 msgid "Template “{name}” saved; it is in the Add Operation menu"
 msgstr "Шаблон «{name}» збережено; він у меню «Додати операцію»"
 
-msgid "Save the part first: the second setup becomes a part of its own"
-msgstr "Спершу збережіть деталь: друге встановлення стає окремою деталлю"
-
 msgid "Part length"
 msgstr "Довжина деталі"
 
@@ -2131,17 +2137,32 @@ msgstr "Номер програми"
 msgid "Of the second setup"
 msgstr "Другого встановлення"
 
+msgid "Setup 2 machines the other end: setup 1's drawing turned end for end, its back face on Z0, without operations. Both setups are kept in this part's file."
+msgstr "Встановлення 2 обробляє інший кінець: креслення встановлення 1, перевернуте, задній торець на Z0, без операцій. Обидва встановлення зберігаються у файлі цієї деталі."
+
+msgid "This replaces the current setup 2 and its operations."
+msgstr "Це замінить поточне встановлення 2 і його операції."
+
 msgid "Turn Part Around"
 msgstr "Перевернути деталь"
 
-msgid "A second setup for the other end: the drawing is turned end for end, its back face on Z0, without operations. It opens as a new part; this one stays as it is."
-msgstr "Друге встановлення для іншого кінця: креслення перевертається, його задній торець стає Z0, операцій немає. Воно відкривається як нова деталь; ця залишається як є."
+msgid "_Replace Setup 2"
+msgstr "_Замінити встановлення 2"
 
 msgid "_Turn Around"
 msgstr "_Перевернути"
 
-msgid "Second setup: {name}, program {n}. Add its operations and save it."
-msgstr "Друге встановлення: {name}, програма {n}. Додайте операції й збережіть його."
+msgid "Setup 2, program {n}: add its operations, then save the part."
+msgstr "Встановлення 2, програма {n}: додайте його операції, потім збережіть деталь."
+
+msgid "Remove Setup {n}?"
+msgstr "Видалити встановлення {n}?"
+
+msgid "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save."
+msgstr "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь."
+
+msgid "_Remove"
+msgstr "_Видалити"
 
 msgid "New parts"
 msgstr "Нові деталі"

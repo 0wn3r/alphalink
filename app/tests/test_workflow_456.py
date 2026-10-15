@@ -124,3 +124,24 @@ class Notes(unittest.TestCase):
         p.notes = "Centre drill first"
         self.assertEqual(Project.loads(p.dumps()).notes, "Centre drill first")
         self.assertNotIn("notes", part(SHAFT).to_dict())
+
+
+class SetupsInOneFile(unittest.TestCase):
+    def test_setup_two_round_trips_and_has_its_own_undo(self):
+        from alphacam.commands import UndoStack
+        from alphacam.setups import turn_around
+
+        p = part(SHAFT)
+        p.setups = [turn_around(p)]
+        q = Project.loads(p.dumps())
+        self.assertEqual(len(q.setups), 1)
+        self.assertEqual(q.setups[0].program_number, p.program_number + 1)
+        self.assertEqual(q.setups[0].to_dict(), p.setups[0].to_dict())
+        # setup 1's undo leaves setup 2 alone
+        one, two = UndoStack(q), UndoStack(q.setups[0])
+        two.apply("x", lambda s: setattr(s, "program_number", 99))
+        one.apply("y", lambda s: setattr(s, "program_number", 42))
+        one.undo()
+        self.assertEqual((q.program_number, q.setups[0].program_number), (p.program_number, 99))
+        self.assertFalse(one.modified)
+        self.assertTrue(two.modified)
