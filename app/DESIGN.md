@@ -288,8 +288,11 @@ gets a **fixture test** that pins it down against its sample before the generato
    interface inputs UI000..UI015, so `#1005/#1006/#1009` are three machine-side signals (switches or keys) read by
    the program header: 1006 = go on at the block after the last one done, 1005 = redo the last block, 1009 = redo
    it with the operation counter #131 stepped back.
-4. Is `O2` constant, or does it depend on the program store slot?
-5. Inch mode: values are converted with 4 decimals, but `F0.3` was written unchanged in the inch sample. Check feed units.
-6. ATOOLIB.IM1/IM2 tool image format (for tool graphics).
+4. ~~Is `O2` constant?~~ Yes: it is a literal line of ALPHA-T's table-driven post ALPHTCNC.PRG (line 87, next to
+   `#132=`, `#140=0`, the `IF[#1006EQ1]` header and `M71`); the program number goes in `#132`.
+5. ~~Inch feed units~~: the feed is converted with the rest (0.15 mm/rev -> `#130=0.0118`, RE_NOTES program units
+   note); the app does the same.
+6. ~~Tool image format~~: ATOOLIB.TL2 (and ATSETUP's .IM1/.IM2) decoded in RE_NOTES Progress 41; the simulation
+   draws the pictures.
 7. Whether ALPHA-T's pass-distribution maths (depth of cut → number of passes) must be bit-exact, or whether the macros
    tolerate any pass set. Assume bit-exact until proven otherwise (C1).
