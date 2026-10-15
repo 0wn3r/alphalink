@@ -813,4 +813,7 @@ UK = {
 "Remove Setup {n}?": "Видалити встановлення {n}?",
 "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save.": "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь.",
 "_Remove": "_Видалити",
+"Parity from the app": "Парність від програми",
+"For adapters without 7-bit framing: set the adapter to 9600 8N2": "Для адаптерів без 7-бітового кадру: налаштуйте адаптер на 9600 8N2",
+"Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of its pause (DC3)": "Через Bluetooth ставте 5 мс або більше: верстат має зупинитися не пізніше 10 символів після паузи (DC3)",
 }

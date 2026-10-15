@@ -122,6 +122,7 @@ Connect the serial cable, then on the Machine page:
 - **Back up Manual Ops**: start the backup in the app first. Then on the lathe, in Manual Ops, touch the ops file icon, choose 1 "OP. SAVE/RESTORE" and touch the → arrow. The lathe pauses between operations and the app waits through them; it ends at the end mark, or press **Stop and Keep** when the lathe has finished.
 - **Restore Manual Ops**: on the lathe, same menu, touch the ← arrow, then hold **Restore to the Lathe…** in the app and choose the file. Only restore files saved from this lathe.
 - **Cable Test**: unplug the cable from the lathe, bridge pins 2 and 3 of the adapter, and run the loopback test.
+- **Bluetooth adapter**: pair it in the system's Bluetooth settings, then pick it in the port list (it shows as “name (Bluetooth)”; an rfcomm device works too). Set the adapter itself to 9600, 7 data bits, even parity, 2 stop bits and no flow control of its own, so DC1 and DC3 reach the app; an adapter that only does 8 data bits goes to 8N2 with **Parity from the app** on. Use a delay per character of 5 ms or more. There are no modem lines over Bluetooth.
 
 The app never starts the machine. Always check the program on the control before Cycle Start, and run new programs with the feed override turned down.
 

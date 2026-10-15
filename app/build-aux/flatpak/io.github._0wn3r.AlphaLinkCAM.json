@@ -9,6 +9,8 @@
     "--socket=wayland",
     "--socket=fallback-x11",
     "--device=all",
+    "--allow=bluetooth",
+    "--system-talk-name=org.bluez",
     "--filesystem=home",
     "--filesystem=/media",
     "--filesystem=/run/media"

@@ -109,6 +109,11 @@ class MachinePage(Gtk.Box):
                                       subtitle=_("Nothing is sent until the lathe asks for data"))
         self.wait_row.connect("notify::active", lambda r, _p: settings().set("wait_xon", r.get_active()))
         conn.add(self.wait_row)
+        # Bluetooth serial adapters: the line is set in the adapter; some only frame 8 data bits
+        self.parity_row = Adw.SwitchRow(title=_("Parity from the app"), active=bool(settings()["soft_parity"]),
+                                        subtitle=_("For adapters without 7-bit framing: set the adapter to 9600 8N2"))
+        self.parity_row.connect("notify::active", lambda r, _p: settings().set("soft_parity", r.get_active()))
+        conn.add(self.parity_row)
         page.add(conn)
 
         # send
@@ -142,7 +147,9 @@ class MachinePage(Gtk.Box):
 
         self.append(page)
         self.refresh_ports()
-        self.port_row.connect("notify::selected", lambda *_: (self._restart_poll(), self._remember_port()))
+        self.port_row.connect("notify::selected", lambda *_: (self._restart_poll(), self._remember_port(),
+                                                              self._port_kind()))
+        self._port_kind()
         self.connect("map", lambda *_: self._restart_poll())
         self.connect("unmap", lambda *_: self._stop_poll())
 
@@ -163,6 +170,18 @@ class MachinePage(Gtk.Box):
         item = self.port_row.get_selected_item()
         return item.get_string().split("  ")[0] if item is not None else None
 
+    def _port_kind(self) -> None:
+        """Bluetooth ports: the adapter carries the line settings, has no modem lines, and adds latency, so the
+        delay per character should be longer (the lathe must stop within 10 characters of its DC3)."""
+        bt = sl.is_bluetooth(self.port())
+        self.parity_row.set_visible(bt)
+        self.lines_row.set_visible(not bt)
+        self.delay_row.set_subtitle(_("Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of "
+                                      "its pause (DC3)") if bt else _("2 ms works on the 400T; 0 sends at full speed"))
+
+    def _open(self, port: str):
+        return sl.open_port(port, soft_parity=sl.is_bluetooth(port) and self.parity_row.get_active())
+
     def _remember_port(self) -> None:
         if not getattr(self, "_restoring", False) and self.port():
             settings().set("serial_port", self.port())
@@ -181,7 +200,7 @@ class MachinePage(Gtk.Box):
 
     def _restart_poll(self) -> None:
         self._stop_poll()
-        if self.get_mapped():
+        if self.get_mapped() and not sl.is_bluetooth(self.port()):  # opening a Bluetooth port connects: no polling
             self._poll = GLib.timeout_add(200, self._poll_lines)
 
     def _stop_poll(self) -> None:
@@ -228,7 +247,7 @@ class MachinePage(Gtk.Box):
         def worker():
             result, error = None, None
             try:
-                ser = sl.open_port(port)
+                ser = self._open(port)
                 try:
                     result = work(ser, dlg, log)
                 finally:

@@ -60,7 +60,89 @@ class TransferLog:
         return "".join(f"{t:8.3f}  {e}\n" for t, e in self.events)
 
 
-def open_port(path: str, **overrides):
+BT_PREFIX = "bt://"  # bt://AA:BB:CC:DD:EE:FF[/channel]: a paired Bluetooth serial (SPP) adapter, straight over RFCOMM
+SPP_UUID = "00001101-0000-1000-8000-00805f9b34fb"
+
+
+def is_bluetooth(path: str | None) -> bool:
+    return bool(path) and (path.startswith(BT_PREFIX) or os.path.basename(path).startswith("rfcomm"))
+
+
+class RfcommPort:
+    """A Bluetooth serial adapter reached over an RFCOMM socket, with the parts of pyserial's interface the transfers
+    use. The line itself (9600, 7E2) is set in the adapter: RFCOMM carries bytes, not the PC's port settings, and has
+    no modem lines (reading one raises AttributeError, shown as unknown)."""
+
+    def __init__(self, url: str, timeout: float = 0.05, connect_timeout: float = 10.0, sock=None):
+        import socket
+
+        self.port = url
+        addr = url[len(BT_PREFIX):] if url.startswith(BT_PREFIX) else url
+        mac, _, ch = addr.partition("/")
+        self.address, self.channel = mac.upper(), int(ch or 1)  # SPP adapters listen on channel 1
+        if sock is None:
+            sock = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
+            sock.settimeout(connect_timeout)
+            sock.connect((self.address, self.channel))
+        self.sock = sock
+        self.sock.settimeout(timeout)
+
+    def read(self, n: int = 1) -> bytes:
+        import socket
+
+        try:
+            return self.sock.recv(n)
+        except (socket.timeout, BlockingIOError):
+            return b""
+
+    def write(self, data: bytes) -> int:
+        self.sock.sendall(data)
+        return len(data)
+
+    def flush(self) -> None:
+        pass  # sendall has handed the bytes over
+
+    def reset_input_buffer(self) -> None:
+        self.sock.setblocking(False)
+        try:
+            while self.sock.recv(4096):
+                pass
+        except (BlockingIOError, OSError):
+            pass
+        finally:
+            self.sock.settimeout(0.05)
+
+    def close(self) -> None:
+        self.sock.close()
+
+
+class SoftParityPort:
+    """For adapters that only frame 8 data bits: set them to 9600 8N2 and the app makes the 7E2 characters itself
+    (even parity in bit 7 going out, bit 7 dropped coming in). On the wire it is the same frame as 7E2."""
+
+    def __init__(self, inner):
+        self.inner = inner
+        self.port = getattr(inner, "port", None)
+
+    def read(self, n: int = 1) -> bytes:
+        return bytes(b & 0x7F for b in self.inner.read(n))
+
+    def write(self, data: bytes) -> int:
+        return self.inner.write(bytes(b & 0x7F for b in data).translate(EVEN_PARITY))
+
+    def __getattr__(self, name):
+        return getattr(self.inner, name)
+
+
+def open_port(path: str, soft_parity: bool = False, **overrides):
+    """A pyserial port (or, for bt:// addresses, an RFCOMM socket), with the line's 7E2 framing; soft_parity: 8-bit
+    framing with the parity made here (adapters without 7-bit framing)."""
+    if path and path.startswith(BT_PREFIX):
+        port = RfcommPort(path)
+        return SoftParityPort(port) if soft_parity else port
+    if soft_parity:
+        overrides = dict(overrides, bytesize=8, parity="N")
+        return SoftParityPort(open_port(path, **overrides))
     import serial  # imported here so the rest of the module works without pyserial
 
     params = dict(LINE, **overrides)
@@ -226,10 +308,39 @@ def list_ports() -> list[tuple[str, str]]:
         from serial.tools import list_ports as lp
     except ImportError:
         return []
-    # legacy /dev/ttyS* without hardware report "n/a"; leave them out
-    ports = [(p.device, p.description or p.device) for p in lp.comports() if p.description != "n/a"]
+    # legacy /dev/ttyS* without hardware report "n/a"; leave them out (rfcomm devices report "n/a" too: keep those)
+    ports = [(p.device, "Bluetooth (rfcomm)" if "rfcomm" in p.device else p.description or p.device)
+             for p in lp.comports() if p.description != "n/a" or "rfcomm" in p.device]
     # end-to-end tests: only virtual ports (socat ptys) standing in for the lathe, never a real adapter (tests/e2e)
     test = [d for d in os.environ.get("ALPHALINK_TEST_PORTS", "").split(":") if d]
     if test:
         return [(d, "test port") for d in test]
-    return sorted(ports, key=lambda p: (not p[0].startswith("/dev/ttyUSB"), p[0]))
+    return sorted(ports, key=lambda p: (not p[0].startswith("/dev/ttyUSB"), p[0])) + bluetooth_devices()
+
+
+def bluetooth_devices() -> list[tuple[str, str]]:
+    """Paired Bluetooth devices with a serial port profile (from BlueZ over D-Bus), as bt:// ports."""
+    try:
+        import gi
+
+        gi.require_version("Gio", "2.0")
+        from gi.repository import Gio, GLib
+
+        bus = Gio.bus_get_sync(Gio.BusType.SYSTEM, None)
+        reply = bus.call_sync("org.bluez", "/", "org.freedesktop.DBus.ObjectManager", "GetManagedObjects", None,
+                              GLib.VariantType.new("(a{oa{sa{sv}}})"), Gio.DBusCallFlags.NONE, 2000, None)
+    except Exception:  # noqa: BLE001 - no BlueZ, no system bus, sandbox without access: no Bluetooth ports
+        return []
+    out = []
+    for _path, ifaces in reply.unpack()[0].items():
+        dev = ifaces.get("org.bluez.Device1")
+        if not dev or not dev.get("Paired"):
+            continue
+        uuids = [u.lower() for u in dev.get("UUIDs", [])]
+        if uuids and SPP_UUID not in uuids:
+            continue  # a device that lists nothing may still be a serial adapter
+        if str(dev.get("Icon", "")).startswith(("audio", "phone", "input", "computer", "video")):
+            continue  # earbuds and phones offer a serial profile too (for their apps), but are not adapters
+        name = dev.get("Alias") or dev.get("Name") or dev.get("Address")
+        out.append((BT_PREFIX + dev["Address"], f"{name} (Bluetooth)"))
+    return sorted(out)

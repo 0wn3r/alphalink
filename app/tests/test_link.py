@@ -144,3 +144,50 @@ class Pure(unittest.TestCase):
 
         ok, got = sl.loopback(Echo())
         self.assertTrue(ok)
+
+
+class Bluetooth(unittest.TestCase):
+    def test_rfcomm_port_over_a_socket(self):
+        import socket
+
+        a, b = socket.socketpair()
+        port = sl.RfcommPort("bt://aa:bb:cc:dd:ee:ff/3", sock=a)
+        self.assertEqual((port.address, port.channel), ("AA:BB:CC:DD:EE:FF", 3))
+        self.assertEqual(port.read(10), b"")  # nothing yet: a timeout, not an error
+        b.sendall(b"\x11%\r\n")
+        self.assertEqual(port.read(10), b"\x11%\r\n")
+        port.write(b"O1")
+        self.assertEqual(b.recv(10), b"O1")
+        with self.assertRaises(AttributeError):
+            port.cts  # no modem lines over RFCOMM
+        self.assertEqual(sl.modem_lines(port), {"cts": None, "dsr": None, "cd": None, "ri": None})
+        port.close()
+        b.close()
+
+    def test_soft_parity(self):
+        class Wire:
+            def __init__(self):
+                self.out, self.inp = b"", b""
+
+            def write(self, data):
+                self.out += data
+                return len(data)
+
+            def read(self, n):
+                got, self.inp = self.inp[:n], self.inp[n:]
+                return got
+
+        w = Wire()
+        port = sl.SoftParityPort(w)
+        port.write(b"C%")  # C = 0x43 has three bits set: parity on; % = 0x25, three bits: on
+        self.assertEqual(w.out, bytes([0xC3, 0xA5]))
+        port.write(sl.manops_load_bytes(b"C"))  # already with parity (restore): not doubled up
+        self.assertEqual(w.out[-1], 0xC3)
+        w.inp = bytes([0x91, 0x25])  # DC1 with its parity bit
+        self.assertEqual(port.read(2), b"\x11%")
+
+    def test_bluetooth_ports_are_recognised(self):
+        self.assertTrue(sl.is_bluetooth("bt://AA:BB:CC:DD:EE:FF"))
+        self.assertTrue(sl.is_bluetooth("/dev/rfcomm0"))
+        self.assertFalse(sl.is_bluetooth("/dev/ttyUSB0"))
+        self.assertFalse(sl.is_bluetooth(None))

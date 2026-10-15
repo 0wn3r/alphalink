@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 19:39+0300\n"
+"POT-Creation-Date: 2026-10-15 20:08+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -207,11 +207,11 @@ msgstr ""
 msgid "not a TL1 tool library ({len_data} bytes)"
 msgstr ""
 
-#: alphacam/link/serial_link.py:197
+#: alphacam/link/serial_link.py:279
 msgid "nothing received"
 msgstr ""
 
-#: alphacam/link/serial_link.py:200
+#: alphacam/link/serial_link.py:282
 #, python-brace-format
 msgid "transfer stopped after {n} bytes (no second %)"
 msgstr ""
@@ -619,8 +619,8 @@ msgstr ""
 #: alphacam_gtk/drawing_tools.py:564 alphacam_gtk/drawing_tools.py:973
 #: alphacam_gtk/drawing_tools.py:1249 alphacam_gtk/drawing_tools.py:1298
 #: alphacam_gtk/drawing_tools.py:1326 alphacam_gtk/machine.py:46
-#: alphacam_gtk/machine.py:282 alphacam_gtk/machine.py:377
-#: alphacam_gtk/machine.py:412 alphacam_gtk/tools_page.py:182
+#: alphacam_gtk/machine.py:301 alphacam_gtk/machine.py:396
+#: alphacam_gtk/machine.py:431 alphacam_gtk/tools_page.py:182
 #: alphacam_gtk/window.py:539 alphacam_gtk/window.py:940
 #: alphacam_gtk/window.py:994 alphacam_gtk/window.py:1027
 #: alphacam_gtk/window.py:1168 alphacam_gtk/window.py:1247
@@ -1209,7 +1209,7 @@ msgstr ""
 msgid "Delay per character (ms)"
 msgstr ""
 
-#: alphacam_gtk/machine.py:104
+#: alphacam_gtk/machine.py:104 alphacam_gtk/machine.py:180
 msgid "2 ms works on the 400T; 0 sends at full speed"
 msgstr ""
 
@@ -1221,88 +1221,102 @@ msgstr ""
 msgid "Nothing is sent until the lathe asks for data"
 msgstr ""
 
-#: alphacam_gtk/machine.py:115
+#: alphacam_gtk/machine.py:113
+msgid "Parity from the app"
+msgstr ""
+
+#: alphacam_gtk/machine.py:114
+msgid "For adapters without 7-bit framing: set the adapter to 9600 8N2"
+msgstr ""
+
+#: alphacam_gtk/machine.py:120
 msgid "Send CAM program"
 msgstr ""
 
-#: alphacam_gtk/machine.py:116 alphacam_gtk/machine.py:158
+#: alphacam_gtk/machine.py:121 alphacam_gtk/machine.py:165
 msgid "No program"
 msgstr ""
 
-#: alphacam_gtk/machine.py:116
+#: alphacam_gtk/machine.py:121
 msgid "Open a part first"
 msgstr ""
 
-#: alphacam_gtk/machine.py:118
+#: alphacam_gtk/machine.py:123
 msgid "Send to the Lathe"
 msgstr ""
 
-#: alphacam_gtk/machine.py:125
+#: alphacam_gtk/machine.py:130
 msgid "Manual Ops"
 msgstr ""
 
-#: alphacam_gtk/machine.py:126
+#: alphacam_gtk/machine.py:131
 msgid "Back Up Manual Ops from the Lathe…"
 msgstr ""
 
-#: alphacam_gtk/machine.py:129 alphacam_gtk/machine.py:390
+#: alphacam_gtk/machine.py:134 alphacam_gtk/machine.py:409
 msgid "Restore Manual Ops"
 msgstr ""
 
-#: alphacam_gtk/machine.py:131
+#: alphacam_gtk/machine.py:136
 msgid "Restore to the Lathe…"
 msgstr ""
 
-#: alphacam_gtk/machine.py:137
+#: alphacam_gtk/machine.py:142
 msgid "Cable Test"
 msgstr ""
 
-#: alphacam_gtk/machine.py:138
+#: alphacam_gtk/machine.py:143
 msgid "Run Loopback Test"
 msgstr ""
 
-#: alphacam_gtk/machine.py:156
+#: alphacam_gtk/machine.py:163
 #, python-brace-format
 msgid "{size} bytes, about {secs} s"
 msgstr ""
 
-#: alphacam_gtk/machine.py:159
+#: alphacam_gtk/machine.py:166
 msgid "Open a part that posts without errors"
 msgstr ""
 
-#: alphacam_gtk/machine.py:171
+#: alphacam_gtk/machine.py:179
+msgid ""
+"Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of "
+"its pause (DC3)"
+msgstr ""
+
+#: alphacam_gtk/machine.py:190
 msgid "(not present)"
 msgstr ""
 
-#: alphacam_gtk/machine.py:237
+#: alphacam_gtk/machine.py:256
 msgid "Cancelled"
 msgstr ""
 
-#: alphacam_gtk/machine.py:250
+#: alphacam_gtk/machine.py:269
 #, python-brace-format
 msgid "not written ({error})"
 msgstr ""
 
-#: alphacam_gtk/machine.py:253
+#: alphacam_gtk/machine.py:272
 #, python-brace-format
 msgid "Log: {path}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:265
+#: alphacam_gtk/machine.py:284
 #, python-brace-format
 msgid "{done} / {total} bytes"
 msgstr ""
 
-#: alphacam_gtk/machine.py:268
+#: alphacam_gtk/machine.py:287
 #, python-brace-format
 msgid "{done} bytes"
 msgstr ""
 
-#: alphacam_gtk/machine.py:277
+#: alphacam_gtk/machine.py:296
 msgid "Send this program?"
 msgstr ""
 
-#: alphacam_gtk/machine.py:278
+#: alphacam_gtk/machine.py:297
 #, python-brace-format
 msgid ""
 "{info}\n"
@@ -1311,59 +1325,59 @@ msgid ""
 "{steps}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:280
+#: alphacam_gtk/machine.py:299
 msgid ""
 "The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then "
 "press Send."
 msgstr ""
 
-#: alphacam_gtk/machine.py:283
+#: alphacam_gtk/machine.py:302
 msgid "_Send"
 msgstr ""
 
-#: alphacam_gtk/machine.py:295
+#: alphacam_gtk/machine.py:314
 msgid "Waiting for the lathe (DC1)…"
 msgstr ""
 
-#: alphacam_gtk/machine.py:296 alphacam_gtk/machine.py:391
+#: alphacam_gtk/machine.py:315 alphacam_gtk/machine.py:410
 msgid "Sending…"
 msgstr ""
 
-#: alphacam_gtk/machine.py:298
+#: alphacam_gtk/machine.py:317
 msgid "Send CAM Program"
 msgstr ""
 
-#: alphacam_gtk/machine.py:299
+#: alphacam_gtk/machine.py:318
 #, python-brace-format
 msgid "Sent {n} bytes. Check the program list on the control."
 msgstr ""
 
-#: alphacam_gtk/machine.py:303
+#: alphacam_gtk/machine.py:322
 msgid ""
 "Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”"
 msgstr ""
 
-#: alphacam_gtk/machine.py:306
+#: alphacam_gtk/machine.py:325
 #, python-brace-format
 msgid ""
 "The lathe paused {s} s ago; waiting. Press Stop and Keep when it has "
 "finished."
 msgstr ""
 
-#: alphacam_gtk/machine.py:309
+#: alphacam_gtk/machine.py:328
 msgid "_Stop and Keep"
 msgstr ""
 
-#: alphacam_gtk/machine.py:312
+#: alphacam_gtk/machine.py:331
 msgid "Receiving…"
 msgstr ""
 
-#: alphacam_gtk/machine.py:330
+#: alphacam_gtk/machine.py:349
 #, python-brace-format
 msgid "Received {n} bytes."
 msgstr ""
 
-#: alphacam_gtk/machine.py:332
+#: alphacam_gtk/machine.py:351
 #, python-brace-format
 msgid ""
 "Received {n} bytes without the end mark. If the lathe had finished, the "
@@ -1371,42 +1385,42 @@ msgid ""
 "until a restore of it has been checked."
 msgstr ""
 
-#: alphacam_gtk/machine.py:336
+#: alphacam_gtk/machine.py:355
 msgid "Save Manual Ops Backup"
 msgstr ""
 
-#: alphacam_gtk/machine.py:349
+#: alphacam_gtk/machine.py:368
 #, python-brace-format
 msgid "Could not save {path}: {error}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:351
+#: alphacam_gtk/machine.py:370
 #, python-brace-format
 msgid "Backup saved to {path}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:356
+#: alphacam_gtk/machine.py:375
 msgid "Back Up Manual Ops"
 msgstr ""
 
-#: alphacam_gtk/machine.py:359
+#: alphacam_gtk/machine.py:378
 msgid "Restore Manual Ops From"
 msgstr ""
 
-#: alphacam_gtk/machine.py:369
+#: alphacam_gtk/machine.py:388
 #, python-brace-format
 msgid "Could not read the file: {error}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:372
+#: alphacam_gtk/machine.py:391
 msgid "This is not a Manual Ops backup (it must start and end with %)."
 msgstr ""
 
-#: alphacam_gtk/machine.py:374
+#: alphacam_gtk/machine.py:393
 msgid "Restore Manual Ops?"
 msgstr ""
 
-#: alphacam_gtk/machine.py:375
+#: alphacam_gtk/machine.py:394
 #, python-brace-format
 msgid ""
 "{name}, {size} bytes.\n"
@@ -1414,49 +1428,49 @@ msgid ""
 "{steps}"
 msgstr ""
 
-#: alphacam_gtk/machine.py:378
+#: alphacam_gtk/machine.py:397
 msgid "_Restore"
 msgstr ""
 
-#: alphacam_gtk/machine.py:393
+#: alphacam_gtk/machine.py:412
 #, python-brace-format
 msgid "Sent {n} bytes."
 msgstr ""
 
-#: alphacam_gtk/machine.py:409
+#: alphacam_gtk/machine.py:428
 msgid "Run the loopback test?"
 msgstr ""
 
-#: alphacam_gtk/machine.py:410
+#: alphacam_gtk/machine.py:429
 msgid ""
 "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter "
 "first: the test sends a short text to the port."
 msgstr ""
 
-#: alphacam_gtk/machine.py:413
+#: alphacam_gtk/machine.py:432
 msgid "_Run Test"
 msgstr ""
 
-#: alphacam_gtk/machine.py:420
+#: alphacam_gtk/machine.py:439
 msgid "Loopback Test"
 msgstr ""
 
-#: alphacam_gtk/machine.py:421
+#: alphacam_gtk/machine.py:440
 msgid "Loopback OK: the adapter and cable work."
 msgstr ""
 
-#: alphacam_gtk/machine.py:422
+#: alphacam_gtk/machine.py:441
 #, python-brace-format
 msgid "Loopback failed: got {data}. Check the 2-3 bridge."
 msgstr ""
 
-#: alphacam_gtk/machine.py:429
+#: alphacam_gtk/machine.py:448
 msgid ""
 "Permission denied: add yourself to the dialout group (sudo usermod -aG "
 "dialout $USER), then log in again"
 msgstr ""
 
-#: alphacam_gtk/machine.py:431
+#: alphacam_gtk/machine.py:450
 msgid "Port not found: is the USB adapter plugged in?"
 msgstr ""
 

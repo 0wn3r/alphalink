@@ -25,6 +25,7 @@ DEFAULTS = {
     "spindle_max": 2500.0,  # rpm, for the cycle time estimate
     "rapid_rate": 6000.0,  # mm/min
     "tool_change_s": 30.0,  # seconds the operator needs to change a tool
+    "soft_parity": False,  # Bluetooth adapters with 8-bit framing only: 8N2 on the adapter, parity made by the app
 }
 
 

@@ -823,6 +823,12 @@ msgstr "Чекати на сигнал ЧПК (DC1)"
 msgid "Nothing is sent until the lathe asks for data"
 msgstr "Нічого не надсилається, доки верстат не запросить дані"
 
+msgid "Parity from the app"
+msgstr "Парність від програми"
+
+msgid "For adapters without 7-bit framing: set the adapter to 9600 8N2"
+msgstr "Для адаптерів без 7-бітового кадру: налаштуйте адаптер на 9600 8N2"
+
 msgid "Send CAM program"
 msgstr "Надіслати програму CAM"
 
@@ -858,6 +864,9 @@ msgstr "{size} байт, приблизно {secs} с"
 
 msgid "Open a part that posts without errors"
 msgstr "Відкрийте деталь, для якої програма створюється без помилок"
+
+msgid "Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of its pause (DC3)"
+msgstr "Через Bluetooth ставте 5 мс або більше: верстат має зупинитися не пізніше 10 символів після паузи (DC3)"
 
 msgid "(not present)"
 msgstr "(немає)"
