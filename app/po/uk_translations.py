@@ -303,6 +303,7 @@ UK = {
 "Import Tool Library": "Імпорт бібліотеки інструментів",
 "Could not import {name}: {error}": "Не вдалося імпортувати {name}: {error}",
 "Imported {n} tools from {name}": "Імпортовано інструментів: {n} з {name}",
+"Imported {n} tools and their pictures from {name}": "Імпортовано інструментів із зображеннями: {n} з {name}",
 "Tool library reset to ALPHA-T's 32 standard tools": "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T",
 "Tools": "Інструменти",
 
@@ -425,6 +426,7 @@ UK = {
 "threading: the thread lines are not in the drawing": "різьба: ліній різьби немає на кресленні",
 "SDG too short ({len_data} bytes)": "файл SDG закороткий ({len_data} байт)",
 "not a TL1 tool library ({len_data} bytes)": "це не бібліотека інструментів TL1 ({len_data} байт)",
+"not a TL2 tool picture file ({len_data} bytes)": "це не файл зображень інструментів TL2 ({len_data} байт)",
 "contour references unknown geometry: {join_missing}": "контур посилається на невідомі елементи: {join_missing}",
 "thread pitch must be > 0": "крок різьби має бути > 0",
 "units must be one of {units}, not {units2}": "одиниці мають бути одним із {units}, а не {units2}",

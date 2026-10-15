@@ -2,7 +2,7 @@
 
 The numbers are the lathe's tool memory slots (manual turret with tool memory, DESIGN.md C8). The nose radius
 changes the toolpath (imaginary tool tip), so every edit re-posts the open part. Import reads ALPHA-T's
-ATOOLIB.TL1; Reset goes back to ALPHA-T's standard 32 tools."""
+ATOOLIB.TL1, with the tool pictures from the ATOOLIB.TL2 next to it; Reset goes back to ALPHA-T's standard 32 tools."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
-from alphacam.io.toollib import load_tl1  # noqa: E402
+from alphacam.io.toollib import load_tl1, load_tl2, sibling  # noqa: E402
 from alphacam.model.tools import (  # noqa: E402
     TOOL_TYPES,
     Tool,
@@ -210,9 +210,22 @@ class ToolsPage(Gtk.Box):
             except (OSError, ValueError) as e:
                 self.w.toast(_("Could not import {name}: {error}").format(name=file.get_basename(), error=e))
                 return
+            pictures = {}
+            tl2 = sibling(file.get_path(), ".TL2")  # ALPHA-T keeps the tool pictures next to the library
+            if tl2 is not None:
+                try:
+                    pictures = load_tl2(tl2)
+                except (OSError, ValueError):
+                    pictures = {}
+            for tool in lib.tools:
+                tool.outline = [[list(p) for p in line] for line in pictures.get(tool.number, [])]
             self.lib.tools[:] = lib.tools
             self._changed(None)
-            self.w.toast(_("Imported {n} tools from {name}").format(n=len(lib.tools), name=file.get_basename()))
+            if pictures:
+                msg = _("Imported {n} tools and their pictures from {name}")
+            else:
+                msg = _("Imported {n} tools from {name}")
+            self.w.toast(msg.format(n=len(lib.tools), name=file.get_basename()))
 
         dlg.open(self.w, None, done)
 

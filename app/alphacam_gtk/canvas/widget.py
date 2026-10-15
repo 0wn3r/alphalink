@@ -69,6 +69,8 @@ class LatheCanvas(Gtk.DrawingArea):
         self.tool = "select"
         self.show_grid = True
         self.sim_index: int | None = None  # simulation: number of moves done (None = show everything)
+        self.library = None  # the user's tool library, for the tool pictures in the simulation
+        self._shapes = {}
         self.pointer = (0.0, 0.0)
         self._fit_pending = True
         self._before_fit: ViewTransform | None = None
@@ -87,6 +89,7 @@ class LatheCanvas(Gtk.DrawingArea):
     def set_project(self, project, preview) -> None:
         self.project, self.preview, self.selected = project, preview, None
         self.segs = segments(preview)
+        self._shapes = {}
         self._fit_pending = True
         self.fit()
 
@@ -94,6 +97,7 @@ class LatheCanvas(Gtk.DrawingArea):
         """New preview after an edit: keep the view (no refit) and the selection."""
         self.project, self.preview = project, preview
         self.segs = segments(preview)
+        self._shapes = {}
         self.queue_draw()
 
     def select(self, op_index: int | None) -> None:
@@ -439,7 +443,9 @@ class LatheCanvas(Gtk.DrawingArea):
             cr.stroke()
         cr.set_dash([])
         if sim is not None and self.segs:
-            x, z = self.segs[max(0, min(sim, len(self.segs)) - 1)].b if sim else self.segs[0].a
+            seg = self.segs[max(0, min(sim, len(self.segs)) - 1)] if sim else self.segs[0]
+            x, z = seg.b if sim else seg.a
+            self._tool_shape(cr, seg.block, x, z)
             sx, sy = self.view.to_screen(x, z)
             self._rgb(cr, "rapid")
             cr.arc(sx, sy, 7, 0, 2 * math.pi)
@@ -447,6 +453,37 @@ class LatheCanvas(Gtk.DrawingArea):
             self._rgb(cr, "bg")
             cr.arc(sx, sy, 3, 0, 2 * math.pi)
             cr.fill()
+
+    def _shape(self, label: int):
+        """The tool picture of the PRG block with this label: (Z, radius) polylines in mm, cached per preview."""
+        if label not in self._shapes:
+            from alphacam.checks import _tool
+            from alphacam.tool_shapes import outline
+
+            number = next((b.tool for b in self.preview.program.blocks if b.label == label), None) \
+                if self.preview is not None and self.preview.program is not None else None
+            tool = _tool(self.project, number, self.library) if number else None
+            self._shapes[label] = outline(tool)
+        return self._shapes[label]
+
+    def _tool_shape(self, cr, label: int, x: float, z: float) -> None:
+        """The tool drawn with its tip at the simulation position (X is a diameter: the picture's radius doubles)."""
+        lines = self._shape(label)
+        if not lines:
+            return
+        k = 1 / 25.4 if self.project is not None and self.project.units == "inch" else 1.0
+        for line in lines:
+            pts = [self.view.to_screen(x + 2 * r * k, z + dz * k) for dz, r in line]
+            cr.move_to(*pts[0])
+            for q in pts[1:]:
+                cr.line_to(*q)
+            if pts[0] == pts[-1]:
+                cr.close_path()
+                self._rgb(cr, "part", 0.12)
+                cr.fill_preserve()
+            self._rgb(cr, "part", 0.7)
+            cr.set_line_width(1.2)
+            cr.stroke()
 
     def _overlay(self, cr) -> None:
         v, p = self.view, self.project

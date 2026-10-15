@@ -29,6 +29,7 @@ alphacam/post/alphat_sd1.py
 alphacam/preview.py
 alphacam/safety.py
 alphacam/setups.py
+alphacam/tool_shapes.py
 alphacam/toolpath/__init__.py
 alphacam/toolpath/area.py
 alphacam/toolpath/contour.py

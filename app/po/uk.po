@@ -136,6 +136,9 @@ msgstr "у кресленні забагато елементів для ALPHA-T
 msgid "not a TL1 tool library ({len_data} bytes)"
 msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
 
+msgid "not a TL2 tool picture file ({len_data} bytes)"
+msgstr "це не файл зображень інструментів TL2 ({len_data} байт)"
+
 msgid "nothing received"
 msgstr "нічого не отримано"
 
@@ -1776,6 +1779,9 @@ msgstr "Імпорт бібліотеки інструментів"
 
 msgid "Could not import {name}: {error}"
 msgstr "Не вдалося імпортувати {name}: {error}"
+
+msgid "Imported {n} tools and their pictures from {name}"
+msgstr "Імпортовано інструментів із зображеннями: {n} з {name}"
 
 msgid "Imported {n} tools from {name}"
 msgstr "Імпортовано інструментів: {n} з {name}"

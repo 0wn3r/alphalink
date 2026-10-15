@@ -202,6 +202,7 @@ class MainWindow(Adw.ApplicationWindow):
 
         # part view
         self.canvas = LatheCanvas()
+        self.canvas.library = self.library  # the tool pictures in the simulation
         self.canvas.update_property([Gtk.AccessibleProperty.LABEL], [_("Drawing")])  # screen readers, tests/e2e
         self.canvas.connect("cursor-moved", self._cursor_moved)
         self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,

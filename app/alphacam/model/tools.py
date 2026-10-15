@@ -23,6 +23,9 @@ class Tool:
     description: str = ""
     surface_speed: float = 0.0  # m/min for the cycle time estimate; 0 = the default for the tool type
     max_rpm: float = 0.0  # spindle limit for this tool; 0 = the machine's
+    # the tool's picture as polylines of [Z, radius] points in mm, tip at [0, 0] (from ALPHA-T's ATOOLIB.TL2);
+    # empty = drawn from the type and the clearance angles (alphacam/tool_shapes.py)
+    outline: list[list[list[float]]] = field(default_factory=list)
 
     def __post_init__(self):
         if self.type not in TOOL_TYPES:

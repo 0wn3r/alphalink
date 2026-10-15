@@ -1147,3 +1147,21 @@ Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there
   input. Not yet seen on the machine: whether the Harrison restore stops at M30 without a '%' (reading normally
   ends at '%'), and whether it replaces an existing O1001. Try it only with this lathe's own backup, after a fresh
   backup, and watch the screen; Reset ends a read that waits.
+
+## Progress 41 (2026-10-15): ATOOLIB.TL2, the tool pictures
+
+ALPHA-T.EXE opens ATOOLIB.TL1 (names, radii, angles) and ATOOLIB.TL2 (the pictures); ATSETUP's ATOOLIB.IM1/.IM2 are
+an alternative pair of the same layout (IM2 differs from TL2 in tools 14-32). TL2 is one 780-byte record per tool,
+record 0 = tool 1 (32 records in V1.2), in the segment/point layout of ALPHA-T's drawings:
+
+- int16 at 0: segment count n; int16 at 2: point count; then n int16 triples (start, end, centre) from offset 4.
+  Points are written as -(index+1); centre 0 = a line, c > 0 = an anticlockwise arc about point c-1, c < 0 = clockwise
+  about point -c-1. A triple with a 0 start or end is a deleted segment (skip it: read as a point it makes a bogus
+  circle).
+- float32 A[64] at 0x104 and B[64] at 0x208: A along Z, B the radius, in mm, tip at (0, 0), +Z right and the radius
+  up. Turning tools stand above the tip, boring bars, drills and face tools reach along +Z.
+
+Checked by drawing all 32 against their TL1 names (roughers, finishers, neutral, boring bars, internal and external
+grooving, face tools, ball-ends, drills, threading). `alphacam/io/toollib.read_tl2`; the app reads it with the TL1
+import and keeps the pictures in the user's tool library (`Tool.outline`), since ALPHA-T's files are not in the repo.
+

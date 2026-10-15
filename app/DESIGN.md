@@ -73,7 +73,7 @@ app/
     model/                  dataclasses + JSON (de)serialisation
       project.py            Project, Units, Billet, Chuck, MachineProfile
       geometry.py           Point(x_dia, z), Line, Arc, Contour, snapping helpers
-      tools.py              Tool, ToolLibrary (import ATOOLIB.TL1/TL2 later)
+      tools.py              Tool, ToolLibrary (with the ATOOLIB.TL2 picture as outline)
       operations.py         one dataclass per op (section 4.3)
     toolpath/               generators: Operation + geometry + tool -> Toolpath
       contour.py            offsets, nose radius, profile clipping

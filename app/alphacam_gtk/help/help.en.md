@@ -112,7 +112,7 @@ Before export the app checks every move. A cut into the part, a move into the ch
 
 ## Simulation
 
-The buttons under the drawing step through the toolpath: first move, previous pass, play / pause, next pass, show all. The label shows the move, the operation, the pass and the program line. The 1× button changes the speed, the button next to it jumps to the start of the selected operation, and tapping a toolpath jumps there.
+The buttons under the drawing step through the toolpath: first move, previous pass, play / pause, next pass, show all. The label shows the move, the operation, the pass and the program line. The 1× button changes the speed, the button next to it jumps to the start of the selected operation, and tapping a toolpath jumps there. The tool is drawn at its tip: a simple shape from its type and angles, or ALPHA-T's own picture of it once the library has been imported from ATOOLIB.TL1 with its ATOOLIB.TL2 in the same folder.
 
 ## Sending to the lathe
 
