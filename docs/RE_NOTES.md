@@ -1130,9 +1130,16 @@ Samples (cloud run, scripts in cloud-run/samples/scripts/manual_de, README there
   after each operation (the lathe shows the program number), several seconds each. The first app version stopped
   at a 10 s pause and threw the bytes away; the app now ends at DC4 or the second '%', has no idle limit, and keeps
   partial data (Stop and Keep).
-* So "AMANOPS/ATMANOP stores until the 2nd '%'" cannot be the end condition on this lathe. In ATMANOP.EXE the only
-  `cmp al,25h` are in the C library's printf; there is no `cmp al,14h`. The DOS module most likely ended on a key
-  (Esc) or a timeout; not checked further.
+* ATMANOP.EXE (Alpha-T V1.2) decompiled with REA's Ghidra DOS path (Ghidra 12.1.4, MzLoader, x86 real mode; data
+  segment at linear 0x1a080; sha256 851b9f04...). Save is FUN_1122_000e (linear 0x1122e): read a character from the
+  port (FUN_1975_000d), write it raw to the file, end at the **second '%'** or when the operator presses **Esc**;
+  a read timeout (status 0x0a) just waits again (FUN_1122_05c2); no DC2/DC4 handling, no idle limit; a file with no
+  bytes is deleted. On this lathe (no '%') ALPHA-T's save therefore ran until the operator pressed Esc and kept
+  everything, DC2 ... DC4 and the NULs included: what the app's Stop and Keep does, and the app's end at DC4 does by
+  itself. Load is FUN_10c5_000a (0x10c5a): fgetc to EOF, each byte through the parity table (FUN_10c5_05ac) and out
+  (FUN_10c5_0510), Esc aborts, then it waits for the transmit queue to drain; nothing is added or stripped, so a
+  restore sends the saved file byte for byte, as the app does. (The two `cmp al,25h` found by byte search earlier
+  are in printf and a DOS set-vector wrapper; the save's '%' test is a compare on the stored character.)
 * Restore (PC -> lathe) sends the file as saved (ATMANOP LOAD did the same: raw bytes, parity table, LF kept).
   FANUC reader rules (Series 21 operator's manual B-62704EN/03, ch. 12.1 and appendix A): NUL and CR are not
   registered; codes not in the ISO table (DC2, DC4) are ignored when their parity is right (the UART adds even
