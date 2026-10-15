@@ -71,6 +71,9 @@ EXPECTED_OPS = {
     # German manual list (2026-10-13 night)
     "AREA_follow_contour_metric": [("area_clear", 26)],
     "AREA_retract2_metric": [("area_clear", 26)],
+    "DIVE1_metric": [("area_clear", 29)],
+    "DIVE2_metric": [("area_clear", 29)],
+    "DIVE3_metric": [("area_clear", 34)],
     "AREA_away_from_chuck_end_metric": [("area_clear", 11)],
     "AREA_towards_from_chuck_end_metric": [("area_clear", 10)],
     "FACE_away_from_chuck_end_metric": [("face_clear", 26)],

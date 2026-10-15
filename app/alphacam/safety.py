@@ -23,6 +23,7 @@ from .i18n import tr
 from .io.prg_parse import MoveKind
 from .model.geometry import Arc
 from .moves import segments
+from .toolpath.area import tip_angle_ok  # noqa: F401 (ALPHA-T's rule lives with the area clear it guards)
 
 TOL = 0.02  # mm: a move this close to the surface is on it
 DIVE_SLACK = 0.5  # degrees
@@ -113,29 +114,6 @@ def _wedge(tool) -> tuple[float, float] | None:
         return None
     a, b = (tool.front_angle % 360, tool.rear_angle % 360)
     return (min(a, b), max(a, b))
-
-
-def tip_angle_ok(front: float, rear: float, external: bool = True, towards: bool = True, face: bool = False) -> bool:
-    """ALPHA-T's tip angle test (ALPHA-T.EXE overlay 10, the routine before message 242): the tool's clearance
-    angles (degrees from +Z, negative for internal tools) against the cut. Tools without angles (both 0: grooving,
-    drills, ball-ends) pass, and ALPHA-T then skips its collision check. Face clear only looks at the size of the
-    angles; area clear (FRONT or FACE) wants the rear edge on the side the tool moves away from, and the front
-    edge steeper than the rear one."""
-    if front == 0 and rear == 0:
-        return True
-    if face:
-        if towards:
-            return -90 <= rear <= 90 and -90 <= front <= 90
-        return abs(rear) >= 90 and abs(front) >= 90
-    if external:
-        rear_ok = 0 < rear <= 90 if towards else 90 <= rear < 180
-        front_ok = 0 < front < 180
-    else:
-        rear_ok = -90 < rear < 0 if towards else -180 < rear < -90
-        front_ok = -180 < front < 0
-    if not (rear_ok and front_ok) or front == rear:
-        return False
-    return abs(front) >= abs(rear) if towards else abs(front) <= abs(rear)
 
 
 def check(project, preview, library=None) -> list[Finding]:

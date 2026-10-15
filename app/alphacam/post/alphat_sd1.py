@@ -30,7 +30,7 @@ from ..model.geometry import Point
 from ..model.project import Project
 from ..model.tools import ToolLibrary
 from ..numfmt import format_number
-from ..toolpath.area import area_clear, retract_mm
+from ..toolpath.area import area_clear, collision_angle, retract_mm
 from ..toolpath.contour import front_first, centre_path, chain, limits, mm, points, translate
 from ..toolpath.drill import drill
 from ..toolpath.face import face_clear
@@ -96,8 +96,10 @@ def _leg(units: str, dist_mm: float) -> float:
 
 def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool, cycle_line,
                    lead_out_mm: float, lead_out_rapid: bool, extend_end: bool, inward: bool, end_g: int,
-                   face_mode: bool = False) -> None:
+                   face_mode: bool = False, angle: float | None = None) -> None:
     """G70/G71 body. `cycle_line(p, q)` gives the cycle's own line text (needs the P/Q line numbers).
+    angle (area clear, collision_angle): a wall dropping into a pocket steeper than this is listed at this angle,
+    from its top to its floor (DIVE2/DIVE3: N70 X30.8 Z-28.5922 for the drawn Z-22.27 with T3's 31 degrees).
     face_mode (face clear passes: E401 / E101 / E-101): the first point is carried r back along its element, not
     below the axis (AREA_face_internal: X49.2 Z0.4; FACE_*: X0 Z0.4), and internal work lists G21 Q3."""
     side = 1 if external else -1
@@ -111,6 +113,17 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
         # the finish pass lists its path moved by the offsets, the first point only across its element
         # (OFFSET_finish, INT_finish_offset); area and face clear list the path as drawn
         cp = translate(cp, op.offset_x, op.offset_z, external)
+    if angle is not None and external:
+        tan = math.tan(math.radians(angle))
+        for k, s in enumerate(cp):
+            drop = (s.a.x - s.b.x) / 2
+            if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
+                continue
+            end = Point(s.b.x, s.a.z - drop / tan)
+            cp[k] = type(s)(s.a, end, None, s.ccw)
+            if k + 1 < len(cp):
+                n = cp[k + 1]
+                cp[k + 1] = type(n)(end, n.b, n.centre, n.ccw)
     first, last = cp[0].a, cp[-1].b
     approach = _leg(units, APPROACH_MM)
     out_leg = _leg(units, lead_out_mm)
@@ -206,7 +219,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         elif not op.front:
             e, tp = (101 if external else -101), face_clear(op, path, r, units, DEC, retract_mm(op, units), outward=True)
         else:
-            e, tp = (100 if external else -100), area_clear(op, path, r, units, DEC)
+            e, tp = (100 if external else -100), area_clear(op, path, r, units, DEC, collision_angle(tool, op))
         retract = FACE_RETRACT_MM if face else retract_mm(op, units)  # mm, for the pull-off legs
         # R as entered, in the drawing's units (UNITS_inchdwg_metricout: R0.0079)
         r_shown = retract if units == "mm" else (op.retract if getattr(op, "retract", None) is not None
@@ -215,7 +228,8 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
                        lambda p, q: f"G71P{p}Q{q}U{_n(op.offset_x)}W{_n(op.offset_z)}D{_n(op.depth_of_cut)}"
                                     f"R{_n(r_shown)}A45E{e + 200 if getattr(op, "follow", False) else e}"
                                     f"H{len(tp.passes)}",
-                       retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100))
+                       retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100),
+                       angle=collision_angle(tool, op) if e in (100, -100) else None)
         if getattr(op, "pre_finish", False):  # G70 R1, E0 / E1 internal / E2 face, with the op's offsets
             out.put(f"G115X{_n(lx)}Z{_n(lz)}")
             fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, external)

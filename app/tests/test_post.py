@@ -37,6 +37,7 @@ MET2 = ["g0", "g1", "g2", "g3", "g4"]  # contour picked from the axis (X0 Z0) to
 ARC = ["g0", "g1", "g2", "g5", "g3", "g6", "g4"]  # MET2 with R5 (g5) and R3 (g6) corners, in pick order
 INT = ["g0", "g1", "g2", "g3"]  # bore X50 Z0 -> X20 Z-40
 S = Point(120, 5)
+DIVE = ["g0", "g1", "g2", "g3", "g4", "g5"]  # X0 Z0 up the face, along the shoulder, down into the undercut, out
 GOLDEN = {
     "MET2_finish_metric": [FinishPass(3, S, MET2)],
     "MET2_finish_inch": [FinishPass(3, Point(5, 0.2), MET2)],
@@ -73,6 +74,11 @@ GOLDEN = {
     # German manual list (2026-10-13 night)
     "AREA_follow_contour_metric": [AreaClear(3, S, MET2, follow=True)],
     "AREA_retract2_metric": [AreaClear(3, S, MET2, retract=2)],
+    # undercuts (RE_NOTES Progress 43): a 26.6-degree dive T3 can follow, a steep wall and a 36.9-degree slope it
+    # cannot (31-degree rear clearance), each roughed by pocket passes after the main ones
+    "DIVE1_metric": [AreaClear(3, S, DIVE)],
+    "DIVE2_metric": [AreaClear(3, S, DIVE)],
+    "DIVE3_metric": [AreaClear(3, S, DIVE)],
     "FINISH_face_metric": [FinishPass(3, S, MET2, face=True)],
     "DRILL_fullret_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, full_retract=True)],
     "DRILL_retract1_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, retract=1)],

@@ -1198,3 +1198,31 @@ toolpath: the collision check it guards is what keeps the passes clear of the to
 `alphacam/safety.tip_angle_ok` (finding "tip"); its own dive check ("angle") stays as the stand-in for the collision
 check. Finish passes are not tested by ALPHA-T (no other overlay shows message 242).
 
+## Progress 43 (2026-10-16): undercuts in area clear, and ALPHA-T's collision check
+
+New samples made in DOSBox-X with tools/mk_at_script.py (area clear 119, `--exec 9`, T3 = 55 deg finisher, front 87,
+rear 31, r 0.4; depth 2, start X120 Z5), now in samples/alphat_v12 as DIVE1-3_metric:
+- DIVE1 `0,0 40,0 40,-20 30,-30 30,-40 60,-40 100,-40`: a dive of 26.6 deg (on the radius), shallower than T3's rear.
+- DIVE2 `... 40,-20 30,-22 ...`: a 68 deg wall.
+- DIVE3 `0,0 60,0 60,-10 30,-30 30,-40 70,-50 100,-50`: a 36.9 deg dive and a rising back wall.
+
+What ALPHA-T does (the app now matches all three byte for byte, PRG and SD1):
+- The main passes treat the pocket as filled: the pocket floor (X30) is not a zone, so the stepping does not restart
+  there (the app used to step 30, 26, 22 ... instead of 28, 24, 20 ...), and passes below the shoulder end on the
+  front face as before.
+- Then the pocket's own passes (#120 counts them: 26 + 3, 26 + 3, 26 + 8): levels from the shoulder down by
+  2 x depth of cut to the floor (40 -> 36, 32, 30). The way down is a line from the shoulder's tip-path corner, at
+  the dive's own angle when the tool's rear clearance allows it, otherwise at the rear angle (31 deg: DIVE2/3 slopes
+  0.6009). Each pass: from the previous level on that line (the first from shoulder + 2 x retract, reached by rapids
+  at start Z - r), feed down the line to the new level, along it to the far wall, 45 deg retract, rapid back up to
+  the line. After the last: rapid to X (start - 2r) at the same Z, then to the start.
+- The SD1 profile (nose-centre path) lists a wall steeper than the rear angle at the rear angle, from its top to
+  the floor (DIVE2 N70 X30.8 Z-28.5922 instead of Z-22.2708); the face clear sample FACE6_stock (Progress 9 table)
+  showed the same thing.
+- The material the rear-angle line leaves on a steep wall is not cut by the area clear. The finish pass follows the
+  drawing, so the app's safety check flags that dive for a tool that does not clear it.
+
+The app: alphacam/toolpath/area.py `_pockets` / `_pocket_passes`, `collision_angle(tool, op)` (None, i.e. follow the
+profile, for tools without angles or angles that fail the tip angle test), and post/alphat_sd1 `_contour_cycle(angle)`.
+External area clear only; internal pockets and pockets with arcs on the way down have no sample yet.
+

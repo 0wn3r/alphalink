@@ -13,7 +13,7 @@ from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, G
 from ..model.project import MachineProfile, Project
 from ..model.tools import Tool, ToolLibrary, standard_library
 from ..numfmt import format_number
-from ..toolpath.area import area_clear, retract_mm
+from ..toolpath.area import area_clear, collision_angle, retract_mm
 from ..toolpath.contour import front_first, chain, limits, mm, points
 from ..toolpath.drill import drill
 from ..toolpath.face import face_clear
@@ -219,7 +219,8 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
                                                      outward=True),
                        8 if op.external else 7, limit)
     elif isinstance(op, AreaClear):
-        _generic_block(w, block, op, area_clear(op, path, r, project.units, w.tdec), 6 if op.external else 7, limit)
+        _generic_block(w, block, op, area_clear(op, path, r, project.units, w.tdec, collision_angle(tool, op)),
+                       6 if op.external else 7, limit)
         if op.pre_finish:
             # its own block after an empty one: #127=10, internal 11 (AREA_prefinish_internal), with the area's
             # offsets (AREA_prefinish_offset) and a 1 mm pull-off
