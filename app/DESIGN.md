@@ -282,8 +282,12 @@ gets a **fixture test** that pins it down against its sample before the generato
 1. ~~Is Z/feed ×2 real for the control (C4)?~~ Yes: the control shows tool start Z50 for `#124=100.` and feed 0.15 for
    `#130=0.3` (2026-10-13, RE_NOTES Progress 29). Thread pitch not yet seen on the control.
 2. ~~Who applies tool-nose compensation?~~ The CAM: the PRG holds the imaginary tool-tip path (C5).
-3. Meaning of `#120..#140`, `M60..M71` and `#1005/#1006/#1009` (restart switches?). This needs the B703-0703 macro listing or
-   a Manual Ops / macro dump from the control.
+3. Meaning of `#120..#140`, `M60..M71` and `#1005/#1006/#1009`. ALPHA-T's code only writes them (its overlays hold no
+   macro text, and ATMACROS just sends `\ALPHA-T\MACROS\MACROS.MOP`, which is not in the vendor files), so the macro
+   bodies need the B703-0703 listing or a dump from the control. Known from Fanuc: `#1000..#1015` are the PMC
+   interface inputs UI000..UI015, so `#1005/#1006/#1009` are three machine-side signals (switches or keys) read by
+   the program header: 1006 = go on at the block after the last one done, 1005 = redo the last block, 1009 = redo
+   it with the operation counter #131 stepped back.
 4. Is `O2` constant, or does it depend on the program store slot?
 5. Inch mode: values are converted with 4 decimals, but `F0.3` was written unchanged in the inch sample. Check feed units.
 6. ATOOLIB.IM1/IM2 tool image format (for tool graphics).
