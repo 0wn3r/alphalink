@@ -267,3 +267,24 @@ def limits(pts: list[Point], nose_radius: float) -> tuple[float, float]:
     """#125/#126 (SD1 G115): drawn contour minimum X - 4r (diameter) and minimum Z - 2r. Same for internal
     (INT_*) and with offsets (OFFSET_*)."""
     return min(p.x for p in pts) - 4 * nose_radius, min(p.z for p in pts) - 2 * nose_radius
+
+
+def limit_dives(path: list[Seg], angle: float | None) -> list[Seg]:
+    """ALPHA-T's collision check on a profile (external work): a line dropping away from the tool (X falling as Z
+    goes towards the chuck) steeper than the tool's rear clearance angle is replaced by a line at that angle from
+    the same start down to the same diameter, and the next element starts there (FDIVE2: tip path X40 Z-20.671 ->
+    X30 Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way)."""
+    if angle is None or angle <= 0:
+        return path
+    tan = math.tan(math.radians(angle))
+    out = list(path)
+    for k, s in enumerate(out):
+        drop = (s.a.x - s.b.x) / 2
+        if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
+            continue
+        end = Point(s.b.x, s.a.z - drop / tan)
+        out[k] = Seg(s.a, end)
+        if k + 1 < len(out):
+            n = out[k + 1]
+            out[k + 1] = Seg(end, n.b, n.centre, n.ccw)
+    return out

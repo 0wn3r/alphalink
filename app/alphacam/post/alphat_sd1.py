@@ -31,7 +31,7 @@ from ..model.project import Project
 from ..model.tools import ToolLibrary
 from ..numfmt import format_number
 from ..toolpath.area import area_clear, collision_angle, retract_mm
-from ..toolpath.contour import front_first, centre_path, chain, limits, mm, points, translate
+from ..toolpath.contour import front_first, centre_path, chain, limit_dives, limits, mm, points, translate
 from ..toolpath.drill import drill
 from ..toolpath.face import face_clear
 from ..toolpath.groove import groove, groove_finish
@@ -113,17 +113,8 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
         # the finish pass lists its path moved by the offsets, the first point only across its element
         # (OFFSET_finish, INT_finish_offset); area and face clear list the path as drawn
         cp = translate(cp, op.offset_x, op.offset_z, external)
-    if angle is not None and external:
-        tan = math.tan(math.radians(angle))
-        for k, s in enumerate(cp):
-            drop = (s.a.x - s.b.x) / 2
-            if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
-                continue
-            end = Point(s.b.x, s.a.z - drop / tan)
-            cp[k] = type(s)(s.a, end, None, s.ccw)
-            if k + 1 < len(cp):
-                n = cp[k + 1]
-                cp[k + 1] = type(n)(end, n.b, n.centre, n.ccw)
+    if external:
+        cp = limit_dives(cp, angle)
     first, last = cp[0].a, cp[-1].b
     approach = _leg(units, APPROACH_MM)
     out_leg = _leg(units, lead_out_mm)
@@ -210,7 +201,8 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
         _contour_cycle(out, op, path, r, units, op.external,
                        lambda p, q: f"G70R0E{2 if op.face else 0 if op.external else 1}U{_n(op.offset_x)}"
                                     f"W{_n(op.offset_z)}",
-                       FINISH_LEAD_OUT_MM, False, True, op.face, 170)
+                       FINISH_LEAD_OUT_MM, False, True, op.face, 170,
+                       angle=None if op.face else collision_angle(tool, op))
     elif isinstance(op, (AreaClear, FaceClear)):
         face = isinstance(op, FaceClear)
         external = getattr(op, "external", True)
@@ -237,7 +229,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
             _contour_cycle(out, fp, path, r, units, external,
                            lambda p, q: f"G70R1E{pe}U{_n(op.offset_x)}W{_n(op.offset_z)}",
                            FINISH_LEAD_OUT_MM if face else retract_mm(op, units, PREFINISH_LEAD_OUT_MM), False,
-                           not face, face, 170)
+                           not face, face, 170, angle=None if face else collision_angle(tool, op))
     elif isinstance(op, Groove) and op.mode == "finish":
         out.put("G78")
         tp = groove_finish(op, path)

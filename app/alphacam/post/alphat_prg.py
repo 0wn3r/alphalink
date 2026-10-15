@@ -209,7 +209,8 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
         path = front_first(path)
     limit = limits(points(path), r_exact)
     if isinstance(op, FinishPass):
-        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.tdec),
+        _generic_block(w, block, op, finish_pass(op, path, r, project.units, w.tdec,
+                                                 angle=collision_angle(tool, op)),
                        16 if op.face else 14 if op.external else 15, limit)
     elif isinstance(op, AreaClear) and not op.front:
         # FACE direction: face-clear passes; #127=8 external (AREA_front_face), 7 internal (AREA_face_internal)
@@ -229,7 +230,7 @@ def _op_blocks(w: _Writer, block: int, project: Project, op) -> int:
             fp = FinishPass(op.tool, op.start, op.contour, op.feed, op.offset_x, op.offset_z, op.external)
             _generic_block(w, block, fp, finish_pass(fp, path, r, project.units, w.tdec,
                                                          round(mm(retract_mm(op, project.units, PREFINISH_LEAD_OUT_MM),
-                                                                  project.units), w.tdec)),
+                                                                  project.units), w.tdec), angle=collision_angle(tool, op)),
                            10 if op.external else 11, limit)
     elif isinstance(op, FaceClear):
         _generic_block(w, block, op, face_clear(op, path, r, project.units, w.tdec), 8, limit)

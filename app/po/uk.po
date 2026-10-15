@@ -211,6 +211,9 @@ msgstr "до патрона"
 msgid "T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): ALPHA-T refuses it with Invalid tip angle"
 msgstr "Кути T{n} (передній {f:g}°, задній {r:g}°) не підходять для цього різання ({side}, {way}): ALPHA-T відхиляє його як «Invalid tip angle» (недопустимий кут вершини)"
 
+msgid "T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)"
+msgstr "T{n} не може пройти стінкою вниз до X{x:g} Z{z:g}: вона крутіша за задній кут {a:g}° інструмента, тож там лишається матеріал (як в ALPHA-T)"
+
 msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
 msgstr "заходить у кулачки патрона (Z{z:g}, за довжиною заготовки {l:g})"
 
@@ -232,14 +235,14 @@ msgstr "деталь не має довжини, щоб її переверну�
 msgid "area clear: no contour below X{x}"
 msgstr "чорнова обробка: немає контуру нижче X{x}"
 
+msgid "area clear"
+msgstr "чорнова обробка"
+
 msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
 msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
 
 msgid "depth of cut must be > 0"
 msgstr "глибина різання має бути > 0"
-
-msgid "area clear"
-msgstr "чорнова обробка"
 
 msgid "empty contour"
 msgstr "порожній контур"

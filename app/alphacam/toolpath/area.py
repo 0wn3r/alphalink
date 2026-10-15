@@ -117,7 +117,8 @@ def collision_angle(tool, op) -> float | None:
     then goes on without the check)."""
     if tool is None or (tool.front_angle == 0 and tool.rear_angle == 0):
         return None
-    if not tip_angle_ok(tool.front_angle, tool.rear_angle, getattr(op, "external", True), op.towards):
+    if not tip_angle_ok(tool.front_angle, tool.rear_angle, getattr(op, "external", True),
+                        getattr(op, "towards", True)):
         return None
     return abs(tool.rear_angle)
 

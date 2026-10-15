@@ -74,6 +74,7 @@ EXPECTED_OPS = {
     "DIVE1_metric": [("area_clear", 29)],
     "DIVE2_metric": [("area_clear", 29)],
     "DIVE3_metric": [("area_clear", 34)],
+    "FINISH_dive2_metric": [("finish", 1)],
     "AREA_away_from_chuck_end_metric": [("area_clear", 11)],
     "AREA_towards_from_chuck_end_metric": [("area_clear", 10)],
     "FACE_away_from_chuck_end_metric": [("face_clear", 26)],

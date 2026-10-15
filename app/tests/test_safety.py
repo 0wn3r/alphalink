@@ -30,6 +30,9 @@ class NoFalseAlarms(unittest.TestCase):
         for name in GOLDEN:
             with self.subTest(name):
                 p = sample_project(name)
+                if name == "FINISH_dive2_metric":  # the steep wall really stays uncut (ALPHA-T's collision check)
+                    self.assertEqual({f.kind for f in check(p, preview(p))}, {"uncut"})
+                    continue
                 self.assertEqual(check(p, preview(p)), [])
 
 
@@ -55,8 +58,9 @@ class Fires(unittest.TestCase):
         dive = [(0, 0), (40, 0), (40, -20), (30, -30), (30, -40), (60, -40), (100, -40)]
         p = part(dive)
         p.operations.append(FinishPass(1, Point(120, 5), [g.id for g in p.geometry]))  # 80° rougher clears 7°
-        self.assertIn("angle", kinds(p))
+        self.assertIn("uncut", kinds(p))  # ALPHA-T's collision check goes down at 7° and leaves the rest
         p.operations[0].tool = 4  # 35° finisher clears 51°: fine
+        self.assertNotIn("uncut", kinds(p))
         self.assertNotIn("angle", kinds(p))
 
     def test_area_clear_on_the_same_dive_is_clean_with_a_35_degree_tool(self):

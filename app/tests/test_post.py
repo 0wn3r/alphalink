@@ -79,6 +79,7 @@ GOLDEN = {
     "DIVE1_metric": [AreaClear(3, S, DIVE)],
     "DIVE2_metric": [AreaClear(3, S, DIVE)],
     "DIVE3_metric": [AreaClear(3, S, DIVE)],
+    "FINISH_dive2_metric": [FinishPass(3, S, DIVE)],  # the finish pass takes the steep wall at 31 degrees too
     "FINISH_face_metric": [FinishPass(3, S, MET2, face=True)],
     "DRILL_fullret_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, full_retract=True)],
     "DRILL_retract1_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, retract=1)],

@@ -9,8 +9,11 @@ program is never blocked.
 * tip angle: ALPHA-T's own test before an area clear or face clear (RE_NOTES Progress 42): the tool's front and rear
   clearance angles must suit the cut's side and direction, or it says "Invalid tip angle" and drops its collision
   check;
-* tool angle: a feed move diving steeper than the tool's clearance allows (our own check, in the spirit of ALPHA-T's
-  collision check): the surface it leaves behind would run into the tool's trailing edge.
+* uncut: a wall steeper than the tool's rear clearance in an external finish pass. ALPHA-T's collision
+  check (contour.limit_dives) goes down it at the rear angle instead, so material stays on the wall;
+* tool angle: a feed move diving steeper than the tool's clearance allows, when ALPHA-T's collision check is off
+  (a tool without angles, or angles that fail the tip angle test): the surface it leaves behind would run into the
+  tool's trailing edge.
 
 Moves are the PRG's: X is a diameter, the tool's imaginary tip; distances below are on the radius."""
 
@@ -23,7 +26,8 @@ from .i18n import tr
 from .io.prg_parse import MoveKind
 from .model.geometry import Arc
 from .moves import segments
-from .toolpath.area import tip_angle_ok  # noqa: F401 (ALPHA-T's rule lives with the area clear it guards)
+from .toolpath.area import collision_angle, tip_angle_ok  # ALPHA-T's rules live with the area clear they guard
+from .toolpath.contour import chain
 
 TOL = 0.02  # mm: a move this close to the surface is on it
 DIVE_SLACK = 0.5  # degrees
@@ -32,7 +36,7 @@ DIVE_SLACK = 0.5  # degrees
 @dataclass
 class Finding:
     op_index: int | None
-    kind: str  # gouge | rapid | chuck | tailstock | tip | angle
+    kind: str  # gouge | rapid | chuck | tailstock | tip | uncut | angle
     message: str
     x: float  # where (X diameter, Z)
     z: float
@@ -156,6 +160,26 @@ def check(project, preview, library=None) -> list[Finding]:
             add(i, "tip", tr("T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): "
                              "ALPHA-T refuses it with Invalid tip angle", n=op.tool, f=t.front_angle,
                              r=t.rear_angle, side=side, way=way), op.start.x, op.start.z)
+    for i, op in enumerate(ops):  # walls ALPHA-T's collision check will not follow
+        # the finish pass makes the final shape (the area clear leaves the wall to it anyway)
+        if type(op).__name__ != "FinishPass" or not op.external or op.face:
+            continue
+        t = _tool(project, op.tool, library)
+        angle = collision_angle(t, op)
+        if angle is None:
+            continue
+        tan = math.tan(math.radians(angle))
+        try:
+            drawn = chain(project.contour(op.contour))
+        except (ValueError, KeyError):
+            continue
+        for el in drawn:
+            drop = (el.a.x - el.b.x) / 2
+            if not el.is_arc and drop > 1e-6 and drop > tan * abs(el.a.z - el.b.z) + 1e-6:
+                add(i, "uncut", tr("T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the "
+                                   "tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)",
+                                   n=op.tool, x=round(el.b.x, 3), z=round(el.b.z, 3), a=angle), el.b.x, el.b.z)
+                break
     tools = {}
     for seg in segments(preview):
         i = seg.op_index
@@ -213,6 +237,6 @@ def check(project, preview, library=None) -> list[Finding]:
                     add(i, "angle", tr("dives at {a:.0f}°, steeper than T{n} clears",
                                        a=dive, n=number), xb, zb)
                     break
-    order = {"chuck": 0, "tailstock": 1, "gouge": 2, "rapid": 3, "tip": 4, "angle": 5}  # the worst first: the banner shows it
+    order = {"chuck": 0, "tailstock": 1, "gouge": 2, "rapid": 3, "tip": 4, "uncut": 5, "angle": 6}  # the worst first: the banner shows it
     found.sort(key=lambda f: order.get(f.kind, 9))
     return found

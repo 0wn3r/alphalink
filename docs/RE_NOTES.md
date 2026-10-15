@@ -1225,4 +1225,8 @@ What ALPHA-T does (the app now matches all three byte for byte, PRG and SD1):
 The app: alphacam/toolpath/area.py `_pockets` / `_pocket_passes`, `collision_angle(tool, op)` (None, i.e. follow the
 profile, for tools without angles or angles that fail the tip angle test), and post/alphat_sd1 `_contour_cycle(angle)`.
 External area clear only; internal pockets and pockets with arcs on the way down have no sample yet.
+- Finish pass too (FDIVE2 -> samples/alphat_v12/FINISH_dive2_metric, finish 138 `--exec 4`): the tip path goes down
+  the 68 deg wall at T3's 31 deg (X40 Z-20.671 -> X30 Z-28.992) and the SD1 lists the same line, without any
+  "Invalid tip angle" question. The app applies it to finish passes and the area pre-finish
+  (contour.limit_dives), and its safety check now reports the wall that stays uncut ("uncut") instead of a dive.
 

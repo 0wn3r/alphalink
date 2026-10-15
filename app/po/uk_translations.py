@@ -717,6 +717,7 @@ UK = {
 "cuts into the part at X{x:g} Z{z:g}": "врізається в деталь у X{x:g} Z{z:g}",
 "dives at {a:.0f}°, steeper than T{n} clears": "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n}",
 "T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): ALPHA-T refuses it with Invalid tip angle": "Кути T{n} (передній {f:g}°, задній {r:g}°) не підходять для цього різання ({side}, {way}): ALPHA-T відхиляє його як «Invalid tip angle» (недопустимий кут вершини)",
+"T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)": "T{n} не може пройти стінкою вниз до X{x:g} Z{z:g}: вона крутіша за задній кут {a:g}° інструмента, тож там лишається матеріал (як в ALPHA-T)",
 "external": "зовнішнє",
 "internal": "внутрішнє",
 "towards the chuck": "до патрона",
