@@ -64,3 +64,33 @@ class Fires(unittest.TestCase):
         p = part(dive)
         p.operations.append(AreaClear(4, Point(120, 5), [g.id for g in p.geometry]))
         self.assertNotIn("gouge", kinds(p))
+
+
+class TipAngle(unittest.TestCase):
+    """ALPHA-T's own tool test before an area clear or face clear (RE_NOTES Progress 42)."""
+
+    def test_the_rule_on_alpha_t_standard_tools(self):
+        from alphacam.safety import tip_angle_ok
+
+        self.assertTrue(tip_angle_ok(87, 7))  # rougher, external, towards the chuck
+        self.assertFalse(tip_angle_ok(87, 7, towards=False))
+        self.assertTrue(tip_angle_ok(93, 173, towards=False))  # left-hand rougher, away
+        self.assertFalse(tip_angle_ok(93, 173))
+        self.assertTrue(tip_angle_ok(-87, -7, external=False))  # boring bar
+        self.assertFalse(tip_angle_ok(-87, -7))
+        self.assertTrue(tip_angle_ok(120, 60))  # neutral: towards only
+        self.assertFalse(tip_angle_ok(120, 60, towards=False))
+        self.assertFalse(tip_angle_ok(7, 87))  # front edge flatter than the rear one
+        self.assertTrue(tip_angle_ok(0, 0, towards=False))  # no angles: no test (and no collision check)
+        # face clear: AWAY refused tools 3, 9 and 19 in ALPHA-T (E411 sample)
+        for front, rear in ((87, 31), (118, 62), (28, -28)):
+            self.assertFalse(tip_angle_ok(front, rear, towards=False, face=True))
+        self.assertTrue(tip_angle_ok(28, -28, face=True))
+        self.assertFalse(tip_angle_ok(118, 62, face=True))
+
+    def test_area_clear_away_with_a_right_hand_rougher(self):
+        p = part(SHAFT)
+        p.operations.append(AreaClear(1, Point(120, 5), [g.id for g in p.geometry]))
+        self.assertNotIn("tip", kinds(p))
+        p.operations[0].towards = False
+        self.assertIn("tip", kinds(p))

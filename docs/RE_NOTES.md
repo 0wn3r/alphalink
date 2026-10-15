@@ -1029,7 +1029,7 @@ Samples in samples/alphat_v12 (second table of README_options_2026-10-13.md). By
 * Grooving finish mode on a slope: both ends of a descending side move by -tip width, like a face.
 * Refused by the app, because ALPHA-T's own output is unsafe on these parts: area clear AWAY (passes end 1.6 mm
   past the shoulder; the rerun is byte-identical), face clear AWAY (E411: one pass at Z0 only, tools 3/9/19 refused
-  with "Invalid tip angle"), threading AWAY (E2: cuts start at Z-5 inside the thread, W+ pull-out), grooving from
+  with "Invalid tip angle", the rule in Progress 42), threading AWAY (E2: cuts start at Z-5 inside the thread, W+ pull-out), grooving from
   the BACK (L2xx: face grooving that plunges through the turned profile). A real face-groove drawing would be the
   sample to try BACK again.
 
@@ -1164,4 +1164,37 @@ record 0 = tool 1 (32 records in V1.2), in the segment/point layout of ALPHA-T's
 Checked by drawing all 32 against their TL1 names (roughers, finishers, neutral, boring bars, internal and external
 grooving, face tools, ball-ends, drills, threading). `alphacam/io/toollib.read_tl2`; the app reads it with the TL1
 import and keeps the pictures in the user's tool library (`Tool.outline`), since ALPHA-T's files are not in the repo.
+
+## Progress 42 (2026-10-16): ALPHA-T's "Invalid tip angle" rule
+
+How it was found:
+- ALPHA-T.EXE is an EXEPACK-packed main module (to file offset 0x3F12D) followed by 17 MS-LINK overlays, each an MZ
+  image with a 0x600-byte header (`tools/unexepack.py` unpacks the main module). The program is MS Fortran with the
+  floating-point emulator: INT 34h-3Dh stand for x87 instructions. Rewriting them back to FWAIT + ESC opcodes (34h-3Bh
+  -> 9B D8..DF; 3Ch -> 9B + segment prefix from the next byte's top two bits, 11 = ES; 3Dh -> 90 9B) makes the code
+  disassemble cleanly.
+- ALPHA-T.MES is read by 1-based record number (80-byte records): the message shown is record 242, index 241,
+  "Invalid tip angle. Continue without collision check? <Enter>=Yes <Space Bar>=No". The number is a local passed to
+  the message routine (`mov word [bp-6], 0xF2` ... `call 1650:000B`). It appears only in **overlay 10** (area clear
+  and face clear, with the depth of cut and pre-finish prompts), at overlay offsets 0x493 and 0x2096. Both call the
+  test at 38FD:3713 = overlay 10 offset 0x52A3 (the overlay is linked at segment 0x3744) and show the message when it
+  returns a negative value; Enter goes on without the collision check, Space or Esc abandons the operation.
+- The cut is read from the SD1 E code (overlay 10 offset 0x1B9D): sign = external (+) / internal (-), hundreds 4 =
+  face clear, tens 1 = AWAY, units 1 = FACE mode of the area clear.
+
+The test (overlay 10 offset 0x52A3), with the current tool's front angle F and rear angle R (integer degrees from the
+tool record, the ATTOOLS "Front/Rear Clearance Angle"):
+- F = R = 0 (grooving, drills, ball-ends): passes, and the collision check is switched off.
+- Face clear: towards -> |F| <= 90 and |R| <= 90; AWAY -> |F| >= 90 and |R| >= 90.
+- Otherwise (area clear, FRONT or FACE mode):
+  - external towards: 0 < R <= 90, 0 < F < 180; external AWAY: 90 <= R < 180, 0 < F < 180;
+  - internal towards: -90 < R < 0, -180 < F < 0; internal AWAY: -180 < R < -90, -180 < F < 0;
+  - and F != R, and |F| >= |R| towards, |F| <= |R| AWAY.
+
+So right-hand tools only cut towards the chuck, left-hand tools only away, the neutral tools 8-10 only towards, the
+boring bars only internal towards, and the face tools 19/20 only in a face clear towards (this matches the E411
+sample, where face clear AWAY refused tools 3, 9 and 19). It is a test of the tool against the cut, not of the
+toolpath: the collision check it guards is what keeps the passes clear of the tool's rear edge. The app has it as
+`alphacam/safety.tip_angle_ok` (finding "tip"); its own dive check ("angle") stays as the stand-in for the collision
+check. Finish passes are not tested by ALPHA-T (no other overlay shows message 242).
 

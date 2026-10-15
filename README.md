@@ -39,7 +39,7 @@ So the lathe's Harrison macros treat the app's programs as ALPHA-T programs.
 * **Checking**: pass-by-pass simulation linked to the program lines (speed, jump to an operation or a tapped
   toolpath), the program exactly as sent (search, go to N10), ALPHA-T's setup sheet with restart numbers, tool
   warnings, and a safety check before export (gouges, rapids through the part, chuck jaws, tailstock, dives steeper
-  than the tool clears); warnings never block a deliberate program. A cycle time estimate (constant surface speed,
+  than the tool clears, and ALPHA-T's own "Invalid tip angle" rule); warnings never block a deliberate program. A cycle time estimate (constant surface speed,
   per tool) and a printable PDF setup sheet with the part, the tools in loading order and notes for the operator.
 * **Files**: parts as .alcam; opens ALPHA-T drawings (.SDG, operations rebuilt from the .SD1) and DXF; exports
   .PRG + .SD1, optionally in other units than the drawing; saves ALPHA-T drawings (.SDG) so DOS ALPHA-T can open

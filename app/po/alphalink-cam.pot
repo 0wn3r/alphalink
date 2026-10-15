@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-15 23:50+0300\n"
+"POT-Creation-Date: 2026-10-16 00:47+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -300,29 +300,56 @@ msgstr ""
 msgid "{type} is not supported by the SD1 writer yet"
 msgstr ""
 
-#: alphacam/safety.py:148
+#: alphacam/safety.py:176
+msgid "external"
+msgstr ""
+
+#: alphacam/safety.py:176 alphacam/toolpath/face.py:57
+msgid "face clear"
+msgstr ""
+
+#: alphacam/safety.py:176
+msgid "internal"
+msgstr ""
+
+#: alphacam/safety.py:177
+msgid "away from the chuck"
+msgstr ""
+
+#: alphacam/safety.py:177
+msgid "towards the chuck"
+msgstr ""
+
+#: alphacam/safety.py:178
+#, python-brace-format
+msgid ""
+"T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, "
+"{way}): ALPHA-T refuses it with Invalid tip angle"
+msgstr ""
+
+#: alphacam/safety.py:188
 #, python-brace-format
 msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
 msgstr ""
 
-#: alphacam/safety.py:156
+#: alphacam/safety.py:196
 #, python-brace-format
 msgid "moves into the tailstock centre (X{x:g} Z{z:g})"
 msgstr ""
 
-#: alphacam/safety.py:163
+#: alphacam/safety.py:203
 #, python-brace-format
 msgid "a rapid move passes through the part at X{x:g} Z{z:g}"
 msgstr ""
 
-#: alphacam/safety.py:166
+#: alphacam/safety.py:206
 #, python-brace-format
 msgid "cuts into the part at X{x:g} Z{z:g}"
 msgstr ""
 
-#: alphacam/safety.py:195
+#: alphacam/safety.py:235
 #, python-brace-format
-msgid "dives at {a:.0f}°, steeper than T{n} clears (Invalid tip angle)"
+msgid "dives at {a:.0f}°, steeper than T{n} clears"
 msgstr ""
 
 #: alphacam/setups.py:27
@@ -378,10 +405,6 @@ msgstr ""
 msgid ""
 "face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the "
 "app does not offer it; use TOWARDS"
-msgstr ""
-
-#: alphacam/toolpath/face.py:57
-msgid "face clear"
 msgstr ""
 
 #: alphacam/toolpath/groove.py:35

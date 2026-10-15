@@ -6,8 +6,11 @@ program is never blocked.
   inside for internal ones), or a rapid through it;
 * chuck jaws: any move behind the billet length (the jaws hold the billet there);
 * tailstock: any move into the live centre at the front face, when the part shows one;
-* tool angle: a feed move diving steeper than the tool's clearance allows (ALPHA-T's "Invalid tip angle"): the
-  surface it leaves behind would run into the tool's trailing edge (front / rear clearance angles of the library).
+* tip angle: ALPHA-T's own test before an area clear or face clear (RE_NOTES Progress 42): the tool's front and rear
+  clearance angles must suit the cut's side and direction, or it says "Invalid tip angle" and drops its collision
+  check;
+* tool angle: a feed move diving steeper than the tool's clearance allows (our own check, in the spirit of ALPHA-T's
+  collision check): the surface it leaves behind would run into the tool's trailing edge.
 
 Moves are the PRG's: X is a diameter, the tool's imaginary tip; distances below are on the radius."""
 
@@ -28,7 +31,7 @@ DIVE_SLACK = 0.5  # degrees
 @dataclass
 class Finding:
     op_index: int | None
-    kind: str  # gouge | rapid | chuck | tailstock | angle
+    kind: str  # gouge | rapid | chuck | tailstock | tip | angle
     message: str
     x: float  # where (X diameter, Z)
     z: float
@@ -112,6 +115,29 @@ def _wedge(tool) -> tuple[float, float] | None:
     return (min(a, b), max(a, b))
 
 
+def tip_angle_ok(front: float, rear: float, external: bool = True, towards: bool = True, face: bool = False) -> bool:
+    """ALPHA-T's tip angle test (ALPHA-T.EXE overlay 10, the routine before message 242): the tool's clearance
+    angles (degrees from +Z, negative for internal tools) against the cut. Tools without angles (both 0: grooving,
+    drills, ball-ends) pass, and ALPHA-T then skips its collision check. Face clear only looks at the size of the
+    angles; area clear (FRONT or FACE) wants the rear edge on the side the tool moves away from, and the front
+    edge steeper than the rear one."""
+    if front == 0 and rear == 0:
+        return True
+    if face:
+        if towards:
+            return -90 <= rear <= 90 and -90 <= front <= 90
+        return abs(rear) >= 90 and abs(front) >= 90
+    if external:
+        rear_ok = 0 < rear <= 90 if towards else 90 <= rear < 180
+        front_ok = 0 < front < 180
+    else:
+        rear_ok = -90 < rear < 0 if towards else -180 < rear < -90
+        front_ok = -180 < front < 0
+    if not (rear_ok and front_ok) or front == rear:
+        return False
+    return abs(front) >= abs(rear) if towards else abs(front) <= abs(rear)
+
+
 def check(project, preview, library=None) -> list[Finding]:
     from .checks import _tool  # the part's tools, the library, ALPHA-T's standard tools
 
@@ -138,6 +164,20 @@ def check(project, preview, library=None) -> list[Finding]:
         # the face clear's contour is the face it stops at, not a part outline: no gouge test for it
         if getattr(op, "contour", None) and type(op).__name__ in ("AreaClear", "FinishPass"):
             profiles[i] = (_profile(project, op.contour), getattr(op, "external", True))
+    for i, op in enumerate(ops):
+        name = type(op).__name__
+        if name not in ("AreaClear", "FaceClear"):
+            continue
+        t = _tool(project, op.tool, library)
+        if t is None or t.type in ("groove", "drill", "thread"):
+            continue
+        external = getattr(op, "external", True)
+        if not tip_angle_ok(t.front_angle, t.rear_angle, external, op.towards, name == "FaceClear"):
+            side = tr("face clear") if name == "FaceClear" else tr("external") if external else tr("internal")
+            way = tr("towards the chuck") if op.towards else tr("away from the chuck")
+            add(i, "tip", tr("T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): "
+                             "ALPHA-T refuses it with Invalid tip angle", n=op.tool, f=t.front_angle,
+                             r=t.rear_angle, side=side, way=way), op.start.x, op.start.z)
     tools = {}
     for seg in segments(preview):
         i = seg.op_index
@@ -192,9 +232,9 @@ def check(project, preview, library=None) -> list[Finding]:
                 lo, hi = wedge
                 if lo + DIVE_SLACK < behind < hi - DIVE_SLACK:
                     dive = math.degrees(math.atan2(abs(dr), abs(dz)))
-                    add(i, "angle", tr("dives at {a:.0f}°, steeper than T{n} clears (Invalid tip angle)",
+                    add(i, "angle", tr("dives at {a:.0f}°, steeper than T{n} clears",
                                        a=dive, n=number), xb, zb)
                     break
-    order = {"chuck": 0, "tailstock": 1, "gouge": 2, "rapid": 3, "angle": 4}  # the worst first: the banner shows it
+    order = {"chuck": 0, "tailstock": 1, "gouge": 2, "rapid": 3, "tip": 4, "angle": 5}  # the worst first: the banner shows it
     found.sort(key=lambda f: order.get(f.kind, 9))
     return found

@@ -108,7 +108,7 @@ Use the arrows in the editor header to move an operation up or down, and the bin
 
 Drag a row by its handle to reorder the operations; **Duplicate Operation** at the end of the editor copies one.
 
-Before export the app checks every move. A cut into the part, a move into the chuck jaws or the tailstock, or a dive steeper than the tool clears shows a banner with **Show**, a red ring on the drawing and a sign on the operation. It only warns: export still works.
+Before export the app checks every move. A cut into the part, a move into the chuck jaws or the tailstock, a dive steeper than the tool clears, or a tool whose angles ALPHA-T would refuse for that area clear or face clear (its "Invalid tip angle": for example a right-hand tool cutting away from the chuck) shows a banner with **Show**, a red ring on the drawing and a sign on the operation. It only warns: export still works.
 
 ## Simulation
 
