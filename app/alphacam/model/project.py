@@ -68,6 +68,7 @@ class Project:
     geometry: list[Element] = field(default_factory=list)
     operations: list[Operation] = field(default_factory=list)
     texts: list[Text] = field(default_factory=list)
+    notes: str = ""  # for the operator, printed on the setup sheet
 
     def __post_init__(self):
         if self.units not in UNITS:
@@ -98,6 +99,7 @@ class Project:
             "geometry": serde.to_json(self.geometry),
             "operations": serde.to_json(self.operations),
         } | ({"texts": serde.to_json(self.texts)} if self.texts else {}) \
+            | ({"notes": self.notes} if self.notes else {}) \
             | ({"output_units": self.output_units} if self.output_units not in (None, self.units) else {})
 
     @classmethod
@@ -119,6 +121,7 @@ class Project:
             geometry=[serde.from_json(None, g, ELEMENT_TYPES) for g in data.get("geometry", [])],
             operations=[serde.from_json(None, _legacy_op(o), OPERATION_TYPES) for o in data.get("operations", [])],
             texts=[serde.from_json(Text, t) for t in data.get("texts", [])],
+            notes=str(data.get("notes", "")),
         )
 
     def dumps(self) -> str:

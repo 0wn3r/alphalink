@@ -1125,3 +1125,50 @@ class BackupOverVirtualPort(VirtualPort):
         self.assertEqual(self.saved_backup("PART.MOP"), data)
         raw = list((self.s.root / "home/.var/app").glob("*/.local/state/alphalink-cam/logs/*-manops.raw"))
         self.assertEqual([r.read_bytes() for r in raw], [data])
+
+
+class WorkflowSteps456(Surface):
+    """Workflow improvements 4-6 through the UI: a job template, the printable sheet, the second setup."""
+
+    def test_template_from_the_add_menu(self):
+        from alphacam_gtk.op_factory import OP_MENU
+
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        self.menu("Add Operation (C)", len(OP_MENU))  # the first template: Shaft, rough T1 and finish T3
+        self.app.find("Added 4 operations", contains=True, showing=False)
+        self.snap("template")
+        q = self.saved(path)
+        self.assertEqual([type(o).__name__ for o in q.operations], ["ToolChange", "AreaClear", "ToolChange", "FinishPass"])
+
+    def test_sheet_pdf_with_cycle_time(self):
+        from alphacam.model import AreaClear
+
+        p = shaft()
+        p.operations.append(AreaClear(3, Point(120, 5), [g.id for g in p.geometry]))
+        self.launch(str(self.part(p)))
+        self.press("Sheet", "page tab")
+        self.app.find("About ", contains=True)  # the estimate in the bar
+        self.press("Save as PDF…", "button")
+        FileDialogs.save_as(self, "SHEET.pdf")
+        pdf = self.s.root / "home/SHEET.pdf"
+        self.wait_for(pdf.exists, 10, "SHEET.pdf")
+        self.assertTrue(pdf.read_bytes().startswith(b"%PDF"))
+
+    def test_turn_part_around(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        self.press("Main Menu", "toggle button")
+        self.app.press(acc=self.app.menu_items()[10])  # New, Open, Save, Save As, Save SDG | Undo, Redo | Fit, Grid,
+        self.app.find("Turn Part Around", contains=True)  # Part Settings, Turn Part Around…
+        self.snap("dialog")
+        self.press("Turn Around", "button")
+        self.app.find("Second setup", contains=True, showing=False)
+        self.snap("turned")
+        self.s.key("ctrl+s")
+        FileDialogs.save_as(self, "part-2.alcam")
+        q = Project.load(self.s.root / "home/part-2.alcam")
+        self.assertEqual(q.program_number, p.program_number + 1)
+        self.assertIn(Point(100, 0), [g.b for g in q.geometry] + [g.a for g in q.geometry])

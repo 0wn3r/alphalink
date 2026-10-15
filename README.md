@@ -34,14 +34,17 @@ So the lathe's Harrison macros treat the app's programs as ALPHA-T programs.
   spring passes), drilling (peck, dwell, full retract, retract distance), tool change, dwell, move / rapid.
   ALPHA-T's AWAY programs are unsafe on real parts, so the app refuses AWAY and says why. New operations take the
   outer profile (grooves and threads their own lines) and bring their own tool change; operations can be duplicated
-  and reordered by dragging.
+  and reordered by dragging. Job templates add a whole sequence (shaft, bush, groove and thread, or your own) with
+  the contours picked from the drawing.
 * **Checking**: pass-by-pass simulation linked to the program lines (speed, jump to an operation or a tapped
   toolpath), the program exactly as sent (search, go to N10), ALPHA-T's setup sheet with restart numbers, tool
   warnings, and a safety check before export (gouges, rapids through the part, chuck jaws, tailstock, dives steeper
-  than the tool clears); warnings never block a deliberate program.
+  than the tool clears); warnings never block a deliberate program. A cycle time estimate (constant surface speed,
+  per tool) and a printable PDF setup sheet with the part, the tools in loading order and notes for the operator.
 * **Files**: parts as .alcam; opens ALPHA-T drawings (.SDG, operations rebuilt from the .SD1) and DXF; exports
   .PRG + .SD1, optionally in other units than the drawing; saves ALPHA-T drawings (.SDG) so DOS ALPHA-T can open
-  them.
+  them. DXF import turns and places the drawing (front face, axis, Z0) and reads circles; Turn Part Around makes the
+  second setup for the other end.
 * **Machine**: sending with the control's XON handshake, Manual Ops backup (the 400T's DC2 ... DC4 output, waiting
   through its pauses, partial data always kept) and restore, loopback cable test; the app never starts a cycle.
 * **Touch**: thumb-sized bars, number pad, touch lock while coolant runs. English and Ukrainian, in-app help (F1),

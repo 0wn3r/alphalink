@@ -15,7 +15,7 @@ from gi.repository import GLib, Gtk  # noqa: E402
 from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.tools import standard_library  # noqa: E402
 
-from .i18n import N_, _  # noqa: E402
+from .i18n import N_, _, ngettext  # noqa: E402
 
 MONTHS = [N_("Jan"), N_("Feb"), N_("Mar"), N_("Apr"), N_("May"), N_("Jun"), N_("Jul"), N_("Aug"), N_("Sep"), N_("Oct"),
           N_("Nov"), N_("Dec")]
@@ -39,14 +39,38 @@ def _tool_name(project, number, library=None) -> str:
         return ""
 
 
-def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
-    """The setup sheet as monospaced text, laid out like ALPHA-T's print."""
+def machine():
+    """The cycle time settings (Preferences)."""
+    from alphacam.cycletime import Machine
+
+    from .settings import settings
+
+    st = settings()
+    return Machine(spindle_max=float(st["spindle_max"]), rapid=float(st["rapid_rate"]),
+                   tool_change=float(st["tool_change_s"]))
+
+
+def time_summary(est) -> str:
+    """"About 6:52 (5:52 cutting, 2 tool changes)": the estimate in one line."""
+    from alphacam.cycletime import mmss
+
+    return _("About {total} ({cutting} cutting, {changes})").format(
+        total=mmss(est.total), cutting=mmss(est.cutting),
+        changes=ngettext("{n} tool change", "{n} tool changes", est.tool_changes).format(n=est.tool_changes))
+
+
+def sheet_text(project, pv, title: str, moves: bool, library=None, est=None) -> str:
+    """The setup sheet as monospaced text, laid out like ALPHA-T's print, with the cycle time estimate."""
+    from alphacam.cycletime import estimate, mmss
+
     today = datetime.date.today()
     month = _(MONTHS[today.month - 1])  # strftime's %b is always English here (C locale)
     out = [" ", f"  {_('TITLE')} : {title:<40} {_('DATE')} : {today.day:02d} {month} {today.year}", " "]
     prog = pv.program if pv is not None else None
     if prog is None:
         return "\n".join(out + [_("  (no program)")])
+    est = est or estimate(project, pv, library, machine())
+    out += [f"  {_('Program')} : {project.program_number}     {_('Cycle time')} : {time_summary(est)}", " "]
     op_no = 0
     from alphacam.checks import tool_warnings
 
@@ -86,6 +110,8 @@ def sheet_text(project, pv, title: str, moves: bool, library=None) -> str:
                 else:
                     line += f"     {_('Feed')} : {block.feed:g}"
                 out.append(line)
+                if op.op_index in est.seconds and block is op.blocks[0]:
+                    out.append(f"  {_('Time')} : {mmss(est.seconds[op.op_index])}")
             for msg in warnings.get(op.op_index, []) if name != "tool_change" else []:
                 out.append(f"  ! {msg}")
             restarts = [ps.restart[0] for ps in block.passes if ps.restart]
@@ -123,6 +149,91 @@ def _moves(block) -> list[str]:
     return lines
 
 
+def tool_order(project, pv, library=None) -> list[tuple[int, str, list[str]]]:
+    """The tools in the order they are needed: (number, name, the operations it does)."""
+    out: list[tuple[int, str, list[str]]] = []
+    if pv is None or pv.program is None:
+        return out
+    for op in pv.ops:
+        for block in op.blocks:
+            if block.op_name in ("empty", "end", "tool_change") or block.tool is None:
+                continue
+            what = _(KIND_NAMES.get(block.op_name, block.op_name.upper())).capitalize()
+            if out and out[-1][0] == block.tool:
+                if what not in out[-1][2]:
+                    out[-1][2].append(what)
+            else:
+                out.append((block.tool, _tool_name(project, block.tool, library), [what]))
+    return out
+
+
+def write_pdf(path, project, pv, title: str, canvas, library=None, moves: bool = False) -> int:
+    """The setup sheet as a printable A4 PDF: first page the part with its toolpaths, the program, billet and cycle
+    time, the tools in loading order and the operator's notes; then the sheet itself. Returns the page count."""
+    import cairo
+
+    gi.require_version("Pango", "1.0")
+    gi.require_version("PangoCairo", "1.0")
+    from gi.repository import Pango, PangoCairo
+
+    from alphacam.cycletime import estimate
+
+    W, H, M = 595.0, 842.0, 40.0  # A4 in points, margin
+    est = estimate(project, pv, library, machine())
+    surface = cairo.PDFSurface(str(path), W, H)
+    cr = cairo.Context(surface)
+    pages = 1
+
+    def text(x, y, markup, size=10, width=W - 2 * M, mono=False):
+        layout = PangoCairo.create_layout(cr)
+        layout.set_font_description(Pango.FontDescription.from_string(("Monospace " if mono else "Sans ") + str(size)))
+        layout.set_width(int(width * Pango.SCALE))
+        layout.set_wrap(Pango.WrapMode.WORD_CHAR)
+        layout.set_markup(markup, -1)
+        cr.set_source_rgb(0.1, 0.1, 0.12)
+        cr.move_to(x, y)
+        PangoCairo.show_layout(cr, layout)
+        return layout.get_pixel_extents()[1].height
+
+    esc = GLib.markup_escape_text
+    unit = "mm" if project.units == "mm" else "inch"
+    b = project.billet
+    y = M
+    y += text(M, y, f"<b>{esc(title)}</b>", 18) + 6
+    facts = [(_("Program"), str(project.program_number)), (_("Units"), unit),
+             (_("Billet"), f"Ø{b.diameter:g} × {b.length:g}" + (f", {_('bore')} Ø{b.bore:g}" if b.bore else "")),
+             (_("Cycle time"), time_summary(est)), (_("Date"), datetime.date.today().isoformat())]
+    y += text(M, y, "   ".join(f"{esc(k)}: <b>{esc(v)}</b>" for k, v in facts), 9) + 10
+    pic_h = 300.0
+    cr.save()
+    cr.rectangle(M, y, W - 2 * M, pic_h)
+    cr.clip()
+    cr.translate(M, y)
+    canvas.render_to(cr, W - 2 * M, pic_h)
+    cr.restore()
+    cr.set_source_rgb(0.7, 0.7, 0.72)
+    cr.set_line_width(0.5)
+    cr.rectangle(M, y, W - 2 * M, pic_h)
+    cr.stroke()
+    y += pic_h + 14
+    y += text(M, y, f"<b>{esc(_('Tools, in loading order'))}</b>", 11) + 4
+    for n, (number, name, what) in enumerate(tool_order(project, pv, library), 1):
+        y += text(M, y, f"{n}.  <b>T{number}</b>  {esc(name)}  —  {esc(', '.join(what))}", 9) + 2
+    if project.notes.strip():
+        y += 10
+        y += text(M, y, f"<b>{esc(_('Notes'))}</b>", 11) + 4
+        y += text(M, y, esc(project.notes.strip()), 9)
+    cr.show_page()
+    lines = sheet_text(project, pv, title, moves, library, est).splitlines()
+    per_page = int((H - 2 * M) / 10.5)
+    for start in range(0, len(lines), per_page):
+        pages += 1
+        text(M, M, esc("\n".join(lines[start:start + per_page])), 7.5, mono=True)
+        cr.show_page()
+    surface.finish()
+    return pages
+
+
 class SheetPage(Gtk.Box):
     """Shows the setup sheet; a switch adds the tool moves; Save as Text writes it to a file."""
 
@@ -133,14 +244,27 @@ class SheetPage(Gtk.Box):
         self.moves_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
         self.moves_switch.connect("notify::active", lambda *a: self.refresh())
         lbl = Gtk.Label(label=_("Tool moves"))
-        save = Gtk.Button(label=_("_Save as Text…"), use_underline=True, halign=Gtk.Align.END, hexpand=True)
+        self.time_label = Gtk.Label(hexpand=True, xalign=0, ellipsize=3, css_classes=["dim-label"])
+        save = Gtk.Button(label=_("_Save as Text…"), use_underline=True, halign=Gtk.Align.END)
         save.connect("clicked", lambda *a: self._save())
-        for wdg in (lbl, self.moves_switch, save):
+        pdf = Gtk.Button(label=_("Save as _PDF…"), use_underline=True, halign=Gtk.Align.END,
+                         tooltip_text=_("Printable setup sheet: the part, the tools in loading order, notes"))
+        pdf.connect("clicked", lambda *a: self._save_pdf())
+        for wdg in (lbl, self.moves_switch, self.time_label, save, pdf):
             bar.append(wdg)
         self.view = Gtk.TextView(editable=False, cursor_visible=False, monospace=True, top_margin=12,
                                  bottom_margin=12, left_margin=12, right_margin=12)
         self.view.add_css_class("program-text")
+        self.notes = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR, top_margin=6, bottom_margin=6, left_margin=6,
+                                  right_margin=6, height_request=60)
+        focus = Gtk.EventControllerFocus()
+        focus.connect("leave", lambda *a: self._notes_changed())
+        self.notes.add_controller(focus)
+        notes_box = Gtk.Expander(label=_("Notes for the operator"), child=Gtk.ScrolledWindow(
+            child=self.notes, max_content_height=120, propagate_natural_height=True), margin_start=12,
+            margin_end=12, margin_bottom=6)
         self.append(bar)
+        self.append(notes_box)
         self.append(Gtk.Separator())
         self.append(Gtk.ScrolledWindow(child=self.view, vexpand=True))
 
@@ -148,8 +272,53 @@ class SheetPage(Gtk.Box):
         w = self.window
         if w.project is None:
             return
-        title = w.path.stem.upper() if w.path else _("UNTITLED")
-        self.view.get_buffer().set_text(sheet_text(w.project, w.pv, title, self.moves_switch.get_active(), w.library))
+        from alphacam.cycletime import estimate
+
+        title = self._title()
+        est = estimate(w.project, w.pv, w.library, machine())
+        self.time_label.set_label(time_summary(est) if w.pv is not None and w.pv.program is not None else "")
+        self.view.get_buffer().set_text(sheet_text(w.project, w.pv, title, self.moves_switch.get_active(), w.library,
+                                                   est))
+        buf = self.notes.get_buffer()
+        if buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False) != w.project.notes:
+            buf.set_text(w.project.notes)
+
+    def _title(self) -> str:
+        w = self.window
+        return w.path.stem.upper() if w.path else (getattr(w, "import_name", None) or _("UNTITLED")).upper()
+
+    def _notes_changed(self) -> None:
+        w = self.window
+        if w.project is None:
+            return
+        buf = self.notes.get_buffer()
+        text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
+        if text != w.project.notes:
+            w.apply_edit(_("Notes"), lambda p: setattr(p, "notes", text))
+
+    def _save_pdf(self) -> None:
+        w = self.window
+        if w.project is None or w.pv is None or w.pv.program is None:
+            w.toast(_("There is no program to print yet"))
+            return
+        self._notes_changed()
+        stem = w.path.stem if w.path else (getattr(w, "import_name", None) or "part")
+        dlg = Gtk.FileDialog(title=_("Save Setup Sheet as PDF"), initial_name=f"{stem}-sheet.pdf")
+
+        def done(d, res):
+            try:
+                f = d.save_finish(res)
+            except GLib.Error:
+                return
+            try:
+                write_pdf(f.get_path(), w.project, w.pv, self._title(), w.canvas, w.library,
+                          self.moves_switch.get_active())
+            except Exception as e:  # noqa: BLE001  cairo raises its own errors (disk full, permission)
+                w.toast(_("Could not save {name}: {error}").format(name=f.get_basename(), error=e))
+                return
+            w.toast(_("Saved {name}").format(name=f.get_basename()))
+
+        dlg.save(w, None, done)
 
     def _save(self) -> None:
         w = self.window

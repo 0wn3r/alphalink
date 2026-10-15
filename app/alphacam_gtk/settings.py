@@ -22,6 +22,9 @@ DEFAULTS = {
     "show_grid": True,
     "export_sdg": False,  # Export PRG also writes the ALPHA-T drawing (.SDG + .SDT) next to the program
     "export_dir": "",  # where the last program was exported (a USB stick, say): the next export starts there
+    "spindle_max": 2500.0,  # rpm, for the cycle time estimate
+    "rapid_rate": 6000.0,  # mm/min
+    "tool_change_s": 30.0,  # seconds the operator needs to change a tool
 }
 
 

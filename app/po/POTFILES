@@ -2,6 +2,7 @@ alphacam/__init__.py
 alphacam/__main__.py
 alphacam/checks.py
 alphacam/commands.py
+alphacam/cycletime.py
 alphacam/drawing.py
 alphacam/features.py
 alphacam/i18n.py
@@ -27,6 +28,7 @@ alphacam/post/alphat_prg.py
 alphacam/post/alphat_sd1.py
 alphacam/preview.py
 alphacam/safety.py
+alphacam/setups.py
 alphacam/toolpath/__init__.py
 alphacam/toolpath/area.py
 alphacam/toolpath/contour.py
@@ -59,5 +61,6 @@ alphacam_gtk/report.py
 alphacam_gtk/settings.py
 alphacam_gtk/shortcuts.py
 alphacam_gtk/simulation.py
+alphacam_gtk/templates.py
 alphacam_gtk/tools_page.py
 alphacam_gtk/window.py

@@ -127,7 +127,10 @@ class ToolsPage(Gtk.Box):
                 ("front_angle", _("Front clearance angle"), _("degrees from Z; negative = internal"), -180, 180, 1, 0),
                 ("rear_angle", _("Rear clearance angle"), _("degrees from Z"), -180, 180, 1, 0),
                 ("width", _("Width"), _("grooving tip or drill diameter, mm"), 0, 100, 0.5, 2),
-                ("default_feed", _("Default feed"), _("per revolution, for new operations"), 0.001, 5, 0.01, 3)):
+                ("default_feed", _("Default feed"), _("per revolution, for new operations"), 0.001, 5, 0.01, 3),
+                ("surface_speed", _("Surface speed"), _("m/min, for the cycle time; 0 = a default for the type"),
+                 0, 1000, 10, 0),
+                ("max_rpm", _("Spindle limit"), _("rpm for this tool; 0 = the machine's"), 0, 10000, 100, 0)):
             row = Adw.SpinRow.new_with_range(lo, hi, step)
             row.set_title(label)
             row.set_subtitle(sub)

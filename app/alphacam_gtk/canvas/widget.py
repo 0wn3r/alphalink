@@ -177,9 +177,22 @@ class LatheCanvas(Gtk.DrawingArea):
 
     # --- drawing ----------------------------------------------------------------------------------------
 
+    def render_to(self, cr, width: float, height: float) -> None:
+        """The part, billet, chuck and every toolpath, fitted to width x height in light colours, for the printed
+        setup sheet (the screen's view, selection and simulation position are left alone)."""
+        saved = (self.view, self.show_grid, getattr(self, "_print", False))
+        self.view = saved[0].copy()
+        self.view.fit(self.bounds(), width, height, margin=12)
+        self.show_grid, self._print = False, True
+        try:
+            self._draw_scene(None, cr, width, height)
+        finally:
+            self.view, self.show_grid, self._print = saved
+
     def _rgb(self, cr, name: str, alpha: float = 1.0) -> None:
         light, dark = COLOURS[name]
-        r, g, b = dark if Adw.StyleManager.get_default().get_dark() else light
+        dark_now = Adw.StyleManager.get_default().get_dark() and not getattr(self, "_print", False)
+        r, g, b = dark if dark_now else light
         cr.set_source_rgba(r, g, b, alpha)
 
     def _draw(self, area, cr, width, height) -> None:
@@ -281,10 +294,11 @@ class LatheCanvas(Gtk.DrawingArea):
                     cr.line_to(*v.to_screen(g.b.x * mirror, g.b.z))
                 cr.stroke()
         self._texts(cr)
-        if self.tool == "select" or not self.picked:
+        if self.tool == "select" or not self.picked or getattr(self, "_print", False):
             self._paths(cr)
-        self._overlay(cr)
-        self._axes(cr, height)
+        if not getattr(self, "_print", False):
+            self._overlay(cr)
+            self._axes(cr, height)
 
     def _texts(self, cr) -> None:
         """Drawing text (ALPHA-T T): starts at its point, character height in drawing units."""
@@ -400,8 +414,9 @@ class LatheCanvas(Gtk.DrawingArea):
                                              math.atan2(ay - cy, ax - cx), math.atan2(by - cy, bx - cx))
 
     def _paths(self, cr) -> None:
-        sel = self.selected
-        sim = self.sim_index
+        printing = getattr(self, "_print", False)
+        sel = None if printing else self.selected
+        sim = None if printing else self.sim_index
         for i, s in enumerate(self.segs):
             focus = sel is None or s.op_index == sel
             alpha = 1.0 if focus else 0.15

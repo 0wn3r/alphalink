@@ -24,8 +24,8 @@ AlphaLink CAM makes programs for the Harrison Alpha 400T lathe (FANUC Power Mate
 
 - **Part**: the drawing, the toolpaths and the drawing tools.
 - **Program**: the program text exactly as it goes to the lathe. Ctrl+F searches it; N10 goes to block 10.
-- **Sheet**: the setup sheet: tools, operations and every tool move as text, like ALPHA-T's print. Save as Text writes it to a file. It shows each block's restart number (#140) and any tool warnings.
-- **Tools**: the tool library (tool memory slots of the control, nose radius, type, default feed).
+- **Sheet**: the setup sheet: tools, operations and every tool move as text, like ALPHA-T's print. Save as Text writes it to a file. It shows each block's restart number (#140) and any tool warnings. It also gives a cycle time estimate (per operation and in total), takes notes for the operator, and **Save as PDF…** writes a printable sheet: the part with its toolpaths, the tools in loading order and the notes, then the sheet.
+- **Tools**: the tool library (tool memory slots of the control, nose radius, type, default feed). Each tool can carry its surface speed (m/min) and a spindle limit for the cycle time.
 - **Machine**: sending programs, Manual Ops backup and restore, and the cable test.
 
 The operations list is on the left. Tap an operation to select it: its toolpath is highlighted and its editor opens.
@@ -35,7 +35,7 @@ The operations list is on the left. Tap an operation to select it: its toolpath 
 - **Open** (Ctrl+O) reads:
   - AlphaLink parts (.alcam), with drawing and operations;
   - ALPHA-T drawings (.SDG). ALPHA-T keeps the operations only in the .SD1 file next to the drawing, so the app rebuilds them from there and tells you whether the result matches the .PRG next to it. If the .SD1 is not found, use Choose .SD1… in the message;
-  - DXF drawings: lines, arcs and polylines, drawn with the spindle axis along the DXF X axis.
+  - DXF drawings: lines, arcs and polylines, drawn with the spindle axis along the DXF X axis. The import can turn the drawing (a part drawn upright), put the front face on the right, find the spindle axis (as drawn, the middle of a full section, or the lowest point of a half drawing) and put the front face on Z0. Circles come in as two half arcs.
 - **Save** (Ctrl+S) / **Save As** (Ctrl+Shift+S) write the .alcam part.
 - **Export PRG** (Ctrl+E) writes the .PRG program and, next to it, the .SD1 listing with the same name, as ALPHA-T does. With Preferences ▸ Also save the ALPHA-T drawing, it writes the .SDG drawing (and .SDT) too. It remembers the folder and suggests the part's name cut to 8 characters.
 - **Save as ALPHA-T Drawing…** (main menu) writes the drawing as an .SDG that DOS ALPHA-T can open (names of up to 8 characters). Operations are not part of an ALPHA-T drawing.
@@ -73,6 +73,8 @@ The tools are in the bar under the drawing.
 ## Operations
 
 Each operation has a **tool** (the tool memory slot on the control), a **tool start** point (where the tool goes before and after the cut), and a **feed** per revolution. Most operations follow a **contour**: the drawing elements in cutting order. Pick Contour on the Drawing, then tap the elements in order and press Done.
+
+**Templates** (in the **+** menu): a saved list of operations with their tools and settings but no drawing. Applying one adds its operations with the contours picked from this part (the outer profile, the bore for internal operations, the groove, the thread lines). Three come built in (shaft, bush, groove and thread); **Save Operations as Template…** keeps the open part's operations as a template of your own.
 
 New operations take the outer profile, not thread or construction lines; Grooving takes the groove and Threading the two thread lines. Adding Grooving, Threading or Drilling also adds a Tool Change when the tool in the turret does not suit them. Tool warnings show as a sign on the operation and on the setup sheet.
 
@@ -187,6 +189,8 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 
 Main menu ▸ Part Settings changes the billet of the open part: diameter, length, bore (for a tube; 0 = solid bar), the chuck jaws (on the outside, as ALPHA-T draws them, or expanding in the bore), and whether the tailstock centre is shown at the front face. New Part asks for the same; these billet settings only change the picture, not the program. **Program number** is the number the control shows for the program (#132). **Program units** writes the program in mm (M71) or inch (M70) whatever the drawing's units (the .SD1 stays in the drawing's units, as ALPHA-T keeps it), like ALPHA-T's "Select Units To Store Output In"; as the drawing is the default.
 
+**Turn Part Around…** (main menu) makes the second setup for the other end of the part: the drawing turned end for end, its back face on Z0, no operations, the next program number. It opens as a new part to save under its own name; the first setup stays as it was.
+
 ## Preferences
 
-Main menu ▸ Preferences: units, billet size and first tool for new parts, the language (after a restart), and Export ▸ Also save the ALPHA-T drawing (.SDG) next to the program.
+Main menu ▸ Preferences: units, billet size and first tool for new parts, the language (after a restart), and Export ▸ Also save the ALPHA-T drawing (.SDG) next to the program. The **Cycle time** group sets the spindle limit, the rapid rate and the time a tool change takes, for the estimate on the setup sheet.

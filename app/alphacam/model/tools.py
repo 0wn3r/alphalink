@@ -21,6 +21,8 @@ class Tool:
     front_angle: float = 0.0  # clearance angles from the Z axis, as in ATTOOLS (tip angle = front - rear;
     rear_angle: float = 0.0  # negative = internal / boring)
     description: str = ""
+    surface_speed: float = 0.0  # m/min for the cycle time estimate; 0 = the default for the tool type
+    max_rpm: float = 0.0  # spindle limit for this tool; 0 = the machine's
 
     def __post_init__(self):
         if self.type not in TOOL_TYPES:

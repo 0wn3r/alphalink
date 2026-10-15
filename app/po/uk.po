@@ -205,6 +205,9 @@ msgstr "врізається в деталь у X{x:g} Z{z:g}"
 msgid "dives at {a:.0f}°, steeper than T{n} clears (Invalid tip angle)"
 msgstr "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n} (недопустимий кут вершини)"
 
+msgid "the part has no length to turn around"
+msgstr "деталь не має довжини, щоб її перевернути"
+
 msgid "area clear: no contour below X{x}"
 msgstr "чорнова обробка: немає контуру нижче X{x}"
 
@@ -1294,6 +1297,15 @@ msgstr "НАПІВЧИСТОВИЙ ПРОХІД"
 msgid "THREADING"
 msgstr "НАРІЗАННЯ РІЗЬБИ"
 
+msgid "About {total} ({cutting} cutting, {changes})"
+msgstr "Близько {total} ({cutting} різання, {changes})"
+
+msgid "{n} tool change"
+msgid_plural "{n} tool changes"
+msgstr[0] "{n} зміна інструмента"
+msgstr[1] "{n} зміни інструмента"
+msgstr[2] "{n} змін інструмента"
+
 msgid "DATE"
 msgstr "ДАТА"
 
@@ -1302,6 +1314,12 @@ msgstr "НАЗВА"
 
 msgid "  (no program)"
 msgstr "  (немає програми)"
+
+msgid "Cycle time"
+msgstr "Час циклу"
+
+msgid "Program"
+msgstr "Програма"
 
 msgid "Tool No."
 msgstr "Інстр. №"
@@ -1329,6 +1347,9 @@ msgstr "Проходів"
 
 msgid "Depth Of Cut"
 msgstr "Глибина різання"
+
+msgid "Time"
+msgstr "Час"
 
 msgid "Block"
 msgstr "Блок"
@@ -1366,23 +1387,56 @@ msgstr "ВИТРИМКА"
 msgid "revs"
 msgstr "об."
 
+msgid "Units"
+msgstr "Одиниці"
+
+msgid "Billet"
+msgstr "Заготовка"
+
+msgid "bore"
+msgstr "отвір"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Tools, in loading order"
+msgstr "Інструменти в порядку встановлення"
+
+msgid "Notes"
+msgstr "Примітки"
+
 msgid "Tool moves"
 msgstr "Переміщення інструмента"
 
 msgid "_Save as Text…"
 msgstr "_Зберегти як текст…"
 
+msgid "Save as _PDF…"
+msgstr "Зберегти як _PDF…"
+
+msgid "Printable setup sheet: the part, the tools in loading order, notes"
+msgstr "Карта наладки для друку: деталь, інструменти в порядку встановлення, примітки"
+
+msgid "Notes for the operator"
+msgstr "Примітки для оператора"
+
 msgid "UNTITLED"
 msgstr "БЕЗ НАЗВИ"
 
-msgid "Save Setup Sheet"
-msgstr "Зберегти карту наладки"
+msgid "There is no program to print yet"
+msgstr "Ще немає програми для друку"
+
+msgid "Save Setup Sheet as PDF"
+msgstr "Зберегти карту наладки як PDF"
 
 msgid "Could not save {name}: {error}"
 msgstr "Не вдалося зберегти {name}: {error}"
 
 msgid "Saved {name}"
 msgstr "Збережено {name}"
+
+msgid "Save Setup Sheet"
+msgstr "Зберегти карту наладки"
 
 msgid "General"
 msgstr "Загальні"
@@ -1585,6 +1639,18 @@ msgstr "прохід {n}"
 msgid "{i}/{total} · {op}{pass_} · line {line}"
 msgstr "{i}/{total} · {op}{pass_} · рядок {line}"
 
+msgid "not an AlphaLink CAM template"
+msgstr "це не шаблон AlphaLink CAM"
+
+msgid "Shaft: rough T1, finish T3"
+msgstr "Вал: чорнова T1, чистова T3"
+
+msgid "Bush: drill T25, bore rough and finish T12"
+msgstr "Втулка: свердло T25, розточування чорнове й чистове T12"
+
+msgid "Groove and thread: groove T16, thread T31"
+msgstr "Канавка й різьба: канавка T16, різьба T31"
+
 msgid "Grooving / parting"
 msgstr "Канавки / відрізання"
 
@@ -1659,6 +1725,18 @@ msgstr "Подача за замовчуванням"
 
 msgid "per revolution, for new operations"
 msgstr "на оберт, для нових операцій"
+
+msgid "Surface speed"
+msgstr "Швидкість різання"
+
+msgid "m/min, for the cycle time; 0 = a default for the type"
+msgstr "м/хв, для часу циклу; 0 = типова для виду інструмента"
+
+msgid "Spindle limit"
+msgstr "Межа шпинделя"
+
+msgid "rpm for this tool; 0 = the machine's"
+msgstr "об/хв для цього інструмента; 0 = як у верстата"
 
 msgid "Description"
 msgstr "Опис"
@@ -1759,6 +1837,12 @@ msgstr "Відкрити…"
 msgid "Open Machine Page"
 msgstr "Відкрити сторінку «Верстат»"
 
+msgid "Templates"
+msgstr "Шаблони"
+
+msgid "Save Operations as Template…"
+msgstr "Зберегти операції як шаблон…"
+
 msgid "Add Operation (C)"
 msgstr "Додати операцію (C)"
 
@@ -1776,9 +1860,6 @@ msgstr "Пошук (Ctrl+F)"
 
 msgid "Part"
 msgstr "Деталь"
-
-msgid "Program"
-msgstr "Програма"
 
 msgid "Sheet"
 msgstr "Наладка"
@@ -1812,6 +1893,9 @@ msgstr "Показувати сітку"
 
 msgid "Part Settings"
 msgstr "Параметри деталі"
+
+msgid "Turn Part Around…"
+msgstr "Перевернути деталь…"
 
 msgid "Clear Messages"
 msgstr "Прибрати повідомлення"
@@ -1873,9 +1957,6 @@ msgstr "Y у DXF — це"
 msgid "Diameter"
 msgstr "Діаметр"
 
-msgid "Units"
-msgstr "Одиниці"
-
 msgid "inch"
 msgstr "дюйм"
 
@@ -1887,6 +1968,39 @@ msgstr "Лише верхня половина"
 
 msgid "Drop the mirrored half below the axis"
 msgstr "Відкинути дзеркальну половину під віссю"
+
+msgid "Anticlockwise, for a part drawn upright"
+msgstr "Проти годинникової стрілки, для деталі, накресленої вертикально"
+
+msgid "Turn the drawing"
+msgstr "Повернути креслення"
+
+msgid "Front face is on the"
+msgstr "Передній торець"
+
+msgid "Left"
+msgstr "Ліворуч"
+
+msgid "Right"
+msgstr "Праворуч"
+
+msgid "Spindle axis"
+msgstr "Вісь шпинделя"
+
+msgid "At Y0, as drawn"
+msgstr "На Y0, як накреслено"
+
+msgid "At the lowest point (half drawing)"
+msgstr "У найнижчій точці (половина деталі)"
+
+msgid "In the middle (full section)"
+msgstr "Посередині (повний переріз)"
+
+msgid "Front face on Z0"
+msgstr "Передній торець на Z0"
+
+msgid "Moves the drawing so its front face is the part's Z0"
+msgstr "Зсуває креслення так, щоб передній торець був Z0 деталі"
 
 msgid "_Import"
 msgstr "_Імпортувати"
@@ -1972,6 +2086,63 @@ msgstr "Дублювання: {what}"
 msgid "Move operation"
 msgstr "Перемістити операцію"
 
+msgid "The template is gone or damaged"
+msgstr "Шаблону немає або його пошкоджено"
+
+msgid "Template {name}"
+msgstr "Шаблон {name}"
+
+msgid "Added {n} operation from {name}"
+msgid_plural "Added {n} operations from {name}"
+msgstr[0] "Додано {n} операцію з шаблону {name}"
+msgstr[1] "Додано {n} операції з шаблону {name}"
+msgstr[2] "Додано {n} операцій з шаблону {name}"
+
+msgid "Add operations first: a template keeps the operations, not the drawing"
+msgstr "Спершу додайте операції: шаблон зберігає операції, а не креслення"
+
+msgid "Save Operations as Template"
+msgstr "Зберегти операції як шаблон"
+
+msgid "The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to."
+msgstr "Операції з інструментами й параметрами, без креслення. Шаблон бере контури з деталі, до якої його застосовано."
+
+msgid "_Save"
+msgstr "_Зберегти"
+
+msgid "Template"
+msgstr "Шаблон"
+
+msgid "Template “{name}” saved; it is in the Add Operation menu"
+msgstr "Шаблон «{name}» збережено; він у меню «Додати операцію»"
+
+msgid "Save the part first: the second setup becomes a part of its own"
+msgstr "Спершу збережіть деталь: друге встановлення стає окремою деталлю"
+
+msgid "Part length"
+msgstr "Довжина деталі"
+
+msgid "Its back face becomes Z0"
+msgstr "Її задній торець стане Z0"
+
+msgid "Program number"
+msgstr "Номер програми"
+
+msgid "Of the second setup"
+msgstr "Другого встановлення"
+
+msgid "Turn Part Around"
+msgstr "Перевернути деталь"
+
+msgid "A second setup for the other end: the drawing is turned end for end, its back face on Z0, without operations. It opens as a new part; this one stays as it is."
+msgstr "Друге встановлення для іншого кінця: креслення перевертається, його задній торець стає Z0, операцій немає. Воно відкривається як нова деталь; ця залишається як є."
+
+msgid "_Turn Around"
+msgstr "_Перевернути"
+
+msgid "Second setup: {name}, program {n}. Add its operations and save it."
+msgstr "Друге встановлення: {name}, програма {n}. Додайте операції й збережіть його."
+
 msgid "New parts"
 msgstr "Нові деталі"
 
@@ -1992,6 +2163,21 @@ msgstr "Також зберігати креслення ALPHA-T (.SDG)"
 
 msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
+
+msgid "For the estimate on the setup sheet; the tools' surface speeds are on the Tools page"
+msgstr "Для оцінки в карті наладки; швидкості різання інструментів — на сторінці «Інструменти»"
+
+msgid "rpm"
+msgstr "об/хв"
+
+msgid "Rapid rate"
+msgstr "Швидкість прискореного переміщення"
+
+msgid "mm/min"
+msgstr "мм/хв"
+
+msgid "seconds for the operator to change a tool"
+msgstr "секунд оператору на зміну інструмента"
 
 msgid "Language"
 msgstr "Мова"
@@ -2029,9 +2215,6 @@ msgstr "_Створити"
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr "Накресліть профіль: торкайтеся точок або вводьте X,Z і Enter"
 
-msgid "Billet"
-msgstr "Заготовка"
-
 msgid "Billet, chuck jaws and tailstock only change the picture."
 msgstr "Заготовка, кулачки патрона й задня бабка змінюють лише зображення."
 
@@ -2040,9 +2223,6 @@ msgstr "Одиниці креслення"
 
 msgid "Set when the part was made"
 msgstr "Задаються під час створення деталі"
-
-msgid "Program number"
-msgstr "Номер програми"
 
 msgid "Shown on the control"
 msgstr "Показується на системі керування"
@@ -2085,9 +2265,6 @@ msgstr "Деталь має незбережені зміни. Їх буде в�
 
 msgid "_Discard"
 msgstr "_Відкинути"
-
-msgid "_Save"
-msgstr "_Зберегти"
 
 msgid "Export Alpha-T Program"
 msgstr "Експорт програми Alpha-T"

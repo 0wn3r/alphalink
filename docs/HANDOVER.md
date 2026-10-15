@@ -12,7 +12,7 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 | Lathe link | Works with the manual's cable and bridges. Programs load and run (Progress 29). Details in `docs/ALPHA-T_STATUS.md`. |
 | GNOME app | `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Since 2026-10-14: touch work from `app/TOUCH.md`, the workflow improvements' quick wins, a safety check before export, standard threads (metric, UNC, UNF) and corners in one go, right-click menu. Status and design in `app/DESIGN.md`. |
 | Manual Ops | First real backup works (25 ops, O1001, DC2 ... DC4, no %; RE_NOTES Progress 40). Restore of such a file not yet tried on the machine. |
-| Workflow plan | Claude Doc https://claude.ai/code/artifact/8b56ba44-0ceb-4639-bdd9-9030c2ce306a (steps 1-3 done; next: job templates). |
+| Workflow plan | Claude Doc https://claude.ai/code/artifact/8b56ba44-0ceb-4639-bdd9-9030c2ce306a (steps 1-6 done 2026-10-15; left: stock-aware roughing, which needs a dry run on the machine first). |
 | Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample (`app/tests`) except the 7 refused AWAY samples and 3 that differ on purpose (chuck-end picks, GROOVE_back); sub-micron differences on FACE_slope/FACE_arcs and two inch samples. All listed in `app/tests/test_post.py`. |
 | Options | Every ALPHA-T option is sampled. AWAY (area, face, thread) is refused on purpose (ALPHA-T's own output is unsafe); contours picked from the chuck end are cut as if picked from the front. |
 

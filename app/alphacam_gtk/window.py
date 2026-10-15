@@ -175,10 +175,19 @@ class MainWindow(Adw.ApplicationWindow):
         side = Adw.ToolbarView()
         side_header = Adw.HeaderBar()
         add_menu = Gio.Menu()
+        ops_section = Gio.Menu()
         for label, kind in OP_MENU:
             item = Gio.MenuItem.new(label, None)
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
-            add_menu.append_item(item)
+            ops_section.append_item(item)
+        add_menu.append_section(None, ops_section)
+        # job templates (workflow improvements, step 4): a saved list of operations applied to this drawing
+        self.template_section = Gio.Menu()
+        self._fill_templates()
+        add_menu.append_section(_("Templates"), self.template_section)
+        save_tpl = Gio.Menu()
+        save_tpl.append(_("Save Operations as Template…"), "win.save-template")
+        add_menu.append_section(None, save_tpl)
         self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
                                             tooltip_text=_("Add Operation (C)"))
         side_header.pack_start(self.add_op_button)
@@ -307,6 +316,7 @@ class MainWindow(Adw.ApplicationWindow):
         view_menu.append(_("Fit Part"), "win.fit")
         view_menu.append(_("Show Grid"), "win.show-grid")
         view_menu.append(_("Part Settings"), "win.part-settings")
+        view_menu.append(_("Turn Part Around…"), "win.turn-around")
         view_menu.append(_("Clear Messages"), "win.clear-messages")
         menu.append_section(None, view_menu)
         layout = Gio.Menu()
@@ -443,6 +453,9 @@ class MainWindow(Adw.ApplicationWindow):
         self.undo_action = add("undo", lambda *_: self._undo(), ["<Control>z"])
         self.redo_action = add("redo", lambda *_: self._redo(), ["<Control><Shift>z", "<Control>y"])
         add("add-op", lambda a, v: self.add_op(v.get_string()), param=GLib.VariantType.new("s"))
+        add("apply-template", lambda a, v: self.apply_template(v.get_string()), param=GLib.VariantType.new("s"))
+        add("save-template", lambda *_: self.save_template_dialog())
+        add("turn-around", lambda *_: self.turn_around_dialog())
         self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
                                                GLib.Variant.new_string(settings()["input_layout"]))
@@ -505,7 +518,14 @@ class MainWindow(Adw.ApplicationWindow):
                              selected=1 if st["units"] == "inch" else 0)
         half = Adw.SwitchRow(title=_("Upper half only"), active=True,
                              subtitle=_("Drop the mirrored half below the axis"))
-        for r in (y_row, units, half):
+        rotate = Adw.ComboRow(title=_("Turn the drawing"), subtitle=_("Anticlockwise, for a part drawn upright"),
+                              model=Gtk.StringList.new(["0°", "90°", "180°", "270°"]))
+        front = Adw.ComboRow(title=_("Front face is on the"), model=Gtk.StringList.new([_("Right"), _("Left")]))
+        axis = Adw.ComboRow(title=_("Spindle axis"), model=Gtk.StringList.new(
+            [_("At Y0, as drawn"), _("In the middle (full section)"), _("At the lowest point (half drawing)")]))
+        datum = Adw.SwitchRow(title=_("Front face on Z0"), active=True,
+                              subtitle=_("Moves the drawing so its front face is the part's Z0"))
+        for r in (y_row, units, half, rotate, front, axis, datum):
             group.add(r)
         alert.set_extra_child(group)
         alert.add_response("cancel", _("_Cancel"))
@@ -519,7 +539,9 @@ class MainWindow(Adw.ApplicationWindow):
                 return
             try:
                 res = load_dxf(path, y_is="radius" if y_row.get_selected() == 0 else "diameter",
-                               units="inch" if units.get_selected() == 1 else "mm", upper_half=half.get_active())
+                               units="inch" if units.get_selected() == 1 else "mm", upper_half=half.get_active(),
+                               rotate=90 * rotate.get_selected(), front="left" if front.get_selected() else "right",
+                               axis=("as drawn", "middle", "lowest")[axis.get_selected()], datum=datum.get_active())
             except (OSError, ValueError) as e:
                 self.toast(_("Could not open {name}: {error}").format(name=path.name, error=e))
                 return
@@ -813,6 +835,134 @@ class MainWindow(Adw.ApplicationWindow):
             self.refresh()
             self._select_op(i + delta)
 
+    # --- job templates (workflow improvements, step 4) -----------------------------------------------------------
+
+    def _fill_templates(self) -> None:
+        from . import templates as tpl
+
+        self.template_section.remove_all()
+        for i, t in enumerate(tpl.builtin()):
+            item = Gio.MenuItem.new(t["name"], None)
+            item.set_action_and_target_value("win.apply-template", GLib.Variant.new_string(f"builtin:{i}"))
+            self.template_section.append_item(item)
+        for path, t in tpl.user_templates():
+            item = Gio.MenuItem.new(t.get("name") or path.stem, None)
+            item.set_action_and_target_value("win.apply-template", GLib.Variant.new_string(str(path)))
+            self.template_section.append_item(item)
+
+    def apply_template(self, target: str) -> None:
+        from . import templates as tpl
+
+        if self.project is None:
+            return
+        if target.startswith("builtin:"):
+            t = tpl.builtin()[int(target.split(":")[1])]
+        else:
+            t = next((t for path, t in tpl.user_templates() if str(path) == target), None)
+            if t is None:
+                self.toast(_("The template is gone or damaged"))
+                self._fill_templates()
+                return
+        added = {}
+
+        def edit(p):
+            added["n"] = tpl.apply(p, t, self.library)
+        if self.apply_edit(_("Template {name}").format(name=t["name"]), edit):
+            self.refresh()
+            self.toast(ngettext("Added {n} operation from {name}", "Added {n} operations from {name}",
+                                added["n"]).format(n=added["n"], name=t["name"]))
+
+    def save_template_dialog(self) -> None:
+        from . import templates as tpl
+
+        if self.project is None or not self.project.operations:
+            self.toast(_("Add operations first: a template keeps the operations, not the drawing"))
+            return
+        name = Adw.EntryRow(title=_("Name"), text=self.path.stem if self.path else "")
+        group = Adw.PreferencesGroup()
+        group.add(name)
+        alert = Adw.AlertDialog(heading=_("Save Operations as Template"),
+                                body=_("The operations with their tools and settings, without the drawing. A template "
+                                       "picks the contours from the part it is applied to."))
+        alert.set_extra_child(group)
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("save", _("_Save"))
+        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("save")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "save":
+                return
+            label = name.get_text().strip() or _("Template")
+            try:
+                path = tpl.save_user_template(tpl.from_part(self.project, label))
+            except OSError as e:
+                self.toast(_("Could not save {name}: {error}").format(name=label, error=e))
+                return
+            self._fill_templates()
+            self.toast(_("Template “{name}” saved; it is in the Add Operation menu").format(name=label))
+            del path
+
+        alert.connect("response", response)
+        alert.present(self)
+
+    # --- second setup (workflow improvements, step 6) --------------------------------------------------------------
+
+    def turn_around_dialog(self) -> None:
+        from alphacam.setups import part_length, turn_around
+
+        if self.project is None:
+            return
+        if self.undo and self.undo.modified:
+            self.toast(_("Save the part first: the second setup becomes a part of its own"))
+            return
+        inch = self.project.units == "inch"
+        length = Adw.SpinRow.new_with_range(0.001, 5000, 1)
+        length.set_title(_("Part length"))
+        length.set_subtitle(_("Its back face becomes Z0"))
+        length.set_digits(4 if inch else 3)
+        length.set_value(part_length(self.project) or self.project.billet.length)
+        from .op_editor import fit_spin
+
+        fit_spin(length, 0.001, 5000, 4 if inch else 3)  # room for "50.000", not "0.000" cut short
+        prog = Adw.SpinRow.new_with_range(1, 9999, 1)
+        prog.set_title(_("Program number"))
+        prog.set_subtitle(_("Of the second setup"))
+        prog.set_value(min(self.project.program_number + 1, 9999))
+        group = Adw.PreferencesGroup()
+        group.add(length)
+        group.add(prog)
+        alert = Adw.AlertDialog(heading=_("Turn Part Around"),
+                                body=_("A second setup for the other end: the drawing is turned end for end, its back "
+                                       "face on Z0, without operations. It opens as a new part; this one stays as "
+                                       "it is."))
+        alert.set_extra_child(group)
+        alert.add_response("cancel", _("_Cancel"))
+        alert.add_response("turn", _("_Turn Around"))
+        alert.set_response_appearance("turn", Adw.ResponseAppearance.SUGGESTED)
+        alert.set_default_response("turn")
+        alert.set_close_response("cancel")
+
+        def response(_d, r):
+            if r != "turn":
+                return
+            try:
+                new = turn_around(self.project, length.get_value(), int(prog.get_value()))
+            except ValueError as e:
+                self.toast(str(e))
+                return
+            stem = self.path.stem if self.path else (getattr(self, "import_name", None) or "part")
+            self.path, self.import_name = None, f"{stem}-2"
+            self.set_project(new)
+            self.undo.mark_unsaved()
+            self.refresh()
+            self.toast(_("Second setup: {name}, program {n}. Add its operations and save it.").format(
+                name=f"{stem}-2", n=new.program_number))
+
+        alert.connect("response", response)
+        alert.present(self)
+
     def preferences_dialog(self) -> None:
         """ALPHA-T's ATSETUP: defaults for new parts and the language. The serial settings live on the Machine
         page and are remembered there."""
@@ -846,6 +996,20 @@ class MainWindow(Adw.ApplicationWindow):
         sdg.connect("notify::active", lambda r, _p: st.set("export_sdg", r.get_active()))
         export.add(sdg)
         page.add(export)
+        cycle = Adw.PreferencesGroup(title=_("Cycle time"),
+                                     description=_("For the estimate on the setup sheet; the tools' surface speeds "
+                                                   "are on the Tools page"))
+        for key, title, sub, lo, hi, step in (
+                ("spindle_max", _("Spindle limit"), _("rpm"), 100, 10000, 100),
+                ("rapid_rate", _("Rapid rate"), _("mm/min"), 100, 50000, 500),
+                ("tool_change_s", _("Tool change"), _("seconds for the operator to change a tool"), 0, 600, 5)):
+            row = Adw.SpinRow.new_with_range(lo, hi, step)
+            row.set_title(title)
+            row.set_subtitle(sub)
+            row.set_value(float(st[key]))
+            row.connect("notify::value", lambda r, _p, k=key: (st.set(k, r.get_value()), self.sheet.refresh()))
+            cycle.add(row)
+        page.add(cycle)
         lang = Adw.PreferencesGroup(title=_("Language"), description=_("Takes effect after restarting the app."))
         codes = ["", "en", "uk"]
         names = [_("Same as the desktop"), "English", "Українська"]

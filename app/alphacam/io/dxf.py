@@ -1,9 +1,11 @@
 """Import a turned-part profile from DXF (ALPHA-T's ATDXF, reimplemented after tools/dxf2sdl.py).
 
 DXF X is the Z axis (spindle axis), DXF Y the distance from the axis: a radius (usual for lathe drawings) or a
-diameter, as chosen. Entities: LINE, ARC, POLYLINE/VERTEX (bulges), LWPOLYLINE (bulges); CIRCLE, TEXT, INSERT and
-the rest are skipped, as ADXF does. By default only the half at or above the axis is kept (a full-section drawing
-mirrors the part below it)."""
+diameter, as chosen. Entities: LINE, ARC, CIRCLE (two half arcs, as the app draws circles), POLYLINE/VERTEX (bulges),
+LWPOLYLINE (bulges); TEXT, INSERT and the rest are skipped, as ADXF does. A drawing from the office lands in place:
+it can be turned (a part drawn upright), put with its front face on the right, its axis on Y0 (as drawn, the middle
+of a full section, or the lowest point of a half drawing) and its front face on Z0. By default only the half at or
+above the axis is kept (a full-section drawing mirrors the part below it)."""
 
 from __future__ import annotations
 
@@ -52,22 +54,25 @@ def _entities(text: str):
         yield cur
 
 
-def read_dxf(text: str, y_is: str = "radius", units: str = "mm", upper_half: bool = True) -> DxfResult:
-    """y_is: "radius" or "diameter"; units: unit of the DXF and of the new part ("mm" or "inch")."""
+def read_dxf(text: str, y_is: str = "radius", units: str = "mm", upper_half: bool = True, rotate: int = 0,
+             front: str = "right", axis: str = "as drawn", datum: bool = False) -> DxfResult:
+    """y_is: "radius" or "diameter"; units: unit of the DXF and of the new part ("mm" or "inch").
+    rotate: 0, 90, 180 or 270 degrees anticlockwise, first; front: "right" (as the lathe is seen) or "left" (the
+    drawing is mirrored so the front face comes to the right); axis: "as drawn" (DXF Y0), "middle" (a full section:
+    half way between the lowest and the highest point) or "lowest" (a half drawing standing on its axis);
+    datum: put the front face (the largest Z) on Z0."""
     k = 2.0 if y_is == "radius" else 1.0
+    prims: list = []  # ("line", a, b) | ("arc", a, b, c, ccw) in DXF (x, y), before turning and moving
     elements: list = []
     skipped: dict[str, int] = {}
 
-    def pt(x, y) -> Point:
-        return Point(round(k * y, 6), round(x, 6))  # (X diameter, Z)
-
     def add_line(a, b):
         if a != b:
-            elements.append(Line(pt(*a), pt(*b)))
+            prims.append(("line", a, b))
 
     def add_arc(a, b, c, ccw):
         # DXF counter-clockwise in (x, y) = (Z, radius) is counter-clockwise with Z right and X up = G3
-        elements.append(Arc(pt(*a), pt(*b), pt(*c), ccw=ccw))
+        prims.append(("arc", a, b, c, ccw))
 
     def bulge(a, b, bg):
         th = 4 * math.atan(bg)
@@ -94,6 +99,11 @@ def read_dxf(text: str, y_is: str = "radius", units: str = "mm", upper_half: boo
         t = e["type"]
         if t == "LINE":
             add_line((f(10), f(20)), (f(11), f(21)))
+        elif t == "CIRCLE":  # two half arcs, split at the 3 and 9 o'clock points
+            cx, cy, r = f(10), f(20), f(40)
+            if r > 0:
+                add_arc((cx + r, cy), (cx - r, cy), (cx, cy), True)
+                add_arc((cx - r, cy), (cx + r, cy), (cx, cy), True)
         elif t == "ARC":
             cx, cy, r = f(10), f(20), f(40)
             a0, a1 = math.radians(f(50)), math.radians(f(51))
@@ -118,6 +128,31 @@ def read_dxf(text: str, y_is: str = "radius", units: str = "mm", upper_half: boo
             chain([(tuple(p), b) for p, b in verts], int(f(70)) & 1)
         else:
             skipped[t] = skipped.get(t, 0) + 1
+    # turn, mirror, then move the axis and the front face into place (DXF units)
+    def turned(p):
+        x, y = p
+        for _ in range((rotate // 90) % 4):
+            x, y = -y, x
+        return (-x if front == "left" else x, y)
+
+    mirrored = front == "left"
+    pts = [turned(q) for pr in prims for q in pr[1:4] if isinstance(q, tuple)]
+    dy = 0.0
+    if pts and axis == "middle":
+        dy = -(min(y for _, y in pts) + max(y for _, y in pts)) / 2
+    elif pts and axis == "lowest":
+        dy = -min(y for _, y in pts)
+    dx = -max(x for x, _ in pts) if pts and datum else 0.0
+
+    def pt(p) -> Point:
+        x, y = turned(p)
+        return Point(round(k * (y + dy), 6), round(x + dx, 6))  # (X diameter, Z)
+
+    for pr in prims:
+        if pr[0] == "line":
+            elements.append(Line(pt(pr[1]), pt(pr[2])))
+        else:
+            elements.append(Arc(pt(pr[1]), pt(pr[2]), pt(pr[3]), ccw=pr[4] != mirrored))
     if upper_half:
         elements = [g for g in elements if min(g.a.x, g.b.x) >= -1e-9 and
                     not (isinstance(g, Arc) and g.centre.x < -1e-9)]
