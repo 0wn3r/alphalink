@@ -25,7 +25,7 @@ from ..i18n import tr
 
 from ..model.operations import AreaClear
 from ..model.geometry import Point
-from .contour import Seg, mm, points, tip_path, translate, z_at
+from .contour import Seg, limit_dives, mm, points, tip_path, translate, z_at
 from .toolpath import MAX_PASSES, Move, MoveKind, Pass, Toolpath, too_many
 
 RETRACT_MM = 1.0  # RETRACT DIST default
@@ -146,13 +146,17 @@ def _pockets(boundary: list[Seg], side: int = 1) -> list[tuple[int, int, int]]:
     return out
 
 
+def _floor(boundary, pocket, side) -> float:
+    xs = [x for s in boundary[pocket[0]:pocket[1] + 1] for x in (s.a.x, s.b.x)]
+    return min(xs) if side > 0 else max(xs)
+
+
 def _pocket_passes(boundary, pocket, step, angle, retract, feed, zs, decimals, side=1, here_x=None):
     """ALPHA-T's passes for one pocket (DIVE1-3, IDIVE1): see the module docstring. side -1 = internal (mirrored in
     X). here_x: where the tool is (X) before the first pass. Returns (passes, the last line Z)."""
     first, deepest, last = pocket
     corner = boundary[first].a
-    xs = [x for s in boundary[first:deepest + 1] for x in (s.a.x, s.b.x)]
-    floor = min(xs) if side > 0 else max(xs)
+    floor = _floor(boundary, pocket, side)
     s0 = boundary[first]
     drop = side * (s0.a.x - s0.b.x) / 2
     run = abs(s0.a.z - s0.b.z)
@@ -214,10 +218,14 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
     if op.depth_of_cut <= 0:
         raise ValueError(tr("depth of cut must be > 0"))
     boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
+    # ALPHA-T's collision check first: the passes see walls too steep for the tool at the rear angle (RG1, IDIVE2)
+    boundary = limit_dives(boundary, angle, 1 if op.external else -1)
     bx = [p.x for p in points(boundary)]
     step = 2 * op.depth_of_cut
     side = 1 if op.external else -1
-    pockets = _pockets(boundary, side)
+    # pockets shallower than the depth of cut get no passes of their own (RG1: a relief groove 1.3 deep for D2)
+    pockets = [pk for pk in _pockets(boundary, side)
+               if abs(boundary[pk[0]].a.x - _floor(boundary, pk, side)) / 2 >= op.depth_of_cut - 1e-9]
     inside = {k for first, _, last in pockets for k in range(first, last + 1)}
     if op.external:
         start, limit = max(bx), min(p.x for p in points(path)) - 2 * nose_radius

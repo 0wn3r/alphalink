@@ -269,23 +269,51 @@ def limits(pts: list[Point], nose_radius: float) -> tuple[float, float]:
     return min(p.x for p in pts) - 4 * nose_radius, min(p.z for p in pts) - 2 * nose_radius
 
 
+def _cross(a: Point, e: Point, s: Seg) -> Point | None:
+    """Where the line a -> e meets the straight element s (None if they do not meet), in (X diameter, Z)."""
+    (ar, az), (er, ez), (pr, pz), (qr, qz) = _rz(a), _rz(e), _rz(s.a), _rz(s.b)
+    d1r, d1z, d2r, d2z = er - ar, ez - az, qr - pr, qz - pz
+    den = d1r * d2z - d1z * d2r
+    if abs(den) < 1e-12:
+        return None
+    t = ((pr - ar) * d2z - (pz - az) * d2r) / den
+    u = ((pr - ar) * d1z - (pz - az) * d1r) / den
+    if not (1e-9 < t <= 1 + 1e-9 and -1e-9 <= u <= 1 + 1e-9):
+        return None
+    return _pt(ar + t * d1r, az + t * d1z)
+
+
 def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg]:
-    """ALPHA-T's collision check on a profile (external work): a line dropping away from the tool (X falling as Z
-    goes towards the chuck) steeper than the tool's rear clearance angle is replaced by a line at that angle from
-    the same start down to the same diameter, and the next element starts there (FDIVE2: tip path X40 Z-20.671 ->
-    X30 Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way). side -1: internal work,
-    X rising away from the boring bar (FIDIVE2: X50 Z-10.671 -> X60 Z-18.992)."""
+    """ALPHA-T's collision check on a profile: a line dropping away from the tool (external: X falling as Z goes
+    towards the chuck) steeper than the tool's rear clearance angle is replaced by a line at that angle from the same
+    start down to the same diameter, and the next element starts there (FDIVE2: tip path X40 Z-20.671 -> X30
+    Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way). When that line meets a later
+    element first, the far wall of a narrow groove (FRG1: X27.356 Z-23 on the wall at Z-23, above the X26 floor), it
+    ends there and the profile goes on from that point. side -1: internal work, X rising away from the boring bar
+    (FIDIVE2: X50 Z-10.671 -> X60 Z-18.992)."""
     if angle is None or angle <= 0:
         return path
     tan = math.tan(math.radians(angle))
     out = list(path)
-    for k, s in enumerate(out):
+    k = 0
+    while k < len(out):
+        s = out[k]
         drop = side * (s.a.x - s.b.x) / 2
         if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
+            k += 1
             continue
         end = Point(s.b.x, s.a.z - drop / tan)
-        out[k] = Seg(s.a, end)
-        if k + 1 < len(out):
-            n = out[k + 1]
-            out[k + 1] = Seg(end, n.b, n.centre, n.ccw)
+        for j in range(k + 2, len(out)):  # a later element in the way (k + 1 starts at the old end: the floor)
+            if out[j].is_arc:
+                break
+            hit = _cross(s.a, end, out[j])
+            if hit is not None:
+                out[k:j + 1] = [Seg(s.a, hit), Seg(hit, out[j].b)]
+                break
+        else:
+            out[k] = Seg(s.a, end)
+            if k + 1 < len(out):
+                n = out[k + 1]
+                out[k + 1] = Seg(end, n.b, n.centre, n.ccw)
+        k += 1
     return out

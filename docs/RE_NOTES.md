@@ -1240,4 +1240,11 @@ External area clear only; internal pockets and pockets with arcs on the way down
   a page, cursor on the current T3), Return, Down (MC OPTIONS: FEEDRATE -> EXECUTE), Return; area clear INTERNAL is
   `--menu "key Down;key Down;key Down;key Down;key Return"` with `--exec 5`, finish INTERNAL `--menu "key Down;key
   Down;key Return"` with `--exec 2`; the start point decides the end the contour is picked from (X45 Z5 for X50 Z0).
+- Narrow undercuts (2026-10-16): AREA_relief_groove (`0,0 30,0 30,-20 26,-20 26,-23 40,-23 40,-40 100,-40`, a thread
+  relief groove), FINISH_relief_groove and AREA_groove_and_dive (that groove at Z-10 plus the DIVE1 dive), all T3.
+  The 31 deg line from the groove's top corner meets the far wall (Z-23) before the X26 floor, so the profile goes
+  from the corner to that point (tip X27.356 Z-23, SD1 X28.1562 Z-22.6) and up the far wall: the floor is dropped.
+  The area clear then gives the groove no passes: what is left of it is 1.3 deep on the radius, less than the
+  depth of cut 2 (the German manual: pockets shallower than the depth of cut are ignored). The groove needs a
+  grooving tool; the app's safety check reports the floor the finish pass cannot reach.
 

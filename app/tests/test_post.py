@@ -37,7 +37,8 @@ MET2 = ["g0", "g1", "g2", "g3", "g4"]  # contour picked from the axis (X0 Z0) to
 ARC = ["g0", "g1", "g2", "g5", "g3", "g6", "g4"]  # MET2 with R5 (g5) and R3 (g6) corners, in pick order
 INT = ["g0", "g1", "g2", "g3"]  # bore X50 Z0 -> X20 Z-40
 S = Point(120, 5)
-DIVE = ["g0", "g1", "g2", "g3", "g4", "g5"]  # X0 Z0 up the face, along the shoulder, down into the undercut, out
+DIVE = ["g0", "g1", "g2", "g3", "g4", "g5"]
+RELIEF = ["g0", "g1", "g2", "g3", "g4", "g5", "g6"]  # X0 Z0 up the face, along the shoulder, down into the undercut, out
 GOLDEN = {
     "MET2_finish_metric": [FinishPass(3, S, MET2)],
     "MET2_finish_inch": [FinishPass(3, Point(5, 0.2), MET2)],
@@ -80,6 +81,11 @@ GOLDEN = {
     "DIVE2_metric": [AreaClear(3, S, DIVE)],
     "DIVE3_metric": [AreaClear(3, S, DIVE)],
     "FINISH_dive2_metric": [FinishPass(3, S, DIVE)],  # the finish pass takes the steep wall at 31 degrees too
+    # a thread relief groove (X26, 3 wide): the 31-degree line meets the far wall above the floor, and the groove is
+    # shallower than the depth of cut, so it gets no passes; then the groove and a dive (two undercuts)
+    "AREA_relief_groove_metric": [AreaClear(3, S, RELIEF)],
+    "FINISH_relief_groove_metric": [FinishPass(3, S, RELIEF)],
+    "AREA_groove_and_dive_metric": [AreaClear(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"])],
     # the same inside a bore with T12 (55 deg boring bar, rear -31): an undercut, a steep one, its finish pass
     "AREA_int_dive1_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
                                                                               external=False)],
