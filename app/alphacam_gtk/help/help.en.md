@@ -176,7 +176,7 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 - **F** radius at the corner nearest the cursor, **O** blend arc between two elements (ALPHA-T's 2 PKT RADIUS, More ▸ Blend Arc), **K** trim corner (the Corner tool).
 - **M** measures X and Z between two points, **N** length and angle. Tap the points, or move the cursor and press Enter; the nearest point is used.
 - **T** puts text at the cursor, **U** erases the nearest text.
-- **Q** erases all of the drawing after asking (Enter erases, Esc does not). Undo brings it back.
+- **Q** erases all of the drawing after asking (Enter erases, Esc does not). Undo brings it back. By touch: **More ▸ Erase Drawing…**.
 - **Z** zooms in, **R** redraws the whole part, **V** goes back to the view before.
 - **C** opens the operations menu (ALPHA-T's CAM menu).
 - The arrow keys move the cursor, PgUp and PgDn make the step 10 times bigger or smaller, Home puts it in the middle of the view, End on X0 Z0, and Enter takes it as the next point.

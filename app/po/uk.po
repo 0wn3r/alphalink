@@ -295,9 +295,6 @@ msgstr "торцеві канавки: лише зовнішні, режим are
 msgid "face grooving"
 msgstr "торцеві канавки"
 
-msgid "grooving finish: lines only (no sample with arcs)"
-msgstr "чистовий режим канавки: лише лінії (немає зразка з дугами)"
-
 msgid "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the app does not offer it; use TOWARDS"
 msgstr "різьба AWAY: сама ALPHA-T у цьому режимі починає кожен прохід усередині різьби, тому програма його не пропонує; використовуйте «До патрона»"
 
@@ -411,6 +408,9 @@ msgstr "Торкніться кута або поставте біля ньог�
 
 msgid "Tap two lines, or move the cursor to each and press Enter"
 msgstr "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter"
+
+msgid "Erase Drawing…"
+msgstr "Стерти креслення…"
 
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
