@@ -29,6 +29,7 @@ use regex::Regex;
 
 use super::{ascii_replace, py_float, py_strip, read_file};
 use crate::error::{Error, Result, not_implemented, value};
+use crate::drawing::{outer_profile, pick_order};
 use crate::i18n::tr;
 use crate::model::{
     AreaClear, Datum, Drill, Dwell, Element, FaceClear, FinishPass, Groove, GrooveMode, MoveTo, Operation, Point,
@@ -36,7 +37,6 @@ use crate::model::{
 };
 use crate::post::alphat_prg::post;
 use crate::py::round;
-use crate::toolpath::contour::chain;
 
 static RE_WORD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"([A-Z])(-?\d*\.?\d+)").unwrap());
 
@@ -85,105 +85,6 @@ impl Words {
 
 fn gs_of(line: &str) -> Result<Vec<i64>> {
     Ok(Words::parse(line)?.gs)
-}
-
-// --- the drawing's chain (drawing.pick_order / outer_profile) ---------------------------------------------
-
-/// Contour picking (TOUCH.md 7.1): keep the tapped elements, ordered as a connected chain from the first.
-fn pick_order(project: &Project, picked: &[String]) -> Result<Vec<String>> {
-    // the last element with an id wins, like a dict built from the list
-    let by_id = |id: &str| project.geometry.iter().rev().find(|g| g.id() == id);
-    let elems: Vec<&Element> = picked.iter().filter_map(|i| by_id(i)).collect();
-    let Some((&first, rest)) = elems.split_first() else {
-        return Ok(vec![]);
-    };
-    let (mut remaining, mut order) = (rest.to_vec(), vec![first]);
-    let mut path = chain(&[first])?;
-    while !remaining.is_empty() {
-        let (start, end) = (path[0].a, path[path.len() - 1].b);
-        let touches = |e: &&Element, p: Point| e.a() == p || e.b() == p;
-        let k = match remaining.iter().position(|e| touches(e, end)) {
-            Some(k) => {
-                order.push(remaining[k]);
-                k
-            }
-            None => {
-                let Some(k) = remaining.iter().position(|e| touches(e, start)) else {
-                    return value(tr("{id} does not connect to the picked contour", &[("id", &remaining[0].id())]));
-                };
-                order.insert(0, remaining[k]);
-                k
-            }
-        };
-        remaining.remove(k);
-        path = chain(&order)?;
-    }
-    Ok(order.iter().map(|e| e.id().to_string()).collect())
-}
-
-/// Element ids grouped by connection (elements that share an end point), each group in drawing order.
-fn components(project: &Project) -> Vec<Vec<String>> {
-    let elems = &project.geometry;
-    // union-find over element indices; the first element with an id stands for it, like the id-keyed dict
-    let first = |id: &str| elems.iter().position(|g| g.id() == id).unwrap();
-    let mut parent: Vec<usize> = (0..elems.len()).collect();
-    fn find(parent: &mut [usize], mut i: usize) -> usize {
-        while parent[i] != i {
-            parent[i] = parent[parent[i]];
-            i = parent[i];
-        }
-        i
-    }
-    let mut at: Vec<(Point, usize)> = vec![];
-    for g in elems {
-        let gi = first(g.id());
-        for p in [g.a(), g.b()] {
-            match at.iter().find(|(q, _)| *q == p) {
-                Some(&(_, other)) => {
-                    let (a, b) = (find(&mut parent, gi), find(&mut parent, other));
-                    parent[a] = b;
-                }
-                None => at.push((p, gi)),
-            }
-        }
-    }
-    let mut groups: Vec<(usize, Vec<String>)> = vec![];
-    for g in elems {
-        let root = find(&mut parent, first(g.id()));
-        match groups.iter_mut().find(|(r, _)| *r == root) {
-            Some((_, ids)) => ids.push(g.id().to_string()),
-            None => groups.push((root, vec![g.id().to_string()])),
-        }
-    }
-    groups.into_iter().map(|(_, ids)| ids).collect()
-}
-
-/// The part's profile: the connected chain that starts on the axis at the front (X0 at the largest Z), or else the
-/// longest chain; thread minor-diameter lines and other loose construction lines are left out.
-fn outer_profile(project: &Project) -> Vec<String> {
-    let groups = components(project);
-    let by_id = |id: &str| project.geometry.iter().rev().find(|g| g.id() == id).unwrap();
-    let front_axis = |group: &[String]| {
-        group
-            .iter()
-            .flat_map(|i| [by_id(i).a(), by_id(i).b()])
-            .filter(|p| p.x.abs() < 1e-9)
-            .map(|p| p.z)
-            .fold(f64::NEG_INFINITY, f64::max)
-    };
-    let length = |group: &[String]| group.iter().map(|i| by_id(i).a().distance(&by_id(i).b())).sum::<f64>();
-    // max() by (starts on the axis, its Z there, length): the first of equal groups wins
-    type Key = (bool, f64, f64);
-    let key = |g: &[String]| -> Key { (front_axis(g) > f64::NEG_INFINITY, front_axis(g), length(g)) };
-    let mut best: Option<(&Vec<String>, Key)> = None;
-    for g in &groups {
-        let k = key(g);
-        if best.is_none_or(|(_, b)| k.partial_cmp(&b) == Some(std::cmp::Ordering::Greater)) {
-            best = Some((g, k));
-        }
-    }
-    let Some((best, _)) = best else { return vec![] };
-    pick_order(project, best).unwrap_or_else(|_| best.clone())
 }
 
 // --- the listing ------------------------------------------------------------------------------------------

@@ -1,8 +1,10 @@
-//! The command line: `post` gives the same bytes as the Python app (stdout and -o), `dump` and `--sd1` say what is
-//! not ported yet instead of doing something else.
+//! The command line against the Python app's (`python -m alphacam`): the same exit status, stdout, stderr and
+//! written files for every case tools/export_rust_cli_fixtures.py recorded, run from the repository root.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;
+
+use serde_json::Value;
 
 fn fixtures() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR")).join("../alphacam/tests/fixtures/post")
@@ -29,26 +31,33 @@ fn post_to_stdout_and_file() {
 }
 
 #[test]
-fn post_with_sd1_is_not_ported_yet() {
-    let target = std::env::temp_dir().join(format!("alphacam-cli-test-{}.SD1", std::process::id()));
-    let out = alphacam()
-        .args(["post", "--sd1"])
-        .arg(&target)
-        .arg(fixtures().join("example_area_clear.alcam"))
-        .output()
-        .unwrap();
-    assert_eq!(out.status.code(), Some(1));
-    assert!(out.stdout.is_empty());
-    assert!(String::from_utf8_lossy(&out.stderr).contains("not ported to Rust yet"));
-    assert!(!target.exists());
-}
-
-#[test]
-fn dump_reports_each_file() {
-    let out = alphacam().args(["dump", "A.PRG", "B.PRG", "--moves"]).output().unwrap();
-    assert_eq!(out.status.code(), Some(1));
-    let err = String::from_utf8_lossy(&out.stderr);
-    assert!(err.contains("A.PRG: not ported to Rust yet") && err.contains("B.PRG: "), "{err}");
+fn same_as_the_python_cli() {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/cases.json");
+    let cases: Value = serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+    let cases = cases.as_object().unwrap();
+    assert!(cases.len() >= 9);
+    for (name, case) in cases {
+        let scratch = std::env::temp_dir().join(format!("alphacam-cli-test-{}-{name}", std::process::id()));
+        std::fs::create_dir_all(&scratch).unwrap();
+        let out_dir = scratch.to_str().unwrap();
+        let args: Vec<String> =
+            case["args"].as_array().unwrap().iter().map(|a| a.as_str().unwrap().replace("{out}", out_dir)).collect();
+        let out = alphacam().args(&args).current_dir(&root).output().unwrap();
+        assert_eq!(out.status.code(), case["status"].as_i64().map(|s| s as i32), "{name}");
+        assert_eq!(String::from_utf8_lossy(&out.stdout), case["stdout"].as_str().unwrap(), "{name}: stdout");
+        assert_eq!(String::from_utf8_lossy(&out.stderr), case["stderr"].as_str().unwrap(), "{name}: stderr");
+        let mut written: Vec<String> =
+            std::fs::read_dir(&scratch).unwrap().map(|e| e.unwrap().file_name().into_string().unwrap()).collect();
+        written.sort();
+        let expected = case["files"].as_object().unwrap();
+        assert_eq!(written, expected.keys().cloned().collect::<Vec<_>>(), "{name}: files");
+        for (file, text) in expected {
+            let got = std::fs::read(scratch.join(file)).unwrap();
+            assert_eq!(String::from_utf8_lossy(&got), text.as_str().unwrap(), "{name}: {file}");
+        }
+        std::fs::remove_dir_all(&scratch).unwrap();
+    }
 }
 
 #[test]

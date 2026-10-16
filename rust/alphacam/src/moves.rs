@@ -21,7 +21,7 @@ pub struct Segment {
     /// arcs
     pub centre: Option<(f64, f64)>,
     /// PRG block label (N10, N20 ...)
-    pub block: u32,
+    pub block: i64,
     /// #121 pass within the block (0 outside passes)
     pub pass_no: i64,
 }
@@ -59,7 +59,7 @@ impl Segment {
 
 pub fn segments(preview: &Preview) -> Vec<Segment> {
     let Some(program) = &preview.program else { return vec![] };
-    let owner: HashMap<u32, Option<usize>> =
+    let owner: HashMap<i64, Option<usize>> =
         preview.ops.iter().flat_map(|op| op.blocks.iter().map(|b| (b.label, op.op_index))).collect();
     let mut out = vec![];
     let mut pos: Option<(f64, f64)> = None;

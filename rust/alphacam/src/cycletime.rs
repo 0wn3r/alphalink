@@ -88,7 +88,7 @@ pub fn estimate(project: &Project, preview: &Preview, library: Option<&ToolLibra
     let mut est = Estimate { machine, ..Estimate::default() };
     let Some(program) = &preview.program else { return est };
     let k = if project.units == "inch" { 25.4 } else { 1.0 }; // everything below in mm
-    let owner: HashMap<u32, Option<usize>> =
+    let owner: HashMap<i64, Option<usize>> =
         preview.ops.iter().flat_map(|op| op.blocks.iter().map(|b| (b.label, op.op_index))).collect();
     let mut pos: Option<(f64, f64)> = None;
     for block in &program.blocks {
@@ -96,16 +96,17 @@ pub fn estimate(project: &Project, preview: &Preview, library: Option<&ToolLibra
         if name == "tool_change" {
             est.tool_changes += 1;
         }
-        let tool = block.tool().filter(|n| *n != 0).and_then(|n| tool(project, n, library));
+        let tool = block.tool().filter(|n| *n != 0).and_then(|n| tool(project, i32::try_from(n).ok()?, library));
         let feed = block.feed().unwrap_or(0.0) * k; // mm/rev (threads: the pitch)
         let i = owner.get(&block.label).copied().flatten();
         if pos.is_none() && block.start().is_some() {
             pos = block.start();
         }
         // threads and drills turn at one speed: the largest diameter of the block
+        let moves = block.moves();
         let mut fixed = None;
         if matches!(name.as_str(), "thread" | "thread_spring" | "drill") {
-            let xs = block.moves().filter_map(|m| m.x.map(f64::abs));
+            let xs = moves.iter().filter_map(|m| m.x.map(f64::abs));
             let mut d = xs.reduce(|a, b| if b > a { b } else { a }).unwrap_or(0.0) * k;
             if let Some(t) = tool.filter(|t| name == "drill" && t.width != 0.0) {
                 d = t.width; // the drill's own diameter (library sizes are mm)
@@ -113,7 +114,7 @@ pub fn estimate(project: &Project, preview: &Preview, library: Option<&ToolLibra
             fixed = Some(rpm(tool, d, &machine)).filter(|r| *r != 0.0);
         }
         let mut t = 0.0;
-        for m in block.moves() {
+        for m in &moves {
             if m.kind == MoveKind::Dwell {
                 let speed = fixed.unwrap_or_else(|| rpm(tool, pos.map_or(0.0, |p| p.0) * k, &machine));
                 t += 60.0 * m.dwell_revs.unwrap_or(0.0) / speed;
