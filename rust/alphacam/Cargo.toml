@@ -12,3 +12,19 @@ serde_json.workspace = true
 thiserror.workspace = true
 rust_decimal.workspace = true
 regex.workspace = true
+serialport = { workspace = true, optional = true }
+socket2 = { workspace = true, optional = true }
+zbus = { workspace = true, optional = true }
+
+[dev-dependencies]
+# the link tests play the control on a pty pair and a socket pair
+serialport.workspace = true
+socket2.workspace = true
+
+[features]
+default = ["serial"]
+# Opening real ports: serialport for tty devices, an RFCOMM socket for bt:// addresses. The transfers in
+# alphacam::link (send, receive, loopback) work on any `Port` without it.
+serial = ["dep:serialport", "dep:socket2"]
+# list_ports also lists paired Bluetooth serial adapters, from BlueZ over D-Bus.
+bluez = ["serial", "dep:zbus"]
