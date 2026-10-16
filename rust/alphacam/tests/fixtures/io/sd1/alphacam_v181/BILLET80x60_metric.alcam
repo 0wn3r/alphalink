@@ -1,0 +1,40 @@
+{
+ "format": "alcam/1",
+ "units": "mm",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 80.0,
+  "length": 60.0,
+  "face_allowance": 0.8,
+  "bore": 0.0,
+  "jaws": "external",
+  "tailstock": false
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 80.0
+ },
+ "tool_change": {
+  "x": 100.0,
+  "z": 50.0
+ },
+ "program_number": 10,
+ "first_tool": 1,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [0.0, 0.0],
+   "b": [40.0, -10.0],
+   "id": "g0"
+  }
+ ],
+ "operations": [
+  {
+   "type": "tool_change",
+   "tool": 1,
+   "change_point": [100.0, 50.0],
+   "feed": 0.15
+  }
+ ]
+}

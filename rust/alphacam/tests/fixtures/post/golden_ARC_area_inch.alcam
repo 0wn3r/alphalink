@@ -1,0 +1,90 @@
+{
+ "format": "alcam/1",
+ "units": "inch",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 4.724409,
+  "length": 3.937008,
+  "face_allowance": 0.8,
+  "bore": 0.0,
+  "jaws": "external",
+  "tailstock": false
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 120.0
+ },
+ "tool_change": {
+  "x": 3.937,
+  "z": 1.9685
+ },
+ "program_number": 10,
+ "first_tool": 3,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [0.0, 0.0],
+   "b": [1.6, 0.0],
+   "id": "g0"
+  },
+  {
+   "type": "line",
+   "a": [1.6, 0.0],
+   "b": [1.6, -1.0],
+   "id": "g1"
+  },
+  {
+   "type": "line",
+   "a": [1.6, -1.0],
+   "b": [2.0, -1.0],
+   "id": "g2"
+  },
+  {
+   "type": "line",
+   "a": [2.4, -1.2],
+   "b": [2.4, -1.88],
+   "id": "g3"
+  },
+  {
+   "type": "line",
+   "a": [2.64, -2.0],
+   "b": [4.0, -2.0],
+   "id": "g4"
+  },
+  {
+   "type": "arc",
+   "a": [2.0, -1.0],
+   "b": [2.4, -1.2],
+   "centre": [2.0, -1.2],
+   "ccw": true,
+   "id": "g5"
+  },
+  {
+   "type": "arc",
+   "a": [2.4, -1.88],
+   "b": [2.64, -2.0],
+   "centre": [2.64, -1.88],
+   "ccw": false,
+   "id": "g6"
+  }
+ ],
+ "operations": [
+  {
+   "type": "area_clear",
+   "tool": 3,
+   "start": [5.0, 0.2],
+   "contour": ["g0", "g1", "g2", "g5", "g3", "g6", "g4"],
+   "depth_of_cut": 0.0787,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "feed": 0.15,
+   "towards": true,
+   "pre_finish": false,
+   "external": true,
+   "front": true,
+   "retract": null,
+   "follow": false
+  }
+ ]
+}
