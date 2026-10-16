@@ -650,6 +650,12 @@ impl MainWindow {
         self.setup_lock();
         self.guard_list_taps();
         self.setup_op_keys();
+        // a finger on any dialog's number opens the keypad (POINTER_KEYBOARD.md 11)
+        self.connect_visible_dialog_notify(|win| {
+            if let Some(dlg) = win.visible_dialog() {
+                crate::op_editor::keypad_on_touch_all(&dlg);
+            }
+        });
         self.setup_program_keys();
         self.set_font(imp.font_pt.get());
         self.install_actions();

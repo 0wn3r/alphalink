@@ -31,8 +31,8 @@ is the implementation; the Python app is frozen.
 | 9 | Hold to send by Space / Enter 🧪; confirmations default to Cancel, Alt+S sends 🧪 | ✓ |
 | 9 | Escape closes dialogs and the keypad before it cancels or deselects 🧪 | ✓ |
 | 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✗ |
-| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✗ (op editor only) |
-| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ (`i` ✗) |
+| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✓ (finger; pen with §10) |
+| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ |
 | 12 | The Shortcuts window matches what the keys do | ✓ |
 
 ## 1. Who uses which input
@@ -168,9 +168,9 @@ The pen is precise, so it keeps the pointer layout's density, but it cannot type
 
 `keypad_on_touch` (the op editor's numbers) becomes the rule for **every** number field a finger or pen can reach:
 Edit Values…, New Part (billet), Preferences, the Tools page, the construction dialogs, the fillet "Other" size and
-the Machine page delay (✗). A still tap opens the keypad with that one field; a swipe scrolls; −/+ step.
+the Machine page delay (✓). A still tap opens the keypad with that one field; a swipe scrolls; −/+ step.
 
-In the keypad, `i` toggles ABS / INC (✗), since Tab is "next field".
+In the keypad, `i` toggles ABS / INC (✓), since Tab is "next field".
 
 ## 12. Shortcuts window corrections
 

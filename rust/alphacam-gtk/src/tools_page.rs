@@ -254,6 +254,7 @@ impl ToolsPage {
             row.set_digits(digits);
             row.set_value(*number_field(&mut t, field));
             fit_spin(&row, lo, hi, digits);
+            crate::op_editor::keypad_on_touch(&row);
             row.connect_value_notify(glib::clone!(#[weak(rename_to = this)] self, move |r| {
                 let value = round(r.value(), digits as usize);
                 // the list shows the nose radius
