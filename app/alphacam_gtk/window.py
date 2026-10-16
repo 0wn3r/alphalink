@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 
 import gi
@@ -33,6 +34,10 @@ from .op_editor import OpEditor  # noqa: E402, F401
 from .op_factory import OP_MENU, default_op, find_tool, tool_for  # noqa: E402
 from .billet import units_follow  # noqa: E402
 from .ui import builder, template  # noqa: E402
+
+# a touch this soon after the Operations list scrolled stops its glide; it does not pick an operation
+LIST_GLIDE_S = 0.3
+TAP_SLOP_PX = 12  # a touch that travels further than this is a swipe
 
 OP_TITLES = {
     "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
@@ -143,6 +148,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.input_mode.connect("changed", lambda _m, mode: (self.zoom_box.set_visible(mode == "touch"),
                                                              self.drawing.set_touch(mode == "touch")))
         self._setup_lock()
+        self._guard_list_taps()
         self._install_actions()
         self.editor._apply = self.apply_edit_from_editor
         self.editor.on_move = self._move_selected
@@ -234,6 +240,53 @@ class MainWindow(Adw.ApplicationWindow):
         self._set_font(self._pinch_base * scale)
 
     # --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
+
+    def _guard_list_taps(self) -> None:
+        """A touch that lands on the Operations list while it is still gliding after a swipe stops it; it is not a
+        tap on an operation (Eduard 2026-10-16: swiping through the list kept selecting operations). Neither is a
+        touch that travels (a swipe the list could not follow, at its end). The list's own selection on such a touch
+        is undone."""
+        adj = self.op_list.get_ancestor(Gtk.ScrolledWindow).get_vadjustment()
+        state = {"moved": 0.0, "stop": False, "swipe": False, "before": None}
+        self._suppress_select = False
+        self._suppress_restore = None
+        adj.connect("value-changed", lambda *_: state.update(moved=time.monotonic()))
+
+        def pressed(*_):
+            state.update(before=self.selected_index(),
+                         stop=time.monotonic() - state["moved"] < LIST_GLIDE_S)
+
+        def released(*_):
+            if state["stop"] or state["swipe"]:
+                self._suppress_select = True
+                self._suppress_restore = state["before"]
+                GLib.idle_add(lambda: setattr(self, "_suppress_select", False))
+
+        tap = Gtk.GestureClick(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        tap.connect("pressed", pressed)
+        tap.connect("released", released)
+        self.op_list.add_controller(tap)
+
+        # a swipe that scrolled the list counts as moving it until the finger lifts (a drag, a pause, a lift and a
+        # quick touch is still scrolling); the click gesture above is cancelled by such a swipe, so watch the events
+        def touch(ctl, event):
+            event = event or ctl.get_current_event()
+            kind = event.get_event_type() if event is not None else None
+            if kind not in (Gdk.EventType.TOUCH_BEGIN, Gdk.EventType.TOUCH_END, Gdk.EventType.TOUCH_CANCEL):
+                return False
+            _ok, x, y = event.get_position()
+            if kind == Gdk.EventType.TOUCH_BEGIN:
+                state.update(at=(x, y), swipe=False)
+            else:  # the finger travelled: a swipe, however the list took it (it may be at its end)
+                ax, ay = state.get("at", (x, y))
+                state["swipe"] = abs(x - ax) + abs(y - ay) > TAP_SLOP_PX
+                if state["swipe"]:
+                    state["moved"] = time.monotonic()
+            return False
+
+        watch = Gtk.EventControllerLegacy(propagation_phase=Gtk.PropagationPhase.CAPTURE)
+        watch.connect("event", touch)
+        self.op_list.get_ancestor(Gtk.ScrolledWindow).add_controller(watch)
 
     def _setup_lock(self) -> None:
         im = self.input_mode
@@ -1186,6 +1239,16 @@ class MainWindow(Adw.ApplicationWindow):
     @Gtk.Template.Callback()
     def _row_selected(self, listbox, row) -> None:
         if self._select_guard:
+            return
+        if self._suppress_select:  # the touch only stopped the list: put the selection back as it was
+            self._suppress_select = False
+            before = self._suppress_restore
+            self._select_guard = True
+            if before is None:
+                listbox.unselect_all()
+            else:
+                listbox.select_row(listbox.get_row_at_index(before))
+            self._select_guard = False
             return
         index = None if row is None else row.get_index()
         self.canvas.select(index)

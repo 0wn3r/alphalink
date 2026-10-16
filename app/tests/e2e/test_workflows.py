@@ -796,6 +796,30 @@ class TouchPlacement(Surface):
         q = self.saved(path)
         self.assertAlmostEqual(q.operations[0].feed, 0.2, places=6)
 
+    def test_swipes_on_editor_numbers_scroll_not_edit(self):
+        """A swipe that starts on a number, on − or on + scrolls the editor: no keypad, no new value (Eduard
+        2026-10-16). A still tap on + still steps the value."""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        top = self.app.rect(self.app.labelled("5 elements", "list item"))
+        sw = self.app.rect(self.app.all("Towards the chuck", "switch")[0])
+        h = (sw[1] - (top[1] + top[3])) / 4
+        y = top[1] + top[3] + h / 2  # Depth of cut
+        right = sw[0] + sw[2]
+        for x in (right - 160, right - 82, right - 24):  # the number, −, +
+            for dy in (-180, 180):
+                self.s.input.touches([(x, y)], [(x, y + dy)], 15, 0.02)
+                time.sleep(0.6)
+                self.assertFalse(self.app.exists("✓", "button"), f"keypad opened by a swipe from x {x}")
+        self.snap("swiped")
+        q = self.saved(path)
+        before = with_op().operations[0]
+        for name in ("depth_of_cut", "offset_x", "offset_z", "feed"):
+            self.assertAlmostEqual(getattr(q.operations[0], name), getattr(before, name), places=6, msg=name)
+
 
 class TouchMovePoint(Surface):
     """TOUCH.md 5.1/5.2: drag a selected element's end handle; the loupe shows the point; the profile stays joined."""
@@ -921,6 +945,50 @@ class TouchMore2(Surface):
         time.sleep(0.6)
         self.snap("closed")
         self.assertFalse(search_entries(), "the search bar is still open")
+
+
+class TouchScroll(Surface):
+    """A swipe in the Operations list scrolls it and selects nothing (Eduard 2026-10-16: scrolling was taken as a tap)."""
+
+    def selected(self):
+        from gi.repository import Atspi
+
+        return [a for a in self.app.all(None, "list item")
+                if a.get_state_set().contains(Atspi.StateType.SELECTED)]
+
+    def test_swipes_in_the_operations_list_select_nothing(self):
+        p = with_op("area_clear")
+        from alphacam_gtk.op_factory import default_op
+
+        for k in range(1, 60):
+            p.operations.append(default_op("finish" if k % 2 else "area_clear", p, k))
+        self.launch(str(self.part(p)), "--touch")
+        items = self.app.all(None, "list item")
+        x0, y0, w, h = self.app.rect(items[0])
+        x = x0 + w * 0.4
+        top, bottom = y0 + 2 * h, y0 + 8 * h
+        self.s.scroll(x, (top + bottom) / 2, 12)  # into the middle: a swipe never runs into an end of the list
+        self.s.tap(x, (top + bottom) / 2)  # (the first touch after the wheel; not a swipe)
+        time.sleep(0.6)
+        self.s.key("Escape")
+        time.sleep(0.4)
+        for steps, hold in ((12, 0.02), (30, 0.02), (6, 0.0), (40, 0.3)):  # quick, slow, flick, drag-and-pause
+            for a, b in (((x, bottom), (x, top)), ((x, top), (x, bottom))):
+                self.s.input.touches([a], [b], steps, hold)
+                time.sleep(0.8)
+                self.assertEqual(self.selected(), [], f"selected after a swipe of {steps} steps")
+            for a, b in (((x, bottom), (x, top)), ((x, top), (x, bottom))):
+                self.s.input.touches([a], [b], steps, hold)
+                time.sleep(0.1)
+                self.s.tap(x, (top + bottom) / 2)  # a touch that stops the glide is not a tap on an operation
+                time.sleep(0.8)
+                self.assertEqual(self.selected(), [], f"selected by the touch stopping a swipe of {steps} steps")
+        self.snap("scrolled")
+        # a real tap still selects (on the swipes' spot: the rows' accessible positions lag behind the scrolling)
+        time.sleep(0.5)
+        self.s.tap(x, (top + bottom) / 2)
+        time.sleep(0.8)
+        self.assertEqual(len(self.selected()), 1)
 
 
 class QuickWinsUI(Surface):
