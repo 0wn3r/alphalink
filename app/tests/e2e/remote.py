@@ -137,15 +137,18 @@ class Remote:
         from PIL import Image
 
         os.environ.setdefault("PIPEWIRE_RUNTIME_DIR", os.environ["XDG_RUNTIME_DIR"])
-        p = Gst.parse_launch(f"pipewiresrc path={self.node} always-copy=true num-buffers=2 ! videoconvert ! "
-                             "video/x-raw,format=RGB ! appsink name=sink sync=false")
-        sink = p.get_by_name("sink")
-        p.set_state(Gst.State.PLAYING)
         sample = None
-        for _ in range(2):
-            s = sink.emit("try-pull-sample", 5 * Gst.SECOND)
-            sample = s or sample
-        p.set_state(Gst.State.NULL)
+        for _attempt in range(3):  # a busy machine (CI) now and then gives no frame in time: connect again
+            p = Gst.parse_launch(f"pipewiresrc path={self.node} always-copy=true num-buffers=2 ! videoconvert ! "
+                                 "video/x-raw,format=RGB ! appsink name=sink sync=false")
+            sink = p.get_by_name("sink")
+            p.set_state(Gst.State.PLAYING)
+            for _ in range(2):
+                s = sink.emit("try-pull-sample", 5 * Gst.SECOND)
+                sample = s or sample
+            p.set_state(Gst.State.NULL)
+            if sample is not None:
+                break
         if sample is None:
             raise TimeoutError("no frame from the screen cast")
         caps = sample.get_caps().get_structure(0)
