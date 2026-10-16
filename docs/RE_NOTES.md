@@ -1268,4 +1268,18 @@ External area clear only; internal pockets and pockets with arcs on the way down
   and the profile goes on along that radius (G2 to X36 Z-29.6): the near wall, the near radius and the floor are
   dropped. The area clear's pocket levels are 36, 32 and then the "floor" (that meeting point): there is nothing to
   cut there, but ALPHA-T still writes the pass's block (#121=29, only the final retract) and #120 / SD1 H count 28.
+- More undercut combinations (2026-10-16 afternoon):
+  - OFFSET X,Z (AREA_offset_dive2, U0.2 W0.1; the prompt takes "0.2,0.1", then Enter twice more): the rear-angle
+    line of the pocket passes starts W *towards* the chuck from the offset corner (Z-38.214, not -37.814); the rest
+    is the profile moved by the offsets as usual. The SD1 lists the profile without offsets, as before.
+  - Two-line dive (AREA_two_line_dive: a 63 deg line then an 18 deg one): matched without changes.
+  - Rounded shoulder (AREA_rounded_shoulder_groove, R2 over a groove wall): the radius is followed until its
+    tangent is as steep as the rear angle (SD1 G3 to X40.1144 Z-19.2361), then a straight line at that angle
+    (X30.8 Z-26.987); the pocket passes use that line (contour.limit_dives / _arc_turn).
+  - T1 (80 deg rougher, rear 7 deg): the relief groove matches (AREA_T1_relief_groove). On the DIVE1 shape the
+    7 deg line from the corner magnifies ALPHA-T's single-precision corner: 0.0001 in the SD1, 0.002 in a PRG Z;
+    that run (TONE) is kept out of the goldens. It also ends with an empty floor pass, like RADG.
+  - A contour ending on a groove floor (AREA_ends_in_groove, `0,0 40,0 40,-20 30,-20 30,-30`): ALPHA-T steps down
+    only from that end's X30 (8 passes) and leaves everything above it; the app clears from the top of the profile
+    (DIFFERS_ON_PURPOSE).
 

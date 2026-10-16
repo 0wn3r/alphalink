@@ -155,6 +155,10 @@ def _pockets(boundary: list[Seg], side: int = 1) -> list[tuple[int, int, int]]:
     return out
 
 
+def _same_pt(p, q) -> bool:
+    return abs(p.x - q.x) < 1e-9 and abs(p.z - q.z) < 1e-9
+
+
 def _floor(boundary, pocket, side) -> float:
     xs = [x for s in boundary[pocket[0]:pocket[1] + 1] for x in (s.a.x, s.b.x)]
     return min(xs) if side > 0 else max(xs)
@@ -176,22 +180,27 @@ def _pocket_levels(boundary, pocket, side, grid, follow=False) -> list[float]:
 
 
 def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals, side=1, here_x=None,
-                   follow_from=None):
+                   follow_from=None, offset_z=0.0):
     """ALPHA-T's passes for one pocket (DIVE1-3, IDIVE1/2, FOL3, FOLG): see the module docstring. side -1 =
     internal (mirrored in X). here_x: where the tool is (X) before the first pass, z0 the Z of the first rapid.
     follow_from: FOLLOW, where the last pass on the far wall stopped (each pass climbs the far wall back to it).
+    offset_z: OFFSET Z; a rear-angle line starts that much towards the chuck from the (offset) corner, not away
+    from it (OFS1: Z-38.214 for the app's former -37.814 with W0.1).
     Returns (passes, the last line Z)."""
     first, deepest, last = pocket
-    corner = boundary[first].a
-    s0 = boundary[first]
+    top = boundary[first].a
+    # the way down: the first straight element (after a rounded shoulder's radius, RSH)
+    s0 = next((s for s in boundary[first:deepest + 1] if not s.is_arc and not _same_pt(s.a, s.b)), boundary[first])
+    corner = s0.a
     drop = side * (s0.a.x - s0.b.x) / 2
     run = abs(s0.a.z - s0.b.z)
     slope = math.degrees(math.atan2(drop, run)) if not s0.is_arc else 90.0
     line = slope if angle is None else min(slope, angle)
     tan = math.tan(math.radians(line)) if line < 90 else math.inf
+    cz = corner.z - (2 * offset_z if angle is not None and line >= angle - 1e-9 else 0.0)
 
     def on_line(x):
-        return corner.z + (side * (x - corner.x) / 2 / tan if tan != math.inf else 0.0)
+        return cz + (side * (x - corner.x) / 2 / tan if tan != math.inf else 0.0)
 
     def profile(x):  # where the way down meets level x: the profile, nearest the shoulder
         found = [z_at(s, x) for s in boundary[first:deepest + 1]
@@ -208,7 +217,7 @@ def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals,
                 return round(z_at(s, x), decimals)
         return round(boundary[last].b.z, decimals)
 
-    passes, prev, back, last_z = [], corner.x, None, None
+    passes, prev, back, last_z = [], top.x, None, None
     target = follow_from
     for n, x in enumerate(levels):
         z = cut(x)
@@ -219,7 +228,7 @@ def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals,
             up = prev + side * 2 * retract
             moves = [] if here_x is not None and abs(here_x - up) < 1e-9 else [Move(MoveKind.RAPID, up, z0)]
             if follow_from is not None:  # FOL3: in level with the corner, then onto it
-                zc = round(corner.z, decimals)
+                zc = round(top.z, decimals)
                 moves += [Move(MoveKind.RAPID, up, zc), Move(MoveKind.FEED, prev, zc, feed),
                           Move(MoveKind.FEED, prev, zc, feed)]
             else:
@@ -333,7 +342,7 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
         moved = [q for q in passes if q.moves]
         here = moved[-1].moves[-1].x if moved else op.start.x
         more, z = _pocket_passes(boundary, pocket, levels, angle, retract, op.feed, z0, decimals, side, here,
-                                 follow_from)
+                                 follow_from, op.offset_z)
         passes += more
         moved = [q for q in more if q.moves]
         if moved:  # the next pocket's first rapid starts where this one left the tool

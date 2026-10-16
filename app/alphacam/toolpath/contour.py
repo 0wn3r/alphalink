@@ -326,10 +326,26 @@ def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg
     k = 0
     while k < len(out):
         s = out[k]
-        drop = side * (s.a.x - s.b.x) / 2
-        if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
-            k += 1
-            continue
+        if s.is_arc:
+            p = _arc_turn(s, angle, side)
+            if p is None:
+                k += 1
+                continue
+            # a rounded shoulder going over into a dive (RSH): the radius as far as it is no steeper than the
+            # tool, then a straight line on from there at the rear angle
+            if _same(p, s.a):
+                out[k] = Seg(p, p)  # a zero-length stand-in, replaced by the line below
+            else:
+                out[k] = Seg(s.a, p, s.centre, s.ccw)
+                out.insert(k + 1, Seg(p, p))
+                k += 1
+            s = out[k]
+            drop = math.inf
+        else:
+            drop = side * (s.a.x - s.b.x) / 2
+            if drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
+                k += 1
+                continue
         # far enough down the rear-angle line to meet anything in the pocket
         depth = max(side * (s.a.x - q.x) / 2 for t in out[k:] for q in (t.a, t.b))
         far = Point(s.a.x - side * 2 * depth, s.a.z - depth / tan)
@@ -340,6 +356,9 @@ def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg
                 out[k:j + 1] = [Seg(s.a, hit), Seg(hit, n.b, n.centre, n.ccw)]
                 break
         else:
+            if drop == math.inf:  # nothing below the radius: leave the stand-in out
+                out.pop(k)
+                continue
             end = Point(s.b.x, s.a.z - drop / tan)
             out[k] = Seg(s.a, end)
             if k + 1 < len(out):
@@ -347,3 +366,35 @@ def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg
                 out[k + 1] = Seg(end, n.b, n.centre, n.ccw)
         k += 1
     return out
+
+
+def _arc_turn(s: Seg, angle: float, side: int) -> Point | None:
+    """Where a radius dropping away from the tool gets steeper than `angle` (degrees from Z): the point whose
+    tangent is at that angle, its start if it is steeper from the outset, None if it never is."""
+    (ar, az), (br, bz), (cr, cz) = _rz(s.a), _rz(s.b), _rz(s.centre)
+    rad = math.hypot(ar - cr, az - cz)
+    a0, a1 = math.atan2(ar - cr, az - cz), math.atan2(br - cr, bz - cz)
+    sweep = a1 - a0
+    if s.ccw and sweep < 0:
+        sweep += 2 * math.pi
+    if not s.ccw and sweep > 0:
+        sweep -= 2 * math.pi
+    sg = 1 if sweep > 0 else -1
+
+    def steep(th):  # travel direction (dz, dr) at angle th: dropping away from the tool steeper than `angle`?
+        dz, dr = -sg * math.sin(th), sg * math.cos(th)
+        return side * dr < 0 and abs(dr) > math.tan(math.radians(angle)) * abs(dz) + 1e-9
+
+    if not steep(a1):
+        return None
+    if steep(a0):
+        return s.a
+    lo, hi = 0.0, abs(sweep)
+    for _ in range(60):  # the tangent turns monotonically along a radius: bisect
+        mid = (lo + hi) / 2
+        if steep(a0 + sg * mid):
+            hi = mid
+        else:
+            lo = mid
+    th = a0 + sg * hi
+    return _pt(cr + rad * math.sin(th), cz + rad * math.cos(th))

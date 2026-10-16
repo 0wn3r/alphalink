@@ -97,6 +97,12 @@ GOLDEN = {
     # area clear's last pocket pass is an empty block (#120 does not count it)
     "AREA_radius_groove_metric": [AreaClear(3, S, RADIUS_GROOVE)],
     "FINISH_radius_groove_metric": [FinishPass(3, S, RADIUS_GROOVE)],
+    # finish allowance on a steep wall (the rear-angle line starts OFFSET Z towards the chuck), a two-line dive, a
+    # rounded shoulder into a groove (the radius until it is as steep as the tool, then the line), T1 on a groove
+    "AREA_offset_dive2_metric": [AreaClear(3, S, DIVE, offset_x=0.2, offset_z=0.1)],
+    "AREA_two_line_dive_metric": [AreaClear(3, S, RELIEF)],
+    "AREA_rounded_shoulder_groove_metric": [AreaClear(3, S, ["g0", "g1", "g3", "g2", "g4", "g5", "g6", "g7"])],
+    "AREA_T1_relief_groove_metric": [ToolChange(1, Point(100, 50), 0.2), AreaClear(1, S, RELIEF, feed=0.2)],
     # the same inside a bore with T12 (55 deg boring bar, rear -31): an undercut, a steep one, its finish pass
     "AREA_int_dive1_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
                                                                               external=False)],
@@ -281,7 +287,10 @@ REFUSED = {"AREA_away_tool5_retry_metric", "FACE_away_tool5_metric", "FACE_away_
 #   cut at the shoulder; the app cuts it as if picked from the front (contour.front_first);
 # - GROOVE_back (face grooving with the whole turned profile picked): ALPHA-T plunges X32..38 to Z-30 through the
 #   dia-40 part; the app's face plunges stop on the first face under the tip.
-DIFFERS_ON_PURPOSE = {"AREA_towards_from_chuck_end_metric", "FACE_towards_from_chuck_end_metric", "GROOVE_back_metric"}
+DIFFERS_ON_PURPOSE = {"AREA_towards_from_chuck_end_metric", "FACE_towards_from_chuck_end_metric", "GROOVE_back_metric",
+                      # a contour ending on a groove floor: ALPHA-T steps down only from that end's X30 and leaves
+                      # the stock above it; the app clears from the top of the profile as usual
+                      "AREA_ends_in_groove_metric"}
 
 
 class FromSD1(unittest.TestCase):
