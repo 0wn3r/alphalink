@@ -135,6 +135,9 @@ GOLDEN = {
     "GROOVE_radius_floor_finishmode_metric": [Groove(3, S, ["g0", "g1", "g2", "g4", "g3", "g6", "g5", "g7", "g8"], stepover=2, tip_width=3, mode="finish")],
     "AREA_int_slope_depth13_metric": [ToolChange(12, Point(100, 50), 0.12),
                                       AreaClear(12, Point(45, 5), DIVE, feed=0.12, external=False, depth_of_cut=1.3)],
+    "GROOVE_vee_datumright_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3, datum="right")],
+    "GROOVE_vee_peck15_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3, peck_depth=1.5)],
+    "FACE_slope_depth17_metric": [FaceClear(3, S, ["g0", "g1", "g2", "g3"], depth_of_cut=1.7)],
     "THREAD_spring2_metric": [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2)],
     "GROOVE_face_metric": [Groove(3, S, ["g1", "g2", "g3"], stepover=1, tip_width=2, front=False)],
 }

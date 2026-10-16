@@ -1323,4 +1323,9 @@ single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program 
   mode keeps the radii: the one at the foot of the +Z wall moves with that wall by -tip width, centre and all
   (G2 X30 Z-24.5 I0 K-1.5), the far one stays; the SD1 G78 lists them as G2 with I/K (the app refused arcs in
   finish mode before). AREA_int_slope_depth13 (a sloped bore, T12, depth 1.3) matched as it was.
+- Round 4, all matched as they were: GROOVE_vee_datumright (Enter on DATUM LEFT toggles; SD1 L100 instead of L110),
+  GROOVE_vee_peck15 (PECK DEPTH is the item above STEPOV/TIPWD), FACE_slope_depth17 (face clear D1.7 on a 26.6 deg
+  face), area clear FACE mode (identical to AREA_front_face, not kept). A long program needs a longer wait before
+  DOSBox-X is closed: with 5 s after the save the PRG was cut at 12288 bytes and the SDG/SDT were empty (the old
+  PECK samples' problem); 40 s is enough.
 
