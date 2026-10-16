@@ -19,6 +19,7 @@ from alphacam import drawing  # noqa: E402
 from alphacam.model.geometry import Arc, Line, Point  # noqa: E402
 from .hit_keys import CURSOR_KEYS, STEP_KEYS, hit_action, key_char  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
+from .ui import builder  # noqa: E402
 
 CONSTRUCT_MENU = [(N_("Circle…"), "circle", None), (N_("Tangent"), "tangent", None), (N_("Tangent at an Angle…"), "tangent-angle", None),
                   (N_("Parallel Line…"), "parallel", None), (N_("Split Arc"), "split", None), (N_("Blend Arc…"), "blend", "o"),
@@ -75,37 +76,24 @@ class DrawingTools:
         self.measure: tuple[str, Point | None] | None = None
         self._prev_view = None
 
-        # palette (a bottom bar: thumb reach in touch mode)
-        self.palette = Adw.ToggleGroup()
+        ui = builder("drawing-tools")
+        for name in ("bar", "palette", "more", "keypad_button", "entry", "done", "cancel_pick_btn", "edit_el",
+                     "delete_el", "construct_banner", "pick_banner", "chip"):
+            setattr(self, name, ui.get_object(name))
         for name, label in TOOLS:
             self.palette.add(Adw.Toggle(name=name, label=_(label), tooltip=_(TOOL_TIPS[name])))
         self.palette.set_active_name("select")
         self.palette.connect("notify::active-name", lambda *_: self._palette_changed())
 
-        self.entry = Gtk.Entry(hexpand=True, placeholder_text=_(TOOL_HINTS["select"]))
-        self.entry.add_css_class("command-entry")
+        self.entry.set_placeholder_text(_(TOOL_HINTS["select"]))
         self.entry.connect("activate", self._entry_activate)
         entry_keys = Gtk.EventControllerKey(propagation_phase=Gtk.PropagationPhase.CAPTURE)
         entry_keys.connect("key-pressed", self._entry_key)
         self.entry.add_controller(entry_keys)
-        # shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
-        self.done = Gtk.Button(label=_("_Done"), use_underline=True, visible=False, sensitive=False,
-                               tooltip_text=_("Finish Line (Esc)"))
-        self.done.add_css_class("suggested-action")
         self.done.connect("clicked", lambda *_: self.finish_chain())
-        self.delete_el = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Element (Delete)"),
-                                    visible=False)
         self.delete_el.connect("clicked", lambda *_: self.delete_selected_element())
-        self.edit_el = Gtk.Button(icon_name="document-edit-symbolic", tooltip_text=_("Edit Element (E)"), visible=False)
         self.edit_el.connect("clicked", lambda *_: self.edit_selected_element())
-
-        self.keypad_button = Gtk.Button(icon_name="input-dialpad-symbolic", tooltip_text=_("Keypad"), visible=False)
         self.keypad_button.connect("clicked", lambda *_: self.open_keypad())
-        # wraps the entry under the tool names when the Part page is narrow (editor open on half a screen), instead
-        # of cutting the tool names short
-        self.bar = Adw.WrapBox(child_spacing=6, line_spacing=6, margin_start=6, margin_end=6, margin_top=6,
-                               margin_bottom=6, justify=Adw.JustifyMode.FILL, justify_last_line=True)
-        # ALPHA-T's other drawing commands (German manual pp. 20-34): circle, tangents, parallel, split, mirror, blend
         more = Gio.Menu()
         for label, kind, key in CONSTRUCT_MENU:
             item = Gio.MenuItem.new(_(label), None)
@@ -119,24 +107,13 @@ class DrawingTools:
             item.set_action_and_target_value("win.construct", GLib.Variant.new_string(kind))
             features.append_item(item)
         more.append_section(None, features)
-        self.more = Gtk.MenuButton(label=_("More"), menu_model=more, tooltip_text=_("More Drawing Commands"))
+        self.more.set_menu_model(more)
         construct = Gio.SimpleAction.new("construct", GLib.VariantType.new("s"))
         construct.connect("activate", lambda _a, v: self.start_construct(v.get_string()))
         window.add_action(construct)
         self.construct: dict | None = None
-        self.construct_banner = Adw.Banner(button_label=_("_Cancel"))
         self.construct_banner.connect("button-clicked", lambda *_: self._banner_button())
-        # picking a contour: a way out without applying it (the banner has room for one button only)
-        self.cancel_pick_btn = Gtk.Button(label=_("Cancel Picking"), visible=False,
-                                          tooltip_text=_("Cancel Picking (Esc)"))
         self.cancel_pick_btn.connect("clicked", lambda *_: self.cancel_pick())
-        for wdg in (self.palette, self.more, self.keypad_button, self.entry, self.done, self.cancel_pick_btn,
-                    self.edit_el,
-                    self.delete_el):
-            self.bar.append(wdg)
-
-        # contour picking banner
-        self.pick_banner = Adw.Banner(title=_("Tap the contour elements in cutting order"), button_label=_("_Done"))
         self.pick_banner.connect("button-clicked", lambda *_: self.finish_pick())
 
         canvas.connect("canvas-tapped", self._tapped)
@@ -153,12 +130,6 @@ class DrawingTools:
         self._ctx_at = (0.0, 0.0)
         canvas.handle_hooks = self  # begin / drag / end / cancel: moving a selected element's end (TOUCH.md 5.2)
         self._move = None
-        # the value chip on the last drawn segment (TOUCH.md 5.1): tap it to correct the point with the keypad
-        self.chip = Gtk.Button(visible=False, halign=Gtk.Align.START, valign=Gtk.Align.START,
-                               tooltip_text=_("Correct the Last Point"))
-        self.chip.add_css_class("osd")
-        self.chip.add_css_class("pill")
-        self.chip.add_css_class("value-chip")
         self.chip.connect("clicked", lambda *_: self._correct_last_point())
         motion = Gtk.EventControllerMotion()
         motion.connect("motion", self._motion)
@@ -529,23 +500,12 @@ class DrawingTools:
     # --- text (ALPHA-T T) and erase drawing (Q) -------------------------------------------------------------
 
     def text_dialog(self, p: Point) -> None:
-        alert = Adw.AlertDialog(heading=_("Text"), body=_("At X{x} Z{z}").format(x=f"{p.x:g}", z=f"{p.z:g}"))
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        text = Gtk.Entry(activates_default=True)
-        size = Adw.SpinRow.new_with_range(0.1, 100, 0.5)
-        size.set_title(_("Height"))
+        ui = builder("drawing-dialogs")
+        alert = ui.get_object("text_alert")
+        alert.set_body(_("At X{x} Z{z}").format(x=f"{p.x:g}", z=f"{p.z:g}"))
+        text = ui.get_object("text_entry")
+        size = ui.get_object("text_height_row")
         size.set_value(5 if self.w.project.units == "mm" else 0.2)
-        size.set_digits(2)
-        group = Adw.PreferencesGroup()
-        group.add(size)
-        box.append(text)
-        box.append(group)
-        alert.set_extra_child(box)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("add", _("_Add"))
-        alert.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("add")
-        alert.set_close_response("cancel")
 
         def done(_d, response):
             if response == "add" and text.get_text().strip():
@@ -558,14 +518,7 @@ class DrawingTools:
         text.grab_focus()
 
     def erase_drawing_dialog(self) -> None:
-        alert = Adw.AlertDialog(heading=_("Erase All of the Drawing?"),
-                                body=_("Lines, arcs and text are erased. Operations stay, without their contours. "
-                                       "Undo brings the drawing back."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("erase", _("_Erase"))
-        alert.set_response_appearance("erase", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_default_response("erase")  # ALPHA-T: Enter erases, Esc aborts
-        alert.set_close_response("cancel")
+        alert = builder("drawing-dialogs").get_object("erase_alert")
 
         def done(_d, response):
             if response == "erase" and self.w.apply_edit(_("Erase drawing"), drawing.erase_drawing):
@@ -947,34 +900,24 @@ class DrawingTools:
         g = self._element(gid) if gid else None
         if g is None:
             return
-        dlg = Adw.AlertDialog(heading=_("Edit {what}").format(what=gid),
-                              body=_("End points as X (diameter), Z."))
-        group = Adw.PreferencesGroup()
+        from .op_editor import fit_spin
+
+        ui = builder("drawing-dialogs")
+        dlg = ui.get_object("edit_alert")
+        dlg.set_heading(_("Edit {what}").format(what=gid))
         rows = []
-        fields = [(_("Start X"), g.a.x), (_("Start Z"), g.a.z), (_("End X"), g.b.x), (_("End Z"), g.b.z)]
+        values = [("start_x", g.a.x), ("start_z", g.a.z), ("end_x", g.b.x), ("end_z", g.b.z)]
         if isinstance(g, Arc):
-            fields.append((_("Radius"), g.radius()))
-        for label, value in fields:
-            r = Adw.SpinRow.new_with_range(-100000, 100000, 0.1)
-            r.set_title(label)
+            values.append(("radius", g.radius()))
+        else:
+            ui.get_object("edit_group").remove(ui.get_object("edit_radius_row"))
+        for key, value in values:
+            r = ui.get_object(f"edit_{key}_row")
             r.set_digits(4 if self.w.project.units == "inch" else 3)
             r.set_value(value)
-            from .op_editor import fit_spin
-
             fit_spin(r, -10000, 10000, r.get_digits())
-            group.add(r)
             rows.append(r)
-        if isinstance(g, Arc):
-            rows[-1].get_adjustment().set_lower(0.001)
-        follow = Adw.SwitchRow(title=_("Move connected ends too"), subtitle=_("Keeps the profile joined"),
-                               active=True)
-        group.add(follow)
-        dlg.set_extra_child(group)
-        dlg.add_response("cancel", _("_Cancel"))
-        dlg.add_response("ok", _("_Apply"))
-        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
-        dlg.set_default_response("ok")
-        dlg.set_close_response("cancel")
+        follow = ui.get_object("edit_follow_row")
 
         def response(_d, r):
             if r != "ok":
@@ -1209,11 +1152,11 @@ class DrawingTools:
         g = self._diameter_line(gid)
         if g is None:
             return
-        names = {"M": _("ISO metric"), "UNC": _("UNC (inch, coarse)"), "UNF": _("UNF (inch, fine)")}
-        std_row = Adw.ComboRow(title=_("Standard"), model=Gtk.StringList.new([names[k] for k in STANDARDS]))
+        ui = builder("drawing-dialogs")
+        std_row = ui.get_object("thread_standard_row")  # in the order of STANDARDS
         std_row.set_selected(1 if p.units == "inch" else 0)
-        size_row = Adw.ComboRow(title=_("Size"))
-        pitch_row = Adw.ComboRow(title=_("Pitch"))
+        size_row = ui.get_object("thread_size_row")
+        pitch_row = ui.get_object("thread_pitch_row")
         state = {}
 
         def standard_changed(*_a):
@@ -1237,20 +1180,10 @@ class DrawingTools:
         size_row.connect("notify::selected", lambda *_a: size_row.get_model() and size_changed())
         std_row.connect("notify::selected", standard_changed)
         standard_changed()
-        relief = Adw.SwitchRow(title=_("Relief groove"), subtitle=_("DIN 76 proportions, at the back end of the line"),
-                               active=True)
-        with_op = Adw.SwitchRow(title=_("Add a Threading operation"), active=True)
-        group = Adw.PreferencesGroup()
-        for r in (std_row, size_row, pitch_row, relief, with_op):
-            group.add(r)
-        dlg = Adw.AlertDialog(heading=_("Standard Thread"),
-                              body=self._element_label(gid))
-        dlg.set_extra_child(group)
-        dlg.add_response("cancel", _("_Cancel"))
-        dlg.add_response("add", _("_Add"))
-        dlg.set_response_appearance("add", Adw.ResponseAppearance.SUGGESTED)
-        dlg.set_default_response("add")
-        dlg.set_close_response("cancel")
+        relief = ui.get_object("thread_relief_row")
+        with_op = ui.get_object("thread_op_row")
+        dlg = ui.get_object("thread_alert")
+        dlg.set_body(self._element_label(gid))
 
         def response(_d, r):
             if r != "add":
@@ -1308,12 +1241,14 @@ class DrawingTools:
             self.cancel_construct()
 
     def _numbers(self, title: str, fields, done) -> None:
-        dlg = Adw.AlertDialog(heading=title)
-        group = Adw.PreferencesGroup()
+        from .op_editor import fit_spin
+
+        ui = builder("drawing-dialogs")
+        dlg = ui.get_object("numbers_alert")
+        dlg.set_heading(title)
+        group = ui.get_object("numbers_group")
         spins = []
         for label, value, lo, hi in fields:
-            from .op_editor import fit_spin
-
             r = Adw.SpinRow.new_with_range(lo, hi, 0.5)
             r.set_title(label)
             digits = 4 if self.w.project.units == "inch" else 3
@@ -1322,12 +1257,6 @@ class DrawingTools:
             fit_spin(r, lo, hi, digits)  # room for the widest value ("100.000", not "l00.000")
             group.add(r)
             spins.append(r)
-        dlg.set_extra_child(group)
-        dlg.add_response("cancel", _("_Cancel"))
-        dlg.add_response("ok", _("_Apply"))
-        dlg.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
-        dlg.set_default_response("ok")
-        dlg.set_close_response("cancel")
 
         def response(_d, r):
             if r == "ok":

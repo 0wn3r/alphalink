@@ -18,4 +18,4 @@ alphacam = "alphacam.__main__:main"
 include = ["alphacam*", "alphacam_gtk*"]
 
 [tool.setuptools.package-data]
-alphacam_gtk = ["style.css", "locale/*/LC_MESSAGES/*.mo", "help/*.md", "manuals/*.pdf"]
+alphacam_gtk = ["style.css", "ui/*.ui", "locale/*/LC_MESSAGES/*.mo", "help/*.md", "manuals/*.pdf"]

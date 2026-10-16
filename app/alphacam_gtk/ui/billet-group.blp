@@ -1,0 +1,67 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The billet rows shared by New Part and Part Settings (billet.py): size, bore, jaws, tailstock; New Part shows the
+// units first, so the sizes below are read in them.
+template $AlphaLinkBilletGroup: Adw.PreferencesGroup {
+  Adw.ComboRow units_row {
+    title: _("Units");
+    visible: false;
+
+    model: StringList {
+      strings [
+        _("mm"),
+        _("inch"),
+      ]
+    };
+  }
+
+  Adw.SpinRow diameter_row {
+    title: _("Billet diameter");
+
+    adjustment: Adjustment {
+      lower: 0.01;
+      upper: 1000;
+      step-increment: 1;
+      page-increment: 10;
+    };
+  }
+
+  Adw.SpinRow length_row {
+    title: _("Billet length");
+
+    adjustment: Adjustment {
+      lower: 0.01;
+      upper: 2000;
+      step-increment: 1;
+      page-increment: 10;
+    };
+  }
+
+  Adw.SpinRow bore_row {
+    title: _("Bore");
+    subtitle: _("Tube billet; 0 = solid bar");
+
+    adjustment: Adjustment {
+      lower: 0;
+      upper: 1000;
+      step-increment: 1;
+      page-increment: 10;
+    };
+  }
+
+  Adw.ComboRow jaws_row {
+    title: _("Chuck jaws");
+
+    model: StringList {
+      strings [
+        _("On the outside"),
+        _("In the bore"),
+      ]
+    };
+  }
+
+  Adw.SwitchRow tailstock_row {
+    title: _("Show tailstock");
+  }
+}

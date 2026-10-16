@@ -1,0 +1,185 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The drawing tools' dialogs (drawing_tools.py fills in the values and the texts that name the place or element).
+
+Adw.AlertDialog text_alert {
+  heading: _("Text");
+  default-response: "add";
+  close-response: "cancel";
+
+  extra-child: Box {
+    orientation: vertical;
+    spacing: 6;
+
+    Entry text_entry {
+      activates-default: true;
+    }
+
+    Adw.PreferencesGroup {
+      Adw.SpinRow text_height_row {
+        title: _("Height");
+        digits: 2;
+
+        adjustment: Adjustment {
+          lower: 0.1;
+          upper: 100;
+          step-increment: 0.5;
+          page-increment: 5;
+        };
+      }
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+    add: _("_Add") suggested,
+  ]
+}
+
+// ALPHA-T: Enter erases, Esc aborts
+Adw.AlertDialog erase_alert {
+  heading: _("Erase All of the Drawing?");
+  body: _("Lines, arcs and text are erased. Operations stay, without their contours. Undo brings the drawing back.");
+  default-response: "erase";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    erase: _("_Erase") destructive,
+  ]
+}
+
+// Edit Element: the selected line's or arc's end points (and an arc's radius)
+Adw.AlertDialog edit_alert {
+  body: _("End points as X (diameter), Z.");
+  default-response: "ok";
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup edit_group {
+    Adw.SpinRow edit_start_x_row {
+      title: _("Start X");
+
+      adjustment: Adjustment {
+        lower: -100000;
+        upper: 100000;
+        step-increment: 0.1;
+        page-increment: 1;
+      };
+    }
+
+    Adw.SpinRow edit_start_z_row {
+      title: _("Start Z");
+
+      adjustment: Adjustment {
+        lower: -100000;
+        upper: 100000;
+        step-increment: 0.1;
+        page-increment: 1;
+      };
+    }
+
+    Adw.SpinRow edit_end_x_row {
+      title: _("End X");
+
+      adjustment: Adjustment {
+        lower: -100000;
+        upper: 100000;
+        step-increment: 0.1;
+        page-increment: 1;
+      };
+    }
+
+    Adw.SpinRow edit_end_z_row {
+      title: _("End Z");
+
+      adjustment: Adjustment {
+        lower: -100000;
+        upper: 100000;
+        step-increment: 0.1;
+        page-increment: 1;
+      };
+    }
+
+    // arcs only (removed for a line)
+    Adw.SpinRow edit_radius_row {
+      title: _("Radius");
+
+      adjustment: Adjustment {
+        lower: 0.001;
+        upper: 100000;
+        step-increment: 0.1;
+        page-increment: 1;
+      };
+    }
+
+    Adw.SwitchRow edit_follow_row {
+      title: _("Move connected ends too");
+      subtitle: _("Keeps the profile joined");
+      active: true;
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+    ok: _("_Apply") suggested,
+  ]
+}
+
+// a standard thread on the selected diameter line (the size and pitch lists follow the standard)
+Adw.AlertDialog thread_alert {
+  heading: _("Standard Thread");
+  default-response: "add";
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup {
+    Adw.ComboRow thread_standard_row {
+      title: _("Standard");
+
+      model: StringList {
+        strings [
+          _("ISO metric"),
+          _("UNC (inch, coarse)"),
+          _("UNF (inch, fine)"),
+        ]
+      };
+    }
+
+    Adw.ComboRow thread_size_row {
+      title: _("Size");
+    }
+
+    Adw.ComboRow thread_pitch_row {
+      title: _("Pitch");
+    }
+
+    Adw.SwitchRow thread_relief_row {
+      title: _("Relief groove");
+      subtitle: _("DIN 76 proportions, at the back end of the line");
+      active: true;
+    }
+
+    Adw.SwitchRow thread_op_row {
+      title: _("Add a Threading operation");
+      active: true;
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+    add: _("_Add") suggested,
+  ]
+}
+
+// the numbers a drawing command asks for (drawing_tools.py adds a row per number)
+Adw.AlertDialog numbers_alert {
+  default-response: "ok";
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup numbers_group {};
+
+  responses [
+    cancel: _("_Cancel"),
+    ok: _("_Apply") suggested,
+  ]
+}

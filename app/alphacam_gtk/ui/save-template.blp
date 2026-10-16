@@ -1,0 +1,21 @@
+using Gtk 4.0;
+using Adw 1;
+
+// job templates (workflow improvements, step 4)
+Adw.AlertDialog template_alert {
+  heading: _("Save Operations as Template");
+  body: _("The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to.");
+  default-response: "save";
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup {
+    Adw.EntryRow template_name_row {
+      title: _("Name");
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+    save: _("_Save") suggested,
+  ]
+}

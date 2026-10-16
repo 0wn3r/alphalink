@@ -1,0 +1,39 @@
+using Gtk 4.0;
+using Adw 1;
+
+// setup 2 of the part (workflow improvements, step 6), in the same file: the first setup's drawing turned end for end;
+// window.py adds the second response, Turn Around or Replace Setup 2
+Adw.AlertDialog turn_alert {
+  heading: _("Turn Part Around");
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup {
+    Adw.SpinRow turn_length_row {
+      title: _("Part length");
+      subtitle: _("Its back face becomes Z0");
+
+      adjustment: Adjustment {
+        lower: 0.001;
+        upper: 5000;
+        step-increment: 1;
+        page-increment: 10;
+      };
+    }
+
+    Adw.SpinRow turn_program_row {
+      title: _("Program number");
+      subtitle: _("Of the second setup");
+
+      adjustment: Adjustment {
+        lower: 1;
+        upper: 9999;
+        step-increment: 1;
+        page-increment: 10;
+      };
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+  ]
+}

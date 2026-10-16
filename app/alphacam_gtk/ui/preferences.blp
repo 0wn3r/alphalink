@@ -1,0 +1,128 @@
+using Gtk 4.0;
+using Adw 1;
+
+// ALPHA-T's ATSETUP: defaults for new parts and the language. The serial settings live on the Machine page and are
+// remembered there.
+Adw.PreferencesDialog preferences {
+  title: _("Preferences");
+
+  Adw.PreferencesPage {
+    title: _("General");
+    icon-name: "preferences-system-symbolic";
+
+    Adw.PreferencesGroup {
+      title: _("New parts");
+
+      Adw.ComboRow pref_units_row {
+        title: _("Units");
+
+        model: StringList {
+          strings [
+            _("mm"),
+            _("inch"),
+          ]
+        };
+      }
+
+      Adw.SpinRow pref_diameter_row {
+        title: _("Billet diameter");
+
+        adjustment: Adjustment {
+          lower: 0.01;
+          upper: 1000;
+          step-increment: 1;
+          page-increment: 10;
+        };
+      }
+
+      Adw.SpinRow pref_length_row {
+        title: _("Billet length");
+
+        adjustment: Adjustment {
+          lower: 0.01;
+          upper: 2000;
+          step-increment: 1;
+          page-increment: 10;
+        };
+      }
+
+      Adw.SpinRow pref_first_tool_row {
+        title: _("First tool");
+
+        adjustment: Adjustment {
+          lower: 1;
+          upper: 99;
+          step-increment: 1;
+          page-increment: 10;
+        };
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Export");
+
+      Adw.SwitchRow pref_sdg_row {
+        title: _("Also save the ALPHA-T drawing (.SDG)");
+        subtitle: _("Next to the program, so DOS ALPHA-T can open the part");
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Cycle time");
+      description: _("For the estimate on the setup sheet; the tools' surface speeds are on the Tools page");
+
+      Adw.SpinRow pref_spindle_row {
+        title: _("Spindle limit");
+        subtitle: _("rpm");
+
+        adjustment: Adjustment {
+          lower: 100;
+          upper: 10000;
+          step-increment: 100;
+          page-increment: 1000;
+        };
+      }
+
+      Adw.SpinRow pref_rapid_row {
+        title: _("Rapid rate");
+        subtitle: _("mm/min");
+
+        adjustment: Adjustment {
+          lower: 100;
+          upper: 50000;
+          step-increment: 500;
+          page-increment: 5000;
+        };
+      }
+
+      Adw.SpinRow pref_tool_change_row {
+        title: _("Tool change");
+        subtitle: _("seconds for the operator to change a tool");
+
+        adjustment: Adjustment {
+          lower: 0;
+          upper: 600;
+          step-increment: 5;
+          page-increment: 50;
+        };
+      }
+    }
+
+    Adw.PreferencesGroup {
+      title: _("Language");
+      description: _("Takes effect after restarting the app.");
+
+      Adw.ComboRow pref_language_row {
+        title: _("Language");
+
+        model: StringList {
+          strings [
+            _("Same as the desktop"),
+            "English",
+            "Українська",
+          ]
+        };
+      }
+    }
+  }
+}

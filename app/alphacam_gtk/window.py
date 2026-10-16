@@ -18,7 +18,7 @@ from alphacam.model.operations import OP_KIND_TOOL_CHANGE  # noqa: E402
 from alphacam.model.project import Project  # noqa: E402
 from alphacam.preview import preview  # noqa: E402
 
-from .canvas.widget import LatheCanvas  # noqa: E402
+from .canvas.widget import LatheCanvas  # noqa: E402, F401  (types ui/window.blp uses)
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
@@ -29,9 +29,10 @@ from .i18n import N_, _, ngettext  # noqa: E402
 from .settings import settings  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
-from .op_editor import OpEditor  # noqa: E402
+from .op_editor import OpEditor  # noqa: E402, F401
 from .op_factory import OP_MENU, default_op, find_tool, tool_for  # noqa: E402
-from .ui import template  # noqa: E402
+from .billet import units_follow  # noqa: E402
+from .ui import builder, template  # noqa: E402
 
 OP_TITLES = {
     "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
@@ -358,29 +359,12 @@ class MainWindow(Adw.ApplicationWindow):
     def _dxf_dialog(self, path: Path) -> None:
         """ATDXF: a DXF becomes a new part. Lathe drawings usually give Y as a radius; units are the DXF's."""
         st = settings()
-        alert = Adw.AlertDialog(heading=_("Import DXF"),
-                                body=_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
-        group = Adw.PreferencesGroup()
-        y_row = Adw.ComboRow(title=_("DXF Y is"), model=Gtk.StringList.new([_("Radius"), _("Diameter")]))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if st["units"] == "inch" else 0)
-        half = Adw.SwitchRow(title=_("Upper half only"), active=True,
-                             subtitle=_("Drop the mirrored half below the axis"))
-        rotate = Adw.ComboRow(title=_("Turn the drawing"), subtitle=_("Anticlockwise, for a part drawn upright"),
-                              model=Gtk.StringList.new(["0°", "90°", "180°", "270°"]))
-        front = Adw.ComboRow(title=_("Front face is on the"), model=Gtk.StringList.new([_("Right"), _("Left")]))
-        axis = Adw.ComboRow(title=_("Spindle axis"), model=Gtk.StringList.new(
-            [_("At Y0, as drawn"), _("In the middle (full section)"), _("At the lowest point (half drawing)")]))
-        datum = Adw.SwitchRow(title=_("Front face on Z0"), active=True,
-                              subtitle=_("Moves the drawing so its front face is the part's Z0"))
-        for r in (y_row, units, half, rotate, front, axis, datum):
-            group.add(r)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("import", _("_Import"))
-        alert.set_response_appearance("import", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("import")
-        alert.set_close_response("cancel")
+        b = builder("dxf-import")
+        alert = b.get_object("dxf_alert")
+        alert.set_body(_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
+        y_row, units, half, rotate, front, axis, datum = (b.get_object(f"dxf_{k}_row") for k in (
+            "y", "units", "half", "rotate", "front", "axis", "datum"))
+        units.set_selected(1 if st["units"] == "inch" else 0)
 
         def response(_d, r):
             if r != "import":
@@ -770,18 +754,10 @@ class MainWindow(Adw.ApplicationWindow):
         if self.project is None or not self.project.operations:
             self.toast(_("Add operations first: a template keeps the operations, not the drawing"))
             return
-        name = Adw.EntryRow(title=_("Name"), text=self.path.stem if self.path else "")
-        group = Adw.PreferencesGroup()
-        group.add(name)
-        alert = Adw.AlertDialog(heading=_("Save Operations as Template"),
-                                body=_("The operations with their tools and settings, without the drawing. A template "
-                                       "picks the contours from the part it is applied to."))
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("save", _("_Save"))
-        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("save")
-        alert.set_close_response("cancel")
+        b = builder("save-template")
+        alert = b.get_object("template_alert")
+        name = b.get_object("template_name_row")
+        name.set_text(self.path.stem if self.path else "")
 
         def response(_d, r):
             if r != "save":
@@ -809,34 +785,26 @@ class MainWindow(Adw.ApplicationWindow):
             return
         first = self.doc
         inch = first.units == "inch"
-        length = Adw.SpinRow.new_with_range(0.001, 5000, 1)
-        length.set_title(_("Part length"))
-        length.set_subtitle(_("Its back face becomes Z0"))
+        b = builder("turn-around")
+        alert = b.get_object("turn_alert")
+        length = b.get_object("turn_length_row")
         length.set_digits(4 if inch else 3)
         length.set_value(part_length(first) or first.billet.length)
         from .op_editor import fit_spin
 
         fit_spin(length, 0.001, 5000, 4 if inch else 3)  # room for "50.000", not "0.000" cut short
-        prog = Adw.SpinRow.new_with_range(1, 9999, 1)
-        prog.set_title(_("Program number"))
-        prog.set_subtitle(_("Of the second setup"))
+        prog = b.get_object("turn_program_row")
         prog.set_value(min(first.program_number + 1, 9999))
-        group = Adw.PreferencesGroup()
-        group.add(length)
-        group.add(prog)
         replacing = bool(first.setups)
         body = _("Setup 2 machines the other end: setup 1's drawing turned end for end, its back face on Z0, without "
                  "operations. Both setups are kept in this part's file.")
         if replacing:
             body += "\n\n" + _("This replaces the current setup 2 and its operations.")
-        alert = Adw.AlertDialog(heading=_("Turn Part Around"), body=body)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
+        alert.set_body(body)
         alert.add_response("turn", _("_Replace Setup 2") if replacing else _("_Turn Around"))
         alert.set_response_appearance("turn", Adw.ResponseAppearance.DESTRUCTIVE if replacing
                                       else Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("cancel" if replacing else "turn")
-        alert.set_close_response("cancel")
 
         def response(_d, r):
             if r != "turn":
@@ -861,14 +829,8 @@ class MainWindow(Adw.ApplicationWindow):
         if getattr(self, "setup_index", 0) == 0:
             return
         n = self.setup_index + 1
-        alert = Adw.AlertDialog(heading=_("Remove Setup {n}?").format(n=n),
-                                body=_("Its drawing and operations are removed from the part. This cannot be undone, "
-                                       "but the file on disk keeps it until you save."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("remove", _("_Remove"))
-        alert.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_default_response("cancel")
-        alert.set_close_response("cancel")
+        alert = builder("remove-setup").get_object("remove_setup_alert")
+        alert.set_heading(_("Remove Setup {n}?").format(n=n))
 
         def response(_d, r):
             if r != "remove":
@@ -884,144 +846,61 @@ class MainWindow(Adw.ApplicationWindow):
         alert.present(self)
 
     def preferences_dialog(self) -> None:
-        """ALPHA-T's ATSETUP: defaults for new parts and the language. The serial settings live on the Machine
-        page and are remembered there."""
+        """ALPHA-T's ATSETUP: defaults for new parts and the language (ui/preferences.blp). The serial settings live
+        on the Machine page and are remembered there."""
         st = settings()
-        dlg = Adw.PreferencesDialog(title=_("Preferences"))
-        page = Adw.PreferencesPage(title=_("General"), icon_name="preferences-system-symbolic")
-        new = Adw.PreferencesGroup(title=_("New parts"))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if st["units"] == "inch" else 0)
+        b = builder("preferences")
+        units = b.get_object("pref_units_row")
+        units.set_selected(1 if st["units"] == "inch" else 0)
         units.connect("notify::selected", lambda r, _p: st.set("units", "inch" if r.get_selected() else "mm"))
-        new.add(units)
-        size_rows = {}
         inch = st["units"] == "inch"
-        for key, title, lo, hi, step, digits in (("billet_diameter", _("Billet diameter"), 0.01, 1000, 1, 1),
-                                                 ("billet_length", _("Billet length"), 0.01, 2000, 1, 1),
-                                                 ("first_tool", _("First tool"), 1, 99, 1, 0)):
-            row = Adw.SpinRow.new_with_range(lo, hi, step)
-            row.set_title(title)
+        sizes = []
+        for key, row_id, digits in (("billet_diameter", "pref_diameter_row", 1), ("billet_length", "pref_length_row", 1),
+                                    ("first_tool", "pref_first_tool_row", 0)):
+            row = b.get_object(row_id)
             row.set_digits(4 if inch and digits else digits)
             row.set_value(st[key])
             row.connect("notify::value", lambda r, _p, k=key, d=digits: st.set(k, int(r.get_value()) if d == 0
                                                                               else r.get_value()))
-            new.add(row)
-            size_rows[key] = row
-        self._units_follow(units, size_rows, ("billet_diameter", "billet_length"))
-        page.add(new)
-        export = Adw.PreferencesGroup(title=_("Export"))
-        sdg = Adw.SwitchRow(title=_("Also save the ALPHA-T drawing (.SDG)"),
-                            subtitle=_("Next to the program, so DOS ALPHA-T can open the part"),
-                            active=bool(st["export_sdg"]))
+            if digits:
+                sizes.append(row)
+        units_follow(units, sizes)
+        sdg = b.get_object("pref_sdg_row")
+        sdg.set_active(bool(st["export_sdg"]))
         sdg.connect("notify::active", lambda r, _p: st.set("export_sdg", r.get_active()))
-        export.add(sdg)
-        page.add(export)
-        cycle = Adw.PreferencesGroup(title=_("Cycle time"),
-                                     description=_("For the estimate on the setup sheet; the tools' surface speeds "
-                                                   "are on the Tools page"))
-        for key, title, sub, lo, hi, step in (
-                ("spindle_max", _("Spindle limit"), _("rpm"), 100, 10000, 100),
-                ("rapid_rate", _("Rapid rate"), _("mm/min"), 100, 50000, 500),
-                ("tool_change_s", _("Tool change"), _("seconds for the operator to change a tool"), 0, 600, 5)):
-            row = Adw.SpinRow.new_with_range(lo, hi, step)
-            row.set_title(title)
-            row.set_subtitle(sub)
+        for key, row_id in (("spindle_max", "pref_spindle_row"), ("rapid_rate", "pref_rapid_row"),
+                            ("tool_change_s", "pref_tool_change_row")):
+            row = b.get_object(row_id)
             row.set_value(float(st[key]))
             row.connect("notify::value", lambda r, _p, k=key: (st.set(k, r.get_value()), self.sheet.refresh()))
-            cycle.add(row)
-        page.add(cycle)
-        lang = Adw.PreferencesGroup(title=_("Language"), description=_("Takes effect after restarting the app."))
         codes = ["", "en", "uk"]
-        names = [_("Same as the desktop"), "English", "Українська"]
-        row = Adw.ComboRow(title=_("Language"), model=Gtk.StringList.new(names),
-                           selected=codes.index(st["language"]) if st["language"] in codes else 0)
+        row = b.get_object("pref_language_row")
+        row.set_selected(codes.index(st["language"]) if st["language"] in codes else 0)
         row.connect("notify::selected", lambda r, _p: st.set("language", codes[r.get_selected()]))
-        lang.add(row)
-        page.add(lang)
-        dlg.add(page)
-        dlg.present(self)
-
-    @staticmethod
-    def _units_follow(units_row, rows, keys=("diameter", "length", "bore")) -> None:
-        """Switching mm <-> inch converts the size rows already filled in (50 mm stays 50 mm, shown as 1.9685 in)."""
-        state = {"inch": units_row.get_selected() == 1}
-
-        def changed(row, _p):
-            inch = row.get_selected() == 1
-            if inch == state["inch"]:
-                return
-            state["inch"] = inch
-            for key in keys:
-                r = rows[key]
-                v = r.get_value()
-                r.set_digits(4 if inch else 1)
-                r.set_value(round(v / 25.4, 4) if inch else round(v * 25.4, 1))
-
-        units_row.connect("notify::selected", changed)
-
-    def _billet_rows(self, b, inch: bool = False, top: Gtk.Widget | None = None) -> tuple[Adw.PreferencesGroup, dict]:
-        """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock. Inch parts get 4 decimals
-        (a 0.75 in bar must not be rounded or clamped to 1)."""
-        group = Adw.PreferencesGroup()
-        if top is not None:  # e.g. the units, first, so the sizes below are read in them
-            group.add(top)
-        rows = {}
-        for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 0.01, 1000),
-                                       ("length", _("Billet length"), None, 0.01, 2000),
-                                       ("bore", _("Bore"), _("Tube billet; 0 = solid bar"), 0, 1000)):
-            r = Adw.SpinRow.new_with_range(lo, hi, 1)
-            r.set_title(title)
-            if sub:
-                r.set_subtitle(sub)
-            r.set_digits(4 if inch else 1)
-            r.set_value(getattr(b, key))
-            rows[key] = r
-            group.add(r)
-        rows["jaws"] = Adw.ComboRow(title=_("Chuck jaws"),
-                                    model=Gtk.StringList.new([_("On the outside"), _("In the bore")]),
-                                    selected=1 if b.jaws == "internal" else 0)
-        rows["tailstock"] = Adw.SwitchRow(title=_("Show tailstock"), active=b.tailstock)
-        group.add(rows["jaws"])
-        group.add(rows["tailstock"])
-        return group, rows
-
-    @staticmethod
-    def _billet_from(rows):
-        from alphacam.model.project import Billet
-
-        return Billet(diameter=rows["diameter"].get_value(), length=rows["length"].get_value(),
-                      bore=rows["bore"].get_value(), jaws="internal" if rows["jaws"].get_selected() == 1 else "external",
-                      tailstock=rows["tailstock"].get_active())
+        b.get_object("preferences").present(self)
 
     def new_dialog(self) -> None:
         """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
         from alphacam.model.project import Billet
 
-        alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if settings()["units"] == "inch" else 0)
-        group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
-                                               length=settings()["billet_length"]), settings()["units"] == "inch",
-                                        top=units)
-        self._units_follow(units, rows)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("create", _("_Create"))
-        alert.set_response_appearance("create", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("create")
-        alert.set_close_response("cancel")
+        b = builder("new-part")
+        alert = b.get_object("new_part_alert")
+        billet = b.get_object("new_part_billet")
+        billet.set_billet(Billet(diameter=settings()["billet_diameter"], length=settings()["billet_length"]),
+                          settings()["units"] == "inch", units=True)
 
         def response(_d, r):
             if r != "create":
                 return
             from alphacam.model.geometry import Point
 
-            inch = units.get_selected() == 1
+            inch = billet.inch()
+            size = billet.billet()
             settings().set("units", "inch" if inch else "mm")
-            settings().set("billet_diameter", rows["diameter"].get_value())
-            settings().set("billet_length", rows["length"].get_value())
+            settings().set("billet_diameter", size.diameter)
+            settings().set("billet_length", size.length)
             k = 25.4 if inch else 1.0
-            project = Project(units="inch" if inch else "mm", billet=self._billet_from(rows),
+            project = Project(units="inch" if inch else "mm", billet=size,
                               tool_change=Point(round(100 / k, 4), round(50 / k, 4)),
                               first_tool=int(settings()["first_tool"]))
             self.path, self.import_name = None, None
@@ -1042,34 +921,20 @@ class MainWindow(Adw.ApplicationWindow):
         """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""
         if self.project is None:
             return
-        # a dialog with room for the rows (an alert is too narrow: labels broke mid-word, rows scrolled away)
-        dlg = Adw.Dialog(title=_("Part Settings"), content_width=520, content_height=640)
-        group, rows = self._billet_rows(self.project.billet, self.project.units == "inch")
-        group.set_title(_("Billet"))
-        group.set_description(_("Billet, chuck jaws and tailstock only change the picture."))
-        drawing = Adw.ActionRow(title=_("Drawing units"), subtitle=_("Set when the part was made"))
-        drawing.add_suffix(Gtk.Label(label=_("mm") if self.project.units == "mm" else _("inch")))
-        program = Adw.PreferencesGroup(title=_("Program"))
-        # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
-        number = Adw.SpinRow.new_with_range(1, 9999, 1)
-        number.set_title(_("Program number"))
-        number.set_subtitle(_("Shown on the control"))
+        b = builder("part-settings")
+        dlg = b.get_object("part_settings")
+        group = b.get_object("part_settings_billet")
+        group.set_billet(self.project.billet, self.project.units == "inch")
+        b.get_object("part_settings_units_label").set_label(_("mm") if self.project.units == "mm" else _("inch"))
+        number = b.get_object("part_settings_number_row")
         number.set_value(self.project.program_number)
-        program.add(number)
-        # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
         unit_keys = [None, "mm", "inch"]
-        out_units = Adw.ComboRow(title=_("Program units"), subtitle=_("M71 mm / M70 inch on the control"),
-                                 model=Gtk.StringList.new([_("As the drawing"), _("mm"), _("inch")]))
+        out_units = b.get_object("part_settings_output_row")
         current = self.project.output_units if self.project.output_units != self.project.units else None
         out_units.set_selected(unit_keys.index(current))
-        program.add(drawing)
-        program.add(out_units)
-        page = Adw.PreferencesPage()
-        page.add(group)
-        page.add(program)
 
         def apply(*_a):
-            billet = self._billet_from(rows)
+            billet = group.billet()
             billet.face_allowance = self.project.billet.face_allowance
             n = int(number.get_value())
             out = unit_keys[out_units.get_selected()]
@@ -1083,19 +948,8 @@ class MainWindow(Adw.ApplicationWindow):
             if self.apply_edit(_("Part settings"), change):
                 self.refresh(fit=True)
 
-        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
-        cancel = Gtk.Button(label=_("_Cancel"), use_underline=True)
-        cancel.connect("clicked", lambda *_a: dlg.close())
-        ok = Gtk.Button(label=_("_Apply"), use_underline=True)
-        ok.add_css_class("suggested-action")
-        ok.connect("clicked", apply)
-        header.pack_start(cancel)
-        header.pack_end(ok)
-        view = Adw.ToolbarView()
-        view.add_top_bar(header)
-        view.set_content(page)
-        dlg.set_child(view)
-        dlg.set_default_widget(ok)
+        b.get_object("part_settings_cancel").connect("clicked", lambda *_a: dlg.close())
+        b.get_object("part_settings_apply").connect("clicked", apply)
         dlg.apply = apply  # for scripts and tests
         dlg.present(self)
 
@@ -1184,15 +1038,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _close_request(self, *_args) -> bool:
         if not self.modified():
             return False
-        alert = Adw.AlertDialog(heading=_("Save changes?"),
-                                body=_("The part has changes that are not saved. They are lost if you close without saving."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("discard", _("_Discard"))
-        alert.add_response("save", _("_Save"))
-        alert.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("save")
-        alert.set_close_response("cancel")
+        alert = builder("save-changes").get_object("close_alert")
 
         def response(_d, r):
             if r == "discard":
