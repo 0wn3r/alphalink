@@ -12,7 +12,15 @@ on:
 
 jobs:
   build:
-    name: Build the Flatpak
+    name: Build the Flatpak (${{ matrix.app }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: python
+            manifest: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
+          - app: rust
+            manifest: rust/build-aux/io.github._0wn3r.AlphaLinkCAM.json
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
@@ -21,14 +29,23 @@ jobs:
       - uses: actions/checkout@v7
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
         with:
-          bundle: AlphaLinkCAM.flatpak
-          manifest-path: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
-          cache-key: flatpak-builder-e2e-${{ github.sha }}
+          bundle: AlphaLinkCAM-${{ matrix.app }}.flatpak
+          manifest-path: ${{ matrix.manifest }}
+          cache-key: flatpak-builder-e2e-${{ matrix.app }}-${{ github.sha }}
           run-tests: false
 
   e2e:
-    name: UI tests in headless GNOME
+    name: UI tests in headless GNOME (${{ matrix.app }})
     needs: build
+    strategy:
+      fail-fast: false
+      matrix:
+        # the Rust app is read through its test bus (ALPHALINK_TEST=1), which test_interaction.py needs
+        include:
+          - app: python
+            branch: ""
+          - app: rust
+            branch: master
     # the runner VM itself, not a container: GNOME Shell needs systemd-logind on the system bus
     runs-on: ubuntu-26.04
     timeout-minutes: 60
@@ -41,7 +58,7 @@ jobs:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v8
         with:
-          pattern: AlphaLinkCAM*
+          pattern: AlphaLinkCAM-${{ matrix.app }}*
           merge-multiple: true
           path: bundle
       - name: GNOME Shell, PipeWire, libei, AT-SPI and Flatpak
@@ -81,7 +98,7 @@ jobs:
                 echo "low memory: stopping the tests"; ps -u e2e -o rss=,comm= | sort -rn | head -15; sudo pkill -KILL -u e2e; fi
             done ) > logs/watch.log 2>&1 &
           sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
-            python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
+            ALPHALINK_E2E_BRANCH=${{ matrix.branch }} python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Collect what the test user left
         if: always()
@@ -95,25 +112,29 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-screenshots
+          name: e2e-screenshots-${{ matrix.app }}
           path: app/e2e-out
           if-no-files-found: ignore
       - name: Keep the logs
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: e2e-logs
+          name: e2e-logs-${{ matrix.app }}
           path: logs
           if-no-files-found: ignore
       - name: Show the end of the logs as annotations (readable without signing in)
         if: failure()
         run: |
           set +e
-          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
+          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo;
+            echo "processes left:";
             ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
             for p in $(pgrep -u e2e -x gnome-shell); do
               echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(sudo cat /proc/$p/environ | tr '\0' '\n' | grep ^XDG_RUNTIME_DIR)"
             done | head -30; } > logs/summary.log 2>&1 || true
+          # each failed test with the line and the error, readable in the annotations
+          awk '/^\[[0-9]+\//{t=$2} /test_[a-z_]+\.py", line/{l=$0} /^    [A-Za-z.]*(Error|NotFound)[:(]/{print t; print "  " l; print "  " $0}' \
+            logs/e2e.log | cut -c1-220 > logs/failures.log
           first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
           [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
           for f in logs/*.log; do

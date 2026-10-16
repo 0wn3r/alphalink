@@ -11,11 +11,12 @@ import subprocess
 import sys
 import unittest
 
-from . import test_workflows
+from . import test_interaction, test_workflows
 
 
 def ids(names: list[str]) -> list[str]:
-    suite = unittest.defaultTestLoader.loadTestsFromModule(test_workflows)
+    suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromModule(m)
+                               for m in (test_workflows, test_interaction))
     out = []
 
     def walk(s):
@@ -26,6 +27,7 @@ def ids(names: list[str]) -> list[str]:
                 out.append(t.id())
 
     walk(suite)
+    out = list(dict.fromkeys(out))  # classes imported into a second module are listed once
     return [i for i in out if not names or any(f".{n}." in i or i.endswith(f".{n}") for n in names)]
 
 

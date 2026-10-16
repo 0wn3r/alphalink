@@ -42,7 +42,8 @@ _lib.ei_seat_bind_capabilities.restype = None  # varargs: capabilities, then NUL
 # US keyboard: character -> (evdev key code, shift)
 KEY = {"Escape": 1, "BackSpace": 14, "Tab": 15, "Return": 28, "Control_L": 29, "Shift_L": 42, "Alt_L": 56, "space": 57,
        "F1": 59, "Home": 102, "Up": 103, "Page_Up": 104, "Left": 105, "Right": 106, "End": 107, "Down": 108,
-       "Page_Down": 109, "Delete": 111, "Super_L": 125}
+       "Page_Down": 109, "Delete": 111, "Super_L": 125, "Menu": 127,
+       **{f"F{n}": 58 + n for n in range(2, 11)}, "F11": 87, "F12": 88}
 for row, start in (("1234567890-=", 2), ("qwertyuiop[]", 16), ("asdfghjkl;'", 30), ("zxcvbnm,./", 44)):
     for i, ch in enumerate(row):
         KEY[ch] = start + i

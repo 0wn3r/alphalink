@@ -1,6 +1,6 @@
 # AlphaLink CAM: touch and multi-touch design
 
-Status: **design draft 1** (2026-10-13), mostly implemented by 2026-10-14; see the status table below. Companion to
+Status: **design draft 1** (2026-10-13). Mouse, keyboard and pen: `app/POINTER_KEYBOARD.md`. Draft 1, mostly implemented by 2026-10-14; see the status table below. Companion to
 `app/DESIGN.md` (section 6, user interface). Target device: Surface Pro 7 (12.3", 2736×1824 at 200 %, capacitive
 multi-touch, pen).
 
