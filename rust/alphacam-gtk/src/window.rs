@@ -531,6 +531,29 @@ impl MainWindow {
         self.imp().parts.get().expect("the window is set up")
     }
 
+    /// What the end-to-end tests read through the test bus (test_bus.rs State): the page, the view, the
+    /// operations and the drawing tools' state.
+    pub fn test_state(&self) -> serde_json::Value {
+        let imp = self.imp();
+        let (view, tool, sim) = {
+            let s = imp.canvas.state();
+            (s.view, s.tool.clone(), s.sim_index)
+        };
+        let project = self.project();
+        let ops: Vec<String> = project.iter().flat_map(|p| p.operations.iter().map(op_title)).collect();
+        serde_json::json!({
+            "page": self.stack().visible_child_name().map(String::from),
+            "view": {"scale": view.scale, "ox": view.ox, "oy": view.oy},
+            "tool": tool,
+            "sim_index": sim,
+            "elements": project.as_ref().map_or(0, |p| p.geometry.len()),
+            "operations": ops,
+            "selected_op": self.selected_index(),
+            "readout": self.readout().label().to_string(),
+            "drawing": self.parts().drawing.test_state(),
+        })
+    }
+
     pub fn has_project(&self) -> bool {
         self.imp().state.borrow().project.is_some()
     }

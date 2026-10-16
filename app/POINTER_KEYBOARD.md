@@ -15,12 +15,12 @@ is the implementation; the Python app is frozen.
 | 3 | Wheel pans 🧪, Shift+wheel sideways, Ctrl+wheel zooms at the pointer 🧪; Ctrl+= / Ctrl+− / Ctrl+0 🧪; double click fits | ✓ |
 | 3 | Middle-button drag pans | ✗ |
 | 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✗ |
-| 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✗ (about the centre today) |
+| 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✓ |
 | 4 | Hover marker and rubber band; click points; right click menu 🧪; drag handles | ✓ |
 | 4 | Keyboard drawing: ALPHA-T letters, the command entry, arrows + Enter 🧪 | ✓ |
 | 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✗ |
 | 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✗ |
-| 5 | Shift+F10 / Menu 🧪 and Delete 🧪 on the drawing | ✓ (drawing focused only) |
+| 5 | Shift+F10 / Menu 🧪 on the drawing; Delete 🧪 anywhere on the Part page outside text | ✓ |
 | 5 | `[` / `]` select the previous / next element along the profile | ✗ |
 | 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✗ |
 | 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✗ (arrows ✓) |
@@ -33,7 +33,7 @@ is the implementation; the Python app is frozen.
 | 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✗ |
 | 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✗ (op editor only) |
 | 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ (`i` ✗) |
-| 12 | The Shortcuts window matches what the keys do | ✗ (`z`, `r`, Delete differ) |
+| 12 | The Shortcuts window matches what the keys do | ✓ |
 
 ## 1. Who uses which input
 

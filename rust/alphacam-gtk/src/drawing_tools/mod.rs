@@ -448,6 +448,18 @@ impl DrawingTools {
         self.s.borrow().key_pointer.is_some()
     }
 
+    /// What the end-to-end tests read through the test bus (test_bus.rs State).
+    pub fn test_state(&self) -> serde_json::Value {
+        let s = self.s.borrow();
+        serde_json::json!({
+            "selected_element": s.selected,
+            "cursor": s.cursor.map(|c| [c.x, c.z]),
+            "picking": s.pick_op,
+            "constructing": s.construct.is_some(),
+            "chain": s.points.len(),
+        })
+    }
+
     pub fn select_element(&self, id: Option<&str>) {
         self.select_element_(id.map(str::to_string));
     }
@@ -660,16 +672,12 @@ impl DrawingTools {
             self.c.emit_by_name::<()>("canvas-long-pressed", &[&x, &z, &sx, &sy, &el]);
             return glib::Propagation::Stop;
         }
-        let (chain, pick, selected) = {
+        let (chain, pick) = {
             let s = self.s.borrow();
-            (!s.points.is_empty(), s.pick_op.is_some(), s.selected.is_some())
+            (!s.points.is_empty(), s.pick_op.is_some())
         };
         if keyval == gdk::Key::Escape && (chain || pick) {
             if pick { self.cancel_pick() } else { self.finish_chain() }
-            return glib::Propagation::Stop;
-        }
-        if matches!(keyval, gdk::Key::Delete | gdk::Key::BackSpace) && selected {
-            self.delete_selected_element();
             return glib::Propagation::Stop;
         }
         glib::Propagation::Proceed
@@ -687,7 +695,15 @@ impl DrawingTools {
             return glib::Propagation::Proceed;
         }
         let name = keyval.name().map(|n| n.to_string()).unwrap_or_default();
-        let on_canvas = focus.is_none_or(|f| f == self.c.clone().upcast::<gtk::Widget>());
+        let on_canvas = focus.as_ref().is_none_or(|f| *f == self.c.clone().upcast::<gtk::Widget>());
+        // Delete erases the selected element wherever the Part page has the focus (POINTER_KEYBOARD.md 5)
+        if matches!(keyval, gdk::Key::Delete | gdk::Key::KP_Delete | gdk::Key::BackSpace)
+            && self.s.borrow().selected.is_some()
+            && focus.as_ref().is_none_or(|f| w.stack().child_by_name("part").is_some_and(|page| f.is_ancestor(&page)) || on_canvas)
+        {
+            self.delete_selected_element();
+            return glib::Propagation::Stop;
+        }
         let done = if cursor_key(&name).is_some()
             || step_key(&name).is_some()
             || matches!(name.as_str(), "Home" | "End" | "Return" | "KP_Enter")
@@ -796,7 +812,16 @@ impl DrawingTools {
             Hit::ZoomIn | Hit::Fit => {
                 let view = self.c.state().view;
                 self.s.borrow_mut().prev_view = Some(view);
-                if action == Hit::ZoomIn { self.c.zoom(1.25) } else { self.c.fit() }
+                match (action, cur) {
+                    (Hit::Fit, _) => self.c.fit(),
+                    // ALPHA-T's Z zooms in at the cursor (the middle of the view when there is none)
+                    (_, Some(c)) => {
+                        let (sx, sy) = view.to_screen(c.x, c.z);
+                        self.c.state_mut().view.zoom_at(sx, sy, 1.25);
+                        self.c.user_view_change();
+                    }
+                    _ => self.c.zoom(1.25),
+                }
             }
             Hit::RecallView => {
                 let prev = self.s.borrow().prev_view;

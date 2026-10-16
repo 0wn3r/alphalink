@@ -77,7 +77,7 @@ Adw.ShortcutsDialog dialog {
 
     Adw.ShortcutsItem {
       title: _("Redo");
-      accelerator: "<Shift><Control>z";
+      accelerator: "<Shift><Control>z <Control>y";
     }
 
     Adw.ShortcutsItem {
@@ -92,7 +92,12 @@ Adw.ShortcutsDialog dialog {
 
     Adw.ShortcutsItem {
       title: _("Delete Element");
-      accelerator: "Delete";
+      accelerator: "Delete minus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Finish Picking the Contour");
+      accelerator: "3 Return";
     }
 
     Adw.ShortcutsItem {
@@ -106,7 +111,7 @@ Adw.ShortcutsDialog dialog {
 
     Adw.ShortcutsItem {
       title: _("Zoom In");
-      accelerator: "<Control>plus";
+      accelerator: "<Control>plus <Control>equal";
     }
 
     Adw.ShortcutsItem {
@@ -130,7 +135,7 @@ Adw.ShortcutsDialog dialog {
     }
 
     Adw.ShortcutsItem {
-      title: _("Redraw");
+      title: _("Fit Part (ALPHA-T Redraw)");
       accelerator: "r";
     }
 

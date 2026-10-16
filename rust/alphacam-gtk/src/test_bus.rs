@@ -12,6 +12,9 @@
 //!                              selected (list row), has focus, and value (an entry's or editable row's text, a
 //!                              text view's buffer, a spin row's value as shown)
 //!   Title() -> s               the active window's title
+//!   State() -> s               JSON: the page, the view (scale, ox, oy), the tool, the simulation position, the
+//!                              number of elements, the operations' titles and the selected one, the read-out, and
+//!                              the drawing's selected element, ALPHA-T cursor, picking and construction
 //!   Screenshot(s path) -> b    the active window rendered to a PNG (for failed tests)
 //!
 //! Popovers (menus) are surfaces of their own: their widgets are placed by the popover's position on its parent.
@@ -28,6 +31,7 @@ const INTERFACE: &str = r#"<node>
     <method name="Bounds"><arg name="key" type="s" direction="in"/><arg type="(bdddd)" direction="out"/></method>
     <method name="Widgets2"><arg type="a(ssssddddbbbbs)" direction="out"/></method>
     <method name="Title"><arg type="s" direction="out"/></method>
+    <method name="State"><arg type="s" direction="out"/></method>
     <method name="Screenshot"><arg name="path" type="s" direction="in"/><arg type="b" direction="out"/></method>
   </interface>
 </node>"#;
@@ -195,6 +199,15 @@ fn serve(connection: &gio::DBusConnection, app: glib::WeakRef<gtk::Application>)
                 "Title" => {
                     let title = app.active_window().and_then(|w| w.title()).map(String::from).unwrap_or_default();
                     invocation.return_value(Some(&(title,).to_variant()));
+                }
+                "State" => {
+                    let state = app
+                        .active_window()
+                        .and_downcast::<crate::window::MainWindow>()
+                        .or_else(|| app.windows().into_iter().find_map(|w| w.downcast().ok()))
+                        .map(|w| w.test_state().to_string())
+                        .unwrap_or_default();
+                    invocation.return_value(Some(&(state,).to_variant()));
                 }
                 "Screenshot" => {
                     let path: String = params.get::<(String,)>().map(|(k,)| k).unwrap_or_default();

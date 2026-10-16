@@ -624,6 +624,8 @@ UK = {
 "Deselect or Cancel": "Зняти вибір або скасувати",
 "View": "Вигляд",
 "Redraw": "Перемалювати",
+"Fit Part (ALPHA-T Redraw)": "Вписати деталь (перемалювання ALPHA-T)",
+"Finish Picking the Contour": "Завершити вибір контуру",
 "Zoom In at the Cursor": "Збільшити біля курсора",
 "Recall View": "Повернути вигляд",
 "Drawing Keys (Part Page)": "Клавіші креслення (сторінка «Деталь»)",
