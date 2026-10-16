@@ -16,6 +16,9 @@ regex = "1"
 rust_decimal = "1"
 gtk = { package = "gtk4", version = "0.11", features = ["v4_18"] }
 adw = { package = "libadwaita", version = "0.9", features = ["v1_8"] }
+# the setup sheet as PDF (alphacam-gtk report.rs): the cairo gtk uses, with its PDF surface, and Pango on it
+cairo-rs = { version = "0.22", features = ["pdf"] }
+pangocairo = "0.22"
 gettext-rs = { version = "0.8", features = ["gettext-system"] }
 glib-build-tools = "0.22"
 # serial link (alphacam feature "serial"); without libudev, so the build needs no system library
