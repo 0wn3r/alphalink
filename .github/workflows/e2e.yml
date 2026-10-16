@@ -29,11 +29,9 @@ jobs:
   e2e:
     name: UI tests in headless GNOME
     needs: build
-    runs-on: ubuntu-latest
+    # the runner VM itself, not a container: GNOME Shell needs systemd-logind on the system bus
+    runs-on: ubuntu-26.04
     timeout-minutes: 60
-    container:
-      image: ubuntu:26.04
-      options: --privileged
     env:
       DEBIAN_FRONTEND: noninteractive
     defaults:
@@ -48,33 +46,27 @@ jobs:
           path: bundle
       - name: GNOME Shell, PipeWire, libei, AT-SPI and Flatpak
         run: |
-          apt-get update
-          apt-get install -y --no-install-recommends gnome-shell mutter pipewire wireplumber dbus-daemon dbus-user-session \
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gnome-shell mutter pipewire wireplumber dbus-daemon dbus-user-session \
             at-spi2-core gir1.2-atspi-2.0 gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi python3-gi-cairo python3-cairo libei1 \
             socat flatpak gsettings-desktop-schemas fonts-cantarell adwaita-icon-theme sudo ca-certificates \
             libgl1-mesa-dri libegl-mesa0 libgbm1 mesa-vulkan-drivers xdg-desktop-portal-gnome
-          useradd -m tester
       - name: Install the app
         run: |
-          mkdir -p /run/dbus && dbus-daemon --system --fork  # flatpak asks the system bus while installing a bundle
-          mkdir -p logs && chmod 777 logs && ls -la bundle | tee logs/install.log
-          cp bundle/*.flatpak /tmp/app.flatpak && chmod 644 /tmp/app.flatpak
-          (sudo -H -u tester flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
-           sudo -H -u tester flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
-           sudo -H -u tester dbus-run-session -- flatpak install --user -y --noninteractive /tmp/app.flatpak) 2>&1 | tee -a logs/install.log
+          mkdir -p logs && ls -la bundle | tee logs/install.log
+          (flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
+           flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
+           flatpak install --user -y --noninteractive bundle/*.flatpak) 2>&1 | tee -a logs/install.log
           exit ${PIPESTATUS[0]}
       - name: Probe GNOME Shell (its own log, for when the tests cannot start it)
         run: |
-          sudo -H -u tester env XDG_RUNTIME_DIR=/tmp/tester-run sh -c 'mkdir -p -m 700 /tmp/tester-run &&
-            timeout 20 dbus-run-session -- gnome-shell --headless --wayland --no-x11 --virtual-monitor 800x600' \
+          timeout 20 dbus-run-session -- gnome-shell --headless --wayland --no-x11 --virtual-monitor 800x600 \
             > logs/shell-probe.log 2>&1 || true
           tail -n 60 logs/shell-probe.log
       - name: Run the tests
         run: |
-          chown -R tester .
           cd app
-          sudo -H -u tester env ALPHALINK_E2E=1 XDG_RUNTIME_DIR=/tmp/tester-run \
-            sh -c 'mkdir -p -m 700 /tmp/tester-run && python3 -m tests.e2e.run -j 2' 2>&1 | tee ../logs/e2e.log
+          ALPHALINK_E2E=1 python3 -m tests.e2e.run -j 2 2>&1 | tee ../logs/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Keep the screenshots
         if: always()
