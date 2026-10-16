@@ -55,6 +55,7 @@ jobs:
           useradd -m tester
       - name: Install the app
         run: |
+          mkdir -p /run/dbus && dbus-daemon --system --fork  # flatpak asks the system bus while installing a bundle
           mkdir -p logs && chmod 777 logs && ls -la bundle | tee logs/install.log
           cp bundle/*.flatpak /tmp/app.flatpak && chmod 644 /tmp/app.flatpak
           (sudo -H -u tester flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
