@@ -1301,3 +1301,11 @@ External area clear only; internal pockets and pockets with arcs on the way down
   ALPHA-T.SPA/NOR entirely, ALPHA-T.MES 69 %, ALPHTCNC.PRG 61 %, ATSETUP.EXE 19 %, and 11 sectors inside
   ATMACROS.EXE's entry of ALPHTZIP.EXE.
 
+## Progress 45 (2026-10-16): inch threads and ALPHA-T's cut count
+- 1/2-13 UNC drawn as lines X12.7 / X10.3734 (Z0..-20), pitch typed 1.953846 (tools/ac_scripts/at_thread.ks with
+  new values; CUT DATA is menu item 2, entered after Up x3 from PITCH). ALPHA-T keeps the pitch to 4 decimals (SD1
+  F1.9538, PRG F3.908) - the app's 25.4/13 gives the same.
+- Cut count: n = (depth / first cut)^2 *rounded* (not rounded up), and the last cut always goes to the full depth.
+  Depth 1.1633: D1 -> 1.353 -> one cut straight to X10.374; D0.6 -> 3.759 -> 4 cuts 0.6, 0.849, 1.039, 1.1633.
+  The app rounded up (2 cuts with D1); fixed. All earlier thread samples had whole-number ratios.
+
