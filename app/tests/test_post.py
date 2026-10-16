@@ -120,6 +120,15 @@ GOLDEN = {
     # last at full depth)
     "THREAD_unc_half13_metric": [Thread(3, S, "g0", "g1", pitch=25.4 / 13)],
     "THREAD_unc_half13_d06_metric": [Thread(3, S, "g0", "g1", pitch=25.4 / 13, cut_depth=0.6)],
+    # gap search 2026-10-16: odd depths on a slope and on R5/R3 corners, finish allowance on the radii, an internal
+    # M24x1.5 thread with 7 cuts (ratio 7.33), and a V groove (plunges go to the slope under the tip)
+    "AREA_slope_depth13_metric": [AreaClear(3, S, ["g0", "g1", "g2", "g3"], depth_of_cut=1.3)],
+    "AREA_radii_depth17_metric": [AreaClear(3, S, ["g0", "g2", "g1", "g3", "g5", "g4", "g6"], depth_of_cut=1.7)],
+    "FINISH_radii_offset_metric": [FinishPass(3, S, ["g0", "g2", "g1", "g3", "g5", "g4", "g6"], offset_x=0.3, offset_z=0.1)],
+    "THREAD_internal_m24_d03_metric": [Thread(3, S, "g0", "g1", pitch=1.5, cut_depth=0.3, external=False)],
+    "GROOVE_vee_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3)],
+    "GROOVE_vee_finishmode_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2,
+                                            tip_width=3, mode="finish")],
     "THREAD_spring2_metric": [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2)],
     "GROOVE_face_metric": [Groove(3, S, ["g1", "g2", "g3"], stepover=1, tip_width=2, front=False)],
 }

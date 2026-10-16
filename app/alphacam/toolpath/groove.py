@@ -7,7 +7,8 @@ Rules from GROOVE_metric (stepover 2, tip width 3, datum left):
     left wall (where the profile gets shallower going -Z, e.g. Z-30) when a step would jump over it, and the last
     one is clamped to the profile end;
   * each plunge goes to the highest profile diameter under the tip (elements touching only at the tip's edges do
-    not count), backs off 2 mm on diameter, and rapids out to the start X; after the last, rapid to the start;
+    not count; a slope counts with its part under the tip, GV), backs off 2 mm on diameter, and rapids out to
+    the start X; after the last, rapid to the start;
   * with a peck depth the plunge is preceded by pecks every peck depth (see _pecks); FULL RET YES retracts out
     to the start X after each peck."""
 
@@ -30,7 +31,10 @@ def _depth(boundary: list[Seg], z0: float, z1: float) -> float:
             if z0 < lo < z1:
                 xs.append(max(s.a.x, s.b.x))
         elif min(hi, z1) - max(lo, z0) > 1e-9:
-            xs.append(max(s.a.x, s.b.x))
+            if s.is_arc:
+                xs.append(max(s.a.x, s.b.x))
+            else:  # a slope: its highest point inside the tip's width (GV: X33.334 at Z-22 of a 40 -> 30 wall)
+                xs += [s.a.x + (s.b.x - s.a.x) * (z - s.a.z) / (s.b.z - s.a.z) for z in (max(lo, z0), min(hi, z1))]
     if not xs:
         raise ValueError(tr("grooving: no profile under Z{z0}..{z1}", z0=f"{z0:g}", z1=f"{z1:g}"))
     return max(xs)

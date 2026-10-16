@@ -1309,3 +1309,12 @@ External area clear only; internal pockets and pockets with arcs on the way down
   Depth 1.1633: D1 -> 1.353 -> one cut straight to X10.374; D0.6 -> 3.759 -> 4 cuts 0.6, 0.849, 1.039, 1.1633.
   The app rounded up (2 cuts with D1); fixed. All earlier thread samples had whole-number ratios.
 
+## Progress 46 (2026-10-16): gap search, second round
+New samples, all byte-identical now: AREA_slope_depth13 (depth 1.3 on a slope; DEPTH CUT is Enter, value, Enter),
+AREA_radii_depth17 (R5/R3 corners, depth 1.7), FINISH_radii_offset (U0.3 W0.1 on those radii; the finish OFFSET
+prompt needs Enter, "0.3,0.1", Enter, Enter, Enter), THREAD_internal_m24_d03 (internal, depth 0.812, D0.3: 7 cuts),
+GROOVE_vee and GROOVE_vee_finishmode (tools/ac_scripts/at_groove.ks with a V groove; finish mode = key 2, then a
+single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program number came out as 7).
+- Fixed: a grooving plunge goes to the highest point of the profile *within the tip's width*; on a sloped wall
+  that is the slope at the tip's edge (X33.334 at Z-22 on a 40 -> 30 wall), where the app used the wall's top (X40).
+
