@@ -1843,6 +1843,15 @@ msgstr "Редагувати елемент"
 msgid "Delete Element"
 msgstr "Видалити елемент"
 
+msgid "Previous / Next Element Along the Profile"
+msgstr "Попередній / наступний елемент уздовж профілю"
+
+msgid "Add or Remove the Element at the Cursor (Picking)"
+msgstr "Додати або прибрати елемент біля курсора (вибір)"
+
+msgid "Next / Previous Solution (Construction)"
+msgstr "Наступний / попередній розв’язок (побудова)"
+
 msgid "Finish Picking the Contour"
 msgstr "Завершити вибір контуру"
 

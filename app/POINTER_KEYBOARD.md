@@ -18,11 +18,11 @@ is the implementation; the Python app is frozen.
 | 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✓ |
 | 4 | Hover marker and rubber band; click points; right click menu 🧪; drag handles | ✓ |
 | 4 | Keyboard drawing: ALPHA-T letters, the command entry, arrows + Enter 🧪 | ✓ |
-| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✗ |
-| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✗ |
+| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✓ |
+| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✓ |
 | 5 | Shift+F10 / Menu 🧪 on the drawing; Delete 🧪 anywhere on the Part page outside text | ✓ |
-| 5 | `[` / `]` select the previous / next element along the profile | ✗ |
-| 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✗ |
+| 5 | `[` / `]` select the previous / next element along the profile | ✓ |
+| 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✓ |
 | 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✓ |
 | 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider | ✓ |
 | 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✓ |
@@ -84,23 +84,23 @@ chamfers, corners, measuring, text and the cursor commands. Two things are missi
 
 - **Construction commands** (Tangent, Tangent at Angle, Parallel, Split Arc, Blend `o`, Mirror): Enter takes the
   element or point nearest the cursor, as Corner does; when the command offers several solutions (drawn dashed),
-  **Tab and Shift+Tab move the highlight between them and Enter takes it** (✗). Escape cancels. ALPHA-T's own `o`
+  **Tab and Shift+Tab move the highlight between them and Enter takes it** (✓). Escape cancels. ALPHA-T's own `o`
   then finishes as it did on DOS.
 - Nothing else needs new keys; the shortcut list in §12 must be corrected.
 
 **Touch and pen without letters.** Text (`t`), Erase Text (`u`), Measure (`m`, `n`), Line by Length and Angle (`d`)
-and Move Cursor (`g`, `h`, `y`) get items in the **More** menu (✗), each opening the same dialog the letter does.
+and Move Cursor (`g`, `h`, `y`) get items in the **More** menu, each opening the same dialog the letter does (✓).
 Today a finger reaches them only by typing the letter into the command entry, and a pen not at all.
 
 ## 5. Selecting and editing elements
 
 | Action | Mouse | Keyboard | Pen |
 |---|---|---|---|
-| Select | click (6 px radius) | `l` / `a` nearest line / arc to the cursor; **`[` / `]` previous / next element along the profile** (✗) | tap (10 px) |
+| Select | click (6 px radius) | `l` / `a` nearest line / arc to the cursor; **`[` / `]` previous / next element along the profile** (✓) | tap (10 px) |
 | Context menu | right click | Shift+F10 or Menu at the cursor | long press (§10) or barrel button |
 | Edit exact values | right click → Edit Values…; E | E | menu → Edit Values… with the keypad (§11) |
 | Delete | right click → Delete; trash button | Delete, Backspace or `-` **whenever the Part page has the focus outside a text field** (✗: drawing focus only for Delete) | menu → Delete; trash button |
-| Pick a contour | click elements, Done | **Space adds or removes the element nearest the cursor**, `l`/`a` and `[`/`]` move between them, Enter or `3` finishes (✗) | tap elements |
+| Pick a contour | click elements, Done | **Space adds or removes the element nearest the cursor**, `l`/`a` and `[`/`]` move between them, Enter or `3` finishes (✓) | tap elements |
 
 `[` and `]` follow the order of the profile (the contour order the operations use), so a keyboard user can walk
 the part one element at a time and see each one's description in the read-out.

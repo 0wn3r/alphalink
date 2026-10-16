@@ -99,6 +99,7 @@ impl DrawingTools {
         };
         self.s.borrow_mut().construct = Some(Construct { kind: kind.into(), refs: vec![], choices: None });
         self.prompt(&gettext(first));
+        self.c.grab_focus(); // Enter takes what is nearest the cursor, Tab cycles the solutions (POINTER_KEYBOARD.md 4)
     }
 
     // --- feature helpers (workflow improvements, step 3) ------------------------------------------------
@@ -292,7 +293,10 @@ impl DrawingTools {
         self.s.borrow_mut().construct = None;
         self.construct_banner.set_button_label(Some(&gettext("_Cancel")));
         self.construct_banner.set_revealed(false);
-        self.c.overlay(|o| o.previews.clear());
+        self.c.overlay(|o| {
+            o.previews.clear();
+            o.preview_hl = None;
+        });
     }
 
     /// The construction's change, as one undoable step; the construction ends either way.
@@ -333,7 +337,10 @@ impl DrawingTools {
             then(previews[0].clone());
             return;
         }
-        self.c.overlay(|o| o.previews = previews.clone());
+        self.c.overlay(|o| {
+            o.previews = previews.clone();
+            o.preview_hl = None;
+        });
         if let Some(c) = self.s.borrow_mut().construct.as_mut() {
             c.choices = Some((previews, then));
         }
@@ -359,6 +366,50 @@ impl DrawingTools {
                 self.cancel_construct();
             }
         }
+    }
+
+    pub(super) fn constructing(&self, kind: &str) -> bool {
+        self.s.borrow().construct.as_ref().is_some_and(|c| c.kind == kind)
+    }
+
+    /// Tab / Shift+Tab: highlight the next / previous of the solutions drawn dashed (Enter takes it); false when
+    /// there is no choice to make.
+    pub(super) fn cycle_choice(&self, step: i32) -> bool {
+        let n = self.s.borrow().construct.as_ref().and_then(|c| c.choices.as_ref()).map_or(0, |c| c.0.len());
+        if n == 0 {
+            return false;
+        }
+        self.c.overlay(|o| {
+            let next = match o.preview_hl {
+                None if step > 0 => 0,
+                None => n - 1,
+                Some(i) => (i as i32 + step).rem_euclid(n as i32) as usize,
+            };
+            o.preview_hl = Some(next);
+        });
+        self.c.queue_draw();
+        true
+    }
+
+    /// Enter during a construction (POINTER_KEYBOARD.md 4): the highlighted solution, or else what a tap at the
+    /// cursor would take, the element nearest the cursor included.
+    pub(super) fn construct_key(&self, cursor: Point) {
+        let chosen = {
+            let s = self.s.borrow();
+            let choices = s.construct.as_ref().and_then(|c| c.choices.clone());
+            choices.zip(self.c.state().overlay.preview_hl).and_then(|((pv, then), i)| pv.get(i).cloned().map(|pv| (pv, then)))
+        };
+        if let Some((pv, then)) = chosen {
+            then(pv);
+            return;
+        }
+        let Some(project) = self.project() else { return };
+        let tap = crate::canvas::hittest::Source::Touch.radius_px() / self.c.state().view.scale;
+        let el = drawing::nearest_element(&project, cursor, None).unwrap_or_default();
+        let dist = element(&project, &el).map_or(f64::INFINITY, |g| drawing::distance_to(g, cursor));
+        // the nearest element counts however far the cursor is, as the Corner key's does
+        let tol = if dist.is_finite() { tap.max(dist * 1.001) } else { tap };
+        self.construct_tap(cursor, tol, &el);
     }
 
     pub(super) fn construct_tap(&self, p: Point, tol: f64, el: &str) {
