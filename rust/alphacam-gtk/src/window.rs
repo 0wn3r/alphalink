@@ -250,7 +250,7 @@ mod imp {
             OpEditor::ensure_type();
             BilletGroup::ensure_type();
             klass.bind_template();
-            Callbacks::bind_template_callbacks(klass);
+            bind_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -292,128 +292,90 @@ pub fn open(win: &MainWindow, path: &Path, options: &StartOptions) {
     }
 }
 
-/// The window's MainWindow, from a signal's emitter: a widget in it, an event controller on one, or the window's
-/// own breakpoint. ui/window.blp's handlers are not swapped, so the emitter comes first, not the window.
-fn window_of(emitter: &glib::Value) -> Option<MainWindow> {
-    let obj = emitter.get::<glib::Object>().ok()?;
-    let widget = match obj.downcast::<gtk::Widget>() {
-        Ok(w) => w,
-        Err(obj) => match obj.downcast::<gtk::EventController>() {
-            Ok(c) => c.widget()?,
-            Err(_) => return gtk::Window::list_toplevels().into_iter().find_map(|w| w.downcast::<MainWindow>().ok()),
-        },
-    };
-    widget.downcast_ref::<MainWindow>().cloned().or_else(|| widget.root().and_downcast::<MainWindow>())
-}
-
 fn arg<T: for<'a> glib::value::FromValue<'a> + 'static>(values: &[glib::Value], i: usize) -> Option<T> {
     values.get(i).and_then(|v| v.get::<T>().ok())
 }
 
-/// The handlers ui/window.blp names; each finds its window and passes the signal on.
-struct Callbacks;
-
-#[gtk::template_callbacks(functions)]
-impl Callbacks {
-    #[template_callback]
-    fn _close_request(#[rest] values: &[glib::Value]) -> bool {
-        values.first().and_then(window_of).is_some_and(|w| w.close_request_cb())
-    }
-
-    #[template_callback]
-    fn _split_collapsed(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.split_collapsed()
-        }
-    }
-
-    #[template_callback]
-    fn _page_changed(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.page_changed()
-        }
-    }
-
-    #[template_callback]
-    fn _small_applied(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.set_small(true)
-        }
-    }
-
-    #[template_callback]
-    fn _small_unapplied(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.set_small(false)
-        }
-    }
-
-    #[template_callback]
-    fn _program_search_changed(entry: &gtk::SearchEntry) {
-        if let Some(w) = entry.root().and_downcast::<MainWindow>() {
-            w.program_search_changed(entry)
-        }
-    }
-
-    #[template_callback]
-    fn _program_search_next(entry: &gtk::SearchEntry) {
-        if let Some(w) = entry.root().and_downcast::<MainWindow>() {
-            w.program_search_next(entry)
-        }
-    }
-
-    #[template_callback]
-    fn _program_search_previous(entry: &gtk::SearchEntry) {
-        if let Some(w) = entry.root().and_downcast::<MainWindow>() {
-            w.program_search_previous(entry)
-        }
-    }
-
-    #[template_callback]
-    fn _pinch_begin(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.pinch_begin()
-        }
-    }
-
-    #[template_callback]
-    fn _pinch_scaled(#[rest] values: &[glib::Value]) {
-        if let (Some(w), Some(scale)) = (values.first().and_then(window_of), arg::<f64>(values, 1)) {
-            w.pinch_scaled(scale)
-        }
-    }
-
-    #[template_callback]
-    fn _row_selected(#[rest] values: &[glib::Value]) {
-        let Some(listbox) = arg::<gtk::ListBox>(values, 0) else { return };
-        if let Some(w) = listbox.root().and_downcast::<MainWindow>() {
-            w.row_selected(&listbox, arg::<gtk::ListBoxRow>(values, 1).as_ref())
-        }
-    }
-
-    #[template_callback]
-    fn _cursor_moved(#[rest] values: &[glib::Value]) {
-        if let (Some(w), Some(x), Some(z)) =
-            (values.first().and_then(window_of), arg::<f64>(values, 1), arg::<f64>(values, 2))
-        {
-            w.cursor_moved(x, z)
-        }
-    }
-
-    #[template_callback]
-    fn _show_finding(#[rest] values: &[glib::Value]) {
-        if let Some(w) = values.first().and_then(window_of) {
-            w.show_finding()
-        }
-    }
-
-    #[template_callback]
-    fn _program_tapped(#[rest] values: &[glib::Value]) {
-        if let (Some(w), Some(x), Some(y)) =
-            (values.first().and_then(window_of), arg::<f64>(values, 2), arg::<f64>(values, 3))
-        {
-            w.program_tapped(x, y)
-        }
+/// Binds the handlers ui/window.blp names. The template scope passes (emitter, signal arguments..., template object):
+/// the window is the last value, the signal's own values come before it.
+fn bind_callbacks(klass: &mut <imp::MainWindow as ObjectSubclass>::Class) {
+    type Handler = (&'static str, fn(&MainWindow, &[glib::Value]) -> Option<glib::Value>);
+    let handlers: [Handler; 14] = [
+        ("_close_request", |w, _| Some(w.close_request_cb().to_value())),
+        ("_split_collapsed", |w, _| {
+            w.split_collapsed();
+            None
+        }),
+        ("_page_changed", |w, _| {
+            w.page_changed();
+            None
+        }),
+        ("_small_applied", |w, _| {
+            w.set_small(true);
+            None
+        }),
+        ("_small_unapplied", |w, _| {
+            w.set_small(false);
+            None
+        }),
+        ("_program_search_changed", |w, v| {
+            if let Some(e) = arg::<gtk::SearchEntry>(v, 0) {
+                w.program_search_changed(&e)
+            }
+            None
+        }),
+        ("_program_search_next", |w, v| {
+            if let Some(e) = arg::<gtk::SearchEntry>(v, 0) {
+                w.program_search_next(&e)
+            }
+            None
+        }),
+        ("_program_search_previous", |w, v| {
+            if let Some(e) = arg::<gtk::SearchEntry>(v, 0) {
+                w.program_search_previous(&e)
+            }
+            None
+        }),
+        ("_pinch_begin", |w, _| {
+            w.pinch_begin();
+            None
+        }),
+        ("_pinch_scaled", |w, v| {
+            if let Some(scale) = arg::<f64>(v, 1) {
+                w.pinch_scaled(scale)
+            }
+            None
+        }),
+        ("_row_selected", |w, v| {
+            if let Some(listbox) = arg::<gtk::ListBox>(v, 0) {
+                w.row_selected(&listbox, arg::<gtk::ListBoxRow>(v, 1).as_ref())
+            }
+            None
+        }),
+        ("_cursor_moved", |w, v| {
+            if let (Some(x), Some(z)) = (arg::<f64>(v, 1), arg::<f64>(v, 2)) {
+                w.cursor_moved(x, z)
+            }
+            None
+        }),
+        ("_show_finding", |w, _| {
+            w.show_finding();
+            None
+        }),
+        ("_program_tapped", |w, v| {
+            if let (Some(x), Some(y)) = (arg::<f64>(v, 2), arg::<f64>(v, 3)) {
+                w.program_tapped(x, y)
+            }
+            None
+        }),
+    ];
+    let scope = klass.rust_template_scope();
+    for (name, handler) in handlers {
+        scope.add_callback(name, move |values| {
+            let (last, args) = values.split_last()?;
+            let win = last.get::<MainWindow>().ok()?;
+            handler(&win, args)
+        });
     }
 }
 
