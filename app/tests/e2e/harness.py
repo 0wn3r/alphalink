@@ -25,7 +25,10 @@ import time
 from pathlib import Path
 
 APP_ID = "io.github._0wn3r.AlphaLinkCAM"
-REAL_FLATPAK = Path.home() / ".local/share/flatpak"
+# the installation the app is run from; ALPHALINK_E2E_FLATPAK picks another one, e.g. for a second build of the
+# same app id (with two branches of one app installed side by side the file chooser portal answers with paths the
+# app cannot open)
+REAL_FLATPAK = Path(os.environ.get("ALPHALINK_E2E_FLATPAK", Path.home() / ".local/share/flatpak"))
 BTN_LEFT = 0x110
 BTN_RIGHT = 0x111
 # services the private session must not start: the keyring would ask for a password
