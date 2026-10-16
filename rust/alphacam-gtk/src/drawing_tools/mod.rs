@@ -1203,13 +1203,16 @@ impl DrawingTools {
         };
         self.chip.set_label(&text);
         let (sx, sy) = self.c.state().view.to_screen(b.x, b.z);
-        let w = self.chip.measure(gtk::Orientation::Horizontal, -1).1 as f64;
-        let h = self.chip.measure(gtk::Orientation::Vertical, -1).1 as f64;
         let (cw, ch) = (self.c.width() as f64, self.c.height() as f64);
         if !((0.0..=cw).contains(&sx) && (0.0..=ch).contains(&sy)) {
             self.chip.set_visible(false);
             return;
         }
+        // a hidden widget measures 0 x 0, and a measure includes the margins that place the chip: show it first and
+        // take the margins off, or it lands on the point, or (after a zoom) far from it
+        self.chip.set_visible(true);
+        let w = (self.chip.measure(gtk::Orientation::Horizontal, -1).1 - self.chip.margin_start()) as f64;
+        let h = (self.chip.measure(gtk::Orientation::Vertical, -1).1 - self.chip.margin_top()) as f64;
         let (x, y) = if sx - w - CHIP_GAP_PX >= 4.0 {
             (sx - w - CHIP_GAP_PX, sy - h / 2.0) // left of the point (its own label is drawn up and to the right)
         } else {
@@ -1219,7 +1222,6 @@ impl DrawingTools {
         let y = y.max(4.0).min((ch - h - 4.0).max(4.0));
         self.chip.set_margin_start(x as i32);
         self.chip.set_margin_top(y as i32);
-        self.chip.set_visible(true);
     }
 
     fn correct_last_point(&self) {
