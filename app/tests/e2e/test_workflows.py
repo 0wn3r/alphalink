@@ -120,7 +120,7 @@ class Keyboard(Surface):
         self.s.type("x0,0\n40,0\n")
         self.s.key("Escape")
         undo = self.app.find("Undo (Ctrl+Z)", "button")
-        self.assertTrue(undo.get_state_set().contains(__import__("gi").repository.Atspi.StateType.SENSITIVE))
+        self.assertTrue(self.app.sensitive(undo))
         self.snap("line")
 
     def test_exercise1_shaft_chamfer_fillet_by_keys(self):
@@ -177,9 +177,7 @@ class Mouse(Surface):
         text = "\n".join(a.get_name() or "" for a in self.app.all(role="text"))
         expected = post(p).decode("ascii").replace("\r\n", "\n")
         tv = self.app.all(role="text")
-        from gi.repository import Atspi
-
-        shown = Atspi.Text.get_text(tv[0], 0, -1) if tv else text
+        shown = self.app.text(tv[0]) if tv else text
         self.assertEqual(shown.strip(), expected.strip())
 
     def test_main_menu_has_the_gnome_items(self):
@@ -581,9 +579,9 @@ class FileDialogs(Surface):
         c = self.chooser()
         self.snap("chooser")
         self.s.key("ctrl+l")
-        self.s.type(str(path) + "\n")
+        self.s.type(str(path) + "\n")  # selects the file
         time.sleep(0.8)
-        c.press("Open", "button")
+        self.s.key("Return")  # opens it
 
     def save_as(self, name: str) -> None:
         FileDialogs.chooser(self)
@@ -597,7 +595,7 @@ class FileDialogs(Surface):
         self.launch()
         self.s.key("ctrl+o")
         self.choose(path)
-        self.wait_for(lambda: "opened.alcam" in (self.app.acc.get_child_at_index(0).get_name() or ""), 10,
+        self.wait_for(lambda: "opened.alcam" in self.app.title(), 10,
                       "the part to open")
         self.snap("opened")
 
@@ -737,9 +735,7 @@ class TouchPlacement(Surface):
         self.app.find("Profile closed", contains=True, showing=False)
         self.snap("closed")
         done = self.app.find("Done", "button")
-        from gi.repository import Atspi
-
-        self.assertFalse(done.get_state_set().contains(Atspi.StateType.SENSITIVE), "the line should be finished")
+        self.assertFalse(self.app.sensitive(done), "the line should be finished")
         self.assertEqual(len(self.saved(path).geometry), 4)
 
     def test_value_chip_corrects_the_last_point(self):
@@ -795,6 +791,30 @@ class TouchPlacement(Surface):
             self.s.tap(*self.app.center(k, "button"))
         q = self.saved(path)
         self.assertAlmostEqual(q.operations[0].feed, 0.2, places=6)
+
+    def test_swipes_on_editor_numbers_scroll_not_edit(self):
+        """A swipe that starts on a number, on − or on + scrolls the editor: no keypad, no new value (Eduard
+        2026-10-16). A still tap on + still steps the value."""
+        p = with_op()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        top = self.app.rect(self.app.labelled("5 elements", "list item"))
+        sw = self.app.rect(self.app.all("Towards the chuck", "switch")[0])
+        h = (sw[1] - (top[1] + top[3])) / 4
+        y = top[1] + top[3] + h / 2  # Depth of cut
+        right = sw[0] + sw[2]
+        for x in (right - 160, right - 82, right - 24):  # the number, −, +
+            for dy in (-180, 180):
+                self.s.input.touches([(x, y)], [(x, y + dy)], 15, 0.02)
+                time.sleep(0.6)
+                self.assertFalse(self.app.exists("✓", "button"), f"keypad opened by a swipe from x {x}")
+        self.snap("swiped")
+        q = self.saved(path)
+        before = with_op().operations[0]
+        for name in ("depth_of_cut", "offset_x", "offset_z", "feed"):
+            self.assertAlmostEqual(getattr(q.operations[0], name), getattr(before, name), places=6, msg=name)
 
 
 class TouchMovePoint(Surface):
@@ -910,17 +930,55 @@ class TouchMore2(Surface):
         yellow = sum(1 for x in range(0, img.width, 2) for y in range(int(80 * k), img.height, 2)
                      if (lambda c: c[0] > 240 and 200 < c[1] < 245 and c[2] < 170)(img.getpixel((x, y))))
         self.assertGreater(yellow, 40, "no highlighted match")  # the "N20" label line, in the match colour
-        from gi.repository import Atspi
-
         def search_entries():
-            return [e for e in self.app.all(showing=True) if e.get_role_name() == "entry"
-                    and "N20" in (Atspi.Text.get_text(e, 0, -1) if e.get_text_iface() else "")]
+            return [e for e in self.app.all(None, "entry") if "N20" in self.app.text(e)]
 
         self.assertTrue(search_entries(), "the search entry should be found while open")
         self.s.key("Escape")  # closes the search bar, as in GNOME apps
         time.sleep(0.6)
         self.snap("closed")
         self.assertFalse(search_entries(), "the search bar is still open")
+
+
+class TouchScroll(Surface):
+    """A swipe in the Operations list scrolls it and selects nothing (Eduard 2026-10-16: scrolling was taken as a tap)."""
+
+    def selected(self):
+        return [a for a in self.app.all(None, "list item") if self.app.selected(a)]
+
+    def test_swipes_in_the_operations_list_select_nothing(self):
+        p = with_op("area_clear")
+        from alphacam_gtk.op_factory import default_op
+
+        for k in range(1, 60):
+            p.operations.append(default_op("finish" if k % 2 else "area_clear", p, k))
+        self.launch(str(self.part(p)), "--touch")
+        items = self.app.all(None, "list item")
+        x0, y0, w, h = self.app.rect(items[0])
+        x = x0 + w * 0.4
+        top, bottom = y0 + 2 * h, y0 + 8 * h
+        self.s.scroll(x, (top + bottom) / 2, 12)  # into the middle: a swipe never runs into an end of the list
+        self.s.tap(x, (top + bottom) / 2)  # (the first touch after the wheel; not a swipe)
+        time.sleep(0.6)
+        self.s.key("Escape")
+        time.sleep(0.4)
+        for steps, hold in ((12, 0.02), (30, 0.02), (6, 0.0), (40, 0.3)):  # quick, slow, flick, drag-and-pause
+            for a, b in (((x, bottom), (x, top)), ((x, top), (x, bottom))):
+                self.s.input.touches([a], [b], steps, hold)
+                time.sleep(0.8)
+                self.assertEqual(self.selected(), [], f"selected after a swipe of {steps} steps")
+            for a, b in (((x, bottom), (x, top)), ((x, top), (x, bottom))):
+                self.s.input.touches([a], [b], steps, hold)
+                time.sleep(0.1)
+                self.s.tap(x, (top + bottom) / 2)  # a touch that stops the glide is not a tap on an operation
+                time.sleep(0.8)
+                self.assertEqual(self.selected(), [], f"selected by the touch stopping a swipe of {steps} steps")
+        self.snap("scrolled")
+        # a real tap still selects (on the swipes' spot: the rows' accessible positions lag behind the scrolling)
+        time.sleep(0.5)
+        self.s.tap(x, (top + bottom) / 2)
+        time.sleep(0.8)
+        self.assertEqual(len(self.selected()), 1)
 
 
 class QuickWinsUI(Surface):
@@ -978,10 +1036,8 @@ class SafetyCheck(Surface):
         self.press("Show", "button")
         time.sleep(0.5)
         self.snap("shown")
-        from gi.repository import Atspi
-
         export = self.app.find("Export PRG", "button")
-        self.assertTrue(export.get_state_set().contains(Atspi.StateType.SENSITIVE), "export must stay possible")
+        self.assertTrue(self.app.sensitive(export), "export must stay possible")
         self.assertTrue(self.app.exists("cuts into the part", contains=True, showing=False))  # the row's icon
 
 

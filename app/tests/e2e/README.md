@@ -9,7 +9,26 @@ flatpak-builder --user --install ...            # build and install the app firs
 python3 -m tests.e2e.run                        # all 29 tests, each in its own process, 3 at once (about 5 minutes)
 python3 -m tests.e2e.run Touch SmallWindow      # some classes or test names
 python3 -m tests.e2e.run -j 1 FileDialogs       # one at a time
+ALPHALINK_E2E_BRANCH=rust ALPHALINK_E2E_FLATPAK=~/.local/share/flatpak-e2e-rust python3 -m tests.e2e.run
 ```
+
+The Rust app has the same app id, so it is tested from an installation of its own: with two branches of one app
+in one installation, GNOME's file chooser portal answers with paths the app cannot open. Once:
+
+```
+export FLATPAK_USER_DIR=~/.local/share/flatpak-e2e-rust
+flatpak remote-add --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+flatpak install --user flathub org.gnome.Platform//51
+flatpak config --user --set extra-languages uk
+```
+
+and after each build (`flatpak-builder --default-branch=rust --repo=rust-repo ...` from the Rust manifest, without
+`FLATPAK_USER_DIR`): `flatpak remote-add --user --no-gpg-verify rust-build rust-repo` once, then
+`flatpak install --user --reinstall rust-build io.github._0wn3r.AlphaLinkCAM//rust` with `FLATPAK_USER_DIR` set.
+
+With `ALPHALINK_E2E_BRANCH` the harness runs that branch with `ALPHALINK_TEST=1` and reads widget positions,
+text and states from the app's own test bus (`testbus.py`, see `rust/alphacam-gtk/src/test_bus.rs`) instead of
+AT-SPI. Every press is a libei click or tap at the widget's centre; nothing is activated through the bus.
 
 Screenshots of every step go to `app/e2e-out/<test>/` (git-ignored). Set `ALPHALINK_E2E_CURSOR=1` to draw
 the pointer in them.

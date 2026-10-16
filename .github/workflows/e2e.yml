@@ -1,0 +1,122 @@
+# End-to-end UI tests (app/tests/e2e) on GitHub's machines instead of a developer's laptop: the Flatpak built by
+# the Flatpak workflow's job is installed in an Ubuntu container with GNOME Shell, which runs headless with a
+# virtual monitor; the tests drive the app with libei (virtual touchscreen, pointer and keyboard). Screenshots of
+# every step are kept as a download on the run's page.
+name: End-to-end
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build the Flatpak
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/flathub-infra/flatpak-github-actions:gnome-51
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v7
+      - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
+        with:
+          bundle: AlphaLinkCAM.flatpak
+          manifest-path: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
+          cache-key: flatpak-builder-e2e-${{ github.sha }}
+          run-tests: false
+
+  e2e:
+    name: UI tests in headless GNOME
+    needs: build
+    # the runner VM itself, not a container: GNOME Shell needs systemd-logind on the system bus
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    env:
+      DEBIAN_FRONTEND: noninteractive
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: AlphaLinkCAM*
+          merge-multiple: true
+          path: bundle
+      - name: GNOME Shell, PipeWire, libei, AT-SPI and Flatpak
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gnome-shell mutter pipewire wireplumber dbus-daemon dbus-user-session \
+            at-spi2-core gir1.2-atspi-2.0 gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi python3-gi-cairo python3-cairo python3-pil libei1 \
+            socat flatpak gsettings-desktop-schemas fonts-cantarell adwaita-icon-theme sudo ca-certificates \
+            libgl1-mesa-dri libegl-mesa0 libgbm1 mesa-vulkan-drivers xdg-desktop-portal-gnome
+      - name: Room on the system bus (every test session's GNOME Shell and services connect to it)
+        run: |
+          printf '<busconfig>\n  <limit name="max_connections_per_user">4096</limit>\n</busconfig>\n' |
+            sudo tee /etc/dbus-1/system.d/zz-alphalink-e2e.conf
+          sudo systemctl reload dbus
+      # the tests run as a user of their own: whatever a test session's GNOME Shell asks systemd-logind to end
+      # (its "session", the user's processes) must not be the runner's
+      - name: A user for the tests
+        run: |
+          sudo useradd -m -s /bin/bash e2e
+          sudo cp -r app bundle /home/e2e/ && sudo chown -R e2e: /home/e2e
+          mkdir -p logs
+      - name: Install the app
+        run: |
+          sudo -u e2e -H bash -c 'cd ~ && ls -la bundle &&
+            flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
+            flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
+            flatpak install --user -y --noninteractive bundle/*.flatpak' 2>&1 | tee logs/install.log
+          exit ${PIPESTATUS[0]}
+      - name: Run the tests
+        run: |
+          set +e  # GitHub's bash stops at the first failing command; the results below must still be written
+          # a watchdog: memory and the test user's processes every 20 s; the tests are stopped before the runner
+          # itself runs out of memory (that ended earlier runs with "lost communication")
+          ( while sleep 20; do
+              echo "$(date +%T) free $(free -m | awk '/Mem:/{print $7}') MB, e2e processes $(ps -u e2e --no-headers | wc -l), shells $(pgrep -u e2e -x gnome-shell | wc -l)"
+              if [ "$(free -m | awk '/Mem:/{print $7}')" -lt 1500 ]; then
+                echo "low memory: stopping the tests"; ps -u e2e -o rss=,comm= | sort -rn | head -15; sudo pkill -KILL -u e2e; fi
+            done ) > logs/watch.log 2>&1 &
+          sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
+            python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
+          exit ${PIPESTATUS[0]}
+      - name: Collect what the test user left
+        if: always()
+        run: |
+          set +e
+          sudo cp -r /home/e2e/logs/sessions logs/ 2>/dev/null; sudo cp -r /home/e2e/app/e2e-out app/ 2>/dev/null
+          sudo chown -R "$(id -u)" logs app/e2e-out 2>/dev/null
+          sudo journalctl -b --since "-70 min" --no-pager -o short-monotonic | grep -iE "logind|session|e2e|killed|oom" |
+            tail -n 200 > logs/journal.log || true
+      - name: Keep the screenshots
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-screenshots
+          path: app/e2e-out
+          if-no-files-found: ignore
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-logs
+          path: logs
+          if-no-files-found: ignore
+      - name: Show the end of the logs as annotations (readable without signing in)
+        if: failure()
+        run: |
+          set +e
+          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
+            ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
+            for p in $(pgrep -u e2e -x gnome-shell); do
+              echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(sudo cat /proc/$p/environ | tr '\0' '\n' | grep ^XDG_RUNTIME_DIR)"
+            done | head -30; } > logs/summary.log 2>&1 || true
+          first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
+          [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
+          for f in logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "::error title=$(basename $f)::$(tail -n 40 "$f" | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
+          done

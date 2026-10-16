@@ -1309,3 +1309,34 @@ External area clear only; internal pockets and pockets with arcs on the way down
   Depth 1.1633: D1 -> 1.353 -> one cut straight to X10.374; D0.6 -> 3.759 -> 4 cuts 0.6, 0.849, 1.039, 1.1633.
   The app rounded up (2 cuts with D1); fixed. All earlier thread samples had whole-number ratios.
 
+## Progress 46 (2026-10-16): gap search, second round
+New samples, all byte-identical now: AREA_slope_depth13 (depth 1.3 on a slope; DEPTH CUT is Enter, value, Enter),
+AREA_radii_depth17 (R5/R3 corners, depth 1.7), FINISH_radii_offset (U0.3 W0.1 on those radii; the finish OFFSET
+prompt needs Enter, "0.3,0.1", Enter, Enter, Enter), THREAD_internal_m24_d03 (internal, depth 0.812, D0.3: 7 cuts),
+GROOVE_vee and GROOVE_vee_finishmode (tools/ac_scripts/at_groove.ks with a V groove; finish mode = key 2, then a
+single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program number came out as 7).
+- Fixed: a grooving plunge goes to the highest point of the profile *within the tip's width*; on a sloped wall
+  that is the slope at the tip's edge (X33.334 at Z-22 on a 40 -> 30 wall), where the app used the wall's top (X40).
+- Round 3: GROOVE_radius_floor (+ _finishmode): a groove X30 Z-20..-30 under X40 with R1.5 at both floor corners
+  (at_groove.ks drawing replaced by mk_at_rad-style segments; two more contour Enters). A plunge onto a radius goes
+  to the radius's highest point under the tip (X30.172 at Z-29; the app took the radius's top end, X33). Finish
+  mode keeps the radii: the one at the foot of the +Z wall moves with that wall by -tip width, centre and all
+  (G2 X30 Z-24.5 I0 K-1.5), the far one stays; the SD1 G78 lists them as G2 with I/K (the app refused arcs in
+  finish mode before). AREA_int_slope_depth13 (a sloped bore, T12, depth 1.3) matched as it was.
+- Round 4, all matched as they were: GROOVE_vee_datumright (Enter on DATUM LEFT toggles; SD1 L100 instead of L110),
+  GROOVE_vee_peck15 (PECK DEPTH is the item above STEPOV/TIPWD), FACE_slope_depth17 (face clear D1.7 on a 26.6 deg
+  face), area clear FACE mode (identical to AREA_front_face, not kept). A long program needs a longer wait before
+  DOSBox-X is closed: with 5 s after the save the PRG was cut at 12288 bytes and the SDG/SDT were empty (the old
+  PECK samples' problem); 40 s is enough.
+- Round 5, a whole job (JOB_shaft_metric, tools/mk_at_job.py): shaft X30 with a C1 chamfer and a relief groove
+  (X26, Z-25..-28) under an X40 shoulder; T1 area clear, T3 finish, T16 groove (tip 2, stepover 1.5) with tool
+  changes. The PRG is byte-identical; the SD1 differs only in the last digit of one nose-centre corner on the
+  chamfer (X28.6628 / 28.6627, ALPHA-T's single precision). A later CHANGE TOOL first asks "Tool Change Position
+  [X100.000, Z50.000] mm. <Enter>=Accept:" before the tool picker; chamfers are RAD/CHAMFER, size, Enter, Space
+  (toggle to chamfer), Enter.
+- The whole job with a thread (JOB_shaft_metric now has T31 M30x1.5 on X30 / X28.16 last): PRG byte-identical. Thread
+  lines are picked after EXECUTE with the cursor keys (steps of X20 / Z5 from the start point; Enter snaps to the
+  nearest line, outer then inner), then Enter for "Input complete". A loose line in the drawing (the thread's minor
+  diameter) made the app's .SD1 import fall back to "every element" for the area clear and finish contour; it now
+  takes the part's profile from the axis (drawing.outer_profile).
+
