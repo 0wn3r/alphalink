@@ -115,6 +115,12 @@ msgstr "для різьби виберіть лінію вздовж Z (діам
 msgid "the line is too short for {name} and its relief groove"
 msgstr "лінія закоротка для {name} і її канавки для виходу різьби"
 
+msgid "not a readable DXF file ({error})"
+msgstr "файл DXF не вдається прочитати ({error})"
+
+msgid "the file has no drawing in it"
+msgstr "у файлі немає креслення"
+
 msgid "G71 E{e} (area clear option) is not supported yet"
 msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
 

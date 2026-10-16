@@ -236,6 +236,8 @@ UK = {
 "Parts and drawings": "Деталі та креслення",
 "Open Part": "Відкрити деталь",
 "Could not open {name}: {error}": "Не вдалося відкрити {name}: {error}",
+"not a readable DXF file ({error})": "файл DXF не вдається прочитати ({error})",
+"the file has no drawing in it": "у файлі немає креслення",
 "Untitled": "Без назви",
 "{name}: drawing only, no .SD1 found next to it, so no operations.": "{name}: лише креслення, поруч не знайдено .SD1, тому операцій немає.",
 "_Choose .SD1…": "_Вибрати .SD1…",

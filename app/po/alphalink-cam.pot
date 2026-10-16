@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 07:34+0000\n"
+"POT-Creation-Date: 2026-10-16 10:39+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -172,6 +172,15 @@ msgstr ""
 #: alphacam/features.py:136
 #, python-brace-format
 msgid "the line is too short for {name} and its relief groove"
+msgstr ""
+
+#: alphacam/io/dxf.py:160
+#, python-brace-format
+msgid "not a readable DXF file ({error})"
+msgstr ""
+
+#: alphacam/io/dxf.py:162
+msgid "the file has no drawing in it"
 msgstr ""
 
 #: alphacam/io/sd1.py:142
@@ -368,17 +377,17 @@ msgstr ""
 msgid "area clear: no contour below X{x}"
 msgstr ""
 
-#: alphacam/toolpath/area.py:251
+#: alphacam/toolpath/area.py:266
 msgid ""
 "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the "
 "app does not offer it; use TOWARDS"
 msgstr ""
 
-#: alphacam/toolpath/area.py:254
+#: alphacam/toolpath/area.py:269
 msgid "depth of cut must be > 0"
 msgstr ""
 
-#: alphacam/toolpath/area.py:284
+#: alphacam/toolpath/area.py:299
 msgid "area clear"
 msgstr ""
 
