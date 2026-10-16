@@ -75,6 +75,8 @@ EXPECTED_OPS = {
     "DIVE2_metric": [("area_clear", 29)],
     "DIVE3_metric": [("area_clear", 34)],
     "FINISH_dive2_metric": [("finish", 1)],
+    "AREA_radius_groove_metric": [("area_clear", 28)],
+    "FINISH_radius_groove_metric": [("finish", 1)],
     "AREA_follow_dive3_metric": [("area_clear", 34)],
     "AREA_follow_groove_dive_metric": [("area_clear", 30)],
     "PREFINISH_dive3_metric": [("area_clear", 34), ("area_prefinish", 1)],
@@ -118,6 +120,9 @@ def sd1_words(path: Path) -> list[dict[str, str]]:
     return rows
 
 
+EMPTY_LAST_PASS = {"AREA_radius_groove_metric"}
+
+
 class EverySample(unittest.TestCase):
     def test_samples_present(self):
         self.assertEqual({p.stem for p in PRGS}, set(EXPECTED_OPS))
@@ -158,8 +163,10 @@ class EverySample(unittest.TestCase):
             for b, (_, passes) in zip(prog.operations, EXPECTED_OPS[path.stem]):
                 with self.subTest(path.name, block=b.label):
                     self.assertEqual(b.declared_passes, passes)
-                    self.assertEqual(len(b.passes), b.declared_passes)
-                    self.assertEqual([p.number for p in b.passes], list(range(1, b.declared_passes + 1)))
+                    # ALPHA-T's empty pocket floor pass: a block of its own (#121=n+1) that #120 does not count
+                    extra = 1 if path.stem in EMPTY_LAST_PASS else 0
+                    self.assertEqual(len(b.passes), b.declared_passes + extra)
+                    self.assertEqual([p.number for p in b.passes], list(range(1, b.declared_passes + extra + 1)))
                     self.assertTrue(b.passes[-1].moves, "last pass has moves")
 
     def test_numbers_are_canonical(self):

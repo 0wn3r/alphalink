@@ -30,7 +30,8 @@ class NoFalseAlarms(unittest.TestCase):
         for name in GOLDEN:
             with self.subTest(name):
                 p = sample_project(name)
-                if name in ("FINISH_dive2_metric", "FINISH_int_dive2_metric", "FINISH_relief_groove_metric"):  # the steep wall really stays uncut (ALPHA-T's collision check)
+                if name in ("FINISH_dive2_metric", "FINISH_int_dive2_metric", "FINISH_relief_groove_metric",
+                            "FINISH_radius_groove_metric"):  # the steep wall really stays uncut (ALPHA-T's collision check)
                     self.assertEqual({f.kind for f in check(p, preview(p))}, {"uncut"})
                     continue
                 self.assertEqual(check(p, preview(p)), [])

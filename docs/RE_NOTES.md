@@ -1260,4 +1260,12 @@ External area clear only; internal pockets and pockets with arcs on the way down
     stays at the current Z.
   - Output rounding: X is the radius rounded to the output decimals, then doubled, and Z is rounded before the x2
     (FOL3: radius 34.69443 -> X69.388, not 69.389; Z-10.53333 -> Z-21.066). All goldens still pass with it.
+- Radius corners (2026-10-16; AREA_radius_groove, FINISH_radius_groove; tools/mk_at_rad.py): RAD/CHAMFER (CAD menu
+  y 195) fillets the *current point* (the end of the last line drawn), asks the size and then "Is the Radius/Chamfer
+  Acceptable? <Enter>=Yes <Space Bar>=Toggle" (Space toggles to a chamfer). FIND POINT snaps to the point nearest
+  the crosshair, which the mouse does not move. Sample: a groove X30 Z-20..-30 under an X40 shoulder with R3 at
+  both floor corners. The 31 deg line from the shoulder corner ends where it meets the far R3 (SD1 X31.4054 Z-28.2176)
+  and the profile goes on along that radius (G2 to X36 Z-29.6): the near wall, the near radius and the floor are
+  dropped. The area clear's pocket levels are 36, 32 and then the "floor" (that meeting point): there is nothing to
+  cut there, but ALPHA-T still writes the pass's block (#121=29, only the final retract) and #120 / SD1 H count 28.
 

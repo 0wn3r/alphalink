@@ -160,16 +160,17 @@ def _floor(boundary, pocket, side) -> float:
     return min(xs) if side > 0 else max(xs)
 
 
-def _pocket_levels(boundary, pocket, side, grid) -> list[float]:
+def _pocket_levels(boundary, pocket, side, grid, follow=False) -> list[float]:
     """A pocket's levels: the stepping grid's diameters inside it (non-FOLLOW: restarted at the pocket's shoulder,
-    DIVE1 36, 32; FOLLOW: the main passes' grid, FOLG 28 in a groove from 30), then its floor when that is a
-    Z-parallel line (DIVE1 30; not where the rear-angle line meets a far wall, FOLG). None inside: no passes (RG2)."""
+    DIVE1 36, 32; FOLLOW: the main passes' grid, FOLG 28 in a groove from 30), then its floor (DIVE1 30; RADG: the
+    point where the rear-angle line meets the far radius, an empty pass); with FOLLOW only when that is a Z-parallel
+    line (not where the line meets a far wall, FOLG). None inside: no passes (RG2)."""
     first, deepest, _ = pocket
     top, floor = boundary[first].a.x, _floor(boundary, pocket, side)
     levels = [x for x in grid if side * floor < side * x < side * top - 1e-9]
     flat = any(not s.is_arc and abs(s.a.x - s.b.x) < 1e-9 and abs(s.a.x - floor) < 1e-9
                for s in boundary[first:deepest + 2])
-    if levels and flat and abs(levels[-1] - floor) > 1e-9:
+    if levels and (flat or not follow) and abs(levels[-1] - floor) > 1e-9:
         levels.append(floor)
     return levels
 
@@ -207,10 +208,13 @@ def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals,
                 return round(z_at(s, x), decimals)
         return round(boundary[last].b.z, decimals)
 
-    passes, prev, back = [], corner.x, None
+    passes, prev, back, last_z = [], corner.x, None, None
     target = follow_from
     for n, x in enumerate(levels):
         z = cut(x)
+        if n and far(x) >= z - 10 ** -decimals:  # nothing left at this level (RADG's floor): an empty pass
+            passes.append(Pass([]))
+            continue
         if n == 0:
             up = prev + side * 2 * retract
             moves = [] if here_x is not None and abs(here_x - up) < 1e-9 else [Move(MoveKind.RAPID, up, z0)]
@@ -235,8 +239,8 @@ def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals,
         back = ex + side * 2 * retract
         moves += [Move(MoveKind.FEED, back, round(ez + retract, decimals), feed), Move(MoveKind.RAPID, back, z)]
         passes.append(Pass(moves))
-        prev = x
-    return passes, cut(levels[-1]) if levels else None
+        prev, last_z = x, z
+    return passes, last_z
 
 
 def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, decimals: int,
@@ -319,19 +323,21 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
             while side * x > side * _floor(boundary, pocket, side) and len(grid) <= MAX_PASSES:
                 x = round(x - side * step, 9)
                 grid.append(x)
-        levels = _pocket_levels(boundary, pocket, side, grid)
+        levels = _pocket_levels(boundary, pocket, side, grid, op.follow)
         if not levels:
             continue
         follow_from = None
         if op.follow:
             on_far = [Point(x, z) for k, x, z in hits if pocket[1] < k <= pocket[2]]
             follow_from = on_far[-1] if on_far else None
-        here = passes[-1].moves[-1].x if passes else op.start.x
+        moved = [q for q in passes if q.moves]
+        here = moved[-1].moves[-1].x if moved else op.start.x
         more, z = _pocket_passes(boundary, pocket, levels, angle, retract, op.feed, z0, decimals, side, here,
                                  follow_from)
         passes += more
-        if more:  # the next pocket's first rapid starts where this one left the tool
-            z0 = more[-1].moves[-1].z
+        moved = [q for q in more if q.moves]
+        if moved:  # the next pocket's first rapid starts where this one left the tool
+            z0 = moved[-1].moves[-1].z
         last_z = z if z is not None else last_z
     if last_z is not None:  # out of the last pocket: up past the part, then back to the start
         retract_moves.insert(0, Move(MoveKind.RAPID, round(op.start.x - side * 2 * nose_radius, decimals), last_z))

@@ -270,9 +270,37 @@ def limits(pts: list[Point], nose_radius: float) -> tuple[float, float]:
 
 
 def _cross(a: Point, e: Point, s: Seg) -> Point | None:
-    """Where the line a -> e meets the straight element s (None if they do not meet), in (X diameter, Z)."""
-    (ar, az), (er, ez), (pr, pz), (qr, qz) = _rz(a), _rz(e), _rz(s.a), _rz(s.b)
-    d1r, d1z, d2r, d2z = er - ar, ez - az, qr - pr, qz - pz
+    """Where the line a -> e first meets the element s (None if they do not meet), in (X diameter, Z)."""
+    (ar, az), (er, ez) = _rz(a), _rz(e)
+    d1r, d1z = er - ar, ez - az
+    if s.is_arc:
+        (pr, pz), (qr, qz), (cr, cz) = _rz(s.a), _rz(s.b), _rz(s.centre)
+        rad = math.hypot(pr - cr, pz - cz)
+        fr, fz = ar - cr, az - cz
+        qa = d1r * d1r + d1z * d1z
+        qb = 2 * (fr * d1r + fz * d1z)
+        qc = fr * fr + fz * fz - rad * rad
+        disc = qb * qb - 4 * qa * qc
+        if qa < 1e-18 or disc < 0:
+            return None
+        # the arc's sweep, measured like moves.Segment: angles of (r, z) about the centre, ccw (G3) positive
+        a0, a1 = math.atan2(pr - cr, pz - cz), math.atan2(qr - cr, qz - cz)
+        sweep = a1 - a0
+        if s.ccw and sweep < 0:
+            sweep += 2 * math.pi
+        if not s.ccw and sweep > 0:
+            sweep -= 2 * math.pi
+        for t in sorted(((-qb - math.sqrt(disc)) / (2 * qa), (-qb + math.sqrt(disc)) / (2 * qa))):
+            if not 1e-9 < t <= 1 + 1e-9:
+                continue
+            hr, hz = ar + t * d1r, az + t * d1z
+            d = math.atan2(hr - cr, hz - cz) - a0
+            d = d % (2 * math.pi) if sweep > 0 else -((-d) % (2 * math.pi))
+            if abs(d) <= abs(sweep) + 1e-9:
+                return _pt(hr, hz)
+        return None
+    (pr, pz), (qr, qz) = _rz(s.a), _rz(s.b)
+    d2r, d2z = qr - pr, qz - pz
     den = d1r * d2z - d1z * d2r
     if abs(den) < 1e-12:
         return None
@@ -286,11 +314,11 @@ def _cross(a: Point, e: Point, s: Seg) -> Point | None:
 def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg]:
     """ALPHA-T's collision check on a profile: a line dropping away from the tool (external: X falling as Z goes
     towards the chuck) steeper than the tool's rear clearance angle is replaced by a line at that angle from the same
-    start down to the same diameter, and the next element starts there (FDIVE2: tip path X40 Z-20.671 -> X30
-    Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way). When that line meets a later
-    element first, the far wall of a narrow groove (FRG1: X27.356 Z-23 on the wall at Z-23, above the X26 floor), it
-    ends there and the profile goes on from that point. side -1: internal work, X rising away from the boring bar
-    (FIDIVE2: X50 Z-10.671 -> X60 Z-18.992)."""
+    start, down to where it meets the profile again: the floor (FDIVE2: tip path X40 Z-20.671 -> X30 Z-28.992
+    instead of Z-22.671; the SD1 lists the nose-centre path the same way), the far wall of a narrow groove (FRG1:
+    X27.356 Z-23, the floor dropped) or a radius at the far corner, which then starts at that point (RADG: SD1 X31.4054
+    Z-28.2176, G2 on to X36 Z-29.6). side -1: internal work, X rising away from the boring bar (FIDIVE2: X50
+    Z-10.671 -> X60 Z-18.992)."""
     if angle is None or angle <= 0:
         return path
     tan = math.tan(math.radians(angle))
@@ -302,15 +330,17 @@ def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg
         if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
             k += 1
             continue
-        end = Point(s.b.x, s.a.z - drop / tan)
-        for j in range(k + 2, len(out)):  # a later element in the way (k + 1 starts at the old end: the floor)
-            if out[j].is_arc:
-                break
-            hit = _cross(s.a, end, out[j])
+        # far enough down the rear-angle line to meet anything in the pocket
+        depth = max(side * (s.a.x - q.x) / 2 for t in out[k:] for q in (t.a, t.b))
+        far = Point(s.a.x - side * 2 * depth, s.a.z - depth / tan)
+        for j in range(k + 1, len(out)):
+            n = out[j]
+            hit = _cross(s.a, far, n)
             if hit is not None:
-                out[k:j + 1] = [Seg(s.a, hit), Seg(hit, out[j].b)]
+                out[k:j + 1] = [Seg(s.a, hit), Seg(hit, n.b, n.centre, n.ccw)]
                 break
         else:
+            end = Point(s.b.x, s.a.z - drop / tan)
             out[k] = Seg(s.a, end)
             if k + 1 < len(out):
                 n = out[k + 1]

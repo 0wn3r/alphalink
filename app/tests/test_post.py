@@ -38,7 +38,8 @@ ARC = ["g0", "g1", "g2", "g5", "g3", "g6", "g4"]  # MET2 with R5 (g5) and R3 (g6
 INT = ["g0", "g1", "g2", "g3"]  # bore X50 Z0 -> X20 Z-40
 S = Point(120, 5)
 DIVE = ["g0", "g1", "g2", "g3", "g4", "g5"]
-RELIEF = ["g0", "g1", "g2", "g3", "g4", "g5", "g6"]  # X0 Z0 up the face, along the shoulder, down into the undercut, out
+RELIEF = ["g0", "g1", "g2", "g3", "g4", "g5", "g6"]
+RADIUS_GROOVE = ["g0", "g1", "g3", "g4", "g2", "g6", "g5", "g7", "g8"]  # drawn wall first, then each R3 corner  # X0 Z0 up the face, along the shoulder, down into the undercut, out
 GOLDEN = {
     "MET2_finish_metric": [FinishPass(3, S, MET2)],
     "MET2_finish_inch": [FinishPass(3, Point(5, 0.2), MET2)],
@@ -92,6 +93,10 @@ GOLDEN = {
     "AREA_follow_groove_dive_metric": [AreaClear(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"], follow=True)],
     "PREFINISH_dive3_metric": [AreaClear(3, S, DIVE, pre_finish=True)],
     "PREFINISH_dive2_metric": [AreaClear(3, S, DIVE, pre_finish=True)],
+    # a groove with R3 corners at its floor: the 31-degree line ends on the far radius, which goes on from there; the
+    # area clear's last pocket pass is an empty block (#120 does not count it)
+    "AREA_radius_groove_metric": [AreaClear(3, S, RADIUS_GROOVE)],
+    "FINISH_radius_groove_metric": [FinishPass(3, S, RADIUS_GROOVE)],
     # the same inside a bore with T12 (55 deg boring bar, rear -31): an undercut, a steep one, its finish pass
     "AREA_int_dive1_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
                                                                               external=False)],
