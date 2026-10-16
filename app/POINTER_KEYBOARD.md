@@ -25,8 +25,8 @@ is the implementation; the Python app is frozen.
 | 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✗ |
 | 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✓ |
 | 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider | ✓ |
-| 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✗ |
-| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered | ✗ |
+| 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✓ |
+| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered | ✓ |
 | 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn | ✓ |
 | 9 | Hold to send by Space / Enter 🧪; confirmations default to Cancel, Alt+S sends 🧪 | ✓ |
 | 9 | Escape closes dialogs and the keypad before it cancels or deselects 🧪 | ✓ |

@@ -160,6 +160,30 @@ Adw.ShortcutsDialog dialog {
   }
 
   Adw.ShortcutsSection {
+    title: _("Program Page");
+
+    Adw.ShortcutsItem {
+      title: _("Select the Line's Operation");
+      accelerator: "Return";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Larger Text");
+      accelerator: "<Control>plus <Control>equal";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Smaller Text");
+      accelerator: "<Control>minus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Normal Text Size");
+      accelerator: "<Control>0";
+    }
+  }
+
+  Adw.ShortcutsSection {
     title: _("Pages");
 
     Adw.ShortcutsItem {

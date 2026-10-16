@@ -29,7 +29,7 @@ use crate::machine::MachinePage;
 use crate::op_editor::{EditorHooks, OpEditor, fit_spin};
 use crate::op_factory::{default_op, op_menu, tool_for};
 use crate::report::SheetPage;
-use crate::settings::{settings, update as update_settings};
+use crate::settings::{PROGRAM_FONT_PT, settings, update as update_settings};
 use crate::shortcuts::shortcuts_dialog;
 use crate::simulation::SimulationBar;
 use crate::tools_page::{ToolsPage, load_library};
@@ -519,8 +519,7 @@ impl MainWindow {
         let view = &self.imp().program_view;
         let (bx, by) = view.window_to_buffer_coords(gtk::TextWindowType::Widget, x as i32, y as i32);
         let Some(it) = view.iter_at_location(bx, by) else { return };
-        let line = it.line() as usize + 1;
-        let op = self.imp().state.borrow().block_lines.iter().find(|(a, b, _)| *a <= line && line <= *b).and_then(|t| t.2);
+        let op = self.op_at_line(it.line() as usize + 1);
         if op.is_some() {
             self.select_op(op);
         }
@@ -544,6 +543,8 @@ impl MainWindow {
         };
         let project = self.project();
         let ops: Vec<String> = project.iter().flat_map(|p| p.operations.iter().map(op_title)).collect();
+        let buf = imp.program_view.buffer();
+        let caret_line = buf.iter_at_mark(&buf.get_insert()).line() + 1;
         serde_json::json!({
             "page": self.stack().visible_child_name().map(String::from),
             "view": {"scale": view.scale, "ox": view.ox, "oy": view.oy},
@@ -553,6 +554,8 @@ impl MainWindow {
             "operations": ops,
             "selected_op": self.selected_index(),
             "readout": self.readout().label().to_string(),
+            "program_font_pt": imp.font_pt.get(),
+            "program_caret_line": caret_line,
             "drawing": self.parts().drawing.test_state(),
         })
     }
@@ -630,7 +633,7 @@ impl MainWindow {
 
     fn setup(&self) {
         let imp = self.imp();
-        imp.font_pt.set(11.0);
+        imp.font_pt.set(settings().program_font_pt);
         *imp.library.borrow_mut() = Rc::new(load_library());
         self.build_main();
         let input_mode = self.parts().input_mode.clone();
@@ -647,6 +650,8 @@ impl MainWindow {
         self.setup_lock();
         self.guard_list_taps();
         self.setup_op_keys();
+        self.setup_program_keys();
+        self.set_font(imp.font_pt.get());
         self.install_actions();
         let w = self.downgrade();
         let hook = move || w.upgrade();
@@ -934,9 +939,9 @@ impl MainWindow {
         };
         add("open", &["<Control>o"], |w| w.open_dialog());
         add("export", &["<Control>e"], |w| w.export_dialog()).set_enabled(false);
-        add("fit", &["<Control>0"], |w| w.imp().canvas.fit());
-        add("zoom-in", &["<Control>plus", "<Control>equal"], |w| w.imp().canvas.zoom(1.25));
-        add("zoom-out", &["<Control>minus"], |w| w.imp().canvas.zoom(0.8));
+        add("fit", &["<Control>0"], |w| w.zoom_key(None));
+        add("zoom-in", &["<Control>plus", "<Control>equal"], |w| w.zoom_key(Some(1.25)));
+        add("zoom-out", &["<Control>minus"], |w| w.zoom_key(Some(0.8)));
         add("deselect", &["Escape"], |w| w.select_op(None));
         add("save", &["<Control>s"], |w| w.save());
         add("new", &["<Control>n"], |w| w.new_dialog());
@@ -2341,6 +2346,7 @@ impl MainWindow {
             _ => String::new(),
         };
         buf.set_text(text.trim_end_matches('\n'));
+        buf.place_cursor(&buf.start_iter()); // the caret starts at the top, where reading starts
         let mut block_lines = vec![];
         if let Some(prog) = &pv.program {
             let owner: std::collections::HashMap<i64, Option<usize>> =
@@ -2473,6 +2479,96 @@ impl MainWindow {
         let pt = pt.clamp(7.0, 32.0);
         self.imp().font_pt.set(pt);
         self.parts().font_css.load_from_string(&format!("textview.program-text {{ font-size: {pt:.1}pt; }}"));
+    }
+
+    /// The font size is remembered (TOUCH.md 7.3), once a pinch, key or wheel turn has set it.
+    fn save_font(&self) {
+        let pt = self.imp().font_pt.get();
+        if settings().program_font_pt != pt {
+            update_settings(|s| s.program_font_pt = pt);
+        }
+    }
+
+    fn on_program_page(&self) -> bool {
+        self.imp().stack.visible_child_name().as_deref() == Some("program")
+    }
+
+    /// Ctrl+= / Ctrl+− / Ctrl+0: the program's font on the Program page, the drawing elsewhere (POINTER_KEYBOARD.md 8).
+    fn zoom_key(&self, factor: Option<f64>) {
+        let imp = self.imp();
+        match (self.on_program_page(), factor) {
+            (true, f) => {
+                self.set_font(f.map_or(PROGRAM_FONT_PT, |f| imp.font_pt.get() * f));
+                self.save_font();
+            }
+            (false, Some(f)) => imp.canvas.zoom(f),
+            (false, None) => imp.canvas.fit(),
+        }
+    }
+
+    /// The operation that wrote the program's line (1-based), if any.
+    fn op_at_line(&self, line: usize) -> Option<usize> {
+        self.imp().state.borrow().block_lines.iter().find(|(a, b, _)| *a <= line && line <= *b).and_then(|t| t.2)
+    }
+
+    /// Program page keys: Enter selects the operation that owns the caret's block; Ctrl+wheel sizes the font; Enter in
+    /// the search selects the hit's operation (POINTER_KEYBOARD.md 8).
+    fn setup_program_keys(&self) {
+        let imp = self.imp();
+        let keys = gtk::EventControllerKey::new();
+        let win = self.downgrade();
+        keys.connect_key_pressed(move |_, keyval, _, _| {
+            let Some(win) = win.upgrade() else { return glib::Propagation::Proceed };
+            if !matches!(keyval, gdk::Key::Return | gdk::Key::KP_Enter | gdk::Key::ISO_Enter) {
+                return glib::Propagation::Proceed;
+            }
+            let buf = win.imp().program_view.buffer();
+            let line = buf.iter_at_mark(&buf.get_insert()).line() as usize + 1;
+            if let Some(op) = win.op_at_line(line) {
+                win.select_op(Some(op));
+            }
+            glib::Propagation::Stop
+        });
+        imp.program_view.add_controller(keys);
+        let wheel = gtk::EventControllerScroll::new(gtk::EventControllerScrollFlags::VERTICAL);
+        let win = self.downgrade();
+        wheel.connect_scroll(move |c, _, dy| {
+            let Some(win) = win.upgrade() else { return glib::Propagation::Proceed };
+            if !c.current_event_state().contains(gdk::ModifierType::CONTROL_MASK) || dy == 0.0 {
+                return glib::Propagation::Proceed;
+            }
+            win.set_font(win.imp().font_pt.get() * if dy < 0.0 { 1.1 } else { 1.0 / 1.1 });
+            win.save_font();
+            glib::Propagation::Stop
+        });
+        imp.program_view.add_controller(wheel);
+        let pinch = imp.program_view.observe_controllers().into_iter().flatten().find_map(|c| c.downcast::<gtk::GestureZoom>().ok());
+        if let Some(pinch) = pinch {
+            let win = self.downgrade();
+            pinch.connect_end(move |_, _| {
+                if let Some(win) = win.upgrade() {
+                    win.save_font();
+                }
+            });
+        }
+        let win = self.downgrade();
+        imp.program_search.connect_activate(move |_| {
+            let Some(win) = win.upgrade() else { return };
+            let Some(at) = win.imp().state.borrow().find_at else { return };
+            let line = win.imp().program_view.buffer().iter_at_offset(at).line() as usize + 1;
+            if let Some(op) = win.op_at_line(line).filter(|op| win.selected_index() != Some(*op)) {
+                win.select_op(Some(op));
+                // the selection scrolls to the operation's start; the hit stays in view
+                let view = win.imp().program_view.downgrade();
+                glib::idle_add_local_once(move || {
+                    if let Some(view) = view.upgrade()
+                        && let Some(mark) = view.buffer().mark("found")
+                    {
+                        view.scroll_to_mark(&mark, 0.1, true, 0.0, 0.3);
+                    }
+                });
+            }
+        });
     }
 }
 

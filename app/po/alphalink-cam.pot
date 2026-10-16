@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 22:14+0000\n"
+"POT-Creation-Date: 2026-10-16 22:20+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -538,7 +538,7 @@ msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:30 alphacam_gtk/drawing_tools.py:900
 #: alphacam_gtk/op_editor.py:350 alphacam_gtk/op_editor.py:376
-#: alphacam_gtk/ui/shortcuts.ui:392
+#: alphacam_gtk/ui/shortcuts.ui:421
 msgid "Arc"
 msgstr ""
 
@@ -555,7 +555,7 @@ msgstr ""
 msgid "Select"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:31 alphacam_gtk/ui/shortcuts.ui:404
+#: alphacam_gtk/drawing_tools.py:31 alphacam_gtk/ui/shortcuts.ui:433
 msgid "Chamfer"
 msgstr ""
 
@@ -782,7 +782,7 @@ msgstr ""
 msgid "Zoom Here"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:798 alphacam_gtk/ui/shortcuts.ui:262
+#: alphacam_gtk/drawing_tools.py:798 alphacam_gtk/ui/shortcuts.ui:291
 #: alphacam_gtk/ui/window.ui:280 alphacam_gtk/ui/window.ui:532
 msgid "Fit Part"
 msgstr ""
@@ -1029,7 +1029,7 @@ msgstr ""
 msgid "Blend arc"
 msgstr ""
 
-#: alphacam_gtk/drawing_tools.py:1403 alphacam_gtk/ui/shortcuts.ui:410
+#: alphacam_gtk/drawing_tools.py:1403 alphacam_gtk/ui/shortcuts.ui:439
 msgid "Blend Arc"
 msgstr ""
 
@@ -1730,7 +1730,7 @@ msgid "Cycle time"
 msgstr ""
 
 #: alphacam_gtk/report.py:74 alphacam_gtk/report.py:204
-#: alphacam_gtk/ui/part-settings.ui:48 alphacam_gtk/ui/shortcuts.ui:209
+#: alphacam_gtk/ui/part-settings.ui:48 alphacam_gtk/ui/shortcuts.ui:238
 #: alphacam_gtk/ui/window.ui:313
 msgid "Program"
 msgstr ""
@@ -2716,167 +2716,187 @@ msgid "Show All"
 msgstr ""
 
 #: alphacam_gtk/ui/shortcuts.ui:200
+msgid "Program Page"
+msgstr ""
+
+#: alphacam_gtk/ui/shortcuts.ui:203
+msgid "Select the Line's Operation"
+msgstr ""
+
+#: alphacam_gtk/ui/shortcuts.ui:209
+msgid "Larger Text"
+msgstr ""
+
+#: alphacam_gtk/ui/shortcuts.ui:215
+msgid "Smaller Text"
+msgstr ""
+
+#: alphacam_gtk/ui/shortcuts.ui:221
+msgid "Normal Text Size"
+msgstr ""
+
+#: alphacam_gtk/ui/shortcuts.ui:229
 msgid "Pages"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:203 alphacam_gtk/ui/window.ui:138
+#: alphacam_gtk/ui/shortcuts.ui:232 alphacam_gtk/ui/window.ui:138
 #: alphacam_gtk/ui/window.ui:225
 msgid "Part"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:215 alphacam_gtk/window.py:197
+#: alphacam_gtk/ui/shortcuts.ui:244 alphacam_gtk/window.py:197
 msgid "Sheet"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:221 alphacam_gtk/window.py:199
+#: alphacam_gtk/ui/shortcuts.ui:250 alphacam_gtk/window.py:199
 msgid "Tools"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:227 alphacam_gtk/window.py:201
+#: alphacam_gtk/ui/shortcuts.ui:256 alphacam_gtk/window.py:201
 msgid "Machine"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:233
+#: alphacam_gtk/ui/shortcuts.ui:262
 msgid "Previous Page"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:239
+#: alphacam_gtk/ui/shortcuts.ui:268
 msgid "Next Page"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:247
+#: alphacam_gtk/ui/shortcuts.ui:276
 msgid "View"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:250 alphacam_gtk/ui/window.ui:258
+#: alphacam_gtk/ui/shortcuts.ui:279 alphacam_gtk/ui/window.ui:258
 msgid "Zoom In"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:256 alphacam_gtk/ui/window.ui:269
+#: alphacam_gtk/ui/shortcuts.ui:285 alphacam_gtk/ui/window.ui:269
 msgid "Zoom Out"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:268
+#: alphacam_gtk/ui/shortcuts.ui:297
 msgid "Search the Program"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:274
+#: alphacam_gtk/ui/shortcuts.ui:303
 msgid "Zoom In at the Cursor"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:280
+#: alphacam_gtk/ui/shortcuts.ui:309
 msgid "Fit Part (ALPHA-T Redraw)"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:286
+#: alphacam_gtk/ui/shortcuts.ui:315
 msgid "Recall View"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:294
+#: alphacam_gtk/ui/shortcuts.ui:323
 msgid "Cursor (Drawing Has the Focus)"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:297
+#: alphacam_gtk/ui/shortcuts.ui:326
 msgid "Move the Cursor by the Step"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:303
+#: alphacam_gtk/ui/shortcuts.ui:332
 msgid "Step ×10"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:309
+#: alphacam_gtk/ui/shortcuts.ui:338
 msgid "Step ÷10"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:315
+#: alphacam_gtk/ui/shortcuts.ui:344
 msgid "Cursor to the Middle of the View"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:321
+#: alphacam_gtk/ui/shortcuts.ui:350
 msgid "Cursor to X0 Z0"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:327
+#: alphacam_gtk/ui/shortcuts.ui:356
 msgid "Use the Cursor as the Point"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:333
+#: alphacam_gtk/ui/shortcuts.ui:362
 msgid "Drawing Context Menu"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:341
+#: alphacam_gtk/ui/shortcuts.ui:370
 msgid "Drawing Keys (Part Page)"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:344
+#: alphacam_gtk/ui/shortcuts.ui:373
 msgid "Find Nearest Line"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:350
+#: alphacam_gtk/ui/shortcuts.ui:379
 msgid "Find Nearest Arc"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:356
+#: alphacam_gtk/ui/shortcuts.ui:385
 msgid "Find Nearest Point"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:362
+#: alphacam_gtk/ui/shortcuts.ui:391
 msgid "Find Nearest Intersection"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:368
+#: alphacam_gtk/ui/shortcuts.ui:397
 msgid "Draw Line by X,Z"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:374
+#: alphacam_gtk/ui/shortcuts.ui:403
 msgid "Draw Line by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:380
+#: alphacam_gtk/ui/shortcuts.ui:409
 msgid "Draw Line by Taps"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:386
+#: alphacam_gtk/ui/shortcuts.ui:415
 msgid "Start at the Cursor"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:398
+#: alphacam_gtk/ui/shortcuts.ui:427
 msgid "Radius at the Nearest Corner"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:416
+#: alphacam_gtk/ui/shortcuts.ui:445
 msgid "Trim Corner"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:422
+#: alphacam_gtk/ui/shortcuts.ui:451
 msgid "Move Cursor to X,Z"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:428
+#: alphacam_gtk/ui/shortcuts.ui:457
 msgid "Move Cursor by dX,dZ"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:434
+#: alphacam_gtk/ui/shortcuts.ui:463
 msgid "Move Cursor by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:440
+#: alphacam_gtk/ui/shortcuts.ui:469
 msgid "Measure by X,Z"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:446
+#: alphacam_gtk/ui/shortcuts.ui:475
 msgid "Measure by Length and Angle"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:452
+#: alphacam_gtk/ui/shortcuts.ui:481
 msgid "Add Text"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:458
+#: alphacam_gtk/ui/shortcuts.ui:487
 msgid "Erase Text"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:464
+#: alphacam_gtk/ui/shortcuts.ui:493
 msgid "Erase the Whole Drawing"
 msgstr ""
 

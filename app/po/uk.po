@@ -1873,6 +1873,21 @@ msgstr "Перше переміщення"
 msgid "Show All"
 msgstr "Показати все"
 
+msgid "Program Page"
+msgstr "Сторінка «Програма»"
+
+msgid "Select the Line's Operation"
+msgstr "Вибрати операцію рядка"
+
+msgid "Larger Text"
+msgstr "Більший текст"
+
+msgid "Smaller Text"
+msgstr "Менший текст"
+
+msgid "Normal Text Size"
+msgstr "Звичайний розмір тексту"
+
 msgid "Pages"
 msgstr "Сторінки"
 

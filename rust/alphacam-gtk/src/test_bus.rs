@@ -13,7 +13,8 @@
 //!                              text view's buffer, a spin row's value as shown)
 //!   Title() -> s               the active window's title
 //!   State() -> s               JSON: the page, the view (scale, ox, oy), the tool, the simulation position, the
-//!                              number of elements, the operations' titles and the selected one, the read-out, and
+//!                              number of elements, the operations' titles and the selected one, the read-out, the
+//!                              Program page's font size and caret line, and
 //!                              the drawing's selected element, ALPHA-T cursor, picking and construction
 //!   Screenshot(s path) -> b    the active window rendered to a PNG (for failed tests)
 //!
