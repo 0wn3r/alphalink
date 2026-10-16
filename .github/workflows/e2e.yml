@@ -56,23 +56,32 @@ jobs:
           printf '<busconfig>\n  <limit name="max_connections_per_user">4096</limit>\n</busconfig>\n' |
             sudo tee /etc/dbus-1/system.d/zz-alphalink-e2e.conf
           sudo systemctl reload dbus
+      # the tests run as a user of their own: whatever a test session's GNOME Shell asks systemd-logind to end
+      # (its "session", the user's processes) must not be the runner's
+      - name: A user for the tests
+        run: |
+          sudo useradd -m -s /bin/bash e2e
+          sudo cp -r app bundle /home/e2e/ && sudo chown -R e2e: /home/e2e
+          mkdir -p logs
       - name: Install the app
         run: |
-          mkdir -p logs && ls -la bundle | tee logs/install.log
-          (flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
-           flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
-           flatpak install --user -y --noninteractive bundle/*.flatpak) 2>&1 | tee -a logs/install.log
+          sudo -u e2e -H bash -c 'cd ~ && ls -la bundle &&
+            flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
+            flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
+            flatpak install --user -y --noninteractive bundle/*.flatpak' 2>&1 | tee logs/install.log
           exit ${PIPESTATUS[0]}
-      - name: Probe GNOME Shell (its own log, for when the tests cannot start it)
-        run: |
-          timeout 20 dbus-run-session -- gnome-shell --headless --wayland --no-x11 --virtual-monitor 800x600 \
-            > logs/shell-probe.log 2>&1 || true
-          tail -n 60 logs/shell-probe.log
       - name: Run the tests
         run: |
-          cd app
-          ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$PWD/../logs/sessions python3 -m tests.e2e.run -j 2 2>&1 | tee ../logs/e2e.log
+          sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
+            python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
           exit ${PIPESTATUS[0]}
+      - name: Collect what the test user left
+        if: always()
+        run: |
+          sudo cp -r /home/e2e/logs/sessions logs/ 2>/dev/null; sudo cp -r /home/e2e/app/e2e-out app/ 2>/dev/null
+          sudo chown -R "$(id -u)" logs app/e2e-out 2>/dev/null
+          sudo journalctl -b --since "-70 min" --no-pager -o short-monotonic | grep -iE "logind|session|e2e|killed|oom" |
+            tail -n 200 > logs/journal.log || true
       - name: Keep the screenshots
         if: always()
         uses: actions/upload-artifact@v5
@@ -91,9 +100,9 @@ jobs:
         if: failure()
         run: |
           { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
-            ps -u "$(id -u)" -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
-            for p in $(pgrep -u "$(id -u)" -x gnome-shell); do
-              echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(tr '\0' '\n' < /proc/$p/environ | grep ^XDG_RUNTIME_DIR)"
+            ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
+            for p in $(pgrep -u e2e -x gnome-shell); do
+              echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(sudo cat /proc/$p/environ | tr '\0' '\n' | grep ^XDG_RUNTIME_DIR)"
             done | head -30; } > logs/summary.log 2>&1 || true
           first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
           [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
