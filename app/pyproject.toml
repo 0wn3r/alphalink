@@ -7,7 +7,7 @@ name = "alphalink-cam"
 version = "0.1.0"
 description = "Lathe CAM for the Harrison Alpha 400T (ALPHA-T programs), GTK 4 / libadwaita"
 requires-python = ">=3.12"
-dependencies = ["pyserial>=3.5"]  # PyGObject, GTK 4 and libadwaita come from the system / Flatpak runtime
+dependencies = ["pyserial>=3.5", "ezdxf>=1.4"]  # PyGObject, GTK 4 and libadwaita come from the system / Flatpak runtime
 license = "LicenseRef-Proprietary"
 
 [project.scripts]
