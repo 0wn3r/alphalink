@@ -72,6 +72,16 @@ jobs:
           exit ${PIPESTATUS[0]}
       - name: Run the tests
         run: |
+          # a watchdog: memory and the test user's processes every 20 s; the tests are stopped before the runner
+          # itself runs out of memory (that ended earlier runs with "lost communication")
+          ( while sleep 20; do
+              echo "$(date +%T) free $(free -m | awk '/Mem:/{print $7}') MB, e2e processes $(ps -u e2e --no-headers | wc -l), shells $(pgrep -u e2e -x gnome-shell | wc -l)"
+              if [ "$(free -m | awk '/Mem:/{print $7}')" -lt 1500 ]; then
+                echo "low memory: stopping the tests"; ps -u e2e -o rss=,comm= | sort -rn | head -15; sudo pkill -KILL -u e2e; fi
+            done ) > logs/watch.log 2>&1 &
+          sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
+            python3 -m tests.e2e.run -j 1 Keyboard Mouse Touch' 2>&1 | tee logs/e2e-first.log
+          echo "after 8 tests:"; ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -20
           sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
             python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
           exit ${PIPESTATUS[0]}
