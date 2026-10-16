@@ -1328,4 +1328,10 @@ single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program 
   face), area clear FACE mode (identical to AREA_front_face, not kept). A long program needs a longer wait before
   DOSBox-X is closed: with 5 s after the save the PRG was cut at 12288 bytes and the SDG/SDT were empty (the old
   PECK samples' problem); 40 s is enough.
+- Round 5, a whole job (JOB_shaft_metric, tools/mk_at_job.py): shaft X30 with a C1 chamfer and a relief groove
+  (X26, Z-25..-28) under an X40 shoulder; T1 area clear, T3 finish, T16 groove (tip 2, stepover 1.5) with tool
+  changes. The PRG is byte-identical; the SD1 differs only in the last digit of one nose-centre corner on the
+  chamfer (X28.6628 / 28.6627, ALPHA-T's single precision). A later CHANGE TOOL first asks "Tool Change Position
+  [X100.000, Z50.000] mm. <Enter>=Accept:" before the tool picker; chamfers are RAD/CHAMFER, size, Enter, Space
+  (toggle to chamfer), Enter.
 

@@ -21,6 +21,7 @@ def _close(test, a: bytes, b: bytes, float_from: int):
 
 
 ULP = {"THREAD_internal_m24_d03_metric"}  # X22.376 typed into ALPHA-T: its float32 radius is 1 ulp off
+CORNER_EDITS = {"JOB_shaft_metric"}  # a chamfer: ALPHA-T's point numbering follows its edit history
 
 
 class SdgWriter(unittest.TestCase):
@@ -39,7 +40,7 @@ class SdgWriter(unittest.TestCase):
                                  [(g.type, g.a, g.b, getattr(g, "centre", None), getattr(g, "ccw", None))
                                   for g in project.geometry])
                 inch = project.units == "inch"
-                if not any(g.type == "arc" for g in project.geometry):
+                if not any(g.type == "arc" for g in project.geometry) and path.stem not in CORNER_EDITS:
                     # drawn as chains: ALPHA-T's own point numbering (arcs come from corner edits, whose leftover
                     # points only ALPHA-T's edit history explains)
                     self.assertEqual(out[:0xC00], ref[:0xC00])

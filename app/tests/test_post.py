@@ -138,6 +138,10 @@ GOLDEN = {
     "GROOVE_vee_datumright_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3, datum="right")],
     "GROOVE_vee_peck15_metric": [Groove(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6"], stepover=2, tip_width=3, peck_depth=1.5)],
     "FACE_slope_depth17_metric": [FaceClear(3, S, ["g0", "g1", "g2", "g3"], depth_of_cut=1.7)],
+    # a whole shaft job: C1 chamfer, relief groove; T1 rough, T3 finish, T16 groove with tool changes in between
+    "JOB_shaft_metric": [ToolChange(1, Point(100, 50), 0.2), AreaClear(1, S, ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"], feed=0.2),
+                         ToolChange(3, Point(100, 50), 0.15), FinishPass(3, S, ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"]),
+                         ToolChange(16, Point(100, 50), 0.1), Groove(16, S, ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"], stepover=1.5, tip_width=2, feed=0.1)],
     "THREAD_spring2_metric": [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2)],
     "GROOVE_face_metric": [Groove(3, S, ["g1", "g2", "g3"], stepover=1, tip_width=2, front=False)],
 }
