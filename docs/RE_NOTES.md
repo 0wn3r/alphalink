@@ -1334,4 +1334,9 @@ single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program 
   chamfer (X28.6628 / 28.6627, ALPHA-T's single precision). A later CHANGE TOOL first asks "Tool Change Position
   [X100.000, Z50.000] mm. <Enter>=Accept:" before the tool picker; chamfers are RAD/CHAMFER, size, Enter, Space
   (toggle to chamfer), Enter.
+- The whole job with a thread (JOB_shaft_metric now has T31 M30x1.5 on X30 / X28.16 last): PRG byte-identical. Thread
+  lines are picked after EXECUTE with the cursor keys (steps of X20 / Z5 from the start point; Enter snaps to the
+  nearest line, outer then inner), then Enter for "Input complete". A loose line in the drawing (the thread's minor
+  diameter) made the app's .SD1 import fall back to "every element" for the area clear and finish contour; it now
+  takes the part's profile from the axis (drawing.outer_profile).
 

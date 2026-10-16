@@ -28,7 +28,7 @@ from ..i18n import tr
 import re
 from pathlib import Path
 
-from ..drawing import pick_order
+from ..drawing import outer_profile, pick_order
 from ..model.geometry import Line, Point
 from ..model.operations import AreaClear, Drill, Dwell, FaceClear, FinishPass, Groove, MoveTo, Thread, ToolChange
 
@@ -73,7 +73,8 @@ def read_sd1(text: str, project) -> list:
     try:
         contour = pick_order(project, [g.id for g in project.geometry])
     except (ValueError, KeyError):
-        contour = [g.id for g in project.geometry]
+        # loose construction lines too (a thread's minor diameter, JOB_shaft): the part's profile from the axis
+        contour = outer_profile(project) or [g.id for g in project.geometry]
     ops: list = []
     tool, feed = project.first_tool, 0.15
     change = project.tool_change

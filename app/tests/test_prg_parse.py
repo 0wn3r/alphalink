@@ -75,7 +75,7 @@ EXPECTED_OPS = {
     "DIVE2_metric": [("area_clear", 29)],
     "DIVE3_metric": [("area_clear", 34)],
     "FINISH_dive2_metric": [("finish", 1)],
-    "JOB_shaft_metric": [("area_clear", 26), ("finish", 1), ("groove", 1)],
+    "JOB_shaft_metric": [("area_clear", 26), ("finish", 1), ("groove", 1), ("thread", 1)],
     "GROOVE_vee_datumright_metric": [("groove", 1)],
     "GROOVE_vee_peck15_metric": [("groove", 1)],
     "FACE_slope_depth17_metric": [("face_clear", 30)],
