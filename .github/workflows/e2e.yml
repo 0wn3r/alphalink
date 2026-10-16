@@ -82,3 +82,10 @@ jobs:
           name: e2e-logs
           path: logs
           if-no-files-found: ignore
+      - name: Show the end of the logs as annotations (readable without signing in)
+        if: failure()
+        run: |
+          for f in logs/*.log; do
+            [ -f "$f" ] || continue
+            echo "::error title=$(basename $f)::$(tail -n 40 "$f" | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
+          done
