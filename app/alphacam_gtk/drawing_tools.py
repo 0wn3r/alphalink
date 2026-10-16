@@ -39,6 +39,7 @@ TOOL_TIPS = {
     "corner": N_("Trim or Extend Two Lines to Meet (K)"),
 }
 FILLET_CHIPS = (0.5, 1, 2, 3, 5)
+CHIP_GAP_PX = 16  # between the last point and its value chip
 CHAMFER_CHIPS = (0.5, 1, 2, 3)
 FILLET_CHIPS_INCH = (0.01, 0.02, 0.04, 0.06, 0.1)
 CHAMFER_CHIPS_INCH = (0.01, 0.02, 0.04, 0.06)
@@ -685,8 +686,10 @@ class DrawingTools:
     # --- value chip (TOUCH.md 5.1: place roughly, then correct exactly) -------------------------------------
 
     def _place_chip(self) -> None:
-        """In touch mode, a chip at the middle of the last segment of the line being drawn shows its exact end
-        (Z for a step along Z, Ø for a face, both for a taper); tapping it opens the keypad on that point."""
+        """In touch mode, a chip beside the last point of the line being drawn shows it exactly (Z for a step along
+        Z, Ø for a face, both for a taper); tapping it opens the keypad on that point. It sits left of the point
+        (right when there is no room) and moves with it; off the screen it hides. (It used to sit mid-segment and
+        stick to the canvas edge when that was off-screen, so it jumped about while the drawing panned.)"""
         if not getattr(self, "_touch", False) or self.c.tool != "line" or len(self.points) < 2:
             self.chip.set_visible(False)
             return
@@ -698,12 +701,19 @@ class DrawingTools:
         else:
             text = f"X{b.x:g} Z{b.z:g}"
         self.chip.set_label(text)
-        sx, sy = self.c.view.to_screen((a.x + b.x) / 2, (a.z + b.z) / 2)
+        sx, sy = self.c.view.to_screen(b.x, b.z)
         w = self.chip.measure(Gtk.Orientation.HORIZONTAL, -1)[1]
         h = self.chip.measure(Gtk.Orientation.VERTICAL, -1)[1]
         cw, ch = self.c.get_width(), self.c.get_height()
-        x = min(max(sx - w / 2, 4), max(cw - w - 4, 4))
-        y = min(max(sy - h - 12, 4), max(ch - h - 4, 4))  # above the segment, clear of the finger
+        if not (0 <= sx <= cw and 0 <= sy <= ch):
+            self.chip.set_visible(False)
+            return
+        if sx - w - CHIP_GAP_PX >= 4:  # left of the point (its own label is drawn up and to the right)
+            x, y = sx - w - CHIP_GAP_PX, sy - h / 2
+        else:  # no room: below and to the right, clear of that label
+            x, y = sx + CHIP_GAP_PX, sy + CHIP_GAP_PX
+        x = min(x, max(cw - w - 4, 4))
+        y = min(max(y, 4), max(ch - h - 4, 4))
         self.chip.set_margin_start(int(x))
         self.chip.set_margin_top(int(y))
         self.chip.set_visible(True)
