@@ -116,6 +116,10 @@ GOLDEN = {
     "DRILL_fullret_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, full_retract=True)],
     "DRILL_retract1_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, retract=1)],
     "THREAD_angle30_metric": [Thread(3, S, "g0", "g1", pitch=1.5, angle=30)],
+    # 1/2-13 UNC (pitch 1.953846, stored 1.9538, depth 1.1633): one cut with D1, four with D0.6 (rounded count, the
+    # last at full depth)
+    "THREAD_unc_half13_metric": [Thread(3, S, "g0", "g1", pitch=25.4 / 13)],
+    "THREAD_unc_half13_d06_metric": [Thread(3, S, "g0", "g1", pitch=25.4 / 13, cut_depth=0.6)],
     "THREAD_spring2_metric": [Thread(3, S, "g0", "g1", pitch=1.5, spring_passes=2)],
     "GROOVE_face_metric": [Groove(3, S, ["g1", "g2", "g3"], stepover=1, tip_width=2, front=False)],
 }
@@ -262,7 +266,7 @@ class OperationRules(unittest.TestCase):
 
         op = Thread(3, Point(120, 5), "o", "i", pitch=1, cut_depth=0.3)
         plan = plan_thread(op, Line(Point(20, 0), Point(20, -10)), Line(Point(18.4, 0), Point(18.4, -10)), 3)
-        self.assertEqual(len(plan.xs), 8)  # (0.8 / 0.3)^2 = 7.1 -> 8
+        self.assertEqual(len(plan.xs), 7)  # (0.8 / 0.3)^2 = 7.1 -> 7, the last at full depth (UNC2: rounded, not up)
         self.assertEqual((plan.xs[0], plan.xs[-1]), (19.4, 18.4))
 
     def test_groove_wall_insert(self):

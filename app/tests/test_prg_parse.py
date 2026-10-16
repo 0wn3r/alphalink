@@ -75,6 +75,8 @@ EXPECTED_OPS = {
     "DIVE2_metric": [("area_clear", 29)],
     "DIVE3_metric": [("area_clear", 34)],
     "FINISH_dive2_metric": [("finish", 1)],
+    "THREAD_unc_half13_metric": [("thread", 1)],
+    "THREAD_unc_half13_d06_metric": [("thread", 4)],
     "AREA_offset_dive2_metric": [("area_clear", 29)],
     "AREA_two_line_dive_metric": [("area_clear", 29)],
     "AREA_rounded_shoulder_groove_metric": [("area_clear", 29)],
@@ -206,10 +208,12 @@ class EverySample(unittest.TestCase):
                 i = -1
                 for b in prog.operations:
                     i += b.op_name != "thread_spring"  # the spring pass block repeats the thread's limits
-                    self.assertEqual(b.limit, (float(g115[i]["X"]), float(g115[i]["Z"])))
+                    # the PRG has 3 decimals, the SD1 4 (THREAD_unc_half13: X10.374 / X10.3734, F1.954 / F1.9538)
+                    for got, want in zip(b.limit, (float(g115[i]["X"]), float(g115[i]["Z"]))):
+                        self.assertAlmostEqual(got, want, delta=0.0011)
                     if b.op_name in ("thread", "thread_spring"):
                         g76 = next(r for r in sd1 if 76 in r["G"])
-                        self.assertAlmostEqual(b.feed, float(g76["F"]))  # pitch
+                        self.assertAlmostEqual(b.feed, float(g76["F"]), places=3)  # pitch
                     else:
                         current_tool = [t for t in tools if t.label < b.label][-1]
                         self.assertAlmostEqual(b.feed, current_tool.feed)

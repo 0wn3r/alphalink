@@ -58,11 +58,13 @@ def plan_thread(op: Thread, outer: Line, inner: Line, decimals: int) -> ThreadPl
     first = round(depth / math.sqrt(op.cuts), 4) if op.cuts > 0 else op.cut_depth
     if depth <= 0 or first <= 0:
         raise ValueError(tr("thread: outer diameter must be above the inner one, first cut > 0"))
-    n = math.ceil(round((depth / first) ** 2, 9))
+    # cuts at first x sqrt(k), their number the rounded (depth / first)^2, the last one always at the full depth
+    # (UNC1/UNC2, 1/2-13 UNC depth 1.1633: D1 -> one cut, D0.6 -> 0.6, 0.849, 1.039, 1.1633)
+    n = max(1, math.floor(round((depth / first) ** 2, 9) + 0.5))
     if n > MAX_CUTS:
         raise ValueError(tr("threading: {n} cuts; make the first cut deeper or set fewer cuts (at most {max})",
                             n=n, max=MAX_CUTS))
-    steps = [2 * round(first * math.sqrt(k), decimals) for k in range(1, n + 1)]
+    steps = [2 * round(first * math.sqrt(k), decimals) for k in range(1, n)] + [2 * depth]
     # THREAD_leadin2_leadout2: cuts start at the thread top + lead-in (default 5) and end at its end - lead-out
     z_end = round(min(outer.a.z, outer.b.z) - op.lead_out, 9)
     z_start = round(max(outer.a.z, outer.b.z) + op.lead_in, 9)
