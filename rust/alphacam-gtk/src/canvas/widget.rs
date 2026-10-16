@@ -114,7 +114,7 @@ pub struct State {
     pub library: Option<Rc<ToolLibrary>>,
     pub pointer: (f64, f64),
     pub last_tap: Tap,
-    shapes: HashMap<u32, Vec<Polyline>>,
+    shapes: HashMap<i64, Vec<Polyline>>,
     fit_pending: bool,
     before_fit: Option<ViewTransform>,
     /// keep the part fitted while the user has not panned or zoomed (e.g. when the editor pane opens)
@@ -751,7 +751,7 @@ impl LatheCanvas {
     }
 
     /// The tool picture of the PRG block with this label: (Z, radius) polylines in mm, cached per preview.
-    fn shape(s: &mut State, label: u32) -> Vec<Polyline> {
+    fn shape(s: &mut State, label: i64) -> Vec<Polyline> {
         if let Some(lines) = s.shapes.get(&label) {
             return lines.clone();
         }
@@ -759,7 +759,7 @@ impl LatheCanvas {
             .preview
             .as_ref()
             .and_then(|p| p.program.as_ref())
-            .and_then(|prog| prog.blocks.iter().find(|b| b.label as i64 == label as i64).and_then(|b| b.tool()));
+            .and_then(|prog| prog.blocks.iter().find(|b| b.label == label).and_then(|b| b.tool()));
         let lines = match (&s.project, number) {
             (Some(p), Some(n)) => outline(checks::tool(p, n as i32, s.library.as_deref())),
             _ => vec![],
@@ -769,7 +769,7 @@ impl LatheCanvas {
     }
 
     /// The tool drawn with its tip at the simulation position (X is a diameter: the picture's radius doubles).
-    fn tool_shape(s: &mut State, cr: &cairo::Context, label: u32, x: f64, z: f64) {
+    fn tool_shape(s: &mut State, cr: &cairo::Context, label: i64, x: f64, z: f64) {
         let lines = Self::shape(s, label);
         let k = if s.project.as_ref().is_some_and(|p| p.units == "inch") { 1.0 / 25.4 } else { 1.0 };
         for line in &lines {
