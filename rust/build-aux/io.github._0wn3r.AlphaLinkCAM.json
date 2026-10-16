@@ -5,6 +5,7 @@
   "sdk": "org.gnome.Sdk",
   "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
   "command": "alphalink-cam",
+  "separate-locales": false,
   "finish-args": [
     "--share=ipc",
     "--socket=wayland",
