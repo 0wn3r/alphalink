@@ -1,0 +1,36 @@
+/* touch density (TOUCH.md 3): bigger targets once the user works with a finger */
+window.touch button { min-height: 48px; min-width: 48px; }
+window.touch .op-list row { min-height: 64px; }
+.op-list row { min-height: 52px; }
+.canvas-zoom button { min-width: 40px; min-height: 40px; }
+window.touch .canvas-zoom button { min-width: 56px; min-height: 56px; }
+.canvas-zoom { margin: 12px; }
+.op-badge { font-weight: bold; min-width: 28px; }
+.program-text { font-family: monospace; }
+.readout { font-family: monospace; padding: 6px 12px; }
+.modem-line { padding: 2px 8px; border-radius: 99px; font-weight: bold; font-size: smaller; }
+.modem-line.success { background: alpha(@success_color, 0.18); }
+.hold-button { padding: 8px 16px; }
+window.touch .hold-button { min-height: 96px; }
+.editor-pane { border-left: 1px solid alpha(currentColor, 0.15); }
+.command-entry { font-family: monospace; }
+window.touch .command-entry { min-height: 48px; }
+.keypad-key { min-height: 64px; min-width: 64px; font-size: 1.4em; }
+.keypad-field { min-height: 48px; font-family: monospace; font-size: 1.2em; }
+.sim-bar button { min-width: 36px; }
+window.touch .sim-bar button { min-width: 56px; min-height: 56px; }
+
+/* the drawing has the keyboard (ALPHA-T cursor keys and letters): the GNOME focus ring, shown once keys are used */
+.lathe-canvas:focus-visible {
+  outline: 2px solid alpha(var(--accent-color), 0.6);
+  outline-offset: -2px;
+}
+
+/* the reorder handle of an operation row: big enough for a finger in touch mode */
+.touch .drag-handle {
+  min-width: 32px;
+  min-height: 32px;
+}
+.drag-label {
+  padding: 8px 16px;
+}

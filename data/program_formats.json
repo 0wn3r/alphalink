@@ -1,0 +1,69 @@
+{
+ "alphacam_v181_600_registers": {
+  "#500": "Total Passes",
+  "#501": "Pass No.",
+  "#502": "Tool No. (always 1)",
+  "#503": "Tool Start X",
+  "#504": "Tool Start Z",
+  "#505": "Maximum X",
+  "#506": "Maximum Z",
+  "#507": "op kind 1 area/face 2 finish 3 groove",
+  "#508": "always 1",
+  "#509": "Op No. (restart GOTO #509*10)",
+  "#510": "feed (set on machine)",
+  "header": "AI = inch (values/25.4, 4 dec) | AZ = mm (3 dec), from ALPHACAM.MES record 0x0C"
+ },
+ "alphat_v12_prg_observed": {
+  "header": [
+   "%",
+   "O<n>",
+   "#132=<program number>",
+   "#140=0",
+   "IF[#1006EQ1]GOTO[[#129+1]*10]",
+   "IF[#1005EQ1]GOTO[#129*10]",
+   "#131=#131-1",
+   "IF[#1009EQ1]GOTO[#129*10]",
+   "#131=0",
+   "M71"
+  ],
+  "N10 block (tool change)": {
+   "#121": "1",
+   "#122": "tool number (as picked in CHANGE TOOL, e.g. 16)",
+   "#123": "tool change X",
+   "#124": "tool change Z (x2!)",
+   "#127": "1",
+   "#129": "block no.",
+   "#130": "feed (x2: drawing F0.15 -> 0.3)"
+  },
+  "N20 block (operation)": {
+   "#120": "number of passes (finish 1, area clear 26)",
+   "#121": "pass number, re-set before every pass",
+   "#122": "tool",
+   "#123": "tool start X",
+   "#124": "tool start Z (x2)",
+   "#125": "limit X",
+   "#126": "limit Z (x2)",
+   "#127": "operation kind: 6 area clear, 7 internal area clear, 8 face clear, 9 grooving, 10 area clear pre-finish, 11 internal area clear pre-finish, 12 face clear pre-finish, 14 finish pass, 15 internal finish pass, 16 face finish pass, 17 grooving finish mode, 18 drilling, 20 threading, 21 thread spring pass (1 = N10 tool block)",
+   "#128": "1",
+   "#129": "block no.",
+   "#130": "feed (x2); for threading = pitch x2 (pitch 1.5 -> #130=3.)",
+   "#131": "#131+1 counter"
+  },
+  "moves": "M60 G0 X Z M61 (rapid) / M62 G1 X Z F (feed) / M64 end of feed group; M63 / M65 / M66 macro calls; IF[#140EQn] GOTO 50n restart",
+  "per pass": "N5nn label; #121=n; M66; IF[#140EQn] GOTO 5nn (restart at pass n); M63; M60 G0 ... M61 rapid; M62 G1 ... feed; M64 after the last pass",
+  "drilling": "peck cycle written out as G1 moves (in/out per peck), Z x2; SD1 uses G74 ... G174; each peck goes `peck` below the previous one (not below the retract), back-off = RETRACT DIST (default 2; DRILL_retract1: 1); FULL RET (DRILL_fullret): back 1, G0 to the start Z, G0 back in to 0.5 above the last depth; #125/#126 = start X, bottom Z (no nose offset)",
+  "dwell": "G4P<revs*1000> (3 revs -> G4P3000); SD1 G4P3",
+  "threading": "per pass: M60 G0 to start M61; M62; #121=n; M66; G32 X<dia> Z<end> F<pitch x2>; U<dx> W<-pitch x2> (retract starts one pitch before the end, V1.21); G0 out; SD1 uses G76 ... G176; cut n at radial depth first*sqrt(n) (first cut 1 -> 100 cuts for 10 mm), the depth rounded to the output decimals before doubling; U = outer - inner + 1 (assumed); internal: from the inner line out to the outer one, U negative, #125 = outer; W = -pitch x2; infeed angle A (THREAD_angle30): each cut starts depth_n*tan(angle/2) towards the chuck (depth_n = first*sqrt(n), exact); spring passes K: that many cuts at the final diameter in the #127=21 block (#120=K)",
+  "move/rapid to cursor": "no N20 header; moves appended to the current tool block: M62 G1 X Z F / M60 G0 X Z M61",
+  "grooving": "plunges written as G1 in / G1 out (+2 on diameter) per stepover, Z x2; #125/#126 = groove limits; SD1 uses G75 ... G175 with the groove contour; plunges from (top Z - tip width) every stepover, an extra plunge on each left wall, depth = highest drawn diameter under the tip (drawn profile, not the tip path); face grooving (FRONT -> FACE, SD1 L210, GROOVE_face): plunges along -Z from the start Z to the shallowest profile Z under the tip, stepping out from the smallest diameter, back 1 in Z",
+  "face clear": "passes along X at Z = -2*depth*n; each pass has its own N5nn restart label; #125/#126 = billet limits (Z x2); SD1 G71 ... G171; the profile's faces split it into zones, each cut from its top face in depth steps, the last clamped onto the next face (Z-2..-24, -25, -27..-49, -50); pull-off -0.4 X +0.2 Z, then rapid to (start X - 0.8, Z + 0.6)",
+  "arcs": "G2 (CW) / G3 (CCW) X Z I K F: I = centre X - start X as a DIAMETER increment, K = centre Z - start Z (x2). The PRG contour is the imaginary tool-tip path: nose-centre path (SD1) shifted by -r in X (radius; +r internal) and -r in Z, so lines along the axes stay on the drawing while arcs become radius R+r (convex) / R-r (concave) and sloped lines move.",
+  "blocks": "each operation block is followed by an empty block (M66, restart IF, label); when a tool change follows, that block holds the rapid to the tool change point (M60 G0 X Z M61). A mid-program tool change is a tool block like N10 (#121 #122 #123 #124 #127=1 #129 #130).",
+  "offsets": "OFFSET X (radius) / Z translate the contour: X + 2*ox, Z + oz; points on the axis (X0) stay at X0. Area clear passes step from the translated max X; the floor (Xmin - 2r) and #125/#126 do not move.",
+  "pre-finish": "area clear with pre-finish = yes: after the area block and its empty block, a finish-pass block with #127=10 and a 1 mm (not 0.2) 45-degree pull-off, then its own empty block",
+  "area clear options": "RETRACT DIST (SD1 G71 R, default 1): the 45-degree pull-off of every pass and the pre-finish pull-off; FOLLOW (SD1 E300): each pass also feeds along the profile to where the previous pass stopped before pulling off (AREA_follow_contour)",
+  "area clear zones": "every Z-parallel profile diameter between the start and the limit gets its own pass and the stepping restarts from it (inch: ... 2.426, 2.4, 2.2426 ...)",
+  "inch rounding": "toolpaths use the nose radius rounded to 4 decimals (0.0157), #125/#126 the exact one; pre-finish pull-off = area retract as entered (0.0394) at 45 deg",
+  "scaling": "Z, feed and thread pitch are all 2x the drawing value (mm and inch); X (diameter) is 1:1; SD1 is unscaled. Confirmed on the control for Z and feed (the T macros halve them, RE_NOTES Progress 29); pitch not yet seen on the control."
+ }
+}

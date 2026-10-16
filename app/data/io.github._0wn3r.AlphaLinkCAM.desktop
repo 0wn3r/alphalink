@@ -1,0 +1,13 @@
+[Desktop Entry]
+Type=Application
+Name=AlphaLink CAM
+GenericName=Lathe CAM
+Comment=Draw turned parts, make Alpha-T programs and send them to the lathe
+Exec=alphalink-cam %f
+Icon=io.github._0wn3r.AlphaLinkCAM
+Terminal=false
+Categories=Graphics;Engineering;
+Keywords=CNC;lathe;CAM;Harrison;Alpha;FANUC;
+MimeType=application/x-alphalink-cam;
+StartupNotify=true
+X-GNOME-UsesNotifications=false

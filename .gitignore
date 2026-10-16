@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+capture.bin
+capture.hex
+tools/xkeys
+_to_delete/
+build/
+*.egg-info/
+app/e2e-out/

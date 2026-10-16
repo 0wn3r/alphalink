@@ -1,0 +1,44 @@
+{
+ "source": "Alphalink-T manual LNK/T-G1.2-JAN/2002 p.60-61",
+ "lathe_connector": "DB25 female on the side of the electrical cabinet behind the headstock (DTE: pin2 TxD, pin3 RxD)",
+ "wires": [
+  [
+   "PC DB9 2 (RD)",
+   "Alpha DB25 2"
+  ],
+  [
+   "PC DB9 3 (SD)",
+   "Alpha DB25 3"
+  ],
+  [
+   "PC DB9 5 (SG)",
+   "Alpha DB25 7 (SG)"
+  ]
+ ],
+ "bridges_pc_db9": [
+  [
+   7,
+   8
+  ],
+  [
+   1,
+   4,
+   6
+  ]
+ ],
+ "bridges_alpha_db25": [
+  [
+   4,
+   5
+  ],
+  [
+   6,
+   8,
+   20
+  ]
+ ],
+ "shield": "NOT connected to the connector shells",
+ "note": "pin-to-pin 2-2/3-3 between DB9 and DB25 is a null-modem crossover. A standard 9-to-25 adapter (DB9 2->DB25 3) does NOT work (verified 2026-10-12: no data either way). Use a DB25 full-handshake null-modem adapter or this cable.",
+ "usb_adapter_used": "Prolific PL2303 067b:2303 (loopback OK after reconnect)",
+ "as_built_2026-10-13": "User: the cable is exactly the manual p.61 version with the bridges on both ends (PC DB9 7-8 and 1-4-6, machine DB25 4-5 and 6-8-20). First CAM loads accepted by the control. With the PC-side bridges the PC's CTS/DSR/CD only echo its own RTS/DTR, so they say nothing about the lathe."
+}
