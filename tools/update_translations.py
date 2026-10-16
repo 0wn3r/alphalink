@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Regenerate app/po/alphalink-cam.pot from the sources, rebuild app/po/uk.po from app/po/uk_translations.py, and
+"""Regenerate app/po/alphalink-cam.pot from the sources (the Python code and the compiled interface files), rebuild app/po/uk.po from app/po/uk_translations.py, and
 compile the catalogs into app/alphacam_gtk/locale/<lang>/LC_MESSAGES/alphalink-cam.mo.
 Needs xgettext and msgfmt (gettext). Run from anywhere: python3 tools/update_translations.py"""
 
@@ -20,8 +20,9 @@ def quote(s: str) -> str:
 
 def main() -> int:
     sources = sorted(str(p.relative_to(APP)) for d in ("alphacam", "alphacam_gtk") for p in (APP / d).rglob("*.py"))
+    sources += sorted(str(p.relative_to(APP)) for p in (APP / "alphacam_gtk" / "ui").glob("*.ui"))  # tools/build_ui.py
     (PO / "POTFILES").write_text("\n".join(sources) + "\n")
-    subprocess.run(["xgettext", "--from-code=UTF-8", "--language=Python", "--keyword=_", "--keyword=N_",
+    subprocess.run(["xgettext", "--from-code=UTF-8", "--keyword=_", "--keyword=N_",
                     "--keyword=ngettext:1,2", "--keyword=tr", "--add-comments=TRANSLATORS", "--package-name=alphalink-cam",
                     "--package-version=0.1.0", "--sort-by-file", "-f", "po/POTFILES", "-o", "po/alphalink-cam.pot"],
                    cwd=APP, check=True)

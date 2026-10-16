@@ -15,8 +15,9 @@ from gi.repository import Adw, GLib, Gtk  # noqa: E402
 
 from alphacam.link import serial_link as sl  # noqa: E402
 
-from .hold_button import HoldButton  # noqa: E402
+from .hold_button import HoldButton  # noqa: E402, F401  (the type ui/machine.blp uses)
 from .i18n import _  # noqa: E402
+from .ui import builder, template  # noqa: E402
 from .settings import settings  # noqa: E402
 
 LOG_DIR = Path(GLib.get_user_state_dir()) / "alphalink-cam" / "logs"
@@ -30,30 +31,23 @@ STEPS_RESTORE = _("On the lathe: in Manual Ops touch the ops file icon, 1 “OP.
 STEPS_LOOP = _("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test.")
 
 
+@template("transfer-dialog")
 class TransferDialog(Adw.Dialog):
     """Progress of one transfer; Cancel stops the worker at the next byte."""
 
+    __gtype_name__ = "AlphaLinkTransferDialog"
+
+    state = Gtk.Template.Child()
+    bar = Gtk.Template.Child()
+    detail = Gtk.Template.Child()
+    button = Gtk.Template.Child()
+
     def __init__(self, title: str):
-        super().__init__(title=title, content_width=420, can_close=False)
+        super().__init__(title=title)
         self.cancel = threading.Event()
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, margin_top=24, margin_bottom=24,
-                      margin_start=24, margin_end=24)
-        self.state = Gtk.Label(label=_("Opening port…"), wrap=True)
-        self.state.add_css_class("title-3")
-        self.bar = Gtk.ProgressBar(show_text=True)
-        self.detail = Gtk.Label(label="", wrap=True)
-        self.detail.add_css_class("dim-label")
-        self.button = Gtk.Button(label=_("_Cancel"), use_underline=True, halign=Gtk.Align.CENTER)
-        self.button.add_css_class("pill")
-        self.button.connect("clicked", self._cancel_or_close)
-        for w in (self.state, self.bar, self.detail, self.button):
-            box.append(w)
-        view = Adw.ToolbarView()
-        view.add_top_bar(Adw.HeaderBar(show_end_title_buttons=False))
-        view.set_content(box)
-        self.set_child(view)
         self.finished = False
 
+    @Gtk.Template.Callback()
     def _cancel_or_close(self, *_args):
         if self.finished:
             self.set_can_close(True)
@@ -70,88 +64,57 @@ class TransferDialog(Adw.Dialog):
             self.bar.set_fraction(1.0)
 
 
+@template("machine")
 class MachinePage(Gtk.Box):
+    __gtype_name__ = "AlphaLinkMachinePage"
+
+    port_row = Gtk.Template.Child()
+    port_model = Gtk.Template.Child()
+    lines_row = Gtk.Template.Child()
+    line_cts = Gtk.Template.Child()
+    line_dsr = Gtk.Template.Child()
+    line_cd = Gtk.Template.Child()
+    line_ri = Gtk.Template.Child()
+    delay_row = Gtk.Template.Child()
+    wait_row = Gtk.Template.Child()
+    parity_row = Gtk.Template.Child()
+    send_group = Gtk.Template.Child()
+    send_info = Gtk.Template.Child()
+    send_button = Gtk.Template.Child()
+    mops_group = Gtk.Template.Child()
+    restore_row = Gtk.Template.Child()
+    restore_button = Gtk.Template.Child()
+    test_group = Gtk.Template.Child()
+
     def __init__(self, window):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        super().__init__()
         self.window = window
         self.data: bytes | None = None
         self.program_info = ""
         self._poll = 0
         self._busy = False
-
-        page = Adw.PreferencesPage()
-        # connection
-        conn = Adw.PreferencesGroup(title=_("Connection"))
-        self.port_model = Gtk.StringList()
-        self.port_row = Adw.ComboRow(title=_("Serial port"), model=self.port_model)
-        refresh = Gtk.Button(icon_name="view-refresh-symbolic", valign=Gtk.Align.CENTER, tooltip_text=_("Rescan Ports"))
-        refresh.add_css_class("flat")
-        refresh.connect("clicked", lambda *_: self.refresh_ports())
-        self.port_row.add_suffix(refresh)
-        conn.add(self.port_row)
-        self.lines_row = Adw.ActionRow(title=_("Modem lines"), subtitle=_("Shown while this page is open"))
-        self.lines_row.set_tooltip_text(_("With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only "
-                                          "echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe."))
-        self.line_labels = {}
-        for name in ("CTS", "DSR", "CD", "RI"):
-            lbl = Gtk.Label(label=name, valign=Gtk.Align.CENTER)
-            lbl.add_css_class("modem-line")
-            self.line_labels[name.lower()] = lbl
-            self.lines_row.add_suffix(lbl)
-        conn.add(self.lines_row)
-        self.delay_row = Adw.SpinRow.new_with_range(0, 20, 0.5)
-        self.delay_row.set_title(_("Delay per character (ms)"))
-        self.delay_row.set_subtitle(_("2 ms works on the 400T; 0 sends at full speed"))
-        self.delay_row.set_value(settings()["char_delay_ms"])
+        self.send_group.set_description(STEPS_SEND)
+        self.mops_group.set_description(STEPS_BACKUP)
+        self.restore_row.set_subtitle(STEPS_RESTORE)
+        self.test_group.set_description(STEPS_LOOP)
+        self.line_labels = {"cts": self.line_cts, "dsr": self.line_dsr, "cd": self.line_cd, "ri": self.line_ri}
+        st = settings()
+        self.delay_row.set_value(st["char_delay_ms"])
         self.delay_row.connect("notify::value", self._delay_changed)
-        conn.add(self.delay_row)
-        self.wait_row = Adw.SwitchRow(title=_("Wait for the control (DC1)"), active=settings()["wait_xon"],
-                                      subtitle=_("Nothing is sent until the lathe asks for data"))
+        self.wait_row.set_active(st["wait_xon"])
         self.wait_row.connect("notify::active", lambda r, _p: settings().set("wait_xon", r.get_active()))
-        conn.add(self.wait_row)
-        # Bluetooth serial adapters: the line is set in the adapter; some only frame 8 data bits
-        self.parity_row = Adw.SwitchRow(title=_("Parity from the app"), active=bool(settings()["soft_parity"]),
-                                        subtitle=_("For adapters without 7-bit framing: set the adapter to 9600 8N2"))
+        self.parity_row.set_active(bool(st["soft_parity"]))
         self.parity_row.connect("notify::active", lambda r, _p: settings().set("soft_parity", r.get_active()))
-        conn.add(self.parity_row)
-        page.add(conn)
-
-        # send
-        send = Adw.PreferencesGroup(title=_("Send CAM program"), description=STEPS_SEND)
-        self.send_info = Adw.ActionRow(title=_("No program"), subtitle=_("Open a part first"))
-        send.add(self.send_info)
-        self.send_button = HoldButton(_("Send to the Lathe"), margin_top=12, height_request=72)
-        self.send_button.add_css_class("suggested-action")
-        self.send_button.connect("held", lambda *_: self._confirm_send())
-        send.add(self.send_button)
-        page.add(send)
-
-        # manual ops
-        mops = Adw.PreferencesGroup(title=_("Manual Ops"), description=STEPS_BACKUP)
-        backup = Adw.ButtonRow(title=_("Back Up Manual Ops from the Lathe…"), start_icon_name="document-save-symbolic")
-        backup.connect("activated", lambda *_: self._backup())
-        mops.add(backup)
-        restore_row = Adw.ActionRow(title=_("Restore Manual Ops"), subtitle=STEPS_RESTORE)
-        mops.add(restore_row)
-        self.restore_button = HoldButton(_("Restore to the Lathe…"), margin_top=12, height_request=64)
-        self.restore_button.add_css_class("destructive-action")
-        self.restore_button.connect("held", lambda *_: self._restore_pick())
-        mops.add(self.restore_button)
-        page.add(mops)
-
-        test = Adw.PreferencesGroup(title=_("Cable Test"), description=STEPS_LOOP)
-        loop = Adw.ButtonRow(title=_("Run Loopback Test"), start_icon_name="media-playlist-repeat-symbolic")
-        loop.connect("activated", lambda *_: self._loopback())
-        test.add(loop)
-        page.add(test)
-
-        self.append(page)
         self.refresh_ports()
         self.port_row.connect("notify::selected", lambda *_: (self._restart_poll(), self._remember_port(),
                                                               self._port_kind()))
         self._port_kind()
         self.connect("map", lambda *_: self._restart_poll())
         self.connect("unmap", lambda *_: self._stop_poll())
+
+    @Gtk.Template.Callback()
+    def _rescan(self, *_a) -> None:
+        self.refresh_ports()
 
     # --- state ------------------------------------------------------------------------------------------
 
@@ -290,19 +253,14 @@ class MachinePage(Gtk.Box):
             GLib.idle_add(ui)
         return cb
 
-    def _confirm_send(self) -> None:
+    @Gtk.Template.Callback()
+    def _confirm_send(self, *_a) -> None:
         if not self.data:
             return
-        alert = Adw.AlertDialog(heading=_("Send this program?"),
-                                body=_("{info}\n{size} bytes to {port}.\n\n{steps}").format(
-                                    info=self.program_info, size=len(self.data), port=self.port(),
-                                    steps=_("The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. "
-                                            "Then press Send.")))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("send", _("_Send"))
-        alert.set_response_appearance("send", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("cancel")
-        alert.set_close_response("cancel")
+        alert = builder("machine-dialogs").get_object("send_alert")
+        alert.set_body(_("{info}\n{size} bytes to {port}.\n\n{steps}").format(
+            info=self.program_info, size=len(self.data), port=self.port(),
+            steps=_("The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then press Send.")))
         data = self.data  # exactly the program this dialog describes, even if the part changes meanwhile
         alert.connect("response", lambda d, r: r == "send" and self._send(data))
         alert.present(self.window)
@@ -317,7 +275,8 @@ class MachinePage(Gtk.Box):
         self._run(_("Send CAM Program"), work,
                   lambda dlg, n: dlg.finish(True, _("Sent {n} bytes. Check the program list on the control.").format(n=n)))
 
-    def _backup(self) -> None:
+    @Gtk.Template.Callback()
+    def _backup(self, *_a) -> None:
         def work(ser, dlg, log):
             GLib.idle_add(lambda: dlg.state.set_label(_("Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”")) and False)
             def quiet(seconds):
@@ -374,7 +333,8 @@ class MachinePage(Gtk.Box):
 
         self._run(_("Back Up Manual Ops"), work, done)
 
-    def _restore_pick(self) -> None:
+    @Gtk.Template.Callback()
+    def _restore_pick(self, *_a) -> None:
         fd = Gtk.FileDialog(title=_("Restore Manual Ops From"))
 
         def picked(d, res):
@@ -390,14 +350,9 @@ class MachinePage(Gtk.Box):
             if not (data.lstrip().startswith(b"%") and data.rstrip().endswith(b"%")):
                 self.window.toast(_("This is not a Manual Ops backup (it must start and end with %)."))
                 return
-            alert = Adw.AlertDialog(heading=_("Restore Manual Ops?"),
-                                    body=_("{name}, {size} bytes.\n\n{steps}").format(
-                                        name=Path(f.get_path()).name, size=len(data), steps=STEPS_RESTORE))
-            alert.add_response("cancel", _("_Cancel"))
-            alert.add_response("restore", _("_Restore"))
-            alert.set_response_appearance("restore", Adw.ResponseAppearance.DESTRUCTIVE)
-            alert.set_default_response("cancel")
-            alert.set_close_response("cancel")
+            alert = builder("machine-dialogs").get_object("restore_alert")
+            alert.set_body(_("{name}, {size} bytes.\n\n{steps}").format(
+                name=Path(f.get_path()).name, size=len(data), steps=STEPS_RESTORE))
             alert.connect("response", lambda _d, r: r == "restore" and self._restore(data))
             alert.present(self.window)
 
@@ -423,15 +378,10 @@ class MachinePage(Gtk.Box):
 
         self._delay_id = GLib.timeout_add(500, save)
 
-    def _loopback(self) -> None:
+    @Gtk.Template.Callback()
+    def _loopback(self, *_a) -> None:
         """Writes a short test text to the port: only with the cable off the lathe, so ask first."""
-        alert = Adw.AlertDialog(heading=_("Run the loopback test?"),
-                                body=_("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: "
-                                       "the test sends a short text to the port."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("run", _("_Run Test"))
-        alert.set_default_response("run")
-        alert.set_close_response("cancel")
+        alert = builder("machine-dialogs").get_object("loopback_alert")
         alert.connect("response", lambda _d, r: r == "run" and self._run_loopback())
         alert.present(self.window)
 

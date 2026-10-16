@@ -16,6 +16,7 @@ from alphacam.io.prg_parse import MoveKind  # noqa: E402
 from alphacam.model.tools import standard_library  # noqa: E402
 
 from .i18n import N_, _, ngettext  # noqa: E402
+from .ui import template  # noqa: E402
 
 MONTHS = [N_("Jan"), N_("Feb"), N_("Mar"), N_("Apr"), N_("May"), N_("Jun"), N_("Jul"), N_("Aug"), N_("Sep"), N_("Oct"),
           N_("Nov"), N_("Dec")]
@@ -234,43 +235,30 @@ def write_pdf(path, project, pv, title: str, canvas, library=None, moves: bool =
     return pages
 
 
+@template("sheet-page")
 class SheetPage(Gtk.Box):
     """Shows the setup sheet; a switch adds the tool moves; Save as Text writes it to a file."""
 
+    __gtype_name__ = "AlphaLinkSheetPage"
+
+    moves_switch = Gtk.Template.Child()
+    time_label = Gtk.Template.Child()
+    notes = Gtk.Template.Child()
+    view = Gtk.Template.Child()
+
+    window = None
+
     def __init__(self, window):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        super().__init__()
         self.window = window
-        bar = Gtk.Box(spacing=12, margin_start=12, margin_end=12, margin_top=6, margin_bottom=6)
-        self.moves_switch = Gtk.Switch(valign=Gtk.Align.CENTER)
-        self.moves_switch.connect("notify::active", lambda *a: self.refresh())
-        lbl = Gtk.Label(label=_("Tool moves"))
-        self.time_label = Gtk.Label(hexpand=True, xalign=0, ellipsize=3, css_classes=["dim-label"])
-        save = Gtk.Button(label=_("_Save as Text…"), use_underline=True, halign=Gtk.Align.END)
-        save.connect("clicked", lambda *a: self._save())
-        pdf = Gtk.Button(label=_("Save as _PDF…"), use_underline=True, halign=Gtk.Align.END,
-                         tooltip_text=_("Printable setup sheet: the part, the tools in loading order, notes"))
-        pdf.connect("clicked", lambda *a: self._save_pdf())
-        for wdg in (lbl, self.moves_switch, self.time_label, save, pdf):
-            bar.append(wdg)
-        self.view = Gtk.TextView(editable=False, cursor_visible=False, monospace=True, top_margin=12,
-                                 bottom_margin=12, left_margin=12, right_margin=12)
-        self.view.add_css_class("program-text")
-        self.notes = Gtk.TextView(wrap_mode=Gtk.WrapMode.WORD_CHAR, top_margin=6, bottom_margin=6, left_margin=6,
-                                  right_margin=6, height_request=60)
-        focus = Gtk.EventControllerFocus()
-        focus.connect("leave", lambda *a: self._notes_changed())
-        self.notes.add_controller(focus)
-        notes_box = Gtk.Expander(label=_("Notes for the operator"), child=Gtk.ScrolledWindow(
-            child=self.notes, max_content_height=120, propagate_natural_height=True), margin_start=12,
-            margin_end=12, margin_bottom=6)
-        self.append(bar)
-        self.append(notes_box)
-        self.append(Gtk.Separator())
-        self.append(Gtk.ScrolledWindow(child=self.view, vexpand=True))
+
+    @Gtk.Template.Callback()
+    def _moves_toggled(self, *_a) -> None:
+        self.refresh()
 
     def refresh(self) -> None:
         w = self.window
-        if w.project is None:
+        if w is None or w.project is None:
             return
         from alphacam.cycletime import estimate
 
@@ -290,16 +278,18 @@ class SheetPage(Gtk.Box):
             title += " " + _("SETUP {n}").format(n=w.setup_index + 1)
         return title
 
-    def _notes_changed(self) -> None:
+    @Gtk.Template.Callback()
+    def _notes_changed(self, *_a) -> None:
         w = self.window
-        if w.project is None:
+        if w is None or w.project is None:
             return
         buf = self.notes.get_buffer()
         text = buf.get_text(buf.get_start_iter(), buf.get_end_iter(), False)
         if text != w.project.notes:
             w.apply_edit(_("Notes"), lambda p: setattr(p, "notes", text))
 
-    def _save_pdf(self) -> None:
+    @Gtk.Template.Callback()
+    def _save_pdf(self, *_a) -> None:
         w = self.window
         if w.project is None or w.pv is None or w.pv.program is None:
             w.toast(_("There is no program to print yet"))
@@ -323,7 +313,8 @@ class SheetPage(Gtk.Box):
 
         dlg.save(w, None, done)
 
-    def _save(self) -> None:
+    @Gtk.Template.Callback()
+    def _save(self, *_a) -> None:
         w = self.window
         stem = w.path.stem if w.path else "part"
         dlg = Gtk.FileDialog(title=_("Save Setup Sheet"), initial_name=f"{stem}-sheet.txt")

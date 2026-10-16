@@ -8,62 +8,70 @@ from __future__ import annotations
 import gi
 
 gi.require_version("Gtk", "4.0")
-from gi.repository import Pango, GLib, Gtk  # noqa: E402
+from gi.repository import GLib, Gtk  # noqa: E402
 
 from .canvas.paths import pass_starts  # noqa: E402
 from .i18n import _, ngettext  # noqa: E402
+from .ui import template  # noqa: E402
 
 MOVES_PER_SECOND = 25
 SPEEDS = (1, 2, 5, 10, 0.5)  # playback speed, cycled by the speed button
 
 
+@template("simulation")
 class SimulationBar(Gtk.Box):
+    __gtype_name__ = "AlphaLinkSimulationBar"
+
+    first_button = Gtk.Template.Child()
+    previous_button = Gtk.Template.Child()
+    play_button = Gtk.Template.Child()
+    next_button = Gtk.Template.Child()
+    last_button = Gtk.Template.Child()
+    scale = Gtk.Template.Child()
+    to_op = Gtk.Template.Child()
+    speed_button = Gtk.Template.Child()
+    label = Gtk.Template.Child()
+
+    _guard = True  # until __init__ has the canvas: the scale's first value is not a scrub
+
     def __init__(self, canvas, on_move=None):
-        super().__init__(spacing=6, margin_start=6, margin_end=6, margin_top=4, margin_bottom=4)
-        self.add_css_class("sim-bar")
+        super().__init__()
         self.c, self.on_move = canvas, on_move
         self._play = 0
-        self._buttons = []
-        buttons = [("media-skip-backward-symbolic", _("First Move"), lambda: self.goto(0)),
-                   ("media-seek-backward-symbolic", _("Previous Pass"), lambda: self.step_pass(-1)),
-                   (None, None, None),
-                   ("media-seek-forward-symbolic", _("Next Pass"), lambda: self.step_pass(1)),
-                   ("media-skip-forward-symbolic", _("Show All"), lambda: self.goto(None))]
-        for icon, tip, cb in buttons:
-            if icon is None:
-                self.play_button = Gtk.Button(icon_name="media-playback-start-symbolic", tooltip_text=_("Play / Pause"))
-                self.play_button.connect("clicked", lambda *_: self.toggle_play())
-                self._buttons.append(self.play_button)
-                self.append(self.play_button)
-                continue
-            b = Gtk.Button(icon_name=icon, tooltip_text=tip)
-            self._buttons.append(b)
-            b.connect("clicked", lambda _b, cb=cb: cb())
-            b.add_css_class("flat")
-            self.append(b)
-        self.scale = Gtk.Scale(hexpand=True, draw_value=False, adjustment=Gtk.Adjustment(upper=1, step_increment=1))
-        self.scale.connect("value-changed", self._scrubbed)
-        self.append(self.scale)
-        # the selected operation's first move ("run to operation"), and the playback speed
-        self.to_op = Gtk.Button(icon_name="find-location-symbolic", tooltip_text=_("Start of the Selected Operation"),
-                                sensitive=False)
-        self.to_op.add_css_class("flat")
-        self.to_op.connect("clicked", lambda *_: self.goto_op(self.selected_op))
-        self._buttons.append(self.to_op)
-        self.append(self.to_op)
+        self._buttons = [self.first_button, self.previous_button, self.play_button, self.next_button,
+                         self.last_button, self.to_op]
         self.speed = 1
-        self.speed_button = Gtk.Button(label="1×", tooltip_text=_("Playback Speed"))
-        self.speed_button.add_css_class("flat")
-        self.speed_button.add_css_class("numeric")
-        self.speed_button.connect("clicked", lambda *_: self.next_speed())
-        self.append(self.speed_button)
         self.selected_op = None
-        self.label = Gtk.Label(width_chars=12, max_width_chars=40, xalign=0, ellipsize=Pango.EllipsizeMode.END)
-        self.label.add_css_class("caption")
-        self.label.add_css_class("numeric")
-        self.append(self.label)
         self._guard = False
         self.reset()
+
+    @Gtk.Template.Callback()
+    def _first(self, *_a) -> None:
+        self.goto(0)
+
+    @Gtk.Template.Callback()
+    def _previous_pass(self, *_a) -> None:
+        self.step_pass(-1)
+
+    @Gtk.Template.Callback()
+    def _play_clicked(self, *_a) -> None:
+        self.toggle_play()
+
+    @Gtk.Template.Callback()
+    def _next_pass(self, *_a) -> None:
+        self.step_pass(1)
+
+    @Gtk.Template.Callback()
+    def _show_all(self, *_a) -> None:
+        self.goto(None)
+
+    @Gtk.Template.Callback()
+    def _to_op_clicked(self, *_a) -> None:
+        self.goto_op(self.selected_op)
+
+    @Gtk.Template.Callback()
+    def _speed_clicked(self, *_a) -> None:
+        self.next_speed()
 
     def reset(self) -> None:
         self.stop()
@@ -72,8 +80,7 @@ class SimulationBar(Gtk.Box):
         self.scale.get_adjustment().configure(n, 0, n, 1, 10, 0)
         self._guard = False
         self.c.sim_index = None
-        if hasattr(self, "to_op"):
-            self.select_op(self.selected_op)  # new moves: is the selected operation still in them
+        self.select_op(self.selected_op)  # new moves: is the selected operation still in them
         self._label()
 
     def goto(self, index: int | None) -> None:
@@ -136,6 +143,7 @@ class SimulationBar(Gtk.Box):
         self.goto(i)
         return True
 
+    @Gtk.Template.Callback()
     def _scrubbed(self, scale) -> None:
         if self._guard:
             return

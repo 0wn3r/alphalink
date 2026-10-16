@@ -1,0 +1,38 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The Machine page's questions (machine.py fills in the bodies).
+Adw.AlertDialog send_alert {
+  heading: _("Send this program?");
+  default-response: "cancel";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    send: _("_Send") suggested,
+  ]
+}
+
+Adw.AlertDialog restore_alert {
+  heading: _("Restore Manual Ops?");
+  default-response: "cancel";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    restore: _("_Restore") destructive,
+  ]
+}
+
+// writes a short test text to the port: only with the cable off the lathe, so ask first
+Adw.AlertDialog loopback_alert {
+  heading: _("Run the loopback test?");
+  body: _("Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: the test sends a short text to the port.");
+  default-response: "run";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    run: _("_Run Test"),
+  ]
+}

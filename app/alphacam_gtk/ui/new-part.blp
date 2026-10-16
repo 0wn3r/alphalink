@@ -1,0 +1,16 @@
+using Gtk 4.0;
+using Adw 1;
+
+// New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)
+Adw.AlertDialog new_part_alert {
+  heading: _("New Part");
+  body: _("Billet size and units. The drawing starts empty.");
+  default-response: "create";
+  close-response: "cancel";
+  extra-child: $AlphaLinkBilletGroup new_part_billet {};
+
+  responses [
+    cancel: _("_Cancel"),
+    create: _("_Create") suggested,
+  ]
+}

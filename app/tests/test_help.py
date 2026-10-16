@@ -71,6 +71,6 @@ class Manuals(unittest.TestCase):
             self.assertEqual(manual_path(kind, "de").name, f"{kind}.en.pdf")
 
     def test_menu_actions(self):
-        src = (HELP_DIR.parent / "window.py").read_text()
+        src = (HELP_DIR.parent / "ui" / "window.blp").read_text()
         self.assertIn('"win.manual-training"', src)
         self.assertIn('"win.manual-reference"', src)
