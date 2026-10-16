@@ -14,3 +14,5 @@ serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
 thiserror = "2"
 regex = "1"
 rust_decimal = "1"
+indexmap = "2"
+libm = "0.2"

@@ -8,6 +8,8 @@ pub mod finish;
 pub mod groove;
 pub mod thread;
 
+use serde::{Deserialize, Serialize};
+
 use crate::error::Error;
 use crate::i18n::tr;
 
@@ -19,7 +21,9 @@ pub fn too_many(what: &str) -> Error {
                     &[("what", &what), ("max", &MAX_PASSES)]))
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// Stored as its name (`rapid`, `arc_cw`, ...), like Python's `MoveKind.value`.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum MoveKind {
     /// G0
     Rapid,

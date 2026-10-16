@@ -12,3 +12,5 @@ serde_json.workspace = true
 thiserror.workspace = true
 rust_decimal.workspace = true
 regex.workspace = true
+indexmap.workspace = true
+libm.workspace = true
