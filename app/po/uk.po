@@ -235,14 +235,14 @@ msgstr "деталь не має довжини, щоб її переверну�
 msgid "area clear: no contour below X{x}"
 msgstr "чорнова обробка: немає контуру нижче X{x}"
 
-msgid "area clear"
-msgstr "чорнова обробка"
-
 msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
 msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
 
 msgid "depth of cut must be > 0"
 msgstr "глибина різання має бути > 0"
+
+msgid "area clear"
+msgstr "чорнова обробка"
 
 msgid "empty contour"
 msgstr "порожній контур"

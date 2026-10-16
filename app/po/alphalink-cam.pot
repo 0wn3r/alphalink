@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 07:32+0000\n"
+"POT-Creation-Date: 2026-10-16 07:34+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -270,28 +270,28 @@ msgstr ""
 msgid "unsupported tool library format {get_format}"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:102
+#: alphacam/post/alphat_prg.py:103
 #, python-brace-format
 msgid "{value} moves are not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:136
+#: alphacam/post/alphat_prg.py:137
 #, python-brace-format
 msgid ""
 "{op}: no cuts with this contour (nothing between the tool start and the "
 "profile)"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:218
+#: alphacam/post/alphat_prg.py:220
 msgid "area clear FACE with pre-finish (no sample)"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:246
+#: alphacam/post/alphat_prg.py:248
 #, python-brace-format
 msgid "{type} is not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:310
+#: alphacam/post/alphat_prg.py:312
 msgid "move/dwell before the first tool change is not supported"
 msgstr ""
 
@@ -363,23 +363,23 @@ msgstr ""
 msgid "the part has no length to turn around"
 msgstr ""
 
-#: alphacam/toolpath/area.py:55
+#: alphacam/toolpath/area.py:57
 #, python-brace-format
 msgid "area clear: no contour below X{x}"
 msgstr ""
 
-#: alphacam/toolpath/area.py:190 alphacam/toolpath/area.py:249
-msgid "area clear"
-msgstr ""
-
-#: alphacam/toolpath/area.py:216
+#: alphacam/toolpath/area.py:251
 msgid ""
 "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the "
 "app does not offer it; use TOWARDS"
 msgstr ""
 
-#: alphacam/toolpath/area.py:219
+#: alphacam/toolpath/area.py:254
 msgid "depth of cut must be > 0"
+msgstr ""
+
+#: alphacam/toolpath/area.py:284
+msgid "area clear"
 msgstr ""
 
 #: alphacam/toolpath/contour.py:41
