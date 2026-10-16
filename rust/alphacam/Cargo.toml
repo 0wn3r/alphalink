@@ -15,11 +15,13 @@ regex.workspace = true
 serialport = { workspace = true, optional = true }
 socket2 = { workspace = true, optional = true }
 zbus = { workspace = true, optional = true }
+dxf.workspace = true
 
 [dev-dependencies]
 # the link tests play the control on a pty pair and a socket pair
 serialport.workspace = true
 socket2.workspace = true
+sha2.workspace = true
 
 [features]
 default = ["serial"]

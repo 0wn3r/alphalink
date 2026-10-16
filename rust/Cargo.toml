@@ -25,3 +25,5 @@ socket2 = { version = "0.6", features = ["all"] }
 zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
 # command line (alphacam-cli)
 clap = { version = "4", features = ["derive"] }
+dxf = "0.6"
+sha2 = "0.10"
