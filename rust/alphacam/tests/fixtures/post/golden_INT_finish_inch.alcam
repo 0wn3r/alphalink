@@ -1,0 +1,69 @@
+{
+ "format": "alcam/1",
+ "units": "inch",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 4.724409,
+  "length": 3.937008,
+  "face_allowance": 0.8,
+  "bore": 0.0,
+  "jaws": "external",
+  "tailstock": false
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 120.0
+ },
+ "tool_change": {
+  "x": 3.937,
+  "z": 1.9685
+ },
+ "program_number": 10,
+ "first_tool": 3,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [2.0, 0.0],
+   "b": [2.0, -0.8],
+   "id": "g0"
+  },
+  {
+   "type": "line",
+   "a": [2.0, -0.8],
+   "b": [1.44, -0.8],
+   "id": "g1"
+  },
+  {
+   "type": "line",
+   "a": [1.44, -0.8],
+   "b": [1.44, -1.6],
+   "id": "g2"
+  },
+  {
+   "type": "line",
+   "a": [1.44, -1.6],
+   "b": [0.8, -1.6],
+   "id": "g3"
+  }
+ ],
+ "operations": [
+  {
+   "type": "tool_change",
+   "tool": 12,
+   "change_point": [3.937, 1.9685],
+   "feed": 0.12
+  },
+  {
+   "type": "finish",
+   "tool": 12,
+   "start": [0.6, 0.2],
+   "contour": ["g0", "g1", "g2", "g3"],
+   "feed": 0.12,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "external": false,
+   "face": false
+  }
+ ]
+}

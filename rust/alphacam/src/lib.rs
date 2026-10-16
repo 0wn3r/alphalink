@@ -5,6 +5,8 @@ pub mod error;
 pub mod i18n;
 pub mod model;
 pub mod numfmt;
+pub mod post;
 pub mod py;
+pub mod toolpath;
 
 pub use error::{Error, Result};

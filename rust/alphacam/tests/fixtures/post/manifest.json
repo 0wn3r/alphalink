@@ -1,0 +1,609 @@
+{
+ "example_arc_finish": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_arc_finish.PRG"
+ },
+ "example_area_clear": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_area_clear.PRG"
+ },
+ "example_bore_area": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_bore_area.PRG"
+ },
+ "example_drill": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_drill.PRG"
+ },
+ "example_face_clear": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_face_clear.PRG"
+ },
+ "example_groove": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_groove.PRG"
+ },
+ "example_met2_finish": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_met2_finish.PRG"
+ },
+ "example_rough_and_finish": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_rough_and_finish.PRG"
+ },
+ "example_thread": {
+  "alpha_t": false,
+  "expected": "rust/alphacam/tests/fixtures/post/example_thread.PRG"
+ },
+ "golden_ARC_area_inch": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/golden_ARC_area_inch.PRG"
+ },
+ "golden_ARC_area_metric": {
+  "expected": "samples/alphat_v12/ARC_area_metric.PRG"
+ },
+ "golden_ARC_finish_inch": {
+  "expected": "samples/alphat_v12_inch/ARC_finish_inch.PRG"
+ },
+ "golden_ARC_finish_metric": {
+  "expected": "samples/alphat_v12/ARC_finish_metric.PRG"
+ },
+ "golden_AREA1_metric": {
+  "expected": "samples/alphat_v12/AREA1_metric.PRG"
+ },
+ "golden_AREA_T1_relief_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_T1_relief_groove_metric.PRG"
+ },
+ "golden_AREA_follow_contour_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_contour_metric.PRG"
+ },
+ "golden_AREA_follow_dive3_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_dive3_metric.PRG"
+ },
+ "golden_AREA_follow_groove_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_groove_dive_metric.PRG"
+ },
+ "golden_AREA_groove_and_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_groove_and_dive_metric.PRG"
+ },
+ "golden_AREA_int_dive1_metric": {
+  "expected": "samples/alphat_v12/AREA_int_dive1_metric.PRG"
+ },
+ "golden_AREA_int_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_int_dive2_metric.PRG"
+ },
+ "golden_AREA_int_follow_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_int_follow_dive2_metric.PRG"
+ },
+ "golden_AREA_int_slope_depth13_metric": {
+  "expected": "samples/alphat_v12/AREA_int_slope_depth13_metric.PRG"
+ },
+ "golden_AREA_offset_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_offset_dive2_metric.PRG"
+ },
+ "golden_AREA_radii_depth17_metric": {
+  "expected": "samples/alphat_v12/AREA_radii_depth17_metric.PRG"
+ },
+ "golden_AREA_radius_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_radius_groove_metric.PRG"
+ },
+ "golden_AREA_relief_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_relief_groove_metric.PRG"
+ },
+ "golden_AREA_retract2_metric": {
+  "expected": "samples/alphat_v12/AREA_retract2_metric.PRG"
+ },
+ "golden_AREA_rounded_shoulder_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_rounded_shoulder_groove_metric.PRG"
+ },
+ "golden_AREA_slope_depth13_metric": {
+  "expected": "samples/alphat_v12/AREA_slope_depth13_metric.PRG"
+ },
+ "golden_AREA_two_line_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_two_line_dive_metric.PRG"
+ },
+ "golden_DIVE1_metric": {
+  "expected": "samples/alphat_v12/DIVE1_metric.PRG"
+ },
+ "golden_DIVE2_metric": {
+  "expected": "samples/alphat_v12/DIVE2_metric.PRG"
+ },
+ "golden_DIVE3_metric": {
+  "expected": "samples/alphat_v12/DIVE3_metric.PRG"
+ },
+ "golden_DRILL_DWELL_metric": {
+  "expected": "samples/alphat_v12/DRILL_DWELL_metric.PRG"
+ },
+ "golden_DRILL_fullret_metric": {
+  "expected": "samples/alphat_v12/DRILL_fullret_metric.PRG"
+ },
+ "golden_DRILL_retract1_metric": {
+  "expected": "samples/alphat_v12/DRILL_retract1_metric.PRG"
+ },
+ "golden_FACE_depth3_start110_metric": {
+  "expected": "samples/alphat_v12/FACE_depth3_start110_metric.PRG"
+ },
+ "golden_FACE_metric": {
+  "expected": "samples/alphat_v12/FACE_metric.PRG"
+ },
+ "golden_FACE_offset_metric": {
+  "expected": "samples/alphat_v12/FACE_offset_metric.PRG"
+ },
+ "golden_FACE_slope_depth17_metric": {
+  "expected": "samples/alphat_v12/FACE_slope_depth17_metric.PRG"
+ },
+ "golden_FINISH_dive2_metric": {
+  "expected": "samples/alphat_v12/FINISH_dive2_metric.PRG"
+ },
+ "golden_FINISH_face_metric": {
+  "expected": "samples/alphat_v12/FINISH_face_metric.PRG"
+ },
+ "golden_FINISH_int_dive2_metric": {
+  "expected": "samples/alphat_v12/FINISH_int_dive2_metric.PRG"
+ },
+ "golden_FINISH_radii_offset_metric": {
+  "expected": "samples/alphat_v12/FINISH_radii_offset_metric.PRG"
+ },
+ "golden_FINISH_radius_groove_metric": {
+  "expected": "samples/alphat_v12/FINISH_radius_groove_metric.PRG"
+ },
+ "golden_FINISH_relief_groove_metric": {
+  "expected": "samples/alphat_v12/FINISH_relief_groove_metric.PRG"
+ },
+ "golden_GROOVE_face_metric": {
+  "expected": "samples/alphat_v12/GROOVE_face_metric.PRG"
+ },
+ "golden_GROOVE_metric": {
+  "expected": "samples/alphat_v12/GROOVE_metric.PRG"
+ },
+ "golden_GROOVE_radius_floor_finishmode_metric": {
+  "expected": "samples/alphat_v12/GROOVE_radius_floor_finishmode_metric.PRG"
+ },
+ "golden_GROOVE_radius_floor_metric": {
+  "expected": "samples/alphat_v12/GROOVE_radius_floor_metric.PRG"
+ },
+ "golden_GROOVE_vee_datumright_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_datumright_metric.PRG"
+ },
+ "golden_GROOVE_vee_finishmode_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_finishmode_metric.PRG"
+ },
+ "golden_GROOVE_vee_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_metric.PRG"
+ },
+ "golden_GROOVE_vee_peck15_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_peck15_metric.PRG"
+ },
+ "golden_INT_area_inch": {
+  "expected": "samples/alphat_v12_inch/INT_area_inch.PRG"
+ },
+ "golden_INT_area_metric": {
+  "expected": "samples/alphat_v12/INT_area_metric.PRG"
+ },
+ "golden_INT_finish_inch": {
+  "expected": "samples/alphat_v12_inch/INT_finish_inch.PRG"
+ },
+ "golden_INT_finish_metric": {
+  "expected": "samples/alphat_v12/INT_finish_metric.PRG"
+ },
+ "golden_JOB_shaft_metric": {
+  "expected": "samples/alphat_v12/JOB_shaft_metric.PRG"
+ },
+ "golden_MET2_finish_inch": {
+  "expected": "samples/alphat_v12/MET2_finish_inch.PRG"
+ },
+ "golden_MET2_finish_metric": {
+  "expected": "samples/alphat_v12/MET2_finish_metric.PRG"
+ },
+ "golden_MOVE_RAPID_metric": {
+  "expected": "samples/alphat_v12/MOVE_RAPID_metric.PRG"
+ },
+ "golden_OFFSET_area_inch": {
+  "expected": "samples/alphat_v12_inch/OFFSET_area_inch.PRG"
+ },
+ "golden_OFFSET_area_metric": {
+  "expected": "samples/alphat_v12/OFFSET_area_metric.PRG"
+ },
+ "golden_OFFSET_finish_inch": {
+  "expected": "samples/alphat_v12_inch/OFFSET_finish_inch.PRG"
+ },
+ "golden_OFFSET_finish_metric": {
+  "expected": "samples/alphat_v12/OFFSET_finish_metric.PRG"
+ },
+ "golden_PECK_fullret_groove_metric": {
+  "expected": "samples/alphat_v12/PECK_fullret_groove_metric.PRG"
+ },
+ "golden_PECK_groove_metric": {
+  "expected": "samples/alphat_v12/PECK_groove_metric.PRG"
+ },
+ "golden_PREFINISH_area_inch": {
+  "expected": "samples/alphat_v12_inch/PREFINISH_area_inch.PRG"
+ },
+ "golden_PREFINISH_area_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_area_metric.PRG"
+ },
+ "golden_PREFINISH_dive2_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_dive2_metric.PRG"
+ },
+ "golden_PREFINISH_dive3_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_dive3_metric.PRG"
+ },
+ "golden_SLOPE_area_inch": {
+  "expected": "samples/alphat_v12_inch/SLOPE_area_inch.PRG"
+ },
+ "golden_SLOPE_area_metric": {
+  "expected": "samples/alphat_v12/SLOPE_area_metric.PRG"
+ },
+ "golden_THREAD_angle30_metric": {
+  "expected": "samples/alphat_v12/THREAD_angle30_metric.PRG"
+ },
+ "golden_THREAD_internal_m24_d03_metric": {
+  "expected": "samples/alphat_v12/THREAD_internal_m24_d03_metric.PRG"
+ },
+ "golden_THREAD_internal_metric": {
+  "expected": "samples/alphat_v12/THREAD_internal_metric.PRG"
+ },
+ "golden_THREAD_metric": {
+  "expected": "samples/alphat_v12/THREAD_metric.PRG"
+ },
+ "golden_THREAD_p2_len30_metric": {
+  "expected": "samples/alphat_v12/THREAD_p2_len30_metric.PRG"
+ },
+ "golden_THREAD_spring2_metric": {
+  "expected": "samples/alphat_v12/THREAD_spring2_metric.PRG"
+ },
+ "golden_THREAD_unc_half13_d06_metric": {
+  "expected": "samples/alphat_v12/THREAD_unc_half13_d06_metric.PRG"
+ },
+ "golden_THREAD_unc_half13_metric": {
+  "expected": "samples/alphat_v12/THREAD_unc_half13_metric.PRG"
+ },
+ "golden_TOOLCHG_inch": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/golden_TOOLCHG_inch.PRG"
+ },
+ "golden_TOOLCHG_rough1_finish3_metric": {
+  "expected": "samples/alphat_v12/TOOLCHG_rough1_finish3_metric.PRG"
+ },
+ "golden_TWOOP_area_finish_metric": {
+  "expected": "samples/alphat_v12/TWOOP_area_finish_metric.PRG"
+ },
+ "golden_TWOOP_inch": {
+  "expected": "samples/alphat_v12_inch/TWOOP_inch.PRG"
+ },
+ "sd1_ARC_area_metric": {
+  "expected": "samples/alphat_v12/ARC_area_metric.PRG"
+ },
+ "sd1_ARC_finish_metric": {
+  "expected": "samples/alphat_v12/ARC_finish_metric.PRG"
+ },
+ "sd1_ARC_touching_R5_R3_finish_metric": {
+  "expected": "samples/alphat_v12/ARC_touching_R5_R3_finish_metric.PRG"
+ },
+ "sd1_AREA1_metric": {
+  "expected": "samples/alphat_v12/AREA1_metric.PRG"
+ },
+ "sd1_AREA_T1_relief_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_T1_relief_groove_metric.PRG"
+ },
+ "sd1_AREA_away_from_chuck_end_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_AREA_away_tool5_retry_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_AREA_ends_in_groove_metric": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_AREA_ends_in_groove_metric.PRG"
+ },
+ "sd1_AREA_face_internal_metric": {
+  "expected": "samples/alphat_v12/AREA_face_internal_metric.PRG"
+ },
+ "sd1_AREA_follow_contour_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_contour_metric.PRG"
+ },
+ "sd1_AREA_follow_dive3_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_dive3_metric.PRG"
+ },
+ "sd1_AREA_follow_groove_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_follow_groove_dive_metric.PRG"
+ },
+ "sd1_AREA_from_dia20_metric": {
+  "expected": "samples/alphat_v12/AREA_from_dia20_metric.PRG"
+ },
+ "sd1_AREA_front_face_metric": {
+  "expected": "samples/alphat_v12/AREA_front_face_metric.PRG"
+ },
+ "sd1_AREA_groove_and_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_groove_and_dive_metric.PRG"
+ },
+ "sd1_AREA_int_dive1_metric": {
+  "expected": "samples/alphat_v12/AREA_int_dive1_metric.PRG"
+ },
+ "sd1_AREA_int_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_int_dive2_metric.PRG"
+ },
+ "sd1_AREA_int_follow_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_int_follow_dive2_metric.PRG"
+ },
+ "sd1_AREA_int_slope_depth13_metric": {
+  "expected": "samples/alphat_v12/AREA_int_slope_depth13_metric.PRG"
+ },
+ "sd1_AREA_offset_dive2_metric": {
+  "expected": "samples/alphat_v12/AREA_offset_dive2_metric.PRG"
+ },
+ "sd1_AREA_prefinish_internal_metric": {
+  "expected": "samples/alphat_v12/AREA_prefinish_internal_metric.PRG"
+ },
+ "sd1_AREA_prefinish_offset_metric": {
+  "expected": "samples/alphat_v12/AREA_prefinish_offset_metric.PRG"
+ },
+ "sd1_AREA_radii_depth17_metric": {
+  "expected": "samples/alphat_v12/AREA_radii_depth17_metric.PRG"
+ },
+ "sd1_AREA_radius_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_radius_groove_metric.PRG"
+ },
+ "sd1_AREA_relief_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_relief_groove_metric.PRG"
+ },
+ "sd1_AREA_retract2_metric": {
+  "expected": "samples/alphat_v12/AREA_retract2_metric.PRG"
+ },
+ "sd1_AREA_rounded_shoulder_groove_metric": {
+  "expected": "samples/alphat_v12/AREA_rounded_shoulder_groove_metric.PRG"
+ },
+ "sd1_AREA_slope_depth13_metric": {
+  "expected": "samples/alphat_v12/AREA_slope_depth13_metric.PRG"
+ },
+ "sd1_AREA_towards_from_chuck_end_metric": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_AREA_towards_from_chuck_end_metric.PRG"
+ },
+ "sd1_AREA_two_line_dive_metric": {
+  "expected": "samples/alphat_v12/AREA_two_line_dive_metric.PRG"
+ },
+ "sd1_DIVE1_metric": {
+  "expected": "samples/alphat_v12/DIVE1_metric.PRG"
+ },
+ "sd1_DIVE2_metric": {
+  "expected": "samples/alphat_v12/DIVE2_metric.PRG"
+ },
+ "sd1_DIVE3_metric": {
+  "expected": "samples/alphat_v12/DIVE3_metric.PRG"
+ },
+ "sd1_DRILL_DWELL_metric": {
+  "expected": "samples/alphat_v12/DRILL_DWELL_metric.PRG"
+ },
+ "sd1_DRILL_fullret_metric": {
+  "expected": "samples/alphat_v12/DRILL_fullret_metric.PRG"
+ },
+ "sd1_DRILL_nopeck_nodwell_metric": {
+  "expected": "samples/alphat_v12/DRILL_nopeck_nodwell_metric.PRG"
+ },
+ "sd1_DRILL_retract1_metric": {
+  "expected": "samples/alphat_v12/DRILL_retract1_metric.PRG"
+ },
+ "sd1_FACE_arcs_metric": {
+  "expected": "samples/alphat_v12/FACE_arcs_metric.PRG"
+ },
+ "sd1_FACE_away_from_chuck_end_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_FACE_away_tool3_nocheck_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_FACE_away_tool5_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_FACE_depth3_start110_metric": {
+  "expected": "samples/alphat_v12/FACE_depth3_start110_metric.PRG"
+ },
+ "sd1_FACE_identified_inside_out_metric": {
+  "expected": "samples/alphat_v12/FACE_identified_inside_out_metric.PRG"
+ },
+ "sd1_FACE_metric": {
+  "expected": "samples/alphat_v12/FACE_metric.PRG"
+ },
+ "sd1_FACE_offset_metric": {
+  "expected": "samples/alphat_v12/FACE_offset_metric.PRG"
+ },
+ "sd1_FACE_prefinish_metric": {
+  "expected": "samples/alphat_v12/FACE_prefinish_metric.PRG"
+ },
+ "sd1_FACE_slope_depth17_metric": {
+  "expected": "samples/alphat_v12/FACE_slope_depth17_metric.PRG"
+ },
+ "sd1_FACE_slope_metric": {
+  "expected": "samples/alphat_v12/FACE_slope_metric.PRG"
+ },
+ "sd1_FACE_tool1_metric": {
+  "expected": "samples/alphat_v12/FACE_tool1_metric.PRG"
+ },
+ "sd1_FACE_towards_from_chuck_end_metric": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_FACE_towards_from_chuck_end_metric.PRG"
+ },
+ "sd1_FINISH_dive2_metric": {
+  "expected": "samples/alphat_v12/FINISH_dive2_metric.PRG"
+ },
+ "sd1_FINISH_face_metric": {
+  "expected": "samples/alphat_v12/FINISH_face_metric.PRG"
+ },
+ "sd1_FINISH_int_dive2_metric": {
+  "expected": "samples/alphat_v12/FINISH_int_dive2_metric.PRG"
+ },
+ "sd1_FINISH_radii_offset_metric": {
+  "expected": "samples/alphat_v12/FINISH_radii_offset_metric.PRG"
+ },
+ "sd1_FINISH_radius_groove_metric": {
+  "expected": "samples/alphat_v12/FINISH_radius_groove_metric.PRG"
+ },
+ "sd1_FINISH_relief_groove_metric": {
+  "expected": "samples/alphat_v12/FINISH_relief_groove_metric.PRG"
+ },
+ "sd1_FINISH_then_move_rapid_dwell_metric": {
+  "expected": "samples/alphat_v12/FINISH_then_move_rapid_dwell_metric.PRG"
+ },
+ "sd1_GROOVE_back_metric": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_GROOVE_back_metric.PRG"
+ },
+ "sd1_GROOVE_datumright_metric": {
+  "expected": "samples/alphat_v12/GROOVE_datumright_metric.PRG"
+ },
+ "sd1_GROOVE_dwell2_metric": {
+  "expected": "samples/alphat_v12/GROOVE_dwell2_metric.PRG"
+ },
+ "sd1_GROOVE_face_metric": {
+  "expected": "samples/alphat_v12/GROOVE_face_metric.PRG"
+ },
+ "sd1_GROOVE_finishmode_metric": {
+  "expected": "samples/alphat_v12/GROOVE_finishmode_metric.PRG"
+ },
+ "sd1_GROOVE_finishmode_slope_metric": {
+  "expected": "samples/alphat_v12/GROOVE_finishmode_slope_metric.PRG"
+ },
+ "sd1_GROOVE_finishoffset_metric": {
+  "expected": "samples/alphat_v12/GROOVE_finishoffset_metric.PRG"
+ },
+ "sd1_GROOVE_internal_metric": {
+  "expected": "samples/alphat_v12/GROOVE_internal_metric.PRG"
+ },
+ "sd1_GROOVE_metric": {
+  "expected": "samples/alphat_v12/GROOVE_metric.PRG"
+ },
+ "sd1_GROOVE_radius_floor_finishmode_metric": {
+  "expected": "samples/alphat_v12/GROOVE_radius_floor_finishmode_metric.PRG"
+ },
+ "sd1_GROOVE_radius_floor_metric": {
+  "expected": "samples/alphat_v12/GROOVE_radius_floor_metric.PRG"
+ },
+ "sd1_GROOVE_vee_datumright_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_datumright_metric.PRG"
+ },
+ "sd1_GROOVE_vee_finishmode_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_finishmode_metric.PRG"
+ },
+ "sd1_GROOVE_vee_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_metric.PRG"
+ },
+ "sd1_GROOVE_vee_peck15_metric": {
+  "expected": "samples/alphat_v12/GROOVE_vee_peck15_metric.PRG"
+ },
+ "sd1_GROOVE_zshift10_rep1_metric": {
+  "expected": "samples/alphat_v12/GROOVE_zshift10_rep1_metric.PRG"
+ },
+ "sd1_INT_area_metric": {
+  "expected": "samples/alphat_v12/INT_area_metric.PRG"
+ },
+ "sd1_INT_area_offset_metric": {
+  "expected": "samples/alphat_v12/INT_area_offset_metric.PRG"
+ },
+ "sd1_INT_finish_metric": {
+  "expected": "samples/alphat_v12/INT_finish_metric.PRG"
+ },
+ "sd1_INT_finish_offset_metric": {
+  "expected": "samples/alphat_v12/INT_finish_offset_metric.PRG"
+ },
+ "sd1_JOB_shaft_metric": {
+  "expected": "samples/alphat_v12/JOB_shaft_metric.PRG"
+ },
+ "sd1_MET2_finish_inch": {
+  "expected": "samples/alphat_v12/MET2_finish_inch.PRG"
+ },
+ "sd1_MET2_finish_metric": {
+  "expected": "samples/alphat_v12/MET2_finish_metric.PRG"
+ },
+ "sd1_MOVE_RAPID_metric": {
+  "expected": "samples/alphat_v12/MOVE_RAPID_metric.PRG"
+ },
+ "sd1_OFFSET_area_metric": {
+  "expected": "samples/alphat_v12/OFFSET_area_metric.PRG"
+ },
+ "sd1_OFFSET_finish_metric": {
+  "expected": "samples/alphat_v12/OFFSET_finish_metric.PRG"
+ },
+ "sd1_PECK_fullret_groove_metric": {
+  "expected": "samples/alphat_v12/PECK_fullret_groove_metric.PRG"
+ },
+ "sd1_PECK_groove_metric": {
+  "expected": "samples/alphat_v12/PECK_groove_metric.PRG"
+ },
+ "sd1_PREFINISH_area_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_area_metric.PRG"
+ },
+ "sd1_PREFINISH_dive2_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_dive2_metric.PRG"
+ },
+ "sd1_PREFINISH_dive3_metric": {
+  "expected": "samples/alphat_v12/PREFINISH_dive3_metric.PRG"
+ },
+ "sd1_SLOPE_area_metric": {
+  "expected": "samples/alphat_v12/SLOPE_area_metric.PRG"
+ },
+ "sd1_THREAD_6cuts_metric": {
+  "expected": "samples/alphat_v12/THREAD_6cuts_metric.PRG"
+ },
+ "sd1_THREAD_angle30_metric": {
+  "expected": "samples/alphat_v12/THREAD_angle30_metric.PRG"
+ },
+ "sd1_THREAD_away_from_chuck_end_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_THREAD_away_metric": {
+  "error": "NotImplementedError"
+ },
+ "sd1_THREAD_depth6_metric": {
+  "expected": "samples/alphat_v12/THREAD_depth6_metric.PRG"
+ },
+ "sd1_THREAD_internal_m24_d03_metric": {
+  "expected": "samples/alphat_v12/THREAD_internal_m24_d03_metric.PRG"
+ },
+ "sd1_THREAD_internal_metric": {
+  "expected": "samples/alphat_v12/THREAD_internal_metric.PRG"
+ },
+ "sd1_THREAD_leadin2_leadout2_metric": {
+  "expected": "samples/alphat_v12/THREAD_leadin2_leadout2_metric.PRG"
+ },
+ "sd1_THREAD_metric": {
+  "expected": "samples/alphat_v12/THREAD_metric.PRG"
+ },
+ "sd1_THREAD_p2_len30_metric": {
+  "expected": "samples/alphat_v12/THREAD_p2_len30_metric.PRG"
+ },
+ "sd1_THREAD_spring1_metric": {
+  "expected": "samples/alphat_v12/THREAD_spring1_metric.PRG"
+ },
+ "sd1_THREAD_spring2_metric": {
+  "expected": "samples/alphat_v12/THREAD_spring2_metric.PRG"
+ },
+ "sd1_THREAD_unc_half13_d06_metric": {
+  "expected": "samples/alphat_v12/THREAD_unc_half13_d06_metric.PRG"
+ },
+ "sd1_THREAD_unc_half13_metric": {
+  "expected": "samples/alphat_v12/THREAD_unc_half13_metric.PRG"
+ },
+ "sd1_TOOLCHG_rough1_finish3_metric": {
+  "expected": "samples/alphat_v12/TOOLCHG_rough1_finish3_metric.PRG"
+ },
+ "sd1_TWOOP_area_finish_metric": {
+  "expected": "samples/alphat_v12/TWOOP_area_finish_metric.PRG"
+ },
+ "sd1_UNITS_inchdwg_metricout": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_UNITS_inchdwg_metricout.PRG"
+ },
+ "sd1_UNITS_metricdwg_inchout": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/sd1_UNITS_metricdwg_inchout.PRG"
+ },
+ "units_UNITS_inchdwg_metricout": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/units_UNITS_inchdwg_metricout.PRG"
+ },
+ "units_UNITS_metricdwg_inchout": {
+  "alpha_t": true,
+  "expected": "rust/alphacam/tests/fixtures/post/units_UNITS_metricdwg_inchout.PRG"
+ }
+}
