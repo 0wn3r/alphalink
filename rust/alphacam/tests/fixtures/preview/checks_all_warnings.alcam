@@ -1,0 +1,230 @@
+{
+ "format": "alcam/1",
+ "units": "mm",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 60.0,
+  "length": 60.0,
+  "face_allowance": 0.8,
+  "bore": 0.0,
+  "jaws": "external",
+  "tailstock": false
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 120.0
+ },
+ "tool_change": {
+  "x": 100.0,
+  "z": 50.0
+ },
+ "program_number": 10,
+ "first_tool": 1,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [0.0, 0.0],
+   "b": [40.0, 0.0],
+   "id": "g0"
+  },
+  {
+   "type": "line",
+   "a": [40.0, 0.0],
+   "b": [40.0, -20.0],
+   "id": "g1"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -20.0],
+   "b": [34.0, -20.0],
+   "id": "g2"
+  },
+  {
+   "type": "line",
+   "a": [34.0, -20.0],
+   "b": [34.0, -26.0],
+   "id": "g3"
+  },
+  {
+   "type": "line",
+   "a": [34.0, -26.0],
+   "b": [40.0, -26.0],
+   "id": "g4"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -26.0],
+   "b": [40.0, -40.0],
+   "id": "g5"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -40.0],
+   "b": [60.0, -40.0],
+   "id": "g6"
+  },
+  {
+   "type": "line",
+   "a": [38.2, 0.0],
+   "b": [38.2, -18.0],
+   "id": "g7"
+  }
+ ],
+ "operations": [
+  {
+   "type": "tool_change",
+   "tool": 14,
+   "change_point": [100.0, 50.0],
+   "feed": 0.15
+  },
+  {
+   "type": "groove",
+   "tool": 14,
+   "start": [64.0, 5.0],
+   "contour": ["g1", "g2", "g3", "g4", "g5"],
+   "datum": "left",
+   "finish_offset_x": 0.0,
+   "finish_offset_z": 0.0,
+   "peck_depth": 0.0,
+   "stepover": 2.0,
+   "tip_width": 2.0,
+   "feed": 0.15,
+   "full_retract": false,
+   "external": true,
+   "front": true,
+   "z_shift": 0.0,
+   "repeat": 0,
+   "mode": "area",
+   "dwell_revs": 0.0
+  },
+  {
+   "type": "thread",
+   "tool": 1,
+   "start": [120.0, 5.0],
+   "outer_line": "g6",
+   "inner_line": "g7",
+   "pitch": 1.5,
+   "cut_depth": 1.0,
+   "cuts": 0,
+   "lead_in": 5.0,
+   "lead_out": 0.0,
+   "angle": 0.0,
+   "external": true,
+   "towards": true,
+   "spring_passes": 0
+  },
+  {
+   "type": "thread",
+   "tool": 8,
+   "start": [120.0, 5.0],
+   "outer_line": "g6",
+   "inner_line": "g7",
+   "pitch": 1.5,
+   "cut_depth": 1.0,
+   "cuts": 0,
+   "lead_in": 5.0,
+   "lead_out": 0.0,
+   "angle": 0.0,
+   "external": true,
+   "towards": true,
+   "spring_passes": 0
+  },
+  {
+   "type": "drill",
+   "tool": 3,
+   "start": [0.0, 5.0],
+   "depth": -20.0,
+   "peck": 0.0,
+   "feed": 0.15,
+   "dwell_revs": 0.0,
+   "full_retract": false,
+   "retract": null
+  },
+  {
+   "type": "finish",
+   "tool": 12,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g1"],
+   "feed": 0.15,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "external": true,
+   "face": false
+  },
+  {
+   "type": "area_clear",
+   "tool": 3,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g1"],
+   "depth_of_cut": 2.0,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "feed": 0.15,
+   "towards": true,
+   "pre_finish": false,
+   "external": false,
+   "front": true,
+   "retract": null,
+   "follow": false
+  },
+  {
+   "type": "groove",
+   "tool": 11,
+   "start": [120.0, 5.0],
+   "contour": ["g1", "g2", "g3"],
+   "datum": "left",
+   "finish_offset_x": 0.0,
+   "finish_offset_z": 0.0,
+   "peck_depth": 0.0,
+   "stepover": 2.0,
+   "tip_width": 3.0,
+   "feed": 0.15,
+   "full_retract": false,
+   "external": true,
+   "front": true,
+   "z_shift": 0.0,
+   "repeat": 0,
+   "mode": "area",
+   "dwell_revs": 0.0
+  },
+  {
+   "type": "tool_change",
+   "tool": 31,
+   "change_point": [100.0, 50.0],
+   "feed": 0.15
+  },
+  {
+   "type": "thread",
+   "tool": 31,
+   "start": [120.0, 5.0],
+   "outer_line": "g6",
+   "inner_line": "g7",
+   "pitch": 1.5,
+   "cut_depth": 1.0,
+   "cuts": 0,
+   "lead_in": 5.0,
+   "lead_out": 0.0,
+   "angle": 0.0,
+   "external": true,
+   "towards": true,
+   "spring_passes": 0
+  },
+  {
+   "type": "thread",
+   "tool": 99,
+   "start": [120.0, 5.0],
+   "outer_line": "g6",
+   "inner_line": "g7",
+   "pitch": 1.5,
+   "cut_depth": 1.0,
+   "cuts": 0,
+   "lead_in": 5.0,
+   "lead_out": 0.0,
+   "angle": 0.0,
+   "external": true,
+   "towards": true,
+   "spring_passes": 0
+  }
+ ]
+}

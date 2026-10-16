@@ -1,0 +1,67 @@
+{
+  "id": "io.github._0wn3r.AlphaLinkCAM",
+  "runtime": "org.gnome.Platform",
+  "runtime-version": "51",
+  "sdk": "org.gnome.Sdk",
+  "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
+  "command": "alphalink-cam",
+  "finish-args": [
+    "--share=ipc",
+    "--socket=wayland",
+    "--socket=fallback-x11",
+    "--device=all",
+    "--allow=bluetooth",
+    "--system-talk-name=org.bluez",
+    "--filesystem=home",
+    "--filesystem=/media",
+    "--filesystem=/run/media"
+  ],
+  "build-options": {
+    "append-path": "/usr/lib/sdk/rust-stable/bin",
+    "env": {
+      "CARGO_HOME": "/run/build/alphalink-cam/cargo",
+      "CARGO_NET_OFFLINE": "true",
+      "ALPHALINK_PREFIX": "/app"
+    }
+  },
+  "modules": [
+    {
+      "name": "alphalink-cam",
+      "buildsystem": "simple",
+      "build-commands": [
+        "cargo --offline build --release --manifest-path rust/Cargo.toml -p alphacam-gtk",
+        "install -Dm755 rust/target/release/alphalink-cam -t ${FLATPAK_DEST}/bin",
+        "install -Dm644 app/alphacam_gtk/help/*.md -t ${FLATPAK_DEST}/share/alphalink-cam/help",
+        "install -Dm644 app/alphacam_gtk/manuals/*.pdf -t ${FLATPAK_DEST}/share/alphalink-cam/manuals",
+        "for mo in app/alphacam_gtk/locale/*/LC_MESSAGES/alphalink-cam.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo ${FLATPAK_DEST}/share/locale/$lang/LC_MESSAGES/alphalink-cam.mo; done",
+        "install -Dm644 app/data/io.github._0wn3r.AlphaLinkCAM.desktop -t ${FLATPAK_DEST}/share/applications",
+        "install -Dm644 app/data/io.github._0wn3r.AlphaLinkCAM.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo",
+        "install -Dm644 app/data/icons/hicolor/scalable/apps/io.github._0wn3r.AlphaLinkCAM.svg -t ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps",
+        "install -Dm644 app/examples/*.alcam -t ${FLATPAK_DEST}/share/alphalink-cam/examples"
+      ],
+      "sources": [
+        "cargo-sources.json",
+        {
+          "type": "dir",
+          "path": "../..",
+          "skip": [
+            ".git",
+            ".claude",
+            "app/e2e-out",
+            "docs",
+            "evidence",
+            "tools",
+            "vendor-config",
+            "_to_delete",
+            "rust/target",
+            "rust/target-resolute"
+          ]
+        }
+      ],
+      "run-tests": true,
+      "test-commands": [
+        "cargo --offline test --release --manifest-path rust/Cargo.toml --workspace"
+      ]
+    }
+  ]
+}

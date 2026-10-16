@@ -1,0 +1,169 @@
+{
+ "format": "alcam/1",
+ "units": "mm",
+ "machine": "harrison-alpha-400t",
+ "billet": {
+  "diameter": 120.0,
+  "length": 100.0,
+  "face_allowance": 0.8,
+  "bore": 0.0,
+  "jaws": "external",
+  "tailstock": false
+ },
+ "reference": {
+  "g92_x": 163.3803,
+  "g92_z": 120.0
+ },
+ "tool_change": {
+  "x": 100.0,
+  "z": 50.0
+ },
+ "program_number": 10,
+ "first_tool": 3,
+ "tools": [],
+ "geometry": [
+  {
+   "type": "line",
+   "a": [0.0, 0.0],
+   "b": [28.0, 0.0],
+   "id": "g0"
+  },
+  {
+   "type": "line",
+   "a": [30.0, -1.0],
+   "b": [30.0, -25.0],
+   "id": "g1"
+  },
+  {
+   "type": "line",
+   "a": [28.0, 0.0],
+   "b": [30.0, -1.0],
+   "id": "g2"
+  },
+  {
+   "type": "line",
+   "a": [30.0, -25.0],
+   "b": [26.0, -25.0],
+   "id": "g3"
+  },
+  {
+   "type": "line",
+   "a": [26.0, -25.0],
+   "b": [26.0, -28.0],
+   "id": "g4"
+  },
+  {
+   "type": "line",
+   "a": [26.0, -28.0],
+   "b": [40.0, -28.0],
+   "id": "g5"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -28.0],
+   "b": [40.0, -50.0],
+   "id": "g6"
+  },
+  {
+   "type": "line",
+   "a": [40.0, -50.0],
+   "b": [100.0, -50.0],
+   "id": "g7"
+  },
+  {
+   "type": "line",
+   "a": [28.16, -1.0],
+   "b": [28.16, -25.0],
+   "id": "g8"
+  }
+ ],
+ "operations": [
+  {
+   "type": "tool_change",
+   "tool": 1,
+   "change_point": [100.0, 50.0],
+   "feed": 0.2
+  },
+  {
+   "type": "area_clear",
+   "tool": 1,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"],
+   "depth_of_cut": 2.0,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "feed": 0.2,
+   "towards": true,
+   "pre_finish": false,
+   "external": true,
+   "front": true,
+   "retract": null,
+   "follow": false
+  },
+  {
+   "type": "tool_change",
+   "tool": 3,
+   "change_point": [100.0, 50.0],
+   "feed": 0.15
+  },
+  {
+   "type": "finish",
+   "tool": 3,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"],
+   "feed": 0.15,
+   "offset_x": 0.0,
+   "offset_z": 0.0,
+   "external": true,
+   "face": false
+  },
+  {
+   "type": "tool_change",
+   "tool": 16,
+   "change_point": [100.0, 50.0],
+   "feed": 0.1
+  },
+  {
+   "type": "groove",
+   "tool": 16,
+   "start": [120.0, 5.0],
+   "contour": ["g0", "g2", "g1", "g3", "g4", "g5", "g6", "g7"],
+   "datum": "left",
+   "finish_offset_x": 0.0,
+   "finish_offset_z": 0.0,
+   "peck_depth": 0.0,
+   "stepover": 1.5,
+   "tip_width": 2.0,
+   "feed": 0.1,
+   "full_retract": false,
+   "external": true,
+   "front": true,
+   "z_shift": 0.0,
+   "repeat": 0,
+   "mode": "area",
+   "dwell_revs": 0.0
+  },
+  {
+   "type": "tool_change",
+   "tool": 31,
+   "change_point": [100.0, 50.0],
+   "feed": 0.6
+  },
+  {
+   "type": "thread",
+   "tool": 31,
+   "start": [120.0, 5.0],
+   "outer_line": "g1",
+   "inner_line": "g8",
+   "pitch": 1.5,
+   "cut_depth": 1.0,
+   "cuts": 0,
+   "lead_in": 5.0,
+   "lead_out": 0.0,
+   "angle": 0.0,
+   "external": true,
+   "towards": true,
+   "spring_passes": 0
+  }
+ ]
+}
