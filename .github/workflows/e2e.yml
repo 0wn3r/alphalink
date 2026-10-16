@@ -59,7 +59,7 @@ jobs:
           cp bundle/*.flatpak /tmp/app.flatpak && chmod 644 /tmp/app.flatpak
           (sudo -H -u tester flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
            sudo -H -u tester flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
-           sudo -H -u tester flatpak install --user -y --noninteractive /tmp/app.flatpak) 2>&1 | tee -a logs/install.log
+           sudo -H -u tester dbus-run-session -- flatpak install --user -y --noninteractive /tmp/app.flatpak) 2>&1 | tee -a logs/install.log
           exit ${PIPESTATUS[0]}
       - name: Run the tests
         run: |
