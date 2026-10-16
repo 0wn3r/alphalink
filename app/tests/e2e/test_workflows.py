@@ -48,7 +48,10 @@ class Surface(unittest.TestCase):
         self.n = 0
 
     def tearDown(self):
-        self.snap("end")
+        try:
+            self.snap("end")
+        except TimeoutError as e:  # the last screenshot is for looking at, not part of the test
+            print(f"no end screenshot: {e}")
         self.s.__exit__(None, None, None)
 
     def snap(self, what: str) -> None:

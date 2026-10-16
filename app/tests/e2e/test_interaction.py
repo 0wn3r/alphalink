@@ -465,3 +465,122 @@ class SendByTouch(VirtualPort, Bus):
         self.wait_for(lambda: self.app.exists("Sent ", contains=True), 20, "the send to finish")
         self.assertEqual(bytes(self.lathe.got), expected)
         self.wait_for(lambda: not self.app.checked(lock), 5, "the lock to come off after the send")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardAndMouse(Bus):
+    """The same features without a finger (the input-mode parity list of 2026-10-16)."""
+
+    def test_escape_closes_dialogs_and_nothing_else(self):
+        path = self.part(shaft())
+        self.launch(str(path), "--touch")
+        self.s.key("ctrl+comma")
+        time.sleep(0.6)
+        self.snap("preferences")
+        before = len(self.app.widgets())
+        self.s.key("Escape")
+        time.sleep(0.6)
+        self.assertLess(len(self.app.widgets()), before, "Escape should close Preferences")
+        self.tap("Line", "radio button")
+        self.tap("Keypad", "button")
+        self.app.find("✓", "button")
+        self.s.key("Escape")
+        time.sleep(0.5)
+        self.assertFalse(self.app.exists("✓", "button"), "Escape should close the keypad")
+        self.assertTrue(self.app.checked(self.app.find("Line", "radio button")), "the Line tool should stay on")
+        self.assertEqual(len(self.saved(path).geometry), 5)
+
+    def test_menu_key_and_delete_key(self):
+        """Shift+F10 opens the drawing's menu at the ALPHA-T cursor; L selects the nearest line, Delete deletes."""
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path))
+        self.s.type("g40,-12\n")  # the cursor onto g1
+        self.s.key("shift+F10")
+        items = self.app.menu_items()
+        self.snap("menu")
+        self.assertEqual([i.text for i in items][:2], ["Edit Values…", "Delete"])
+        self.s.key("Escape")
+        time.sleep(0.3)
+        self.s.type("l")  # the nearest line
+        time.sleep(0.3)
+        self.s.key("Delete")
+        time.sleep(0.4)
+        self.assertEqual([e.id for e in self.saved(path).geometry], ["g0", "g2", "g3", "g4"])
+
+    def test_ctrl_wheel_zooms_at_the_pointer_and_keys_zoom(self):
+        self.launch(str(self.part(shaft())))
+        fit = self.view()
+        x, y = self.empty_spot()
+        spot = self.to_world(x, y)
+        self.s.move(x + 3, y + 3)
+        self.s.move(x, y)
+        self.s.input.key("Control_L", True)
+        for _ in range(3):
+            self.s.input.scroll(-1)  # up: in
+            time.sleep(0.15)
+        self.s.input.key("Control_L", False)
+        time.sleep(0.5)
+        v = self.view()
+        self.assertLess(self.scale(v), self.scale(fit) * 0.8, "Ctrl+wheel up should zoom in")
+        here = self.to_world(x, y)
+        self.assertAlmostEqual(here[1], spot[1], delta=2.0, msg="the spot under the pointer should stay")
+        self.s.key("ctrl+0")
+        time.sleep(0.4)
+        self.assertViewEqual(self.view(), fit, msg="Ctrl+0 should fit the part")
+        self.s.key("ctrl+minus")
+        time.sleep(0.4)
+        self.assertGreater(self.scale(self.view()), self.scale(fit) * 1.1, "Ctrl+− should zoom out")
+
+    def test_wheel_pans(self):
+        self.launch(str(self.part(shaft())))
+        before = self.view()
+        self.s.scroll(*self.empty_spot(), 3)
+        after = self.view()
+        self.assertGreater(abs(after[0][0] - before[0][0]), 1, "the wheel should pan the drawing")
+
+    def test_mouse_click_unlocks_the_touch_lock(self):
+        self.launch(str(self.part(shaft())), "--touch")
+        lock = self.app.find("Touch Lock", "toggle button", contains=True)
+        self.s.tap(*self.app.center(acc=lock))
+        self.assertTrue(self.app.checked(lock))
+        self.s.click(*self.app.center(acc=lock))
+        time.sleep(0.4)
+        self.assertFalse(self.app.checked(lock), "a mouse click should unlock")
+
+    def test_finger_drags_the_reorder_handle(self):
+        path = self.part(two_ops())
+        self.launch(str(path), "--touch")
+        handles = self.app.all("Drag to Reorder")
+        self.assertEqual(len(handles), 2)
+        hx, hy = self.app.center(acc=handles[1])
+        tx, ty = self.app.center(acc=self.app.labelled("Area clear", "list item"))
+        self.s.input.touches([(hx, hy)], [(tx, ty - 10)], 25, 0.4)
+        time.sleep(0.8)
+        self.snap("reordered")
+        self.assertEqual([type(o).__name__ for o in self.saved(path).operations], ["FinishPass", "AreaClear"])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class SendByKeyboard(VirtualPort, Bus):
+    """TOUCH.md 7.4 by keys: Space held on Send to the Lathe starts it, as a held finger does."""
+
+    def test_space_held_sends(self):
+        p = with_op()
+        port = os.path.realpath(f"{self.pty}-app")
+        self.app = self.s.launch_app("en", args=(str(self.part(p)),), env={"ALPHALINK_TEST_PORTS": port})
+        time.sleep(1.0)
+        self.press("Machine", "page tab")
+        time.sleep(0.5)
+        send = self.app.labelled("Send to the Lathe", "button")
+        self.s.click(*self.app.center(acc=send))  # focus; a click is not a hold
+        self.assertFalse(self.app.exists("Send", "button"), "a click must not start a send")
+        self.assertTrue(self.app.focused(send), "the click should leave the keyboard on the button")
+        self.s.hold_key("space", 2.5)
+        self.snap("confirm")
+        self.app.find("Send", "button")
+        self.s.key("alt+s")  # "_Send": Return would take the default, Cancel
+        expected = post(p)
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)

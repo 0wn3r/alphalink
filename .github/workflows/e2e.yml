@@ -126,11 +126,15 @@ jobs:
         if: failure()
         run: |
           set +e
-          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
+          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo;
+            echo "processes left:";
             ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
             for p in $(pgrep -u e2e -x gnome-shell); do
               echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(sudo cat /proc/$p/environ | tr '\0' '\n' | grep ^XDG_RUNTIME_DIR)"
             done | head -30; } > logs/summary.log 2>&1 || true
+          # each failed test with the line and the error, readable in the annotations
+          awk '/^\[[0-9]+\//{t=$2} /test_[a-z_]+\.py", line/{l=$0} /^    [A-Za-z.]*(Error|NotFound)[:(]/{print t; print "  " l; print "  " $0}' \
+            logs/e2e.log | cut -c1-220 > logs/failures.log
           first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
           [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
           for f in logs/*.log; do
