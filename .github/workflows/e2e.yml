@@ -72,6 +72,7 @@ jobs:
           exit ${PIPESTATUS[0]}
       - name: Run the tests
         run: |
+          set +e  # GitHub's bash stops at the first failing command; the results below must still be written
           # a watchdog: memory and the test user's processes every 20 s; the tests are stopped before the runner
           # itself runs out of memory (that ended earlier runs with "lost communication")
           ( while sleep 20; do
@@ -80,14 +81,12 @@ jobs:
                 echo "low memory: stopping the tests"; ps -u e2e -o rss=,comm= | sort -rn | head -15; sudo pkill -KILL -u e2e; fi
             done ) > logs/watch.log 2>&1 &
           sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
-            python3 -m tests.e2e.run -j 1 Keyboard Mouse Touch' 2>&1 | tee logs/e2e-first.log
-          echo "after 8 tests:"; ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -20
-          sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
             python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Collect what the test user left
         if: always()
         run: |
+          set +e
           sudo cp -r /home/e2e/logs/sessions logs/ 2>/dev/null; sudo cp -r /home/e2e/app/e2e-out app/ 2>/dev/null
           sudo chown -R "$(id -u)" logs app/e2e-out 2>/dev/null
           sudo journalctl -b --since "-70 min" --no-pager -o short-monotonic | grep -iE "logind|session|e2e|killed|oom" |
@@ -109,6 +108,7 @@ jobs:
       - name: Show the end of the logs as annotations (readable without signing in)
         if: failure()
         run: |
+          set +e
           { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
             ps -u e2e -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
             for p in $(pgrep -u e2e -x gnome-shell); do
