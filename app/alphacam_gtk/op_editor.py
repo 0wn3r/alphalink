@@ -78,25 +78,56 @@ def fit_spin(row: Adw.SpinRow, lo: float, hi: float, digits: int) -> Adw.SpinRow
     return row
 
 
+TAP_SLOP_PX = 12  # a finger that travels further than this is scrolling
+
+
 def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
     """A finger on the number opens the AlphaLink keypad (TOUCH.md 6) instead of the system keyboard, which covers
-    half the screen; the − and + buttons and the mouse and keyboard work as before."""
+    half the screen; a finger on − or + steps the value. Both only for a still tap, on release: a finger that moves
+    scrolls the editor instead (Eduard 2026-10-16: swiping through the parameters kept opening the keypad and
+    changing values). The touch is taken on press (no focus, so no system keyboard), so the scrolling is done here.
+    The mouse and keyboard work as before."""
     from .keypad import Keypad
 
-    tap = Gtk.GestureClick(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
+    drag = Gtk.GestureDrag(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
+    state = {"what": None, "moved": False, "start": 0.0, "adj": None}
 
-    def pressed(gesture, n, x, y):
-        target = row.pick(x, y, Gtk.PickFlags.DEFAULT)
-        w = target
+    def begin(gesture, x, y):
+        w = row.pick(x, y, Gtk.PickFlags.DEFAULT)
+        what = None
         while w is not None and w is not row:
             if isinstance(w, Gtk.Button):
-                return  # − / +
+                what = "up" if w.has_css_class("up") else "down" if w.has_css_class("down") else None
+                break
             if isinstance(w, Gtk.Text):
+                what = "number"
                 break
             w = w.get_parent()
-        else:
+        if what is None:
             return
-        gesture.set_state(Gtk.EventSequenceState.CLAIMED)  # no focus, so no system keyboard
+        scroller = row.get_ancestor(Gtk.ScrolledWindow)
+        adj = scroller.get_vadjustment() if scroller is not None else None
+        state.update(what=what, moved=False, adj=adj, start=adj.get_value() if adj else 0.0)
+        gesture.set_state(Gtk.EventSequenceState.CLAIMED)
+
+    def update(gesture, dx, dy):
+        if state["what"] is None:
+            return
+        if not state["moved"] and abs(dx) + abs(dy) > TAP_SLOP_PX:
+            state["moved"] = True
+        adj = state["adj"]
+        if state["moved"] and adj is not None:
+            top = adj.get_upper() - adj.get_page_size()
+            adj.set_value(min(max(state["start"] - dy, adj.get_lower()), top))
+
+    def end(gesture, dx, dy):
+        what, state["what"] = state["what"], None
+        if what is None or state["moved"]:
+            return
+        if what in ("up", "down"):
+            step = row.get_adjustment().get_step_increment()
+            row.set_value(row.get_value() + (step if what == "up" else -step))
+            return
 
         def done(text):
             try:
@@ -107,8 +138,10 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
         Keypad(done, title=row.get_title(), values={"v": f"{row.get_value():.{row.get_digits()}f}"},
                fields=[("v", row.get_title())]).present(row)
 
-    tap.connect("pressed", pressed)
-    row.add_controller(tap)
+    drag.connect("drag-begin", begin)
+    drag.connect("drag-update", update)
+    drag.connect("drag-end", end)
+    row.add_controller(drag)
     return row
 
 
