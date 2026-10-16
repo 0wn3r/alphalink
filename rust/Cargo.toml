@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["alphacam"]
+members = ["alphacam", "alphacam-cli"]
 
 [workspace.package]
 version = "0.1.0"
@@ -14,3 +14,10 @@ serde_json = { version = "1", features = ["float_roundtrip", "preserve_order"] }
 thiserror = "2"
 regex = "1"
 rust_decimal = "1"
+# serial link (alphacam feature "serial"); without libudev, so the build needs no system library
+serialport = { version = "4.10", default-features = false }
+socket2 = { version = "0.6", features = ["all"] }
+# paired Bluetooth adapters from BlueZ over D-Bus (alphacam feature "bluez")
+zbus = { version = "5", default-features = false, features = ["blocking-api", "async-io"] }
+# command line (alphacam-cli)
+clap = { version = "4", features = ["derive"] }

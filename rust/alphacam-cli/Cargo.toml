@@ -1,0 +1,16 @@
+[package]
+name = "alphacam-cli"
+description = "Command line for the AlphaLink CAM core: post .alcam projects, dump ALPHA-T .PRG files"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "alphacam"
+path = "src/main.rs"
+
+[dependencies]
+# the command line has no serial commands (as python -m alphacam): the core without its serial link
+alphacam = { path = "../alphacam", default-features = false }
+clap.workspace = true
