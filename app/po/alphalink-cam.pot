@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-16 01:42+0300\n"
+"POT-Creation-Date: 2026-10-16 09:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -174,6 +174,15 @@ msgstr ""
 msgid "the line is too short for {name} and its relief groove"
 msgstr ""
 
+#: alphacam/io/dxf.py:160
+#, python-brace-format
+msgid "not a readable DXF file ({error})"
+msgstr ""
+
+#: alphacam/io/dxf.py:162
+msgid "the file has no drawing in it"
+msgstr ""
+
 #: alphacam/io/sd1.py:142
 #, python-brace-format
 msgid "G71 E{e} (area clear option) is not supported yet"
@@ -270,91 +279,91 @@ msgstr ""
 msgid "unsupported tool library format {get_format}"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:102
+#: alphacam/post/alphat_prg.py:103
 #, python-brace-format
 msgid "{value} moves are not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:136
+#: alphacam/post/alphat_prg.py:137
 #, python-brace-format
 msgid ""
 "{op}: no cuts with this contour (nothing between the tool start and the "
 "profile)"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:218
+#: alphacam/post/alphat_prg.py:220
 msgid "area clear FACE with pre-finish (no sample)"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:246
+#: alphacam/post/alphat_prg.py:248
 #, python-brace-format
 msgid "{type} is not supported by the post yet"
 msgstr ""
 
-#: alphacam/post/alphat_prg.py:310
+#: alphacam/post/alphat_prg.py:312
 msgid "move/dwell before the first tool change is not supported"
 msgstr ""
 
-#: alphacam/post/alphat_sd1.py:252
+#: alphacam/post/alphat_sd1.py:251
 #, python-brace-format
 msgid "{type} is not supported by the SD1 writer yet"
 msgstr ""
 
-#: alphacam/safety.py:158
+#: alphacam/safety.py:159
 msgid "external"
 msgstr ""
 
-#: alphacam/safety.py:158 alphacam/toolpath/face.py:57
+#: alphacam/safety.py:159 alphacam/toolpath/face.py:57
 msgid "face clear"
 msgstr ""
 
-#: alphacam/safety.py:158
+#: alphacam/safety.py:159
 msgid "internal"
 msgstr ""
 
-#: alphacam/safety.py:159
+#: alphacam/safety.py:160
 msgid "away from the chuck"
 msgstr ""
 
-#: alphacam/safety.py:159
+#: alphacam/safety.py:160
 msgid "towards the chuck"
 msgstr ""
 
-#: alphacam/safety.py:160
+#: alphacam/safety.py:161
 #, python-brace-format
 msgid ""
 "T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, "
 "{way}): ALPHA-T refuses it with Invalid tip angle"
 msgstr ""
 
-#: alphacam/safety.py:179
+#: alphacam/safety.py:180
 #, python-brace-format
 msgid ""
 "T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the "
 "tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)"
 msgstr ""
 
-#: alphacam/safety.py:190
+#: alphacam/safety.py:191
 #, python-brace-format
 msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
 msgstr ""
 
-#: alphacam/safety.py:198
+#: alphacam/safety.py:199
 #, python-brace-format
 msgid "moves into the tailstock centre (X{x:g} Z{z:g})"
 msgstr ""
 
-#: alphacam/safety.py:205
+#: alphacam/safety.py:206
 #, python-brace-format
 msgid "a rapid move passes through the part at X{x:g} Z{z:g}"
 msgstr ""
 
-#: alphacam/safety.py:208
+#: alphacam/safety.py:209
 #, python-brace-format
 msgid "cuts into the part at X{x:g} Z{z:g}"
 msgstr ""
 
-#: alphacam/safety.py:237
+#: alphacam/safety.py:238
 #, python-brace-format
 msgid "dives at {a:.0f}°, steeper than T{n} clears"
 msgstr ""
@@ -363,23 +372,23 @@ msgstr ""
 msgid "the part has no length to turn around"
 msgstr ""
 
-#: alphacam/toolpath/area.py:55
+#: alphacam/toolpath/area.py:57
 #, python-brace-format
 msgid "area clear: no contour below X{x}"
 msgstr ""
 
-#: alphacam/toolpath/area.py:182 alphacam/toolpath/area.py:234
-msgid "area clear"
-msgstr ""
-
-#: alphacam/toolpath/area.py:207
+#: alphacam/toolpath/area.py:266
 msgid ""
 "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the "
 "app does not offer it; use TOWARDS"
 msgstr ""
 
-#: alphacam/toolpath/area.py:210
+#: alphacam/toolpath/area.py:269
 msgid "depth of cut must be > 0"
+msgstr ""
+
+#: alphacam/toolpath/area.py:299
+msgid "area clear"
 msgstr ""
 
 #: alphacam/toolpath/contour.py:41

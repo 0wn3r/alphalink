@@ -32,7 +32,7 @@ The sections below are the original design; where the implementation differs, th
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
 digit, so `0wn3r` becomes `_0wn3r`, as Flatpak does).
-Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.7+ (Adw.ToggleGroup), pyserial. Target: a Microsoft Surface Pro tablet running
+Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.7+ (Adw.ToggleGroup), pyserial, ezdxf (DXF import). Target: a Microsoft Surface Pro tablet running
 **Ubuntu 26.04 LTS** (decided 2026-10-13; native: `sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-serial`) (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
 `app/TOUCH.md`); packaged as a Flatpak.
 
@@ -86,7 +86,7 @@ app/
       v181_600.py           later
     io/
       sdg.py                import ALPHA-T/ALPHACAM .SDG drawings (from tools/sdg_dump.py)
-      dxf.py                DXF import (from tools/dxf2sdl.py)
+      dxf.py                DXF import (read with ezdxf, after tools/dxf2sdl.py)
       prg_parse.py          PRG -> moves, for preview and round-trip tests
     link/
       serial_link.py        port open, 7E2, XON/XOFF, char/line delay, modem lines (from tools/alphalink.py)

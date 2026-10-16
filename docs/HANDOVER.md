@@ -22,7 +22,8 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 - No serial traffic to the lathe unless the user asks; the app and tools never start a cycle.
 
 ## Build and test
-- Tests: `cd app && python3 -m unittest discover -s tests -t .`
+- Tests: `cd app && python3 -m unittest discover -s tests -t .` (needs pyserial and ezdxf: `pip install --user ezdxf`
+  or the distribution's python3-ezdxf; the Flatpak bundles both)
 - End-to-end tests on the installed Flatpak (headless GNOME session, input through libei, Surface Pro 7 sizes,
   DOSBox-X running ALPHA-T, socat ports for the lathe): `cd app && python3 -m tests.e2e.run -j 3`
   (`app/tests/e2e/README.md`). GitHub Actions builds the Flatpak on every push.
