@@ -32,10 +32,18 @@ pub fn init(language: &str) {
         // GTK and libadwaita's own texts (About, file chooser) follow the chosen language too
         // SAFETY: called at startup before any other thread exists
         unsafe { std::env::set_var("LANGUAGE", &forced) };
-        // gettext ignores LANGUAGE in the plain C locale
+        // glibc's gettext ignores LANGUAGE in the C locales (C, POSIX and C.UTF-8): messages need a real locale.
+        // Take the chosen language's own one, or any common one that is installed (only messages change).
         let current = unsafe { setlocale(LocaleCategory::LcMessages, "") }.map(|l| String::from_utf8_lossy(&l).into_owned());
-        if matches!(current.as_deref(), None | Some("C") | Some("POSIX")) {
-            unsafe { setlocale(LocaleCategory::LcMessages, "C.UTF-8") };
+        if matches!(current.as_deref(), None | Some("C") | Some("POSIX") | Some("C.UTF-8") | Some("C.utf8")) {
+            let lang = forced.split(['_', '.', ':']).next().unwrap_or("");
+            let own = format!("{lang}_{}.UTF-8", if lang == "uk" { "UA".to_string() } else { lang.to_uppercase() });
+            for candidate in [own.as_str(), "en_US.UTF-8", "en_GB.UTF-8", "C.UTF-8"] {
+                // SAFETY: still at startup, before any other thread exists
+                if unsafe { setlocale(LocaleCategory::LcMessages, candidate) }.is_some() {
+                    break;
+                }
+            }
         }
     }
     let _ = bindtextdomain(DOMAIN, locale_dir());
@@ -46,10 +54,6 @@ pub fn init(language: &str) {
 
 pub fn gettext(text: &str) -> String {
     gettextrs::gettext(text)
-}
-
-pub fn pgettext(context: &str, text: &str) -> String {
-    gettextrs::pgettext(context, text)
 }
 
 pub fn ngettext(singular: &str, plural: &str, n: u32) -> String {

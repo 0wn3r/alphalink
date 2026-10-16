@@ -40,11 +40,10 @@ pub fn open_manual(window: &crate::window::MainWindow, kind: &str) {
     let launcher = gtk::FileLauncher::new(Some(&gio::File::for_path(manual_path(kind, None))));
     let win = window.downgrade();
     launcher.launch(Some(window), gio::Cancellable::NONE, move |res| {
-        if let (Err(e), Some(win)) = (res, win.upgrade()) {
-            if !e.matches(gtk::DialogError::Dismissed) {
+        if let (Err(e), Some(win)) = (res, win.upgrade())
+            && !e.matches(gtk::DialogError::Dismissed) {
                 win.toast(&gettext("Could not open the manual: {error}").replace("{error}", e.message()));
             }
-        }
     });
 }
 

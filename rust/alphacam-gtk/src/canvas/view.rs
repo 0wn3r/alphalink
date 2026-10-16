@@ -21,12 +21,12 @@ impl Default for ViewTransform {
 }
 
 impl ViewTransform {
-    pub fn to_screen(&self, x_dia: f64, z: f64) -> (f64, f64) {
+    pub fn to_screen(self, x_dia: f64, z: f64) -> (f64, f64) {
         (self.ox + z * self.scale, self.oy - x_dia / 2.0 * self.scale)
     }
 
     /// Screen -> (X diameter, Z).
-    pub fn to_world(&self, sx: f64, sy: f64) -> (f64, f64) {
+    pub fn to_world(self, sx: f64, sy: f64) -> (f64, f64) {
         (2.0 * (self.oy - sy) / self.scale, (sx - self.ox) / self.scale)
     }
 

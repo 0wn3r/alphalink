@@ -87,7 +87,7 @@ pub fn register(app: &gtk::Application) {
     let app = app.downgrade();
     let id = gio::bus_own_name(gio::BusType::Session, BUS_NAME, gio::BusNameOwnerFlags::NONE,
         move |connection, _| serve(&connection, app.clone()), |_, _| {}, |_, _| {});
-    std::mem::forget(id); // owned for the life of the process
+    let _ = id; // never unowned: the name stays for the life of the process
 }
 
 fn serve(connection: &gio::DBusConnection, app: glib::WeakRef<gtk::Application>) {

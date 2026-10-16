@@ -120,11 +120,10 @@ const ENTRY_CHARS: &str = "0123456789.-@,";
 
 /// The character a key stands for in ALPHA-T: a non-Latin letter becomes the Latin letter on that key.
 pub fn key_char(c: char, keycode: u32) -> char {
-    if c.is_alphabetic() && !c.is_ascii() {
-        if let Some(i) = LATIN_KEYCODES.iter().position(|&k| k == keycode) {
+    if c.is_alphabetic() && !c.is_ascii()
+        && let Some(i) = LATIN_KEYCODES.iter().position(|&k| k == keycode) {
             return (b'a' + i as u8) as char;
         }
-    }
     c
 }
 
