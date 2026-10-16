@@ -43,6 +43,9 @@ const TAP_SLOP_PX: f64 = 12.0;
 /// operation 1 (tool change) of a PRG block (#127)
 const OP_KIND_TOOL_CHANGE: i64 = 1;
 
+/// The pages in the order of the switcher (Alt+1 … Alt+5).
+const PAGES: [&str; 5] = ["part", "program", "sheet", "tools", "machine"];
+
 pub fn op_title(op: &Operation) -> String {
     let base = match op {
         Operation::ToolChange(_) => "Tool change",
@@ -643,6 +646,7 @@ impl MainWindow {
         input_mode.connect_changed(apply);
         self.setup_lock();
         self.guard_list_taps();
+        self.setup_op_keys();
         self.install_actions();
         let w = self.downgrade();
         let hook = move || w.upgrade();
@@ -759,6 +763,39 @@ impl MainWindow {
             "applications-engineering-symbolic",
         );
         imp.stack.add_titled_with_icon(&p.machine, Some("machine"), &gettext("Machine"), "network-wired-symbolic");
+    }
+
+    /// The operations by keys, with the list or the editor focused (POINTER_KEYBOARD.md 6): Alt+Up / Alt+Down move
+    /// the selected one, Ctrl+D duplicates it, Delete deletes it (with the Undo toast).
+    fn setup_op_keys(&self) {
+        let keys = gtk::EventControllerKey::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+        let win = self.downgrade();
+        keys.connect_key_pressed(move |_, keyval, _, state| {
+            let Some(win) = win.upgrade() else { return glib::Propagation::Proceed };
+            let imp = win.imp();
+            let Some(focus) = gtk::prelude::GtkWindowExt::focus(&win) else { return glib::Propagation::Proceed };
+            let in_list = focus.is_ancestor(&*imp.op_list) || focus == *imp.op_list;
+            if !(in_list || focus.is_ancestor(&*imp.editor)) || win.selected_index().is_none() {
+                return glib::Propagation::Proceed;
+            }
+            let mods = state & gtk::accelerator_get_default_mod_mask();
+            let (alt, ctrl) = (mods == gdk::ModifierType::ALT_MASK, mods == gdk::ModifierType::CONTROL_MASK);
+            match keyval {
+                gdk::Key::Up | gdk::Key::KP_Up if alt => win.move_selected(-1),
+                gdk::Key::Down | gdk::Key::KP_Down if alt => win.move_selected(1),
+                gdk::Key::d | gdk::Key::D if ctrl => win.duplicate_selected(),
+                gdk::Key::Delete | gdk::Key::KP_Delete if mods.is_empty() && !focus.is::<gtk::Editable>() => {
+                    win.delete_selected()
+                }
+                _ => return glib::Propagation::Proceed,
+            }
+            // the keyboard stays on the list, on the operation it acted on
+            if in_list && let Some(row) = imp.op_list.selected_row() {
+                row.grab_focus();
+            }
+            glib::Propagation::Stop
+        });
+        self.add_controller(keys);
     }
 
     // --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
@@ -923,6 +960,22 @@ impl MainWindow {
             w.dismiss_toasts();
         });
         add("find", &["<Control>f"], |w| w.open_find());
+        // the pages by keys (POINTER_KEYBOARD.md 9): Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn
+        let page = gio::SimpleAction::new("page", Some(glib::VariantTy::STRING));
+        let win = self.downgrade();
+        page.connect_activate(move |_, v| {
+            if let (Some(win), Some(name)) = (win.upgrade(), v.and_then(|v| v.get::<String>()))
+                && win.has_project()
+            {
+                win.imp().stack.set_visible_child_name(&name);
+            }
+        });
+        self.add_action(&page);
+        for (i, name) in PAGES.iter().enumerate() {
+            app.set_accels_for_action(&format!("win.page::{name}"), &[&format!("<Alt>{}", i + 1)]);
+        }
+        add("page-previous", &["<Control>Page_Up"], |w| w.step_page(-1));
+        add("page-next", &["<Control>Page_Down"], |w| w.step_page(1));
         let show_grid = settings().show_grid;
         let grid = gio::SimpleAction::new_stateful("show-grid", None, &show_grid.to_variant());
         let win = self.downgrade();
@@ -965,6 +1018,16 @@ impl MainWindow {
             update_settings(|s| s.input_layout = v.clone());
         });
         self.add_action(&layout);
+    }
+
+    fn step_page(&self, delta: i32) {
+        let stack = &self.imp().stack;
+        let Some(now) = stack.visible_child_name() else { return };
+        let Some(i) = PAGES.iter().position(|p| *p == now.as_str()) else { return };
+        if self.has_project() {
+            let n = PAGES.len() as i32;
+            stack.set_visible_child_name(PAGES[(i as i32 + delta).rem_euclid(n) as usize]);
+        }
     }
 
     fn enable(&self, action: &str, on: bool) {

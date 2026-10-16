@@ -107,6 +107,69 @@ Adw.ShortcutsDialog dialog {
   }
 
   Adw.ShortcutsSection {
+    title: _("Operations (List Focused)");
+
+    Adw.ShortcutsItem {
+      title: _("Move Up");
+      accelerator: "<Alt>Up";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Move Down");
+      accelerator: "<Alt>Down";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Duplicate Operation");
+      accelerator: "<Control>d";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Delete Operation");
+      accelerator: "Delete";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Pages");
+
+    Adw.ShortcutsItem {
+      title: _("Part");
+      accelerator: "<Alt>1";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Program");
+      accelerator: "<Alt>2";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Sheet");
+      accelerator: "<Alt>3";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Tools");
+      accelerator: "<Alt>4";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Machine");
+      accelerator: "<Alt>5";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous Page");
+      accelerator: "<Control>Page_Up";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Next Page");
+      accelerator: "<Control>Page_Down";
+    }
+  }
+
+  Adw.ShortcutsSection {
     title: _("View");
 
     Adw.ShortcutsItem {
