@@ -85,6 +85,8 @@ jobs:
       - name: Show the end of the logs as annotations (readable without signing in)
         if: failure()
         run: |
+          { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
+            ps -u "$(id -u)" -o comm= | sort | uniq -c | sort -rn | head -25; } > logs/summary.log 2>&1 || true
           first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
           [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
           for f in logs/*.log; do
