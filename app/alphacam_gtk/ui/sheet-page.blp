@@ -1,0 +1,94 @@
+using Gtk 4.0;
+
+// The Sheet page: the setup sheet (report.py), a switch that adds the tool moves, the operator's notes, and saving it
+// as text or PDF.
+template $AlphaLinkSheetPage: Box {
+  orientation: vertical;
+
+  Box {
+    spacing: 12;
+    margin-start: 12;
+    margin-end: 12;
+    margin-top: 6;
+    margin-bottom: 6;
+
+    Label {
+      label: _("Tool moves");
+    }
+
+    Switch moves_switch {
+      valign: center;
+      notify::active => $_moves_toggled();
+    }
+
+    Label time_label {
+      hexpand: true;
+      xalign: 0;
+      ellipsize: end;
+
+      styles [
+        "dim-label",
+      ]
+    }
+
+    Button {
+      label: _("_Save as Text…");
+      use-underline: true;
+      halign: end;
+      clicked => $_save();
+    }
+
+    Button {
+      label: _("Save as _PDF…");
+      use-underline: true;
+      halign: end;
+      tooltip-text: _("Printable setup sheet: the part, the tools in loading order, notes");
+      clicked => $_save_pdf();
+    }
+  }
+
+  Expander {
+    label: _("Notes for the operator");
+    margin-start: 12;
+    margin-end: 12;
+    margin-bottom: 6;
+
+    child: ScrolledWindow {
+      max-content-height: 120;
+      propagate-natural-height: true;
+
+      child: TextView notes {
+        wrap-mode: word_char;
+        top-margin: 6;
+        bottom-margin: 6;
+        left-margin: 6;
+        right-margin: 6;
+        height-request: 60;
+
+        EventControllerFocus {
+          leave => $_notes_changed();
+        }
+      };
+    };
+  }
+
+  Separator {}
+
+  ScrolledWindow {
+    vexpand: true;
+
+    child: TextView view {
+      editable: false;
+      cursor-visible: false;
+      monospace: true;
+      top-margin: 12;
+      bottom-margin: 12;
+      left-margin: 12;
+      right-margin: 12;
+
+      styles [
+        "program-text",
+      ]
+    };
+  }
+}

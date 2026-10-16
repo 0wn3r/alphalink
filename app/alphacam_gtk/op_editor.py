@@ -16,6 +16,7 @@ from gi.repository import Adw, Gtk  # noqa: E402
 from alphacam.model.geometry import Arc, Point  # noqa: E402
 from alphacam.model.operations import Drill, Groove  # noqa: E402
 from .i18n import N_, _, ngettext  # noqa: E402
+from .ui import template  # noqa: E402
 
 # field -> (label, subtitle, lower, upper, step, digits) for numbers
 NUMBERS = {
@@ -111,33 +112,42 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
     return row
 
 
+@template("op-editor")
 class OpEditor(Gtk.Box):
-    """Shows one operation; `apply(label, fn)` is the window's undoable edit entry point."""
+    """Shows one operation; the window sets `apply(label, fn)`, its undoable edit entry point, and the header's
+    callbacks (ui/op-editor.blp)."""
 
-    def __init__(self, apply, on_move, on_delete, on_close):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
-        self._apply, self.index, self._building = apply, None, False
+    __gtype_name__ = "AlphaLinkOpEditor"
+
+    title = Gtk.Template.Child()
+    scroll = Gtk.Template.Child()
+
+    def __init__(self):
+        super().__init__()
+        self.index, self._building = None, False
+        self._apply = lambda label, fn: None  # set by the window, with the callbacks below
+        self.on_move = lambda delta: None
+        self.on_delete = lambda: None
+        self.on_close = lambda: None
         self.on_pick = None  # set by the window: start contour picking for operation n
         self.on_duplicate = None  # set by the window: copy the operation below itself
         self.tool_name = lambda n: ""  # set by the window: name of tool n in the library
-        self.title = Adw.WindowTitle(title=_("Operation"))
-        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False, show_back_button=False)
-        header.set_title_widget(self.title)
-        for icon, tip, cb in (("go-up-symbolic", _("Move Up"), lambda *a: on_move(-1)),
-                              ("go-down-symbolic", _("Move Down"), lambda *a: on_move(1))):
-            b = Gtk.Button(icon_name=icon, tooltip_text=tip)
-            b.connect("clicked", cb)
-            header.pack_start(b)
-        close = Gtk.Button(icon_name="window-close-symbolic", tooltip_text=_("Close Editor"))
-        close.connect("clicked", lambda *a: on_close())
-        header.pack_end(close)
-        delete = Gtk.Button(icon_name="user-trash-symbolic", tooltip_text=_("Delete Operation"))
-        delete.add_css_class("destructive-action")
-        delete.connect("clicked", lambda *a: on_delete())
-        header.pack_end(delete)
-        self.append(header)
-        self.scroll = Gtk.ScrolledWindow(vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
-        self.append(self.scroll)
+
+    @Gtk.Template.Callback()
+    def _move_up(self, *_a) -> None:
+        self.on_move(-1)
+
+    @Gtk.Template.Callback()
+    def _move_down(self, *_a) -> None:
+        self.on_move(1)
+
+    @Gtk.Template.Callback()
+    def _close(self, *_a) -> None:
+        self.on_close()
+
+    @Gtk.Template.Callback()
+    def _delete(self, *_a) -> None:
+        self.on_delete()
 
     def show_op(self, project, index: int, title: str) -> None:
         self.index = index

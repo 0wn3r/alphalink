@@ -16,6 +16,7 @@ gi.require_version("Adw", "1")
 from gi.repository import Adw, Gio, GLib, Gtk  # noqa: E402
 
 from .i18n import _, language  # noqa: E402
+from .ui import template  # noqa: E402
 
 HELP_DIR = Path(__file__).with_name("help")
 MANUAL_DIR = Path(__file__).with_name("manuals")
@@ -80,11 +81,14 @@ def blocks(md: str) -> list[tuple[str, int, str]]:
     return out
 
 
+@template("help-dialog")
 class HelpDialog(Adw.Dialog):
+    __gtype_name__ = "AlphaLinkHelpDialog"
+
+    box = Gtk.Template.Child()
+
     def __init__(self, lang: str | None = None):
-        super().__init__(title=_("Help"), content_width=720, content_height=720)
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, margin_start=24, margin_end=24,
-                      margin_top=12, margin_bottom=24)
+        super().__init__()
         for kind, level, markup in blocks(help_path(lang).read_text(encoding="utf-8")):
             lbl = Gtk.Label(use_markup=True, wrap=True, xalign=0)
             if kind == "h":
@@ -96,9 +100,4 @@ class HelpDialog(Adw.Dialog):
                 lbl.set_margin_start(12 + 20 * level)
             else:
                 lbl.set_markup(markup)
-            box.append(lbl)
-        scroll = Gtk.ScrolledWindow(child=box, vexpand=True, hscrollbar_policy=Gtk.PolicyType.NEVER)
-        view = Adw.ToolbarView()
-        view.add_top_bar(Adw.HeaderBar())
-        view.set_content(scroll)
-        self.set_child(view)
+            self.box.append(lbl)

@@ -33,6 +33,7 @@ COLOURS = {
 
 
 class LatheCanvas(Gtk.DrawingArea):
+    __gtype_name__ = "AlphaLinkLatheCanvas"  # used in ui/window.blp
     __gsignals__ = {
         "cursor-moved": (GObject.SignalFlags.RUN_FIRST, None, (float, float)),
         # every tap: world X (dia), Z, the input's radius in mm, toolpath op (-1 none), drawing element ('' none)
@@ -44,9 +45,14 @@ class LatheCanvas(Gtk.DrawingArea):
     }
 
     def __init__(self):
-        # "application": an interactive surface with its own keys; a named role, so screen readers (and tests/e2e) find it
-        super().__init__(hexpand=True, vexpand=True, focusable=True, css_classes=["lathe-canvas"],
-                         accessible_role=Gtk.AccessibleRole.APPLICATION)
+        # "application": an interactive surface with its own keys; a named role, so screen readers (and tests/e2e) find
+        # it. The role can only be given at construction: ui/window.blp gives it too, as GtkBuilder creates the widget
+        # there before this runs (and passes no arguments, so the rest is set one by one).
+        super().__init__(accessible_role=Gtk.AccessibleRole.APPLICATION)
+        self.set_hexpand(True)
+        self.set_vexpand(True)
+        self.set_focusable(True)
+        self.add_css_class("lathe-canvas")
         self.project = None
         self.preview = None
         self.segs = []

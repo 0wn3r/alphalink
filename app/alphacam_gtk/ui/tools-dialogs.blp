@@ -1,0 +1,12 @@
+using Gtk 4.0;
+using Adw 1;
+
+// Delete Tool (tools_page.py fills in the heading and body)
+Adw.AlertDialog delete_alert {
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    delete: _("_Delete") destructive,
+  ]
+}

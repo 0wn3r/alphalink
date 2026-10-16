@@ -10,16 +10,23 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Adw, Gdk, Gtk  # noqa: E402
 from .i18n import _  # noqa: E402
+from .ui import template  # noqa: E402
 
 KEYS = [["7", "8", "9", "⌫"], ["4", "5", "6", "±"], ["1", "2", "3", "ABS"], ["0", ".", "→", "✓"]]
 
 
+@template("keypad")
 class Keypad(Adw.Dialog):
+    __gtype_name__ = "AlphaLinkKeypad"
+
+    field_box = Gtk.Template.Child()
+    grid = Gtk.Template.Child()
+
     def __init__(self, on_done, title: str | None = None, values: dict[str, str] | None = None,
                  fields: list[tuple[str, str]] | None = None):
         """`fields`: (key, label) to fill, X Ø and Z by default (a point, "x,z" to `on_done`); one field gives
         `on_done` that value alone (the editor's numbers). `values`: what the fields start with."""
-        super().__init__(title=title or _("Point"), content_width=360)
+        super().__init__(title=title or _("Point"))
         self.on_done = on_done
         self.fields = fields or [("x", "X Ø"), ("z", "Z")]
         self.values = {k: "" for k, _l in self.fields}
@@ -27,18 +34,13 @@ class Keypad(Adw.Dialog):
         self.active = self.fields[0][0]
         self.incremental = False
         self._fresh = bool(values)  # the first digit replaces a given value instead of extending it
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12, margin_start=12, margin_end=12,
-                      margin_bottom=12, margin_top=6)
-        fields = Gtk.Box(spacing=8, homogeneous=True)
         self.field_buttons = {}
         for key, label in self.fields:
             b = Gtk.Button()
             b.add_css_class("keypad-field")
             b.connect("clicked", lambda _b, k=key: self._activate(k))
-            fields.append(b)
+            self.field_box.append(b)
             self.field_buttons[key] = (b, label)
-        box.append(fields)
-        grid = Gtk.Grid(row_spacing=8, column_spacing=8, row_homogeneous=True, column_homogeneous=True)
         self.abs_button = None
         for r, row in enumerate(KEYS):
             for c, k in enumerate(row):
@@ -51,15 +53,7 @@ class Keypad(Adw.Dialog):
                     if len(self.fields) == 1:
                         b.set_sensitive(False)  # one number: nothing to be incremental from
                 b.connect("clicked", lambda _b, k=k: self._key(k))
-                grid.attach(b, c, r, 1, 1)
-        box.append(grid)
-        view = Adw.ToolbarView()
-        view.add_top_bar(Adw.HeaderBar())
-        view.set_content(box)
-        self.set_child(view)
-        keys = Gtk.EventControllerKey()
-        keys.connect("key-pressed", self._hw_key)
-        self.add_controller(keys)
+                self.grid.attach(b, c, r, 1, 1)
         self._refresh()
 
     def _activate(self, key: str) -> None:
@@ -95,6 +89,7 @@ class Keypad(Adw.Dialog):
         self.values[self.active] = v
         self._refresh()
 
+    @Gtk.Template.Callback()
     def _hw_key(self, ctl, keyval, code, state) -> bool:
         ch = chr(Gdk.keyval_to_unicode(keyval)) if Gdk.keyval_to_unicode(keyval) else ""
         if ch.isdigit() or ch == ".":

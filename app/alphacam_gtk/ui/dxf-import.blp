@@ -1,0 +1,87 @@
+using Gtk 4.0;
+using Adw 1;
+
+// ATDXF: a DXF becomes a new part. Lathe drawings usually give Y as a radius; units are the DXF's.
+Adw.AlertDialog dxf_alert {
+  heading: _("Import DXF");
+  default-response: "import";
+  close-response: "cancel";
+
+  extra-child: Adw.PreferencesGroup {
+    Adw.ComboRow dxf_y_row {
+      title: _("DXF Y is");
+
+      model: StringList {
+        strings [
+          _("Radius"),
+          _("Diameter"),
+        ]
+      };
+    }
+
+    Adw.ComboRow dxf_units_row {
+      title: _("Units");
+
+      model: StringList {
+        strings [
+          _("mm"),
+          _("inch"),
+        ]
+      };
+    }
+
+    Adw.SwitchRow dxf_half_row {
+      title: _("Upper half only");
+      subtitle: _("Drop the mirrored half below the axis");
+      active: true;
+    }
+
+    Adw.ComboRow dxf_rotate_row {
+      title: _("Turn the drawing");
+      subtitle: _("Anticlockwise, for a part drawn upright");
+
+      model: StringList {
+        strings [
+          "0°",
+          "90°",
+          "180°",
+          "270°",
+        ]
+      };
+    }
+
+    Adw.ComboRow dxf_front_row {
+      title: _("Front face is on the");
+
+      model: StringList {
+        strings [
+          _("Right"),
+          _("Left"),
+        ]
+      };
+    }
+
+    Adw.ComboRow dxf_axis_row {
+      title: _("Spindle axis");
+
+      model: StringList {
+        strings [
+          _("At Y0, as drawn"),
+          _("In the middle (full section)"),
+          _("At the lowest point (half drawing)"),
+        ]
+      };
+    }
+
+    Adw.SwitchRow dxf_datum_row {
+      title: _("Front face on Z0");
+      subtitle: _("Moves the drawing so its front face is the part's Z0");
+      active: true;
+    }
+  };
+
+  responses [
+    cancel: _("_Cancel"),
+    import: _("_Import") suggested,
+  ]
+}

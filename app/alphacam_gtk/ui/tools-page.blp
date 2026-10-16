@@ -1,0 +1,85 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The Tools page (ALPHA-T's ATTOOLS): the tool library on the left, the selected tool's rows on the right (filled by
+// tools_page.py).
+template $AlphaLinkToolsPage: Box {
+  orientation: vertical;
+
+  // a wrapping row: the button labels are much longer in Ukrainian and must not set the window's width
+  Adw.WrapBox {
+    child-spacing: 6;
+    line-spacing: 6;
+    margin-start: 12;
+    margin-end: 12;
+    margin-top: 6;
+    margin-bottom: 6;
+
+    Button {
+      label: _("_Add Tool");
+      use-underline: true;
+      clicked => $_add();
+    }
+
+    Button {
+      label: _("_Delete Tool");
+      use-underline: true;
+      clicked => $_delete();
+
+      styles [
+        "destructive-action",
+      ]
+    }
+
+    Button {
+      label: _("_Import ATOOLIB.TL1…");
+      use-underline: true;
+      clicked => $_import();
+    }
+
+    Button {
+      label: _("_Reset to ALPHA-T Tools");
+      use-underline: true;
+      clicked => $_reset();
+    }
+  }
+
+  Label note {
+    label: _("Tool numbers are the lathe's tool memory slots.");
+    xalign: 0;
+    wrap: true;
+    margin-start: 12;
+    margin-end: 12;
+    margin-bottom: 6;
+
+    styles [
+      "dim-label",
+    ]
+  }
+
+  Separator {}
+
+  Paned {
+    position: 360;
+    vexpand: true;
+    shrink-start-child: false;
+    shrink-end-child: false;
+
+    start-child: ScrolledWindow {
+      hscrollbar-policy: never;
+
+      child: ListBox listbox {
+        selection-mode: single;
+        row-selected => $_show();
+
+        styles [
+          "navigation-sidebar",
+        ]
+      };
+    };
+
+    end-child: ScrolledWindow editor {
+      hscrollbar-policy: never;
+    };
+  }
+}

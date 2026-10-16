@@ -23,8 +23,10 @@ Status (2026-10-14): **working app**; all milestones of section 10 are done. Wha
 - Commands: `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG|DRAWING.DXF]`; `python3 -m alphacam dump FILE.PRG`;
   `python3 -m alphacam post PART.alcam -o P.PRG [--sd1 P.SD1]`.
 - Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`); the GTK tests run on a private
-  Xvfb display when Xvfb is installed (`ALPHALINK_TEST_DISPLAY=1` shows them instead). Translations: after changing
-  UI strings run `python3 tools/update_translations.py`; a test fails if a string has no Ukrainian translation.
+  Xvfb display when Xvfb is installed (`ALPHALINK_TEST_DISPLAY=1` shows them instead). Interface: after editing a
+  `alphacam_gtk/ui/*.blp` run `python3 tools/build_ui.py` (needs `blueprint-compiler`); a test fails if a .ui is stale.
+  Translations: after changing UI strings run `python3 tools/update_translations.py` (gettext 0.23 or newer: older
+  xgettext misses strings inside f-strings); a test fails if a string has no Ukrainian translation.
   Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`.
 
@@ -91,8 +93,10 @@ app/
     link/
       serial_link.py        port open, 7E2, XON/XOFF, char/line delay, modem lines (from tools/alphalink.py)
       transfers.py          SendProgram, ReceiveManOps, LoadManOps, Loopback, Listen
-  alphacam_gtk/             GTK4 / libadwaita front end, built in Python code (no Blueprint or .ui files: most
-                            of the UI, such as the operation editor rows and the drawing popups, is generated)
+  alphacam_gtk/             GTK4 / libadwaita front end in Python; the fixed layouts are Blueprint files, and what
+                            is generated from data (operation editor rows, the drawing popups, lists) stays in code
+    ui/                     *.blp (Blueprint) and the .ui each compiles to (tools/build_ui.py; both committed)
+    ui.py                   loads them: template("name") for widget classes, builder("name") for dialogs
     application.py          Adw.Application, app actions, About
     window.py               main window (section 6), menus, window actions and shortcuts
     shortcuts.py            Keyboard Shortcuts dialog (Ctrl+?)

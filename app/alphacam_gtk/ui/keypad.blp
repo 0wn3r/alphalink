@@ -1,0 +1,38 @@
+using Gtk 4.0;
+using Adw 1;
+
+// On-screen keypad for X,Z entry (TOUCH.md 6): the fields to fill, then big keys like a control's (keypad.py adds
+// both).
+template $AlphaLinkKeypad: Adw.Dialog {
+  content-width: 360;
+
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {}
+
+    content: Box {
+      orientation: vertical;
+      spacing: 12;
+      margin-start: 12;
+      margin-end: 12;
+      margin-bottom: 12;
+      margin-top: 6;
+
+      Box field_box {
+        spacing: 8;
+        homogeneous: true;
+      }
+
+      Grid grid {
+        row-spacing: 8;
+        column-spacing: 8;
+        row-homogeneous: true;
+        column-homogeneous: true;
+      }
+    };
+  };
+
+  EventControllerKey {
+    key-pressed => $_hw_key();
+  }
+}

@@ -1,0 +1,13 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.AlertDialog remove_setup_alert {
+  body: _("Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save.");
+  default-response: "cancel";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    remove: _("_Remove") destructive,
+  ]
+}

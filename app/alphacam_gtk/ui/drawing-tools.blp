@@ -1,0 +1,96 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The drawing tools' widgets (drawing_tools.py): the bar under the Part page, the banners above the drawing and the
+// value chip over it. The tool palette and the More menu are filled from drawing_tools.TOOLS and CONSTRUCT_MENU.
+
+// the palette is a bottom bar (thumb reach in touch mode); it wraps the entry under the tool names when the Part page
+// is narrow (editor open on half a screen), instead of cutting the tool names short
+Adw.WrapBox bar {
+  child-spacing: 6;
+  line-spacing: 6;
+  margin-start: 6;
+  margin-end: 6;
+  margin-top: 6;
+  margin-bottom: 6;
+  justify: fill;
+  justify-last-line: true;
+
+  Adw.ToggleGroup palette {}
+
+  // ALPHA-T's other drawing commands (German manual pp. 20-34): circle, tangents, parallel, split, mirror, blend
+  MenuButton more {
+    label: _("More");
+    tooltip-text: _("More Drawing Commands");
+  }
+
+  Button keypad_button {
+    icon-name: "input-dialpad-symbolic";
+    tooltip-text: _("Keypad");
+    visible: false;
+  }
+
+  Entry entry {
+    hexpand: true;
+
+    styles [
+      "command-entry",
+    ]
+  }
+
+  // shown while Line/Arc is the tool, so it is always where the user expects it; usable once there is a chain
+  Button done {
+    label: _("_Done");
+    use-underline: true;
+    visible: false;
+    sensitive: false;
+    tooltip-text: _("Finish Line (Esc)");
+
+    styles [
+      "suggested-action",
+    ]
+  }
+
+  // picking a contour: a way out without applying it (the banner has room for one button only)
+  Button cancel_pick_btn {
+    label: _("Cancel Picking");
+    visible: false;
+    tooltip-text: _("Cancel Picking (Esc)");
+  }
+
+  Button edit_el {
+    icon-name: "document-edit-symbolic";
+    tooltip-text: _("Edit Element (E)");
+    visible: false;
+  }
+
+  Button delete_el {
+    icon-name: "user-trash-symbolic";
+    tooltip-text: _("Delete Element (Delete)");
+    visible: false;
+  }
+}
+
+Adw.Banner construct_banner {
+  button-label: _("_Cancel");
+}
+
+// contour picking
+Adw.Banner pick_banner {
+  title: _("Tap the contour elements in cutting order");
+  button-label: _("_Done");
+}
+
+// the value chip on the last drawn segment (TOUCH.md 5.1): tap it to correct the point with the keypad
+Button chip {
+  visible: false;
+  halign: start;
+  valign: start;
+  tooltip-text: _("Correct the Last Point");
+
+  styles [
+    "osd",
+    "pill",
+    "value-chip",
+  ]
+}

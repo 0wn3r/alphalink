@@ -29,6 +29,8 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 - Follow the GNOME HIG for every UI change; every UI string needs a Ukrainian translation.
 - Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
   app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`
+- Layouts are Blueprint files in `app/alphacam_gtk/ui/`: after editing a `.blp` run `python3 tools/build_ui.py`
+  (needs `blueprint-compiler`) and commit the `.ui` it writes.
 - After UI string changes: `python3 tools/update_translations.py` (Ukrainian strings in `app/po/uk_translations.py`).
 - Vendor binaries and manuals are not in the repo; see `docs/VENDOR_FILES_SHA256.txt`.
 - User manuals: Training Manual and Reference Manual (English and Ukrainian) are written as Claude Docs, exported

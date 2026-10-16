@@ -8,7 +8,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
@@ -18,7 +18,7 @@ from alphacam.model.operations import OP_KIND_TOOL_CHANGE  # noqa: E402
 from alphacam.model.project import Project  # noqa: E402
 from alphacam.preview import preview  # noqa: E402
 
-from .canvas.widget import LatheCanvas  # noqa: E402
+from .canvas.widget import LatheCanvas  # noqa: E402, F401  (types ui/window.blp uses)
 from .drawing_tools import DrawingTools  # noqa: E402
 from .simulation import SimulationBar  # noqa: E402
 from .report import SheetPage  # noqa: E402
@@ -29,8 +29,10 @@ from .i18n import N_, _, ngettext  # noqa: E402
 from .settings import settings  # noqa: E402
 from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
-from .op_editor import OpEditor  # noqa: E402
+from .op_editor import OpEditor  # noqa: E402, F401
 from .op_factory import OP_MENU, default_op, find_tool, tool_for  # noqa: E402
+from .billet import units_follow  # noqa: E402
+from .ui import builder, template  # noqa: E402
 
 OP_TITLES = {
     "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
@@ -78,9 +80,51 @@ def alphat_name(stem: str) -> str:
     return name or "PART"
 
 
+@template("window")
 class MainWindow(Adw.ApplicationWindow):
+    """The layout is ui/window.blp; the pages and bars built from code are added here."""
+
+    __gtype_name__ = "AlphaLinkMainWindow"
+
+    toasts = Gtk.Template.Child()
+    root = Gtk.Template.Child()
+    split = Gtk.Template.Child()
+    side_header = Gtk.Template.Child()
+    add_op_button = Gtk.Template.Child()
+    op_list = Gtk.Template.Child()
+    content_page = Gtk.Template.Child()
+    header_switcher = Gtk.Template.Child()
+    open_button = Gtk.Template.Child()
+    save_button = Gtk.Template.Child()
+    undo_box = Gtk.Template.Child()
+    lock_button = Gtk.Template.Child()
+    banner = Gtk.Template.Child()
+    editor_split = Gtk.Template.Child()
+    stack = Gtk.Template.Child()
+    part_page = Gtk.Template.Child()
+    part_toasts = Gtk.Template.Child()
+    part_overlay = Gtk.Template.Child()
+    canvas = Gtk.Template.Child()
+    zoom_box = Gtk.Template.Child()
+    part_separator = Gtk.Template.Child()
+    readout = Gtk.Template.Child()
+    program_searchbar = Gtk.Template.Child()
+    program_search = Gtk.Template.Child()
+    program_view = Gtk.Template.Child()
+    program_info = Gtk.Template.Child()
+    editor_reveal = Gtk.Template.Child()
+    editor = Gtk.Template.Child()
+    switcher_bar = Gtk.Template.Child()
+    ops_section = Gtk.Template.Child()
+    template_section = Gtk.Template.Child()
+
+    # the template's signals can fire while it is being built, before __init__ sets these
+    project: Project | None = None
+    _select_guard = False
+    _small = False
+
     def __init__(self, app):
-        super().__init__(application=app, title="AlphaLink CAM", default_width=1280, default_height=820)
+        super().__init__(application=app)
         self.project: Project | None = None
         self.path: Path | None = None
         self.pv = None
@@ -91,200 +135,58 @@ class MainWindow(Adw.ApplicationWindow):
         self._refresh_id = 0
         self._editor_edit = False
         self.library = load_library()
-
-        self.toasts = Adw.ToastOverlay()
         self._toast_count = 0
-        self.root = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-        self.toasts.set_child(self.root)
-        self.set_content(self.toasts)
+        self._switching = False
 
-        self.root.add_named(self._build_empty(), "empty")
-        self.root.add_named(self._build_main(), "main")
-        self.root.set_visible_child_name("empty")
+        self._build_main()
         self.input_mode = InputMode(self, settings()["input_layout"])
         self.input_mode.connect("changed", lambda _m, mode: (self.zoom_box.set_visible(mode == "touch"),
                                                              self.drawing.set_touch(mode == "touch")))
         self._setup_lock()
         self._install_actions()
+        self.editor._apply = self.apply_edit_from_editor
+        self.editor.on_move = self._move_selected
+        self.editor.on_delete = self._delete_selected
+        self.editor.on_close = lambda: self._select_op(None)
         self.editor.on_pick = self.drawing.start_pick
         self.editor.on_duplicate = self._duplicate_selected
         self.editor.tool_name = self._tool_name
 
-        # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
-        # gets narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7
-        # in portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e)
-        # below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it
-        # is open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
-        self._small = False
-        for cond, small in (("max-width: 1000sp", False), ("max-width: 700sp", True)):
-            bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(cond))
-            bp.add_setter(self.split, "collapsed", True)
-            bp.add_setter(self.editor, "width-request", 280)
-            bp.add_setter(self.switcher_bar, "reveal", True)
-            bp.add_setter(self.header_switcher, "visible", False)
-            # the header must fit a narrow (touch: 48 px buttons) window; these are in the main menu too
-            for wdg in (self.open_button, self.save_button, self.undo_box):
-                bp.add_setter(wdg, "visible", False)
-            if small:
-                bp.connect("apply", lambda *_: self._set_small(True))
-                bp.connect("unapply", lambda *_: self._set_small(False))
-            self.add_breakpoint(bp)
-
     # --- layout -----------------------------------------------------------------------------------------
 
-    def _build_empty(self) -> Gtk.Widget:
-        page = Adw.StatusPage(title=_("No Part Open"), icon_name="document-open-symbolic",
-                              description=_("Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"))
-        btns = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
-        new = Gtk.Button(label=_("_New Part…"), use_underline=True, action_name="win.new")
-        new.add_css_class("pill")
-        btn = Gtk.Button(label=_("_Open…"), use_underline=True, action_name="win.open")
-        btn.add_css_class("pill")
-        btn.add_css_class("suggested-action")
-        btns.append(new)
-        btns.append(btn)
-        child = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, halign=Gtk.Align.CENTER)
-        child.append(btns)
-        # first run: the way into the exercises (a flat button, so the two pills stay the actions)
-        manual = Gtk.Button(label=_("Open the _Training Manual"), use_underline=True, action_name="win.manual-training",
-                            halign=Gtk.Align.CENTER)
-        manual.add_css_class("flat")
-        child.append(manual)
-        page.set_child(child)
-        start_menu = Gio.Menu()  # what works without a part: the Machine page (Manual Ops backup), settings, help
-        start_menu.append(_("New Part…"), "win.new")
-        start_menu.append(_("Open…"), "win.open")
-        start_menu.append(_("Open Machine Page"), "win.machine-page")
-        start_menu.append_section(None, self._manuals_menu())
-        start_menu.append_section(None, self._standard_menu())
-        header = Adw.HeaderBar()
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=start_menu, primary=True,
-                                       tooltip_text=_("Main Menu")))
-        view = Adw.ToolbarView()
-        view.add_top_bar(header)
-        view.set_content(page)
-        return view
-
-    def _build_main(self) -> Gtk.Widget:
-        # sidebar: operations
-        self.op_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
-        self.op_list.add_css_class("navigation-sidebar")
-        self.op_list.add_css_class("op-list")
-        self.op_list.connect("row-selected", self._row_selected)
-        side_scroll = Gtk.ScrolledWindow(child=self.op_list, vexpand=True)
-        side = Adw.ToolbarView()
-        side_header = Adw.HeaderBar()
-        add_menu = Gio.Menu()
-        ops_section = Gio.Menu()
+    def _build_main(self) -> None:
+        """What ui/window.blp leaves to the code: the operations and templates in the Add Operation menu, the drawing
+        tools and the simulation on the Part page, the Sheet, Tools and Machine pages."""
         for label, kind in OP_MENU:
             item = Gio.MenuItem.new(label, None)
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
-            ops_section.append_item(item)
-        add_menu.append_section(None, ops_section)
-        # job templates (workflow improvements, step 4): a saved list of operations applied to this drawing
-        self.template_section = Gio.Menu()
+            self.ops_section.append_item(item)
         self._fill_templates()
-        add_menu.append_section(_("Templates"), self.template_section)
-        save_tpl = Gio.Menu()
-        save_tpl.append(_("Save Operations as Template…"), "win.save-template")
-        add_menu.append_section(None, save_tpl)
-        self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
-                                            tooltip_text=_("Add Operation (C)"))
-        side_header.pack_start(self.add_op_button)
         # setups of the part (setup 2: turned around), shown when there is more than one
-        self.side_header = side_header
         self.setup_switch = Adw.ToggleGroup(css_classes=["round"])
         self.setup_switch.connect("notify::active", self._setup_switched)
-        self._switching = False
-        side.add_top_bar(side_header)
-        side.set_content(side_scroll)
-        side_page = Adw.NavigationPage(title=_("Operations"), child=side)
 
-        # part view
-        self.canvas = LatheCanvas()
+        # part view: banners above the drawing, the simulation below it, then the drawing tools' bar
         self.canvas.library = self.library  # the tool pictures in the simulation
-        self.canvas.update_property([Gtk.AccessibleProperty.LABEL], [_("Drawing")])  # screen readers, tests/e2e
-        self.canvas.connect("cursor-moved", self._cursor_moved)
-        self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,
-                                valign=Gtk.Align.END)
-        self.zoom_box.add_css_class("canvas-zoom")
-        for icon, action, tip in (("zoom-in-symbolic", "win.zoom-in", _("Zoom In")),
-                                  ("zoom-out-symbolic", "win.zoom-out", _("Zoom Out")),
-                                  ("zoom-fit-best-symbolic", "win.fit", _("Fit Part"))):
-            b = Gtk.Button(icon_name=icon, action_name=action, tooltip_text=tip)
-            b.add_css_class("osd")
-            b.add_css_class("circular")
-            self.zoom_box.append(b)
-        self.zoom_box.set_visible(False)  # shown in touch mode (T1)
-        overlay = Gtk.Overlay(child=self.canvas)
-        overlay.add_overlay(self.zoom_box)
-        self.readout = Gtk.Label(xalign=0, label=" ")
-        self.readout.add_css_class("readout")
-        self.readout.add_css_class("dim-label")
         self.drawing = DrawingTools(self, self.canvas)
-        overlay.add_overlay(self.drawing.chip)  # the value chip on the last drawn segment (touch)
-        part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        part.append(self.drawing.pick_banner)
-        part.append(self.drawing.construct_banner)
-        # Part page messages show over the drawing, above the simulation and tool bars, so they never cover the
-        # tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
-        self.part_toasts = Adw.ToastOverlay(child=overlay, vexpand=True)
-        part.append(self.part_toasts)
+        self.part_overlay.add_overlay(self.drawing.chip)  # the value chip on the last drawn segment (touch)
+        self.part_page.prepend(self.drawing.construct_banner)
+        self.part_page.prepend(self.drawing.pick_banner)
         self.sim = SimulationBar(self.canvas, self._sim_line)
-        part.append(self.sim)
-        part.append(Gtk.Separator())
-        part.append(self.drawing.bar)
-        part.append(self.readout)
+        self.part_page.insert_child_after(self.sim, self.part_toasts)
+        self.part_page.insert_child_after(self.drawing.bar, self.part_separator)
 
         # program view
-        self.program_view = Gtk.TextView(editable=False, cursor_visible=False, monospace=True,
-                                         top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
-        self.program_view.add_css_class("program-text")
-        self._hl = self.program_view.get_buffer().create_tag("hl", paragraph_background="rgba(53,132,228,0.18)")
+        buf = self.program_view.get_buffer()
+        self._hl = buf.create_tag("hl", paragraph_background="rgba(53,132,228,0.18)")
         # each block starts with its label (N10, N20 ...): bold, so the blocks stand out while scrolling
-        self._block_tag = self.program_view.get_buffer().create_tag("block", weight=700)
-        tap = Gtk.GestureClick()
-        tap.connect("released", self._program_tapped)
-        self.program_view.add_controller(tap)
-        pinch = Gtk.GestureZoom()
-        pinch.connect("begin", lambda *_: setattr(self, "_pinch_base", self._font_pt))
-        pinch.connect("scale-changed", lambda g, s: self._set_font(self._pinch_base * s))
-        self.program_view.add_controller(pinch)
-        self.program_info = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)  # never widens the window
-        self.program_info.add_css_class("readout")
-        self.program_info.add_css_class("dim-label")
-        # search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
-        self.program_search = Gtk.SearchEntry(placeholder_text=_("Search, or N10 to go to a block"), hexpand=True)
-        self.program_search.connect("search-changed", lambda e: self._program_find(e.get_text(), 0))
-        self.program_search.connect("activate", lambda e: self._program_find(e.get_text(), 1))
-        self.program_search.connect("next-match", lambda e: self._program_find(e.get_text(), 1))
-        self.program_search.connect("previous-match", lambda e: self._program_find(e.get_text(), -1))
-        self.program_searchbar = Gtk.SearchBar(child=self.program_search, show_close_button=True)
+        self._block_tag = buf.create_tag("block", weight=700)
+        self._found = buf.create_tag("found", background="rgba(246,211,45,0.55)")
         self.program_searchbar.connect_entry(self.program_search)
-        self._found = self.program_view.get_buffer().create_tag("found", background="rgba(246,211,45,0.55)")
-        prog = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        prog.append(self.program_searchbar)
-        prog.append(Gtk.ScrolledWindow(child=self.program_view, vexpand=True))
-        prog.append(Gtk.Separator())
-        info = Gtk.Box()
-        info.append(self.program_info)
-        self.program_info.set_hexpand(True)
-        find = Gtk.ToggleButton(icon_name="edit-find-symbolic", tooltip_text=_("Search (Ctrl+F)"))
-        find.add_css_class("flat")
-        find.bind_property("active", self.program_searchbar, "search-mode-enabled",
-                           GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
-        info.append(find)
-        prog.append(info)
         self._font_css = Gtk.CssProvider()
         Gtk.StyleContext.add_provider_for_display(self.get_display(), self._font_css,
                                                   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
 
-        # size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the width of
-        # the Part page with the editor open
-        self.stack = Adw.ViewStack(hhomogeneous=False)
-        self.stack.connect("notify::visible-child-name", lambda *_: (self._layout_editor(), self._focus_drawing()))
-        self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
-        self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
         self.stack.add_titled_with_icon(self.sheet, "sheet", _("Sheet"), "x-office-document-symbolic")
         self.tools_page = ToolsPage(self)
@@ -292,105 +194,44 @@ class MainWindow(Adw.ApplicationWindow):
         self.machine = MachinePage(self)
         self.stack.add_titled_with_icon(self.machine, "machine", _("Machine"), "network-wired-symbolic")
 
-        header = Adw.HeaderBar()
-        self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.NARROW)  # 5 pages: icon over label fits
-        header.set_title_widget(self.header_switcher)
-        self.open_button = Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
-                                      tooltip_text=_("Open (Ctrl+O)"))
-        self.save_button = Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
-                                      tooltip_text=_("Save (Ctrl+S)"))
-        header.pack_start(self.open_button)
-        header.pack_start(self.save_button)
-        undo_box = self.undo_box = Gtk.Box()
-        undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text=_("Undo (Ctrl+Z)")))
-        undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
-                                   tooltip_text=_("Redo (Ctrl+Shift+Z)")))
-        header.pack_start(undo_box)
-        menu = Gio.Menu()
-        files = Gio.Menu()  # also reachable by touch, and the header buttons hide on a narrow window
-        files.append(_("New Part…"), "win.new")
-        files.append(_("Open…"), "win.open")
-        files.append(_("Save"), "win.save")
-        files.append(_("Save As…"), "win.save-as")
-        files.append(_("Save as ALPHA-T Drawing…"), "win.save-sdg")
-        menu.append_section(None, files)
-        edit = Gio.Menu()
-        edit.append(_("Undo"), "win.undo")
-        edit.append(_("Redo"), "win.redo")
-        menu.append_section(None, edit)
-        view_menu = Gio.Menu()
-        view_menu.append(_("Fit Part"), "win.fit")
-        view_menu.append(_("Show Grid"), "win.show-grid")
-        view_menu.append(_("Part Settings"), "win.part-settings")
-        view_menu.append(_("Turn Part Around…"), "win.turn-around")
-        view_menu.append(_("Remove This Setup…"), "win.remove-setup")
-        view_menu.append(_("Clear Messages"), "win.clear-messages")
-        menu.append_section(None, view_menu)
-        layout = Gio.Menu()
-        for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
-            item = Gio.MenuItem.new(label, None)
-            item.set_action_and_target_value("win.input-layout", GLib.Variant.new_string(target))
-            layout.append_item(item)
-        menu.append_section(_("Input Layout"), layout)
-        menu.append_section(None, self._manuals_menu())
-        menu.append_section(None, self._standard_menu())
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
-                                       tooltip_text=_("Main Menu")))
-        # HIG header bars: icon and label, no suggested style
-        export = Gtk.Button(child=Adw.ButtonContent(icon_name="document-send-symbolic", label=_("_Export PRG"),
-                                                    use_underline=True),
-                            action_name="win.export", tooltip_text=_("Export ALPHA-T Program (Ctrl+E)"))
-        header.pack_end(export)
-        self.lock_button = Gtk.ToggleButton(icon_name="changes-allow-symbolic",
-                                            tooltip_text=_("Touch Lock (Hold to Unlock by Touch)"))
-        header.pack_end(self.lock_button)
-
-        self.banner = Adw.Banner()
-        self.banner.connect("button-clicked", lambda *_: self._show_finding())
-        self.switcher_bar = Adw.ViewSwitcherBar(stack=self.stack)
-        content = Adw.ToolbarView()
-        content.add_top_bar(header)
-        content.add_top_bar(self.banner)
-        self.editor = OpEditor(self.apply_edit_from_editor, self._move_selected, self._delete_selected,
-                               lambda: self._select_op(None))
-        # editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
-        # negative allocations during its slide animation here)
-        self.editor.set_size_request(340, -1)
-        self.editor.add_css_class("editor-pane")
-        self.editor_reveal = Gtk.Revealer(child=self.editor, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT,
-                                          reveal_child=False)
-        self.editor_split = Gtk.Box()
-        self.stack.set_hexpand(True)
-        self.editor_split.append(self.stack)
-        self.editor_split.append(self.editor_reveal)
-        self.editor_reveal.connect("notify::reveal-child", lambda *_: self._layout_editor())
-        content.set_content(self.editor_split)
-        content.add_bottom_bar(self.switcher_bar)
-        self.content_page = Adw.NavigationPage(title=_("Part"), child=content)
-
-        self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
-                                             min_sidebar_width=260, max_sidebar_width=340)
+    @Gtk.Template.Callback()
+    def _split_collapsed(self, split, _p) -> None:
         # a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing
-        self.split.connect("notify::collapsed", lambda sp, _p: sp.get_collapsed() and self.project is not None
-                           and sp.set_show_content(True))
-        return self.split
+        if split.get_collapsed() and self.project is not None:
+            split.set_show_content(True)
 
-    @staticmethod
-    def _manuals_menu() -> Gio.Menu:
-        m = Gio.Menu()
-        m.append(_("Training Manual"), "win.manual-training")
-        m.append(_("Reference Manual"), "win.manual-reference")
-        return m
+    @Gtk.Template.Callback()
+    def _page_changed(self, *_a) -> None:
+        self._layout_editor()
+        self._focus_drawing()
 
-    @staticmethod
-    def _standard_menu() -> Gio.Menu:
-        """The HIG's last group of a main menu, in its order."""
-        m = Gio.Menu()
-        m.append(_("Preferences"), "win.preferences")
-        m.append(_("Keyboard Shortcuts"), "win.shortcuts")
-        m.append(_("Help"), "win.help")
-        m.append(_("About AlphaLink CAM"), "app.about")
-        return m
+    @Gtk.Template.Callback()
+    def _small_applied(self, *_a) -> None:
+        self._set_small(True)
+
+    @Gtk.Template.Callback()
+    def _small_unapplied(self, *_a) -> None:
+        self._set_small(False)
+
+    @Gtk.Template.Callback()
+    def _program_search_changed(self, entry) -> None:
+        self._program_find(entry.get_text(), 0)
+
+    @Gtk.Template.Callback()
+    def _program_search_next(self, entry) -> None:
+        self._program_find(entry.get_text(), 1)
+
+    @Gtk.Template.Callback()
+    def _program_search_previous(self, entry) -> None:
+        self._program_find(entry.get_text(), -1)
+
+    @Gtk.Template.Callback()
+    def _pinch_begin(self, *_a) -> None:
+        self._pinch_base = self._font_pt
+
+    @Gtk.Template.Callback()
+    def _pinch_scaled(self, _gesture, scale) -> None:
+        self._set_font(self._pinch_base * scale)
 
     # --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
 
@@ -465,7 +306,6 @@ class MainWindow(Adw.ApplicationWindow):
         add("turn-around", lambda *_: self.turn_around_dialog())
         self.remove_setup_action = add("remove-setup", lambda *_: self.remove_setup_dialog())
         self.remove_setup_action.set_enabled(False)
-        self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
                                                GLib.Variant.new_string(settings()["input_layout"]))
         layout.connect("change-state", self._input_layout)
@@ -519,29 +359,12 @@ class MainWindow(Adw.ApplicationWindow):
     def _dxf_dialog(self, path: Path) -> None:
         """ATDXF: a DXF becomes a new part. Lathe drawings usually give Y as a radius; units are the DXF's."""
         st = settings()
-        alert = Adw.AlertDialog(heading=_("Import DXF"),
-                                body=_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
-        group = Adw.PreferencesGroup()
-        y_row = Adw.ComboRow(title=_("DXF Y is"), model=Gtk.StringList.new([_("Radius"), _("Diameter")]))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if st["units"] == "inch" else 0)
-        half = Adw.SwitchRow(title=_("Upper half only"), active=True,
-                             subtitle=_("Drop the mirrored half below the axis"))
-        rotate = Adw.ComboRow(title=_("Turn the drawing"), subtitle=_("Anticlockwise, for a part drawn upright"),
-                              model=Gtk.StringList.new(["0°", "90°", "180°", "270°"]))
-        front = Adw.ComboRow(title=_("Front face is on the"), model=Gtk.StringList.new([_("Right"), _("Left")]))
-        axis = Adw.ComboRow(title=_("Spindle axis"), model=Gtk.StringList.new(
-            [_("At Y0, as drawn"), _("In the middle (full section)"), _("At the lowest point (half drawing)")]))
-        datum = Adw.SwitchRow(title=_("Front face on Z0"), active=True,
-                              subtitle=_("Moves the drawing so its front face is the part's Z0"))
-        for r in (y_row, units, half, rotate, front, axis, datum):
-            group.add(r)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("import", _("_Import"))
-        alert.set_response_appearance("import", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("import")
-        alert.set_close_response("cancel")
+        b = builder("dxf-import")
+        alert = b.get_object("dxf_alert")
+        alert.set_body(_("{name}: the DXF X axis becomes Z. How is Y drawn?").format(name=path.name))
+        y_row, units, half, rotate, front, axis, datum = (b.get_object(f"dxf_{k}_row") for k in (
+            "y", "units", "half", "rotate", "front", "axis", "datum"))
+        units.set_selected(1 if st["units"] == "inch" else 0)
 
         def response(_d, r):
             if r != "import":
@@ -931,18 +754,10 @@ class MainWindow(Adw.ApplicationWindow):
         if self.project is None or not self.project.operations:
             self.toast(_("Add operations first: a template keeps the operations, not the drawing"))
             return
-        name = Adw.EntryRow(title=_("Name"), text=self.path.stem if self.path else "")
-        group = Adw.PreferencesGroup()
-        group.add(name)
-        alert = Adw.AlertDialog(heading=_("Save Operations as Template"),
-                                body=_("The operations with their tools and settings, without the drawing. A template "
-                                       "picks the contours from the part it is applied to."))
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("save", _("_Save"))
-        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("save")
-        alert.set_close_response("cancel")
+        b = builder("save-template")
+        alert = b.get_object("template_alert")
+        name = b.get_object("template_name_row")
+        name.set_text(self.path.stem if self.path else "")
 
         def response(_d, r):
             if r != "save":
@@ -970,34 +785,26 @@ class MainWindow(Adw.ApplicationWindow):
             return
         first = self.doc
         inch = first.units == "inch"
-        length = Adw.SpinRow.new_with_range(0.001, 5000, 1)
-        length.set_title(_("Part length"))
-        length.set_subtitle(_("Its back face becomes Z0"))
+        b = builder("turn-around")
+        alert = b.get_object("turn_alert")
+        length = b.get_object("turn_length_row")
         length.set_digits(4 if inch else 3)
         length.set_value(part_length(first) or first.billet.length)
         from .op_editor import fit_spin
 
         fit_spin(length, 0.001, 5000, 4 if inch else 3)  # room for "50.000", not "0.000" cut short
-        prog = Adw.SpinRow.new_with_range(1, 9999, 1)
-        prog.set_title(_("Program number"))
-        prog.set_subtitle(_("Of the second setup"))
+        prog = b.get_object("turn_program_row")
         prog.set_value(min(first.program_number + 1, 9999))
-        group = Adw.PreferencesGroup()
-        group.add(length)
-        group.add(prog)
         replacing = bool(first.setups)
         body = _("Setup 2 machines the other end: setup 1's drawing turned end for end, its back face on Z0, without "
                  "operations. Both setups are kept in this part's file.")
         if replacing:
             body += "\n\n" + _("This replaces the current setup 2 and its operations.")
-        alert = Adw.AlertDialog(heading=_("Turn Part Around"), body=body)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
+        alert.set_body(body)
         alert.add_response("turn", _("_Replace Setup 2") if replacing else _("_Turn Around"))
         alert.set_response_appearance("turn", Adw.ResponseAppearance.DESTRUCTIVE if replacing
                                       else Adw.ResponseAppearance.SUGGESTED)
         alert.set_default_response("cancel" if replacing else "turn")
-        alert.set_close_response("cancel")
 
         def response(_d, r):
             if r != "turn":
@@ -1022,14 +829,8 @@ class MainWindow(Adw.ApplicationWindow):
         if getattr(self, "setup_index", 0) == 0:
             return
         n = self.setup_index + 1
-        alert = Adw.AlertDialog(heading=_("Remove Setup {n}?").format(n=n),
-                                body=_("Its drawing and operations are removed from the part. This cannot be undone, "
-                                       "but the file on disk keeps it until you save."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("remove", _("_Remove"))
-        alert.set_response_appearance("remove", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_default_response("cancel")
-        alert.set_close_response("cancel")
+        alert = builder("remove-setup").get_object("remove_setup_alert")
+        alert.set_heading(_("Remove Setup {n}?").format(n=n))
 
         def response(_d, r):
             if r != "remove":
@@ -1045,144 +846,61 @@ class MainWindow(Adw.ApplicationWindow):
         alert.present(self)
 
     def preferences_dialog(self) -> None:
-        """ALPHA-T's ATSETUP: defaults for new parts and the language. The serial settings live on the Machine
-        page and are remembered there."""
+        """ALPHA-T's ATSETUP: defaults for new parts and the language (ui/preferences.blp). The serial settings live
+        on the Machine page and are remembered there."""
         st = settings()
-        dlg = Adw.PreferencesDialog(title=_("Preferences"))
-        page = Adw.PreferencesPage(title=_("General"), icon_name="preferences-system-symbolic")
-        new = Adw.PreferencesGroup(title=_("New parts"))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if st["units"] == "inch" else 0)
+        b = builder("preferences")
+        units = b.get_object("pref_units_row")
+        units.set_selected(1 if st["units"] == "inch" else 0)
         units.connect("notify::selected", lambda r, _p: st.set("units", "inch" if r.get_selected() else "mm"))
-        new.add(units)
-        size_rows = {}
         inch = st["units"] == "inch"
-        for key, title, lo, hi, step, digits in (("billet_diameter", _("Billet diameter"), 0.01, 1000, 1, 1),
-                                                 ("billet_length", _("Billet length"), 0.01, 2000, 1, 1),
-                                                 ("first_tool", _("First tool"), 1, 99, 1, 0)):
-            row = Adw.SpinRow.new_with_range(lo, hi, step)
-            row.set_title(title)
+        sizes = []
+        for key, row_id, digits in (("billet_diameter", "pref_diameter_row", 1), ("billet_length", "pref_length_row", 1),
+                                    ("first_tool", "pref_first_tool_row", 0)):
+            row = b.get_object(row_id)
             row.set_digits(4 if inch and digits else digits)
             row.set_value(st[key])
             row.connect("notify::value", lambda r, _p, k=key, d=digits: st.set(k, int(r.get_value()) if d == 0
                                                                               else r.get_value()))
-            new.add(row)
-            size_rows[key] = row
-        self._units_follow(units, size_rows, ("billet_diameter", "billet_length"))
-        page.add(new)
-        export = Adw.PreferencesGroup(title=_("Export"))
-        sdg = Adw.SwitchRow(title=_("Also save the ALPHA-T drawing (.SDG)"),
-                            subtitle=_("Next to the program, so DOS ALPHA-T can open the part"),
-                            active=bool(st["export_sdg"]))
+            if digits:
+                sizes.append(row)
+        units_follow(units, sizes)
+        sdg = b.get_object("pref_sdg_row")
+        sdg.set_active(bool(st["export_sdg"]))
         sdg.connect("notify::active", lambda r, _p: st.set("export_sdg", r.get_active()))
-        export.add(sdg)
-        page.add(export)
-        cycle = Adw.PreferencesGroup(title=_("Cycle time"),
-                                     description=_("For the estimate on the setup sheet; the tools' surface speeds "
-                                                   "are on the Tools page"))
-        for key, title, sub, lo, hi, step in (
-                ("spindle_max", _("Spindle limit"), _("rpm"), 100, 10000, 100),
-                ("rapid_rate", _("Rapid rate"), _("mm/min"), 100, 50000, 500),
-                ("tool_change_s", _("Tool change"), _("seconds for the operator to change a tool"), 0, 600, 5)):
-            row = Adw.SpinRow.new_with_range(lo, hi, step)
-            row.set_title(title)
-            row.set_subtitle(sub)
+        for key, row_id in (("spindle_max", "pref_spindle_row"), ("rapid_rate", "pref_rapid_row"),
+                            ("tool_change_s", "pref_tool_change_row")):
+            row = b.get_object(row_id)
             row.set_value(float(st[key]))
             row.connect("notify::value", lambda r, _p, k=key: (st.set(k, r.get_value()), self.sheet.refresh()))
-            cycle.add(row)
-        page.add(cycle)
-        lang = Adw.PreferencesGroup(title=_("Language"), description=_("Takes effect after restarting the app."))
         codes = ["", "en", "uk"]
-        names = [_("Same as the desktop"), "English", "Українська"]
-        row = Adw.ComboRow(title=_("Language"), model=Gtk.StringList.new(names),
-                           selected=codes.index(st["language"]) if st["language"] in codes else 0)
+        row = b.get_object("pref_language_row")
+        row.set_selected(codes.index(st["language"]) if st["language"] in codes else 0)
         row.connect("notify::selected", lambda r, _p: st.set("language", codes[r.get_selected()]))
-        lang.add(row)
-        page.add(lang)
-        dlg.add(page)
-        dlg.present(self)
-
-    @staticmethod
-    def _units_follow(units_row, rows, keys=("diameter", "length", "bore")) -> None:
-        """Switching mm <-> inch converts the size rows already filled in (50 mm stays 50 mm, shown as 1.9685 in)."""
-        state = {"inch": units_row.get_selected() == 1}
-
-        def changed(row, _p):
-            inch = row.get_selected() == 1
-            if inch == state["inch"]:
-                return
-            state["inch"] = inch
-            for key in keys:
-                r = rows[key]
-                v = r.get_value()
-                r.set_digits(4 if inch else 1)
-                r.set_value(round(v / 25.4, 4) if inch else round(v * 25.4, 1))
-
-        units_row.connect("notify::selected", changed)
-
-    def _billet_rows(self, b, inch: bool = False, top: Gtk.Widget | None = None) -> tuple[Adw.PreferencesGroup, dict]:
-        """Billet rows shared by New Part and Part Settings: size, bore, jaws, tailstock. Inch parts get 4 decimals
-        (a 0.75 in bar must not be rounded or clamped to 1)."""
-        group = Adw.PreferencesGroup()
-        if top is not None:  # e.g. the units, first, so the sizes below are read in them
-            group.add(top)
-        rows = {}
-        for key, title, sub, lo, hi in (("diameter", _("Billet diameter"), None, 0.01, 1000),
-                                       ("length", _("Billet length"), None, 0.01, 2000),
-                                       ("bore", _("Bore"), _("Tube billet; 0 = solid bar"), 0, 1000)):
-            r = Adw.SpinRow.new_with_range(lo, hi, 1)
-            r.set_title(title)
-            if sub:
-                r.set_subtitle(sub)
-            r.set_digits(4 if inch else 1)
-            r.set_value(getattr(b, key))
-            rows[key] = r
-            group.add(r)
-        rows["jaws"] = Adw.ComboRow(title=_("Chuck jaws"),
-                                    model=Gtk.StringList.new([_("On the outside"), _("In the bore")]),
-                                    selected=1 if b.jaws == "internal" else 0)
-        rows["tailstock"] = Adw.SwitchRow(title=_("Show tailstock"), active=b.tailstock)
-        group.add(rows["jaws"])
-        group.add(rows["tailstock"])
-        return group, rows
-
-    @staticmethod
-    def _billet_from(rows):
-        from alphacam.model.project import Billet
-
-        return Billet(diameter=rows["diameter"].get_value(), length=rows["length"].get_value(),
-                      bore=rows["bore"].get_value(), jaws="internal" if rows["jaws"].get_selected() == 1 else "external",
-                      tailstock=rows["tailstock"].get_active())
+        b.get_object("preferences").present(self)
 
     def new_dialog(self) -> None:
         """New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)."""
         from alphacam.model.project import Billet
 
-        alert = Adw.AlertDialog(heading=_("New Part"), body=_("Billet size and units. The drawing starts empty."))
-        units = Adw.ComboRow(title=_("Units"), model=Gtk.StringList.new([_("mm"), _("inch")]),
-                             selected=1 if settings()["units"] == "inch" else 0)
-        group, rows = self._billet_rows(Billet(diameter=settings()["billet_diameter"],
-                                               length=settings()["billet_length"]), settings()["units"] == "inch",
-                                        top=units)
-        self._units_follow(units, rows)
-        alert.set_extra_child(group)
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("create", _("_Create"))
-        alert.set_response_appearance("create", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("create")
-        alert.set_close_response("cancel")
+        b = builder("new-part")
+        alert = b.get_object("new_part_alert")
+        billet = b.get_object("new_part_billet")
+        billet.set_billet(Billet(diameter=settings()["billet_diameter"], length=settings()["billet_length"]),
+                          settings()["units"] == "inch", units=True)
 
         def response(_d, r):
             if r != "create":
                 return
             from alphacam.model.geometry import Point
 
-            inch = units.get_selected() == 1
+            inch = billet.inch()
+            size = billet.billet()
             settings().set("units", "inch" if inch else "mm")
-            settings().set("billet_diameter", rows["diameter"].get_value())
-            settings().set("billet_length", rows["length"].get_value())
+            settings().set("billet_diameter", size.diameter)
+            settings().set("billet_length", size.length)
             k = 25.4 if inch else 1.0
-            project = Project(units="inch" if inch else "mm", billet=self._billet_from(rows),
+            project = Project(units="inch" if inch else "mm", billet=size,
                               tool_change=Point(round(100 / k, 4), round(50 / k, 4)),
                               first_tool=int(settings()["first_tool"]))
             self.path, self.import_name = None, None
@@ -1203,34 +921,20 @@ class MainWindow(Adw.ApplicationWindow):
         """Billet, bore, chuck jaws and tailstock of the open part (one undoable change)."""
         if self.project is None:
             return
-        # a dialog with room for the rows (an alert is too narrow: labels broke mid-word, rows scrolled away)
-        dlg = Adw.Dialog(title=_("Part Settings"), content_width=520, content_height=640)
-        group, rows = self._billet_rows(self.project.billet, self.project.units == "inch")
-        group.set_title(_("Billet"))
-        group.set_description(_("Billet, chuck jaws and tailstock only change the picture."))
-        drawing = Adw.ActionRow(title=_("Drawing units"), subtitle=_("Set when the part was made"))
-        drawing.add_suffix(Gtk.Label(label=_("mm") if self.project.units == "mm" else _("inch")))
-        program = Adw.PreferencesGroup(title=_("Program"))
-        # ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
-        number = Adw.SpinRow.new_with_range(1, 9999, 1)
-        number.set_title(_("Program number"))
-        number.set_subtitle(_("Shown on the control"))
+        b = builder("part-settings")
+        dlg = b.get_object("part_settings")
+        group = b.get_object("part_settings_billet")
+        group.set_billet(self.project.billet, self.project.units == "inch")
+        b.get_object("part_settings_units_label").set_label(_("mm") if self.project.units == "mm" else _("inch"))
+        number = b.get_object("part_settings_number_row")
         number.set_value(self.project.program_number)
-        program.add(number)
-        # ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
         unit_keys = [None, "mm", "inch"]
-        out_units = Adw.ComboRow(title=_("Program units"), subtitle=_("M71 mm / M70 inch on the control"),
-                                 model=Gtk.StringList.new([_("As the drawing"), _("mm"), _("inch")]))
+        out_units = b.get_object("part_settings_output_row")
         current = self.project.output_units if self.project.output_units != self.project.units else None
         out_units.set_selected(unit_keys.index(current))
-        program.add(drawing)
-        program.add(out_units)
-        page = Adw.PreferencesPage()
-        page.add(group)
-        page.add(program)
 
         def apply(*_a):
-            billet = self._billet_from(rows)
+            billet = group.billet()
             billet.face_allowance = self.project.billet.face_allowance
             n = int(number.get_value())
             out = unit_keys[out_units.get_selected()]
@@ -1244,19 +948,8 @@ class MainWindow(Adw.ApplicationWindow):
             if self.apply_edit(_("Part settings"), change):
                 self.refresh(fit=True)
 
-        header = Adw.HeaderBar(show_end_title_buttons=False, show_start_title_buttons=False)
-        cancel = Gtk.Button(label=_("_Cancel"), use_underline=True)
-        cancel.connect("clicked", lambda *_a: dlg.close())
-        ok = Gtk.Button(label=_("_Apply"), use_underline=True)
-        ok.add_css_class("suggested-action")
-        ok.connect("clicked", apply)
-        header.pack_start(cancel)
-        header.pack_end(ok)
-        view = Adw.ToolbarView()
-        view.add_top_bar(header)
-        view.set_content(page)
-        dlg.set_child(view)
-        dlg.set_default_widget(ok)
+        b.get_object("part_settings_cancel").connect("clicked", lambda *_a: dlg.close())
+        b.get_object("part_settings_apply").connect("clicked", apply)
         dlg.apply = apply  # for scripts and tests
         dlg.present(self)
 
@@ -1341,18 +1034,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast(_("Saved {name}").format(name=path.name))
         return True
 
+    @Gtk.Template.Callback()
     def _close_request(self, *_args) -> bool:
         if not self.modified():
             return False
-        alert = Adw.AlertDialog(heading=_("Save changes?"),
-                                body=_("The part has changes that are not saved. They are lost if you close without saving."))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("discard", _("_Discard"))
-        alert.add_response("save", _("_Save"))
-        alert.set_response_appearance("discard", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_response_appearance("save", Adw.ResponseAppearance.SUGGESTED)
-        alert.set_default_response("save")
-        alert.set_close_response("cancel")
+        alert = builder("save-changes").get_object("close_alert")
 
         def response(_d, r):
             if r == "discard":
@@ -1497,6 +1183,7 @@ class MainWindow(Adw.ApplicationWindow):
         row = self.op_list.get_selected_row()
         return None if row is None else row.get_index()
 
+    @Gtk.Template.Callback()
     def _row_selected(self, listbox, row) -> None:
         if self._select_guard:
             return
@@ -1535,6 +1222,7 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self.op_list.select_row(row)
 
+    @Gtk.Template.Callback()
     def _cursor_moved(self, canvas, x, z) -> None:
         if self.canvas.cursor is not None and self.drawing._key_pointer is not None:
             return  # the keys put the cursor; the read-out shows it until the mouse really moves (drawing_tools)
@@ -1573,7 +1261,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.program_searchbar.set_search_mode(True)
         self.program_search.grab_focus()
 
-    def _show_finding(self) -> None:
+    @Gtk.Template.Callback()
+    def _show_finding(self, *_a) -> None:
         """The banner's Show: the first warning's operation, and the drawing centred on the place."""
         if not getattr(self, "findings", None):
             return
@@ -1642,6 +1331,7 @@ class MainWindow(Adw.ApplicationWindow):
             buf.move_mark(mark, it)
             GLib.idle_add(lambda: self.program_view.scroll_to_mark(mark, 0.1, True, 0, 0) and False)
 
+    @Gtk.Template.Callback()
     def _program_tapped(self, gesture, n, x, y) -> None:
         bx, by = self.program_view.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, int(x), int(y))
         ok, it = self.program_view.get_iter_at_location(bx, by)
