@@ -155,7 +155,7 @@ impl<'a> Writer<'a> {
 }
 
 /// The part's own tools first, then the user's library, then ALPHA-T's standard ATOOLIB.
-fn tool<'p>(project: &'p Project, number: i32, library: Option<&'p ToolLibrary>) -> Result<&'p Tool> {
+pub fn tool<'p>(project: &'p Project, number: i32, library: Option<&'p ToolLibrary>) -> Result<&'p Tool> {
     project
         .tools
         .iter()

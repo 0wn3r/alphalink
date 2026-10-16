@@ -3,6 +3,7 @@
 
 pub mod error;
 pub mod i18n;
+pub mod io;
 pub mod model;
 pub mod numfmt;
 pub mod post;
