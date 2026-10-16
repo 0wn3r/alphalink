@@ -13,7 +13,7 @@ use alphacam::error::Error;
 use alphacam::model::{Element, Operation, Project};
 use alphacam::py::{fmt_g, round, round_int};
 use alphacam::toolpath::contour::chain;
-use gtk::glib;
+use gtk::{gdk, glib};
 use serde_json::{Value, json};
 
 use crate::i18n::{fill, gettext, ngettext, tr};
@@ -119,10 +119,16 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
         return;
     }
     row.add_css_class("keypad-on-touch");
-    let drag = gtk::GestureDrag::builder().touch_only(true).propagation_phase(gtk::PropagationPhase::Capture).build();
+    let drag = gtk::GestureDrag::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
     let state = Rc::new(RefCell::new(Touch::default()));
     let st = state.clone();
     drag.connect_drag_begin(move |gesture, x, y| {
+        // a finger or the pen, which cannot type either (POINTER_KEYBOARD.md 10); the mouse works as before
+        let source = gesture.current_event_device().map(|d| d.source());
+        if !matches!(source, Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen)) {
+            gesture.set_state(gtk::EventSequenceState::Denied);
+            return;
+        }
         let Some(row) = gesture.widget() else { return };
         let mut w = row.pick(x, y, gtk::PickFlags::DEFAULT);
         let mut what = None;

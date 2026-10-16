@@ -638,10 +638,13 @@ impl MainWindow {
         self.build_main();
         let input_mode = self.parts().input_mode.clone();
         let win = self.downgrade();
+        let im = Rc::downgrade(&input_mode);
         let apply = move |mode: Mode| {
             if let Some(win) = win.upgrade() {
-                win.imp().zoom_box.set_visible(mode == Mode::Touch);
-                win.parts().drawing.set_touch(mode == Mode::Touch);
+                // the pen keeps the pointer layout's density but gets the touch helpers (POINTER_KEYBOARD.md 10)
+                let pen = im.upgrade().is_some_and(|im| im.pen());
+                win.imp().zoom_box.set_visible(mode == Mode::Touch || pen);
+                win.parts().drawing.set_touch(mode == Mode::Touch, pen);
             }
         };
         // the mode was already chosen (from the saved layout) before this handler existed

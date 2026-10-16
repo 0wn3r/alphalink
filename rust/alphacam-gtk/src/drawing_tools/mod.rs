@@ -1295,11 +1295,12 @@ impl DrawingTools {
         }));
     }
 
-    /// Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6).
-    pub fn set_touch(&self, touch: bool) {
-        self.keypad_button.set_visible(touch);
+    /// Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6). The pen gets the keypad and the
+    /// value chip too, but keeps the pointer's handles (POINTER_KEYBOARD.md 10).
+    pub fn set_touch(&self, touch: bool, pen: bool) {
+        self.keypad_button.set_visible(touch || pen);
         self.c.state_mut().handle_px = if touch { 12.0 } else { 6.0 };
-        self.s.borrow_mut().touch = touch;
+        self.s.borrow_mut().touch = touch || pen;
         self.place_chip();
     }
 

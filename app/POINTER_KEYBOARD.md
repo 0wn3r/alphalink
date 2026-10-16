@@ -30,8 +30,8 @@ is the implementation; the Python app is frozen.
 | 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn | ✓ |
 | 9 | Hold to send by Space / Enter 🧪; confirmations default to Cancel, Alt+S sends 🧪 | ✓ |
 | 9 | Escape closes dialogs and the keypad before it cancels or deselects 🧪 | ✓ |
-| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✗ |
-| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✓ (finger; pen with §10) |
+| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✓ (not yet tried with a real pen) |
+| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✓ |
 | 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ |
 | 12 | The Shortcuts window matches what the keys do | ✓ |
 
@@ -153,7 +153,7 @@ F5 stays free in GNOME apps and ALPHA-T, and Space must stay free for buttons an
 
 ## 10. Pen
 
-The pen is precise, so it keeps the pointer layout's density, but it cannot type and has no wheel. Proposed (✗):
+The pen is precise, so it keeps the pointer layout's density, but it cannot type and has no wheel (✓; libei has no tablet devices, so only a real pen can test it):
 
 1. **A pen press does not count in Automatic.** Only the mouse, the touchpad and the touchscreen switch the
    layout, so a user alternating pen and finger does not see the window reflow back and forth.
