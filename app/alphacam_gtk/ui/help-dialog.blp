@@ -1,0 +1,28 @@
+using Gtk 4.0;
+using Adw 1;
+
+// In-app help (F1): help.py fills the box with the help page's headings, paragraphs and list items.
+template $AlphaLinkHelpDialog: Adw.Dialog {
+  title: _("Help");
+  content-width: 720;
+  content-height: 720;
+
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {}
+
+    content: ScrolledWindow {
+      vexpand: true;
+      hscrollbar-policy: never;
+
+      child: Box box {
+        orientation: vertical;
+        spacing: 6;
+        margin-start: 24;
+        margin-end: 24;
+        margin-top: 12;
+        margin-bottom: 24;
+      };
+    };
+  };
+}

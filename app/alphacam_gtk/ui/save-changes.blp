@@ -1,0 +1,15 @@
+using Gtk 4.0;
+using Adw 1;
+
+Adw.AlertDialog close_alert {
+  heading: _("Save changes?");
+  body: _("The part has changes that are not saved. They are lost if you close without saving.");
+  default-response: "save";
+  close-response: "cancel";
+
+  responses [
+    cancel: _("_Cancel"),
+    discard: _("_Discard") destructive,
+    save: _("_Save") suggested,
+  ]
+}

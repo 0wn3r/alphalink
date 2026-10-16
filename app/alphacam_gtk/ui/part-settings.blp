@@ -1,0 +1,81 @@
+using Gtk 4.0;
+using Adw 1;
+
+// Billet, bore, chuck jaws and tailstock of the open part (one undoable change): a dialog with room for the rows (an
+// alert is too narrow: labels broke mid-word, rows scrolled away)
+Adw.Dialog part_settings {
+  title: _("Part Settings");
+  content-width: 520;
+  content-height: 640;
+  default-widget: part_settings_apply;
+
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      show-end-title-buttons: false;
+      show-start-title-buttons: false;
+
+      [start]
+      Button part_settings_cancel {
+        label: _("_Cancel");
+        use-underline: true;
+      }
+
+      [end]
+      Button part_settings_apply {
+        label: _("_Apply");
+        use-underline: true;
+
+        styles [
+          "suggested-action",
+        ]
+      }
+    }
+
+    content: Adw.PreferencesPage {
+      $AlphaLinkBilletGroup part_settings_billet {
+        title: _("Billet");
+        description: _("Billet, chuck jaws and tailstock only change the picture.");
+      }
+
+      Adw.PreferencesGroup {
+        title: _("Program");
+
+        // ALPHA-T asks the 4-digit program number when saving; the control shows it when running (#132)
+        Adw.SpinRow part_settings_number_row {
+          title: _("Program number");
+          subtitle: _("Shown on the control");
+
+          adjustment: Adjustment {
+            lower: 1;
+            upper: 9999;
+            step-increment: 1;
+            page-increment: 10;
+          };
+        }
+
+        Adw.ActionRow {
+          title: _("Drawing units");
+          subtitle: _("Set when the part was made");
+
+          [suffix]
+          Label part_settings_units_label {}
+        }
+
+        // ALPHA-T's "Select Units To Store Output In": the program (and .SD1) can be in other units than the drawing
+        Adw.ComboRow part_settings_output_row {
+          title: _("Program units");
+          subtitle: _("M71 mm / M70 inch on the control");
+
+          model: StringList {
+            strings [
+              _("As the drawing"),
+              _("mm"),
+              _("inch"),
+            ]
+          };
+        }
+      }
+    };
+  };
+}

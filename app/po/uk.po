@@ -235,14 +235,14 @@ msgstr "деталь не має довжини, щоб її переверну�
 msgid "area clear: no contour below X{x}"
 msgstr "чорнова обробка: немає контуру нижче X{x}"
 
-msgid "area clear"
-msgstr "чорнова обробка"
-
 msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
 msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
 
 msgid "depth of cut must be > 0"
 msgstr "глибина різання має бути > 0"
+
+msgid "area clear"
+msgstr "чорнова обробка"
 
 msgid "empty contour"
 msgstr "порожній контур"
@@ -406,42 +406,6 @@ msgstr "Торкніться кута або поставте біля ньог�
 msgid "Tap two lines, or move the cursor to each and press Enter"
 msgstr "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter"
 
-msgid "_Done"
-msgstr "_Готово"
-
-msgid "Finish Line (Esc)"
-msgstr "Завершити лінію (Esc)"
-
-msgid "Delete Element (Delete)"
-msgstr "Видалити елемент (Delete)"
-
-msgid "Edit Element (E)"
-msgstr "Редагувати елемент (E)"
-
-msgid "Keypad"
-msgstr "Цифрова клавіатура"
-
-msgid "More"
-msgstr "Ще"
-
-msgid "More Drawing Commands"
-msgstr "Інші команди креслення"
-
-msgid "_Cancel"
-msgstr "_Скасувати"
-
-msgid "Cancel Picking"
-msgstr "Скасувати вибір"
-
-msgid "Cancel Picking (Esc)"
-msgstr "Скасувати вибір (Esc)"
-
-msgid "Tap the contour elements in cutting order"
-msgstr "Торкніться елементів контуру в порядку обробки"
-
-msgid "Correct the Last Point"
-msgstr "Виправити останню точку"
-
 msgid "Tap a corner between two lines"
 msgstr "Торкніться кута між двома лініями"
 
@@ -489,21 +453,6 @@ msgstr "У точці X{x} Z{z}"
 
 msgid "Text"
 msgstr "Текст"
-
-msgid "Height"
-msgstr "Висота"
-
-msgid "_Add"
-msgstr "_Додати"
-
-msgid "Erase All of the Drawing?"
-msgstr "Стерти все креслення?"
-
-msgid "Lines, arcs and text are erased. Operations stay, without their contours. Undo brings the drawing back."
-msgstr "Лінії, дуги й текст буде стерто. Операції залишаться, але без контурів. Скасування повертає креслення."
-
-msgid "_Erase"
-msgstr "_Стерти"
 
 msgid "Erase drawing"
 msgstr "Стерти креслення"
@@ -583,33 +532,6 @@ msgstr "_Відмінити"
 msgid "Edit {what}"
 msgstr "Редагувати {what}"
 
-msgid "End points as X (diameter), Z."
-msgstr "Кінцеві точки як X (діаметр), Z."
-
-msgid "End X"
-msgstr "Кінець X"
-
-msgid "End Z"
-msgstr "Кінець Z"
-
-msgid "Start X"
-msgstr "Початок X"
-
-msgid "Start Z"
-msgstr "Початок Z"
-
-msgid "Radius"
-msgstr "Радіус"
-
-msgid "Keeps the profile joined"
-msgstr "Профіль залишається з’єднаним"
-
-msgid "Move connected ends too"
-msgstr "Переміщати й з’єднані кінці"
-
-msgid "_Apply"
-msgstr "_Застосувати"
-
 msgid "Chamfer at {point}"
 msgstr "Фаска в {point}"
 
@@ -621,6 +543,9 @@ msgstr "Кут"
 
 msgid "Between the chamfer and the line along Z; the size is measured along that line"
 msgstr "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії"
+
+msgid "_Apply"
+msgstr "_Застосувати"
 
 msgid "Fillet R{size}"
 msgstr "Скруглення R{size}"
@@ -637,6 +562,9 @@ msgstr[2] "Вибрано {n} — торкніться ще раз, щоб пр�
 msgid "Pick contour"
 msgstr "Вибір контуру"
 
+msgid "Tap the contour elements in cutting order"
+msgstr "Торкніться елементів контуру в порядку обробки"
+
 msgid "Centre X (Ø)"
 msgstr "Центр X (Ø)"
 
@@ -645,6 +573,9 @@ msgstr "Центр Z"
 
 msgid "Circle"
 msgstr "Коло"
+
+msgid "Radius"
+msgstr "Радіус"
 
 msgid "Tangent at an angle: tap the arc"
 msgstr "Дотична під кутом: торкніться дуги"
@@ -685,38 +616,11 @@ msgstr[2] "Оброблено {n} кутів"
 msgid "The lines at the corners are too short for that size"
 msgstr "Лінії біля кутів закороткі для такого розміру"
 
-msgid "ISO metric"
-msgstr "Метрична ISO"
-
-msgid "UNC (inch, coarse)"
-msgstr "UNC (дюймова, основна)"
-
-msgid "UNF (inch, fine)"
-msgstr "UNF (дюймова, дрібна)"
-
-msgid "Standard"
-msgstr "Стандарт"
-
-msgid "Pitch"
-msgstr "Крок"
-
 msgid "{p} coarse"
 msgstr "{p} основний"
 
 msgid "{n} threads per inch"
 msgstr "{n} ниток на дюйм"
-
-msgid "DIN 76 proportions, at the back end of the line"
-msgstr "Пропорції DIN 76, на задньому кінці лінії"
-
-msgid "Relief groove"
-msgstr "Канавка для виходу різьби"
-
-msgid "Add a Threading operation"
-msgstr "Додати операцію нарізання різьби"
-
-msgid "Standard Thread"
-msgstr "Стандартна різьба"
 
 msgid "Thread {name}"
 msgstr "Різьба {name}"
@@ -729,6 +633,9 @@ msgstr "_Ні, повернути"
 
 msgid "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
 msgstr "Дзеркально відображено відносно осі шпинделя. Чи це правильно? Якщо так, просто працюйте далі."
+
+msgid "_Cancel"
+msgstr "_Скасувати"
 
 msgid "No solution for these elements"
 msgstr "Для цих елементів розв’язку немає"
@@ -778,9 +685,6 @@ msgstr "Дуга сполучення"
 msgid "Could not open the manual: {error}"
 msgstr "Не вдалося відкрити посібник: {error}"
 
-msgid "Help"
-msgstr "Довідка"
-
 msgid "Hold to start"
 msgstr "Утримуйте, щоб почати"
 
@@ -805,89 +709,26 @@ msgstr "На верстаті: у Manual Ops торкніться значка �
 msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test."
 msgstr "Від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера, потім запустіть перевірку."
 
-msgid "Opening port…"
-msgstr "Відкриття порту…"
-
 msgid "Cancelling…"
 msgstr "Скасування…"
 
 msgid "_Close"
 msgstr "_Закрити"
 
-msgid "Connection"
-msgstr "З’єднання"
-
-msgid "Serial port"
-msgstr "Послідовний порт"
-
-msgid "Rescan Ports"
-msgstr "Оновити список портів"
-
-msgid "Modem lines"
-msgstr "Лінії модему"
-
-msgid "Shown while this page is open"
-msgstr "Показуються, поки відкрита ця сторінка"
-
-msgid "With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe."
-msgstr "З кабелем за посібником (перемички 7-8 і 1-4-6 з боку ПК) ці лінії лише повторюють RTS/DTR самого ПК: «увімкнено» означає, що працює адаптер, а не верстат."
-
-msgid "Delay per character (ms)"
-msgstr "Затримка на символ (мс)"
-
-msgid "2 ms works on the 400T; 0 sends at full speed"
-msgstr "2 мс працює на 400T; 0 — надсилання на повній швидкості"
-
-msgid "Wait for the control (DC1)"
-msgstr "Чекати на сигнал ЧПК (DC1)"
-
-msgid "Nothing is sent until the lathe asks for data"
-msgstr "Нічого не надсилається, доки верстат не запросить дані"
-
-msgid "Parity from the app"
-msgstr "Парність від програми"
-
-msgid "For adapters without 7-bit framing: set the adapter to 9600 8N2"
-msgstr "Для адаптерів без 7-бітового кадру: налаштуйте адаптер на 9600 8N2"
-
-msgid "Send CAM program"
-msgstr "Надіслати програму CAM"
+msgid "{size} bytes, about {secs} s"
+msgstr "{size} байт, приблизно {secs} с"
 
 msgid "No program"
 msgstr "Немає програми"
-
-msgid "Open a part first"
-msgstr "Спершу відкрийте деталь"
-
-msgid "Send to the Lathe"
-msgstr "Надіслати на верстат"
-
-msgid "Manual Ops"
-msgstr "Ручні операції (Manual Ops)"
-
-msgid "Back Up Manual Ops from the Lathe…"
-msgstr "Зберегти ручні операції з верстата…"
-
-msgid "Restore Manual Ops"
-msgstr "Відновити ручні операції"
-
-msgid "Restore to the Lathe…"
-msgstr "Відновити на верстаті…"
-
-msgid "Cable Test"
-msgstr "Перевірка кабелю"
-
-msgid "Run Loopback Test"
-msgstr "Запустити петльову перевірку"
-
-msgid "{size} bytes, about {secs} s"
-msgstr "{size} байт, приблизно {secs} с"
 
 msgid "Open a part that posts without errors"
 msgstr "Відкрийте деталь, для якої програма створюється без помилок"
 
 msgid "Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of its pause (DC3)"
 msgstr "Через Bluetooth ставте 5 мс або більше: верстат має зупинитися не пізніше 10 символів після паузи (DC3)"
+
+msgid "2 ms works on the 400T; 0 sends at full speed"
+msgstr "2 мс працює на 400T; 0 — надсилання на повній швидкості"
 
 msgid "(not present)"
 msgstr "(немає)"
@@ -907,17 +748,11 @@ msgstr "{done} / {total} байт"
 msgid "{done} bytes"
 msgstr "{done} байт"
 
-msgid "Send this program?"
-msgstr "Надіслати цю програму?"
-
 msgid "{info}\n{size} bytes to {port}.\n\n{steps}"
 msgstr "{info}\n{size} байт на {port}.\n\n{steps}"
 
 msgid "The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then press Send."
 msgstr "Верстат має бути в CAM, 4 «LOAD CAM FILE», зі стрілкою ← натиснутою. Потім натисніть «Надіслати»."
-
-msgid "_Send"
-msgstr "_Надіслати"
 
 msgid "Waiting for the lathe (DC1)…"
 msgstr "Очікування верстата (DC1)…"
@@ -970,26 +805,14 @@ msgstr "Не вдалося прочитати файл: {error}"
 msgid "This is not a Manual Ops backup (it must start and end with %)."
 msgstr "Це не резервна копія ручних операцій (вона має починатися й закінчуватися знаком %)."
 
-msgid "Restore Manual Ops?"
-msgstr "Відновити ручні операції?"
-
 msgid "{name}, {size} bytes.\n\n{steps}"
 msgstr "{name}, {size} байт.\n\n{steps}"
 
-msgid "_Restore"
-msgstr "_Відновити"
+msgid "Restore Manual Ops"
+msgstr "Відновити ручні операції"
 
 msgid "Sent {n} bytes."
 msgstr "Надіслано {n} байт."
-
-msgid "Run the loopback test?"
-msgstr "Запустити петльову перевірку?"
-
-msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: the test sends a short text to the port."
-msgstr "Спершу від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера: перевірка надсилає в порт короткий текст."
-
-msgid "_Run Test"
-msgstr "_Запустити"
 
 msgid "Loopback Test"
 msgstr "Петльова перевірка"
@@ -1077,6 +900,9 @@ msgstr "0 = без виведення свердла"
 
 msgid "Peck"
 msgstr "Крок свердління"
+
+msgid "Pitch"
+msgstr "Крок"
 
 msgid "First cut depth"
 msgstr "Глибина першого проходу"
@@ -1179,21 +1005,6 @@ msgstr "Точка зміни інструмента"
 
 msgid "Tool start"
 msgstr "Початкова точка інструмента"
-
-msgid "Operation"
-msgstr "Операція"
-
-msgid "Move Up"
-msgstr "Перемістити вгору"
-
-msgid "Move Down"
-msgstr "Перемістити вниз"
-
-msgid "Close Editor"
-msgstr "Закрити редактор"
-
-msgid "Delete Operation"
-msgstr "Видалити операцію"
 
 msgid "Operation {n}"
 msgstr "Операція {n}"
@@ -1351,6 +1162,9 @@ msgstr "Час циклу"
 msgid "Program"
 msgstr "Програма"
 
+msgid "Operation"
+msgstr "Операція"
+
 msgid "Tool No."
 msgstr "Інстр. №"
 
@@ -1435,21 +1249,6 @@ msgstr "Інструменти в порядку встановлення"
 msgid "Notes"
 msgstr "Примітки"
 
-msgid "Tool moves"
-msgstr "Переміщення інструмента"
-
-msgid "_Save as Text…"
-msgstr "_Зберегти як текст…"
-
-msgid "Save as _PDF…"
-msgstr "Зберегти як _PDF…"
-
-msgid "Printable setup sheet: the part, the tools in loading order, notes"
-msgstr "Карта наладки для друку: деталь, інструменти в порядку встановлення, примітки"
-
-msgid "Notes for the operator"
-msgstr "Примітки для оператора"
-
 msgid "UNTITLED"
 msgstr "БЕЗ НАЗВИ"
 
@@ -1470,186 +1269,6 @@ msgstr "Збережено {name}"
 
 msgid "Save Setup Sheet"
 msgstr "Зберегти карту наладки"
-
-msgid "General"
-msgstr "Загальні"
-
-msgid "Main Menu"
-msgstr "Головне меню"
-
-msgid "Preferences"
-msgstr "Параметри"
-
-msgid "Keyboard Shortcuts"
-msgstr "Клавіатурні скорочення"
-
-msgid "Close Window"
-msgstr "Закрити вікно"
-
-msgid "Quit"
-msgstr "Вийти"
-
-msgid "Files"
-msgstr "Файли"
-
-msgid "New Part"
-msgstr "Нова деталь"
-
-msgid "Open"
-msgstr "Відкрити"
-
-msgid "Save"
-msgstr "Зберегти"
-
-msgid "Export PRG"
-msgstr "Експорт PRG"
-
-msgid "Save As"
-msgstr "Зберегти як"
-
-msgid "Editing"
-msgstr "Редагування"
-
-msgid "Redo"
-msgstr "Повторити"
-
-msgid "Undo"
-msgstr "Відмінити"
-
-msgid "Add Operation"
-msgstr "Додати операцію"
-
-msgid "Delete Element"
-msgstr "Видалити елемент"
-
-msgid "Edit Element"
-msgstr "Редагувати елемент"
-
-msgid "Deselect or Cancel"
-msgstr "Зняти вибір або скасувати"
-
-msgid "View"
-msgstr "Вигляд"
-
-msgid "Zoom In"
-msgstr "Збільшити"
-
-msgid "Zoom Out"
-msgstr "Зменшити"
-
-msgid "Redraw"
-msgstr "Перемалювати"
-
-msgid "Search the Program"
-msgstr "Пошук у програмі"
-
-msgid "Zoom In at the Cursor"
-msgstr "Збільшити біля курсора"
-
-msgid "Recall View"
-msgstr "Повернути вигляд"
-
-msgid "Cursor (Drawing Has the Focus)"
-msgstr "Курсор (фокус на кресленні)"
-
-msgid "Move the Cursor by the Step"
-msgstr "Зсунути курсор на крок"
-
-msgid "Step ×10"
-msgstr "Крок ×10"
-
-msgid "Cursor to the Middle of the View"
-msgstr "Курсор у центр вигляду"
-
-msgid "Step ÷10"
-msgstr "Крок ÷10"
-
-msgid "Cursor to X0 Z0"
-msgstr "Курсор у X0 Z0"
-
-msgid "Use the Cursor as the Point"
-msgstr "Взяти курсор як точку"
-
-msgid "Drawing Context Menu"
-msgstr "Контекстне меню креслення"
-
-msgid "Drawing Keys (Part Page)"
-msgstr "Клавіші креслення (сторінка «Деталь»)"
-
-msgid "Find Nearest Arc"
-msgstr "Знайти найближчу дугу"
-
-msgid "Find Nearest Line"
-msgstr "Знайти найближчу лінію"
-
-msgid "Find Nearest Point"
-msgstr "Знайти найближчу точку"
-
-msgid "Draw Line by X,Z"
-msgstr "Лінія за X,Z"
-
-msgid "Find Nearest Intersection"
-msgstr "Знайти найближчий перетин"
-
-msgid "Draw Line by Length and Angle"
-msgstr "Лінія за довжиною й кутом"
-
-msgid "Draw Line by Taps"
-msgstr "Лінія дотиками"
-
-msgid "Radius at the Nearest Corner"
-msgstr "Радіус у найближчому куті"
-
-msgid "Start at the Cursor"
-msgstr "Почати від курсора"
-
-msgid "Trim Corner"
-msgstr "Обрізати кут"
-
-msgid "Move Cursor by dX,dZ"
-msgstr "Зсунути курсор на dX,dZ"
-
-msgid "Move Cursor to X,Z"
-msgstr "Перемістити курсор у X,Z"
-
-msgid "Measure by X,Z"
-msgstr "Виміряти за X,Z"
-
-msgid "Move Cursor by Length and Angle"
-msgstr "Зсунути курсор за довжиною й кутом"
-
-msgid "Add Text"
-msgstr "Додати текст"
-
-msgid "Erase Text"
-msgstr "Стерти текст"
-
-msgid "Measure by Length and Angle"
-msgstr "Виміряти за довжиною й кутом"
-
-msgid "Erase the Whole Drawing"
-msgstr "Стерти все креслення"
-
-msgid "First Move"
-msgstr "Перше переміщення"
-
-msgid "Previous Pass"
-msgstr "Попередній прохід"
-
-msgid "Next Pass"
-msgstr "Наступний прохід"
-
-msgid "Show All"
-msgstr "Показати все"
-
-msgid "Play / Pause"
-msgstr "Відтворити / пауза"
-
-msgid "Start of the Selected Operation"
-msgstr "Початок вибраної операції"
-
-msgid "Playback Speed"
-msgstr "Швидкість відтворення"
 
 msgid "no moves"
 msgstr "немає переміщень"
@@ -1704,21 +1323,6 @@ msgstr "Нейтральний"
 
 msgid "Right hand"
 msgstr "Правий"
-
-msgid "_Add Tool"
-msgstr "_Додати інструмент"
-
-msgid "_Delete Tool"
-msgstr "_Видалити інструмент"
-
-msgid "_Import ATOOLIB.TL1…"
-msgstr "_Імпорт ATOOLIB.TL1…"
-
-msgid "_Reset to ALPHA-T Tools"
-msgstr "_Скинути до інструментів ALPHA-T"
-
-msgid "Tool numbers are the lathe's tool memory slots."
-msgstr "Номери інструментів — це комірки пам’яті інструментів верстата."
 
 msgid "Name"
 msgstr "Назва"
@@ -1786,9 +1390,6 @@ msgstr "Видалити T{n}?"
 msgid "{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard tool with that number."
 msgstr "{name} буде вилучено з вашої бібліотеки інструментів. Деталі, що його використовують, отримають стандартний інструмент ALPHA-T з тим самим номером."
 
-msgid "_Delete"
-msgstr "_Видалити"
-
 msgid "ALPHA-T tool library"
 msgstr "Бібліотека інструментів ALPHA-T"
 
@@ -1806,6 +1407,702 @@ msgstr "Імпортовано інструментів: {n} з {name}"
 
 msgid "Tool library reset to ALPHA-T's 32 standard tools"
 msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"
+
+msgid "mm"
+msgstr "мм"
+
+msgid "inch"
+msgstr "дюйм"
+
+msgid "Billet diameter"
+msgstr "Діаметр заготовки"
+
+msgid "Billet length"
+msgstr "Довжина заготовки"
+
+msgid "Bore"
+msgstr "Отвір"
+
+msgid "Tube billet; 0 = solid bar"
+msgstr "Заготовка-труба; 0 = суцільний пруток"
+
+msgid "Chuck jaws"
+msgstr "Кулачки патрона"
+
+msgid "On the outside"
+msgstr "Зовні"
+
+msgid "In the bore"
+msgstr "В отворі"
+
+msgid "Show tailstock"
+msgstr "Показувати задню бабку"
+
+msgid "Height"
+msgstr "Висота"
+
+msgid "_Add"
+msgstr "_Додати"
+
+msgid "Erase All of the Drawing?"
+msgstr "Стерти все креслення?"
+
+msgid "Lines, arcs and text are erased. Operations stay, without their contours. Undo brings the drawing back."
+msgstr "Лінії, дуги й текст буде стерто. Операції залишаться, але без контурів. Скасування повертає креслення."
+
+msgid "_Erase"
+msgstr "_Стерти"
+
+msgid "End points as X (diameter), Z."
+msgstr "Кінцеві точки як X (діаметр), Z."
+
+msgid "Start X"
+msgstr "Початок X"
+
+msgid "Start Z"
+msgstr "Початок Z"
+
+msgid "End X"
+msgstr "Кінець X"
+
+msgid "End Z"
+msgstr "Кінець Z"
+
+msgid "Move connected ends too"
+msgstr "Переміщати й з’єднані кінці"
+
+msgid "Keeps the profile joined"
+msgstr "Профіль залишається з’єднаним"
+
+msgid "Standard Thread"
+msgstr "Стандартна різьба"
+
+msgid "Standard"
+msgstr "Стандарт"
+
+msgid "ISO metric"
+msgstr "Метрична ISO"
+
+msgid "UNC (inch, coarse)"
+msgstr "UNC (дюймова, основна)"
+
+msgid "UNF (inch, fine)"
+msgstr "UNF (дюймова, дрібна)"
+
+msgid "Relief groove"
+msgstr "Канавка для виходу різьби"
+
+msgid "DIN 76 proportions, at the back end of the line"
+msgstr "Пропорції DIN 76, на задньому кінці лінії"
+
+msgid "Add a Threading operation"
+msgstr "Додати операцію нарізання різьби"
+
+msgid "More"
+msgstr "Ще"
+
+msgid "More Drawing Commands"
+msgstr "Інші команди креслення"
+
+msgid "Keypad"
+msgstr "Цифрова клавіатура"
+
+msgid "_Done"
+msgstr "_Готово"
+
+msgid "Finish Line (Esc)"
+msgstr "Завершити лінію (Esc)"
+
+msgid "Cancel Picking"
+msgstr "Скасувати вибір"
+
+msgid "Cancel Picking (Esc)"
+msgstr "Скасувати вибір (Esc)"
+
+msgid "Edit Element (E)"
+msgstr "Редагувати елемент (E)"
+
+msgid "Delete Element (Delete)"
+msgstr "Видалити елемент (Delete)"
+
+msgid "Correct the Last Point"
+msgstr "Виправити останню точку"
+
+msgid "Import DXF"
+msgstr "Імпорт DXF"
+
+msgid "DXF Y is"
+msgstr "Y у DXF — це"
+
+msgid "Diameter"
+msgstr "Діаметр"
+
+msgid "Upper half only"
+msgstr "Лише верхня половина"
+
+msgid "Drop the mirrored half below the axis"
+msgstr "Відкинути дзеркальну половину під віссю"
+
+msgid "Turn the drawing"
+msgstr "Повернути креслення"
+
+msgid "Anticlockwise, for a part drawn upright"
+msgstr "Проти годинникової стрілки, для деталі, накресленої вертикально"
+
+msgid "Front face is on the"
+msgstr "Передній торець"
+
+msgid "Right"
+msgstr "Праворуч"
+
+msgid "Left"
+msgstr "Ліворуч"
+
+msgid "Spindle axis"
+msgstr "Вісь шпинделя"
+
+msgid "At Y0, as drawn"
+msgstr "На Y0, як накреслено"
+
+msgid "In the middle (full section)"
+msgstr "Посередині (повний переріз)"
+
+msgid "At the lowest point (half drawing)"
+msgstr "У найнижчій точці (половина деталі)"
+
+msgid "Front face on Z0"
+msgstr "Передній торець на Z0"
+
+msgid "Moves the drawing so its front face is the part's Z0"
+msgstr "Зсуває креслення так, щоб передній торець був Z0 деталі"
+
+msgid "_Import"
+msgstr "_Імпортувати"
+
+msgid "Help"
+msgstr "Довідка"
+
+msgid "Send this program?"
+msgstr "Надіслати цю програму?"
+
+msgid "_Send"
+msgstr "_Надіслати"
+
+msgid "Restore Manual Ops?"
+msgstr "Відновити ручні операції?"
+
+msgid "_Restore"
+msgstr "_Відновити"
+
+msgid "Run the loopback test?"
+msgstr "Запустити петльову перевірку?"
+
+msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter first: the test sends a short text to the port."
+msgstr "Спершу від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера: перевірка надсилає в порт короткий текст."
+
+msgid "_Run Test"
+msgstr "_Запустити"
+
+msgid "Connection"
+msgstr "З’єднання"
+
+msgid "Serial port"
+msgstr "Послідовний порт"
+
+msgid "Rescan Ports"
+msgstr "Оновити список портів"
+
+msgid "Modem lines"
+msgstr "Лінії модему"
+
+msgid "Shown while this page is open"
+msgstr "Показуються, поки відкрита ця сторінка"
+
+msgid "With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe."
+msgstr "З кабелем за посібником (перемички 7-8 і 1-4-6 з боку ПК) ці лінії лише повторюють RTS/DTR самого ПК: «увімкнено» означає, що працює адаптер, а не верстат."
+
+msgid "Delay per character (ms)"
+msgstr "Затримка на символ (мс)"
+
+msgid "Wait for the control (DC1)"
+msgstr "Чекати на сигнал ЧПК (DC1)"
+
+msgid "Nothing is sent until the lathe asks for data"
+msgstr "Нічого не надсилається, доки верстат не запросить дані"
+
+msgid "Parity from the app"
+msgstr "Парність від програми"
+
+msgid "For adapters without 7-bit framing: set the adapter to 9600 8N2"
+msgstr "Для адаптерів без 7-бітового кадру: налаштуйте адаптер на 9600 8N2"
+
+msgid "Send CAM program"
+msgstr "Надіслати програму CAM"
+
+msgid "Open a part first"
+msgstr "Спершу відкрийте деталь"
+
+msgid "Send to the Lathe"
+msgstr "Надіслати на верстат"
+
+msgid "Manual Ops"
+msgstr "Ручні операції (Manual Ops)"
+
+msgid "Back Up Manual Ops from the Lathe…"
+msgstr "Зберегти ручні операції з верстата…"
+
+msgid "Restore to the Lathe…"
+msgstr "Відновити на верстаті…"
+
+msgid "Cable Test"
+msgstr "Перевірка кабелю"
+
+msgid "Run Loopback Test"
+msgstr "Запустити петльову перевірку"
+
+msgid "New Part"
+msgstr "Нова деталь"
+
+msgid "Billet size and units. The drawing starts empty."
+msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
+
+msgid "_Create"
+msgstr "_Створити"
+
+msgid "Move Up"
+msgstr "Перемістити вгору"
+
+msgid "Move Down"
+msgstr "Перемістити вниз"
+
+msgid "Close Editor"
+msgstr "Закрити редактор"
+
+msgid "Delete Operation"
+msgstr "Видалити операцію"
+
+msgid "Part Settings"
+msgstr "Параметри деталі"
+
+msgid "Billet, chuck jaws and tailstock only change the picture."
+msgstr "Заготовка, кулачки патрона й задня бабка змінюють лише зображення."
+
+msgid "Program number"
+msgstr "Номер програми"
+
+msgid "Shown on the control"
+msgstr "Показується на системі керування"
+
+msgid "Drawing units"
+msgstr "Одиниці креслення"
+
+msgid "Set when the part was made"
+msgstr "Задаються під час створення деталі"
+
+msgid "Program units"
+msgstr "Одиниці програми"
+
+msgid "M71 mm / M70 inch on the control"
+msgstr "M71 мм / M70 дюйми на системі керування"
+
+msgid "As the drawing"
+msgstr "Як у кресленні"
+
+msgid "Preferences"
+msgstr "Параметри"
+
+msgid "General"
+msgstr "Загальні"
+
+msgid "New parts"
+msgstr "Нові деталі"
+
+msgid "First tool"
+msgstr "Перший інструмент"
+
+msgid "Export"
+msgstr "Експорт"
+
+msgid "Also save the ALPHA-T drawing (.SDG)"
+msgstr "Також зберігати креслення ALPHA-T (.SDG)"
+
+msgid "Next to the program, so DOS ALPHA-T can open the part"
+msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
+
+msgid "For the estimate on the setup sheet; the tools' surface speeds are on the Tools page"
+msgstr "Для оцінки в карті наладки; швидкості різання інструментів — на сторінці «Інструменти»"
+
+msgid "rpm"
+msgstr "об/хв"
+
+msgid "Rapid rate"
+msgstr "Швидкість прискореного переміщення"
+
+msgid "mm/min"
+msgstr "мм/хв"
+
+msgid "seconds for the operator to change a tool"
+msgstr "секунд оператору на зміну інструмента"
+
+msgid "Language"
+msgstr "Мова"
+
+msgid "Takes effect after restarting the app."
+msgstr "Діє після перезапуску застосунку."
+
+msgid "Same as the desktop"
+msgstr "Як у системі"
+
+msgid "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save."
+msgstr "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь."
+
+msgid "_Remove"
+msgstr "_Видалити"
+
+msgid "Save changes?"
+msgstr "Зберегти зміни?"
+
+msgid "The part has changes that are not saved. They are lost if you close without saving."
+msgstr "Деталь має незбережені зміни. Їх буде втрачено, якщо закрити без збереження."
+
+msgid "_Discard"
+msgstr "_Відкинути"
+
+msgid "_Save"
+msgstr "_Зберегти"
+
+msgid "Save Operations as Template"
+msgstr "Зберегти операції як шаблон"
+
+msgid "The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to."
+msgstr "Операції з інструментами й параметрами, без креслення. Шаблон бере контури з деталі, до якої його застосовано."
+
+msgid "Tool moves"
+msgstr "Переміщення інструмента"
+
+msgid "_Save as Text…"
+msgstr "_Зберегти як текст…"
+
+msgid "Save as _PDF…"
+msgstr "Зберегти як _PDF…"
+
+msgid "Printable setup sheet: the part, the tools in loading order, notes"
+msgstr "Карта наладки для друку: деталь, інструменти в порядку встановлення, примітки"
+
+msgid "Notes for the operator"
+msgstr "Примітки для оператора"
+
+msgid "Main Menu"
+msgstr "Головне меню"
+
+msgid "Keyboard Shortcuts"
+msgstr "Клавіатурні скорочення"
+
+msgid "Close Window"
+msgstr "Закрити вікно"
+
+msgid "Quit"
+msgstr "Вийти"
+
+msgid "Files"
+msgstr "Файли"
+
+msgid "Open"
+msgstr "Відкрити"
+
+msgid "Save"
+msgstr "Зберегти"
+
+msgid "Save As"
+msgstr "Зберегти як"
+
+msgid "Export PRG"
+msgstr "Експорт PRG"
+
+msgid "Editing"
+msgstr "Редагування"
+
+msgid "Undo"
+msgstr "Відмінити"
+
+msgid "Redo"
+msgstr "Повторити"
+
+msgid "Add Operation"
+msgstr "Додати операцію"
+
+msgid "Edit Element"
+msgstr "Редагувати елемент"
+
+msgid "Delete Element"
+msgstr "Видалити елемент"
+
+msgid "Deselect or Cancel"
+msgstr "Зняти вибір або скасувати"
+
+msgid "View"
+msgstr "Вигляд"
+
+msgid "Zoom In"
+msgstr "Збільшити"
+
+msgid "Zoom Out"
+msgstr "Зменшити"
+
+msgid "Search the Program"
+msgstr "Пошук у програмі"
+
+msgid "Zoom In at the Cursor"
+msgstr "Збільшити біля курсора"
+
+msgid "Redraw"
+msgstr "Перемалювати"
+
+msgid "Recall View"
+msgstr "Повернути вигляд"
+
+msgid "Cursor (Drawing Has the Focus)"
+msgstr "Курсор (фокус на кресленні)"
+
+msgid "Move the Cursor by the Step"
+msgstr "Зсунути курсор на крок"
+
+msgid "Step ×10"
+msgstr "Крок ×10"
+
+msgid "Step ÷10"
+msgstr "Крок ÷10"
+
+msgid "Cursor to the Middle of the View"
+msgstr "Курсор у центр вигляду"
+
+msgid "Cursor to X0 Z0"
+msgstr "Курсор у X0 Z0"
+
+msgid "Use the Cursor as the Point"
+msgstr "Взяти курсор як точку"
+
+msgid "Drawing Context Menu"
+msgstr "Контекстне меню креслення"
+
+msgid "Drawing Keys (Part Page)"
+msgstr "Клавіші креслення (сторінка «Деталь»)"
+
+msgid "Find Nearest Line"
+msgstr "Знайти найближчу лінію"
+
+msgid "Find Nearest Arc"
+msgstr "Знайти найближчу дугу"
+
+msgid "Find Nearest Point"
+msgstr "Знайти найближчу точку"
+
+msgid "Find Nearest Intersection"
+msgstr "Знайти найближчий перетин"
+
+msgid "Draw Line by X,Z"
+msgstr "Лінія за X,Z"
+
+msgid "Draw Line by Length and Angle"
+msgstr "Лінія за довжиною й кутом"
+
+msgid "Draw Line by Taps"
+msgstr "Лінія дотиками"
+
+msgid "Start at the Cursor"
+msgstr "Почати від курсора"
+
+msgid "Radius at the Nearest Corner"
+msgstr "Радіус у найближчому куті"
+
+msgid "Trim Corner"
+msgstr "Обрізати кут"
+
+msgid "Move Cursor to X,Z"
+msgstr "Перемістити курсор у X,Z"
+
+msgid "Move Cursor by dX,dZ"
+msgstr "Зсунути курсор на dX,dZ"
+
+msgid "Move Cursor by Length and Angle"
+msgstr "Зсунути курсор за довжиною й кутом"
+
+msgid "Measure by X,Z"
+msgstr "Виміряти за X,Z"
+
+msgid "Measure by Length and Angle"
+msgstr "Виміряти за довжиною й кутом"
+
+msgid "Add Text"
+msgstr "Додати текст"
+
+msgid "Erase Text"
+msgstr "Стерти текст"
+
+msgid "Erase the Whole Drawing"
+msgstr "Стерти все креслення"
+
+msgid "First Move"
+msgstr "Перше переміщення"
+
+msgid "Previous Pass"
+msgstr "Попередній прохід"
+
+msgid "Play / Pause"
+msgstr "Відтворити / пауза"
+
+msgid "Next Pass"
+msgstr "Наступний прохід"
+
+msgid "Show All"
+msgstr "Показати все"
+
+msgid "Start of the Selected Operation"
+msgstr "Початок вибраної операції"
+
+msgid "Playback Speed"
+msgstr "Швидкість відтворення"
+
+msgid "_Delete"
+msgstr "_Видалити"
+
+msgid "_Add Tool"
+msgstr "_Додати інструмент"
+
+msgid "_Delete Tool"
+msgstr "_Видалити інструмент"
+
+msgid "_Import ATOOLIB.TL1…"
+msgstr "_Імпорт ATOOLIB.TL1…"
+
+msgid "_Reset to ALPHA-T Tools"
+msgstr "_Скинути до інструментів ALPHA-T"
+
+msgid "Tool numbers are the lathe's tool memory slots."
+msgstr "Номери інструментів — це комірки пам’яті інструментів верстата."
+
+msgid "Opening port…"
+msgstr "Відкриття порту…"
+
+msgid "Turn Part Around"
+msgstr "Перевернути деталь"
+
+msgid "Part length"
+msgstr "Довжина деталі"
+
+msgid "Its back face becomes Z0"
+msgstr "Її задній торець стане Z0"
+
+msgid "Of the second setup"
+msgstr "Другого встановлення"
+
+msgid "No Part Open"
+msgstr "Деталь не відкрито"
+
+msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
+msgstr "Відкрийте деталь AlphaLink (.alcam), креслення ALPHA-T (.SDG) або DXF"
+
+msgid "_New Part…"
+msgstr "_Нова деталь…"
+
+msgid "_Open…"
+msgstr "_Відкрити…"
+
+msgid "Open the _Training Manual"
+msgstr "Відкрити _навчальний посібник"
+
+msgid "Operations"
+msgstr "Операції"
+
+msgid "Add Operation (C)"
+msgstr "Додати операцію (C)"
+
+msgid "Part"
+msgstr "Деталь"
+
+msgid "Open (Ctrl+O)"
+msgstr "Відкрити (Ctrl+O)"
+
+msgid "Save (Ctrl+S)"
+msgstr "Зберегти (Ctrl+S)"
+
+msgid "Undo (Ctrl+Z)"
+msgstr "Відмінити (Ctrl+Z)"
+
+msgid "Redo (Ctrl+Shift+Z)"
+msgstr "Повторити (Ctrl+Shift+Z)"
+
+msgid "Export ALPHA-T Program (Ctrl+E)"
+msgstr "Експортувати програму ALPHA-T (Ctrl+E)"
+
+msgid "_Export PRG"
+msgstr "_Експорт PRG"
+
+msgid "Touch Lock (Hold to Unlock by Touch)"
+msgstr "Блокування сенсора (утримуйте, щоб розблокувати дотиком)"
+
+msgid "Drawing"
+msgstr "Креслення"
+
+msgid "Search, or N10 to go to a block"
+msgstr "Пошук або N10, щоб перейти до блоку"
+
+msgid "Search (Ctrl+F)"
+msgstr "Пошук (Ctrl+F)"
+
+msgid "New Part…"
+msgstr "Нова деталь…"
+
+msgid "Open…"
+msgstr "Відкрити…"
+
+msgid "Open Machine Page"
+msgstr "Відкрити сторінку «Верстат»"
+
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
+
+msgid "About AlphaLink CAM"
+msgstr "Про AlphaLink CAM"
+
+msgid "Save As…"
+msgstr "Зберегти як…"
+
+msgid "Save as ALPHA-T Drawing…"
+msgstr "Зберегти креслення ALPHA-T…"
+
+msgid "Show Grid"
+msgstr "Показувати сітку"
+
+msgid "Turn Part Around…"
+msgstr "Перевернути деталь…"
+
+msgid "Remove This Setup…"
+msgstr "Видалити це встановлення…"
+
+msgid "Clear Messages"
+msgstr "Прибрати повідомлення"
+
+msgid "Input Layout"
+msgstr "Режим введення"
+
+msgid "Automatic"
+msgstr "Автоматично"
+
+msgid "Pointer"
+msgstr "Миша"
+
+msgid "Touch"
+msgstr "Сенсор"
+
+msgid "Templates"
+msgstr "Шаблони"
+
+msgid "Save Operations as Template…"
+msgstr "Зберегти операції як шаблон…"
 
 msgid "Area clear"
 msgstr "Чорнова обробка"
@@ -1849,54 +2146,6 @@ msgstr[0] "{n} прохід"
 msgstr[1] "{n} проходи"
 msgstr[2] "{n} проходів"
 
-msgid "No Part Open"
-msgstr "Деталь не відкрито"
-
-msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
-msgstr "Відкрийте деталь AlphaLink (.alcam), креслення ALPHA-T (.SDG) або DXF"
-
-msgid "_New Part…"
-msgstr "_Нова деталь…"
-
-msgid "_Open…"
-msgstr "_Відкрити…"
-
-msgid "Open the _Training Manual"
-msgstr "Відкрити _навчальний посібник"
-
-msgid "New Part…"
-msgstr "Нова деталь…"
-
-msgid "Open…"
-msgstr "Відкрити…"
-
-msgid "Open Machine Page"
-msgstr "Відкрити сторінку «Верстат»"
-
-msgid "Templates"
-msgstr "Шаблони"
-
-msgid "Save Operations as Template…"
-msgstr "Зберегти операції як шаблон…"
-
-msgid "Add Operation (C)"
-msgstr "Додати операцію (C)"
-
-msgid "Operations"
-msgstr "Операції"
-
-msgid "Drawing"
-msgstr "Креслення"
-
-msgid "Search, or N10 to go to a block"
-msgstr "Пошук або N10, щоб перейти до блоку"
-
-msgid "Search (Ctrl+F)"
-msgstr "Пошук (Ctrl+F)"
-
-msgid "Part"
-msgstr "Деталь"
-
 msgid "Sheet"
 msgstr "Наладка"
 
@@ -1905,69 +2154,6 @@ msgstr "Інструменти"
 
 msgid "Machine"
 msgstr "Верстат"
-
-msgid "Open (Ctrl+O)"
-msgstr "Відкрити (Ctrl+O)"
-
-msgid "Save (Ctrl+S)"
-msgstr "Зберегти (Ctrl+S)"
-
-msgid "Undo (Ctrl+Z)"
-msgstr "Відмінити (Ctrl+Z)"
-
-msgid "Redo (Ctrl+Shift+Z)"
-msgstr "Повторити (Ctrl+Shift+Z)"
-
-msgid "Save As…"
-msgstr "Зберегти як…"
-
-msgid "Save as ALPHA-T Drawing…"
-msgstr "Зберегти креслення ALPHA-T…"
-
-msgid "Show Grid"
-msgstr "Показувати сітку"
-
-msgid "Part Settings"
-msgstr "Параметри деталі"
-
-msgid "Turn Part Around…"
-msgstr "Перевернути деталь…"
-
-msgid "Remove This Setup…"
-msgstr "Видалити це встановлення…"
-
-msgid "Clear Messages"
-msgstr "Прибрати повідомлення"
-
-msgid "Automatic"
-msgstr "Автоматично"
-
-msgid "Pointer"
-msgstr "Миша"
-
-msgid "Touch"
-msgstr "Сенсор"
-
-msgid "Input Layout"
-msgstr "Режим введення"
-
-msgid "_Export PRG"
-msgstr "_Експорт PRG"
-
-msgid "Export ALPHA-T Program (Ctrl+E)"
-msgstr "Експортувати програму ALPHA-T (Ctrl+E)"
-
-msgid "Touch Lock (Hold to Unlock by Touch)"
-msgstr "Блокування сенсора (утримуйте, щоб розблокувати дотиком)"
-
-msgid "Training Manual"
-msgstr "Навчальний посібник"
-
-msgid "Reference Manual"
-msgstr "Довідковий посібник"
-
-msgid "About AlphaLink CAM"
-msgstr "Про AlphaLink CAM"
 
 msgid "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr "Сенсор заблоковано. Утримуйте кнопку замка або клацніть її мишею, щоб розблокувати."
@@ -1984,65 +2170,8 @@ msgstr "файл пошкоджено або це файл іншого типу
 msgid "Could not open {name}: {error}"
 msgstr "Не вдалося відкрити {name}: {error}"
 
-msgid "Import DXF"
-msgstr "Імпорт DXF"
-
 msgid "{name}: the DXF X axis becomes Z. How is Y drawn?"
 msgstr "{name}: вісь X у DXF стає віссю Z. Як задано Y?"
-
-msgid "DXF Y is"
-msgstr "Y у DXF — це"
-
-msgid "Diameter"
-msgstr "Діаметр"
-
-msgid "inch"
-msgstr "дюйм"
-
-msgid "mm"
-msgstr "мм"
-
-msgid "Upper half only"
-msgstr "Лише верхня половина"
-
-msgid "Drop the mirrored half below the axis"
-msgstr "Відкинути дзеркальну половину під віссю"
-
-msgid "Anticlockwise, for a part drawn upright"
-msgstr "Проти годинникової стрілки, для деталі, накресленої вертикально"
-
-msgid "Turn the drawing"
-msgstr "Повернути креслення"
-
-msgid "Front face is on the"
-msgstr "Передній торець"
-
-msgid "Left"
-msgstr "Ліворуч"
-
-msgid "Right"
-msgstr "Праворуч"
-
-msgid "Spindle axis"
-msgstr "Вісь шпинделя"
-
-msgid "At Y0, as drawn"
-msgstr "На Y0, як накреслено"
-
-msgid "At the lowest point (half drawing)"
-msgstr "У найнижчій точці (половина деталі)"
-
-msgid "In the middle (full section)"
-msgstr "Посередині (повний переріз)"
-
-msgid "Front face on Z0"
-msgstr "Передній торець на Z0"
-
-msgid "Moves the drawing so its front face is the part's Z0"
-msgstr "Зсуває креслення так, щоб передній торець був Z0 деталі"
-
-msgid "_Import"
-msgstr "_Імпортувати"
 
 msgid "Imported {n} element from {name}."
 msgid_plural "Imported {n} elements from {name}."
@@ -2143,41 +2272,17 @@ msgstr[2] "Додано {n} операцій з шаблону {name}"
 msgid "Add operations first: a template keeps the operations, not the drawing"
 msgstr "Спершу додайте операції: шаблон зберігає операції, а не креслення"
 
-msgid "Save Operations as Template"
-msgstr "Зберегти операції як шаблон"
-
-msgid "The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to."
-msgstr "Операції з інструментами й параметрами, без креслення. Шаблон бере контури з деталі, до якої його застосовано."
-
-msgid "_Save"
-msgstr "_Зберегти"
-
 msgid "Template"
 msgstr "Шаблон"
 
 msgid "Template “{name}” saved; it is in the Add Operation menu"
 msgstr "Шаблон «{name}» збережено; він у меню «Додати операцію»"
 
-msgid "Part length"
-msgstr "Довжина деталі"
-
-msgid "Its back face becomes Z0"
-msgstr "Її задній торець стане Z0"
-
-msgid "Program number"
-msgstr "Номер програми"
-
-msgid "Of the second setup"
-msgstr "Другого встановлення"
-
 msgid "Setup 2 machines the other end: setup 1's drawing turned end for end, its back face on Z0, without operations. Both setups are kept in this part's file."
 msgstr "Встановлення 2 обробляє інший кінець: креслення встановлення 1, перевернуте, задній торець на Z0, без операцій. Обидва встановлення зберігаються у файлі цієї деталі."
 
 msgid "This replaces the current setup 2 and its operations."
 msgstr "Це замінить поточне встановлення 2 і його операції."
-
-msgid "Turn Part Around"
-msgstr "Перевернути деталь"
 
 msgid "_Replace Setup 2"
 msgstr "_Замінити встановлення 2"
@@ -2191,104 +2296,8 @@ msgstr "Встановлення 2, програма {n}: додайте йог�
 msgid "Remove Setup {n}?"
 msgstr "Видалити встановлення {n}?"
 
-msgid "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save."
-msgstr "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь."
-
-msgid "_Remove"
-msgstr "_Видалити"
-
-msgid "New parts"
-msgstr "Нові деталі"
-
-msgid "Billet diameter"
-msgstr "Діаметр заготовки"
-
-msgid "Billet length"
-msgstr "Довжина заготовки"
-
-msgid "First tool"
-msgstr "Перший інструмент"
-
-msgid "Export"
-msgstr "Експорт"
-
-msgid "Also save the ALPHA-T drawing (.SDG)"
-msgstr "Також зберігати креслення ALPHA-T (.SDG)"
-
-msgid "Next to the program, so DOS ALPHA-T can open the part"
-msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
-
-msgid "For the estimate on the setup sheet; the tools' surface speeds are on the Tools page"
-msgstr "Для оцінки в карті наладки; швидкості різання інструментів — на сторінці «Інструменти»"
-
-msgid "rpm"
-msgstr "об/хв"
-
-msgid "Rapid rate"
-msgstr "Швидкість прискореного переміщення"
-
-msgid "mm/min"
-msgstr "мм/хв"
-
-msgid "seconds for the operator to change a tool"
-msgstr "секунд оператору на зміну інструмента"
-
-msgid "Language"
-msgstr "Мова"
-
-msgid "Takes effect after restarting the app."
-msgstr "Діє після перезапуску застосунку."
-
-msgid "Same as the desktop"
-msgstr "Як у системі"
-
-msgid "Bore"
-msgstr "Отвір"
-
-msgid "Tube billet; 0 = solid bar"
-msgstr "Заготовка-труба; 0 = суцільний пруток"
-
-msgid "Chuck jaws"
-msgstr "Кулачки патрона"
-
-msgid "In the bore"
-msgstr "В отворі"
-
-msgid "On the outside"
-msgstr "Зовні"
-
-msgid "Show tailstock"
-msgstr "Показувати задню бабку"
-
-msgid "Billet size and units. The drawing starts empty."
-msgstr "Розмір заготовки й одиниці. Креслення спочатку порожнє."
-
-msgid "_Create"
-msgstr "_Створити"
-
 msgid "Draw the profile: tap points, or type X,Z and Enter"
 msgstr "Накресліть профіль: торкайтеся точок або вводьте X,Z і Enter"
-
-msgid "Billet, chuck jaws and tailstock only change the picture."
-msgstr "Заготовка, кулачки патрона й задня бабка змінюють лише зображення."
-
-msgid "Drawing units"
-msgstr "Одиниці креслення"
-
-msgid "Set when the part was made"
-msgstr "Задаються під час створення деталі"
-
-msgid "Shown on the control"
-msgstr "Показується на системі керування"
-
-msgid "M71 mm / M70 inch on the control"
-msgstr "M71 мм / M70 дюйми на системі керування"
-
-msgid "Program units"
-msgstr "Одиниці програми"
-
-msgid "As the drawing"
-msgstr "Як у кресленні"
 
 msgid "Part settings"
 msgstr "Параметри деталі"
@@ -2310,15 +2319,6 @@ msgstr "Зберегти деталь"
 
 msgid "Could not save: {error}"
 msgstr "Не вдалося зберегти: {error}"
-
-msgid "Save changes?"
-msgstr "Зберегти зміни?"
-
-msgid "The part has changes that are not saved. They are lost if you close without saving."
-msgstr "Деталь має незбережені зміни. Їх буде втрачено, якщо закрити без збереження."
-
-msgid "_Discard"
-msgstr "_Відкинути"
 
 msgid "Export Alpha-T Program"
 msgstr "Експорт програми Alpha-T"
