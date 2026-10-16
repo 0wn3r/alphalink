@@ -2,129 +2,13 @@
 //!
 //! Going through the real post means the preview shows exactly what would be sent (scaling undone by the parser).
 //! If an operation cannot be posted, the preview covers the operations before it and reports the error.
-//!
-//! The PRG parser (io::prg_parse) is ported separately, so [`preview`] takes it as an argument, and the parsed
-//! program's structure ([`Program`], [`Block`], [`Pass`], [`Move`]) is declared here with what the preview, the
-//! simulation ([`crate::moves`]), the cycle time and the safety check read of it. ALPHA-T's .SD1 listing of the
-//! program (post::alphat_sd1) is not ported yet either: [`Preview::sd1`] stays None.
-
-use std::collections::BTreeMap;
-
-use serde::Deserialize;
 
 use crate::error::{Error, Result};
-use crate::model::{MachineProfile, OP_KINDS, Operation, Project, ToolLibrary};
+pub use crate::io::prg_parse::{Block, Move, Pass, Program};
+use crate::io::prg_parse::parse;
+use crate::model::{MachineProfile, Operation, Project, ToolLibrary};
 use crate::post::alphat_prg::post;
-use crate::toolpath::MoveKind;
-
-/// One motion, in drawing units. x/z are the absolute end point; before the first absolute move of a block the
-/// position is taken from the block's #123/#124 (see io::prg_parse). `incremental` is set for U/W moves.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct Move {
-    pub kind: MoveKind,
-    /// PRG line of the move
-    pub line: usize,
-    #[serde(default)]
-    pub x: Option<f64>,
-    #[serde(default)]
-    pub z: Option<f64>,
-    /// mm/rev (or inch), unscaled; thread pitch for THREAD
-    #[serde(default)]
-    pub feed: Option<f64>,
-    #[serde(default)]
-    pub dwell_revs: Option<f64>,
-    #[serde(default)]
-    pub incremental: bool,
-    /// arcs: absolute centre. I is a diameter increment, K a (scaled) Z increment
-    #[serde(default)]
-    pub centre_x: Option<f64>,
-    #[serde(default)]
-    pub centre_z: Option<f64>,
-}
-
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct Pass {
-    /// #121
-    pub number: i64,
-    pub line: usize,
-    #[serde(default)]
-    pub moves: Vec<Move>,
-}
-
-/// A block N<k*10>. Block 1 is the tool change (#127=1); the last one only holds M65.
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct Block {
-    pub label: u32,
-    pub line: usize,
-    /// assignments before the first M66, raw text
-    #[serde(default)]
-    pub registers: BTreeMap<u32, String>,
-    #[serde(default)]
-    pub passes: Vec<Pass>,
-    #[serde(default)]
-    pub m_codes: Vec<i64>,
-    pub z_scale: f64,
-    pub f_scale: f64,
-}
-
-impl Block {
-    pub fn index(&self) -> u32 {
-        self.label / 10
-    }
-
-    pub fn reg(&self, n: u32) -> Option<f64> {
-        self.registers.get(&n).map(|v| v.parse().unwrap_or(f64::NAN))
-    }
-
-    pub fn op_kind(&self) -> Option<i32> {
-        self.reg(127).map(|v| v as i32)
-    }
-
-    pub fn op_name(&self) -> String {
-        match self.op_kind() {
-            None => if self.m_codes.contains(&65) { "end" } else { "empty" }.into(),
-            Some(k) => OP_KINDS.iter().find(|(n, _)| *n == k).map_or(format!("unknown_{k}"), |(_, name)| name.to_string()),
-        }
-    }
-
-    pub fn tool(&self) -> Option<i32> {
-        self.reg(122).map(|v| v as i32)
-    }
-
-    pub fn declared_passes(&self) -> Option<i64> {
-        self.reg(120).map(|v| v as i64)
-    }
-
-    /// #123/#124: tool start (op blocks) or tool change point (block 1), unscaled.
-    pub fn start(&self) -> Option<(f64, f64)> {
-        self.registers.get(&123)?;
-        Some((self.reg(123)?, self.reg(124).unwrap_or(f64::NAN) / self.z_scale))
-    }
-
-    /// #125/#126: billet or op limits (SD1 G115), unscaled.
-    pub fn limit(&self) -> Option<(f64, f64)> {
-        self.registers.get(&125)?;
-        Some((self.reg(125)?, self.reg(126).unwrap_or(f64::NAN) / self.z_scale))
-    }
-
-    /// #130 unscaled: feed, or thread pitch for threading.
-    pub fn feed(&self) -> Option<f64> {
-        self.reg(130).map(|v| v / self.f_scale)
-    }
-
-    pub fn moves(&self) -> impl Iterator<Item = &Move> {
-        self.passes.iter().flat_map(|p| p.moves.iter())
-    }
-}
-
-/// The structure of a parsed .PRG (io::prg_parse's `Program` without its statements and header).
-#[derive(Debug, Clone, PartialEq, Deserialize)]
-pub struct Program {
-    pub blocks: Vec<Block>,
-}
-
-/// The PRG parser: the program's bytes and the machine profile (its Z / feed scaling) in, its structure out.
-pub type Parser<'a> = &'a dyn Fn(&[u8], &MachineProfile) -> Result<Program>;
+use crate::post::alphat_sd1::sd1;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct OpPreview {
@@ -134,7 +18,7 @@ pub struct OpPreview {
 }
 
 impl OpPreview {
-    pub fn moves(&self) -> Vec<&Move> {
+    pub fn moves(&self) -> Vec<Move> {
         self.blocks.iter().flat_map(Block::moves).collect()
     }
 
@@ -147,7 +31,7 @@ impl OpPreview {
 pub struct Preview {
     /// the PRG, when the whole project posts
     pub data: Option<Vec<u8>>,
-    /// ALPHA-T's .SD1 listing of the same program (None: post::alphat_sd1 is not ported yet)
+    /// ALPHA-T's .SD1 listing of the same program (None if the SD1 writer can't do it)
     pub sd1: Option<Vec<u8>>,
     pub program: Option<Program>,
     pub ops: Vec<OpPreview>,
@@ -185,8 +69,7 @@ fn message(e: &Error) -> String {
 }
 
 /// Errors only when not even the part without its operations posts (or its program does not parse).
-pub fn preview(project: &Project, profile: Option<&MachineProfile>, library: Option<&ToolLibrary>, parse: Parser)
-               -> Result<Preview> {
+pub fn preview(project: &Project, profile: Option<&MachineProfile>, library: Option<&ToolLibrary>) -> Result<Preview> {
     let default_profile = MachineProfile::default();
     let profile = profile.unwrap_or(&default_profile);
     let mut result = Preview::default();
@@ -195,6 +78,7 @@ pub fn preview(project: &Project, profile: Option<&MachineProfile>, library: Opt
     let mut data = match post(project, Some(profile), library) {
         Ok(data) => {
             result.data = Some(data.clone());
+            result.sd1 = sd1(project, library).ok();
             data
         }
         Err(e) => {
@@ -220,15 +104,16 @@ pub fn preview(project: &Project, profile: Option<&MachineProfile>, library: Opt
         shown.output_units = None;
         data = post_prefix(&shown, n_ok, profile, library)?;
     }
-    let program = match parse(&data, profile) {
+    let program = match parse(&data, Some(profile)) {
         Ok(program) => program,
         Err(e) => {
             // never leave the window half refreshed: report it like a post error
-            result.error = result.error.or_else(|| Some(message(&e)));
+            let text = e.to_string();
+            result.error = result.error.or(Some(if text.is_empty() { "PrgSyntaxError".into() } else { text }));
             result.data = None;
             result.error_op = result.error_op.or(Some(0));
             n_ok = 0;
-            parse(&post_prefix(project, 0, profile, library)?, profile)?
+            parse(&post_prefix(project, 0, profile, library)?, Some(profile))?
         }
     };
 

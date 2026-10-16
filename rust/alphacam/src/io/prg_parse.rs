@@ -18,6 +18,7 @@ use regex::Regex;
 use super::{py_float, py_int, read_file};
 use crate::error::Error;
 use crate::model::{MachineProfile, OP_KINDS};
+use crate::py::repr;
 use crate::toolpath::MoveKind;
 
 /// A line the parser does not accept. `line` is None for the plain value errors Python raises without one (a pass
@@ -38,7 +39,7 @@ impl PrgSyntaxError {
 impl fmt::Display for PrgSyntaxError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self.line {
-            Some(line) => write!(f, "line {line}: {}: {}", self.reason, py_repr(&self.text)),
+            Some(line) => write!(f, "line {line}: {}: {}", self.reason, repr(&self.text)),
             None => write!(f, "{}", self.reason),
         }
     }
@@ -53,28 +54,6 @@ impl From<PrgSyntaxError> for Error {
 }
 
 type PResult<T> = std::result::Result<T, PrgSyntaxError>;
-
-/// Python's `repr()` of a str (the line text is ASCII).
-fn py_repr(s: &str) -> String {
-    let quote = if s.contains('\'') && !s.contains('"') { '"' } else { '\'' };
-    let mut out = String::from(quote);
-    for c in s.chars() {
-        match c {
-            '\\' => out.push_str("\\\\"),
-            '\n' => out.push_str("\\n"),
-            '\r' => out.push_str("\\r"),
-            '\t' => out.push_str("\\t"),
-            c if c == quote => {
-                out.push('\\');
-                out.push(c);
-            }
-            c if (c as u32) < 0x20 || c as u32 == 0x7F => out.push_str(&format!("\\x{:02x}", c as u32)),
-            c => out.push(c),
-        }
-    }
-    out.push(quote);
-    out
-}
 
 // --- lexer -----------------------------------------------------------------------------------------------
 

@@ -3,8 +3,7 @@
 
 drawing, features, setups and commands: scripted edits on small parts, each step's result (or error) and the part
 after it. preview, moves, cycletime, safety and checks: every project of the post fixtures plus the parts the Python
-tests build, with what the Python app gives for them. The Rust crate has no PRG parser yet (io::prg_parse is ported
-separately), so the programs the preview parsed are exported too and the Rust tests hand them to its preview.
+tests build, with what the Python app gives for them (the parsed program and the .SD1 listing too).
 tool_shapes: the outline of every standard tool and of a few made-up ones.
 
     python3 tools/export_rust_core_fixtures.py   # from the repository root; rewrites rust/alphacam/tests/fixtures/
@@ -578,16 +577,6 @@ MACHINES = [Machine(), Machine(spindle_max=1000, rapid=1e9), Machine(spindle_max
 
 
 def preview_cases():
-    parsed = []
-    real_parse = preview_mod.parse
-
-    def recording_parse(data, profile=None):
-        prog = real_parse(data, profile)
-        parsed.append((data, prog))
-        return prog
-
-    preview_mod.parse = recording_parse
-    cases = {}
     projects = [(f.stem, f"post/{f.name}", Project.load(f)) for f in sorted(POST.glob("*.alcam"))]
     (FIXTURES / "preview").mkdir(parents=True, exist_ok=True)
     for name, p in extra_projects().items():
@@ -595,7 +584,6 @@ def preview_cases():
         projects.append((name, f"preview/{name}.alcam", Project.load(FIXTURES / "preview" / f"{name}.alcam")))
     previews, moves, cycles, safety, checks = {}, {}, {}, {}, {}
     for name, file, p in projects:
-        parsed.clear()
         try:
             pv = preview_mod.preview(p)
         except (ValueError, KeyError, NotImplementedError) as e:
@@ -604,9 +592,7 @@ def preview_cases():
         previews[name] = {
             "file": file, "data": None if pv.data is None else pv.data.decode("ascii"), "error": pv.error,
             "error_op": pv.error_op,
-            # the programs it parsed: the PRG text only when it is not `data` (a prefix, or drawing units)
-            "parsed": [{"data": None if d == pv.data else d.decode("ascii"), "program": program_json(prog)}
-                       for d, prog in parsed],
+            "sd1": None if pv.sd1 is None else pv.sd1.decode("ascii"), "program": program_json(pv.program),
             "ops": [[o.op_index, [b.label for b in o.blocks], o.passes, len(o.moves)] for o in pv.ops],
         }
         segs = segments(pv)
@@ -625,7 +611,6 @@ def preview_cases():
                                  "mmss": mmss(est.total)})
         safety[name] = [[f.op_index, f.kind, f.message, f.x, f.z] for f in check(p, pv)]
         checks[name] = {str(k): v for k, v in tool_warnings(p).items()}
-    preview_mod.parse = real_parse
     write("preview", "cases.json", previews)
     write("moves", "cases.json", moves)
     write("cycletime", "cases.json", cycles)
