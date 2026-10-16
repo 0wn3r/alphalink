@@ -22,7 +22,7 @@ pub fn data_dir() -> PathBuf {
     if let Some(dir) = std::env::var_os("ALPHALINK_DATA_DIR") {
         return dir.into();
     }
-    let installed = PathBuf::from(option_env!("ALPHALINK_DATA_DIR").unwrap_or("/app/share/alphalink-cam"));
+    let installed = PathBuf::from(option_env!("ALPHALINK_PREFIX").unwrap_or("/app")).join("share/alphalink-cam");
     if installed.join("help").is_dir() {
         return installed;
     }
