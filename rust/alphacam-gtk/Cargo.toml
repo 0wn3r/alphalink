@@ -11,13 +11,18 @@ name = "alphalink-cam"
 path = "src/main.rs"
 
 [dependencies]
-alphacam = { path = "../alphacam" }
+# bluez: the port list also shows paired Bluetooth serial adapters, as the Python app does
+alphacam = { path = "../alphacam", features = ["bluez"] }
 gtk.workspace = true
 adw.workspace = true
 gettext-rs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 regex.workspace = true
+
+[dev-dependencies]
+# the transfer test plays the control on a pty pair
+serialport.workspace = true
 
 [build-dependencies]
 glib-build-tools.workspace = true
