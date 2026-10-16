@@ -36,6 +36,9 @@ jobs:
       options: --privileged
     env:
       DEBIAN_FRONTEND: noninteractive
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v7
       - uses: actions/download-artifact@v5
@@ -52,19 +55,30 @@ jobs:
           useradd -m tester
       - name: Install the app
         run: |
-          sudo -u tester flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-          sudo -u tester flatpak install --user -y --noninteractive flathub org.gnome.Platform//51
-          sudo -u tester flatpak install --user -y --noninteractive bundle/*.flatpak
+          mkdir -p logs && chmod 777 logs && ls -la bundle | tee logs/install.log
+          cp bundle/*.flatpak /tmp/app.flatpak && chmod 644 /tmp/app.flatpak
+          (sudo -H -u tester flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo &&
+           sudo -H -u tester flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
+           sudo -H -u tester flatpak install --user -y --noninteractive /tmp/app.flatpak) 2>&1 | tee -a logs/install.log
+          exit ${PIPESTATUS[0]}
       - name: Run the tests
         run: |
           chown -R tester .
           cd app
-          sudo -u tester env ALPHALINK_E2E=1 HOME=/home/tester XDG_RUNTIME_DIR=/tmp/tester-run \
-            sh -c 'mkdir -p -m 700 /tmp/tester-run && python3 -m tests.e2e.run -j 2'
+          sudo -H -u tester env ALPHALINK_E2E=1 XDG_RUNTIME_DIR=/tmp/tester-run \
+            sh -c 'mkdir -p -m 700 /tmp/tester-run && python3 -m tests.e2e.run -j 2' 2>&1 | tee ../logs/e2e.log
+          exit ${PIPESTATUS[0]}
       - name: Keep the screenshots
         if: always()
         uses: actions/upload-artifact@v5
         with:
           name: e2e-screenshots
           path: app/e2e-out
+          if-no-files-found: ignore
+      - name: Keep the logs
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: e2e-logs
+          path: logs
           if-no-files-found: ignore
