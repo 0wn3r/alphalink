@@ -51,6 +51,11 @@ jobs:
             at-spi2-core gir1.2-atspi-2.0 gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi python3-gi-cairo python3-cairo libei1 \
             socat flatpak gsettings-desktop-schemas fonts-cantarell adwaita-icon-theme sudo ca-certificates \
             libgl1-mesa-dri libegl-mesa0 libgbm1 mesa-vulkan-drivers xdg-desktop-portal-gnome
+      - name: Room on the system bus (every test session's GNOME Shell and services connect to it)
+        run: |
+          printf '<busconfig>\n  <limit name="max_connections_per_user">4096</limit>\n</busconfig>\n' |
+            sudo tee /etc/dbus-1/system.d/zz-alphalink-e2e.conf
+          sudo systemctl reload dbus
       - name: Install the app
         run: |
           mkdir -p logs && ls -la bundle | tee logs/install.log
@@ -86,7 +91,10 @@ jobs:
         if: failure()
         run: |
           { grep -E "^\[[0-9]+/|^    (OK|FAILED)" logs/e2e.log | paste - - | head -60; echo; echo "processes left:";
-            ps -u "$(id -u)" -o comm= | sort | uniq -c | sort -rn | head -25; } > logs/summary.log 2>&1 || true
+            ps -u "$(id -u)" -o comm= | sort | uniq -c | sort -rn | head -25; echo; echo "shells left:";
+            for p in $(pgrep -u "$(id -u)" -x gnome-shell); do
+              echo "$(ps -o pid=,ppid=,stat=,etimes=,args= -p $p) $(tr '\0' '\n' < /proc/$p/environ | grep ^XDG_RUNTIME_DIR)"
+            done | head -30; } > logs/summary.log 2>&1 || true
           first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
           [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
           for f in logs/*.log; do

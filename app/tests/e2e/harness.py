@@ -194,6 +194,18 @@ class GnomeSession:
         from .a11y import App
 
         extra = [f"--env={k}={v}" for k, v in (env or {}).items()]
+        branch = os.environ.get("ALPHALINK_E2E_BRANCH")  # e.g. "rust": that build, read through its test bus
+        if branch:
+            from .testbus import BusApp
+
+            cmd = ["flatpak", "run", f"--env=ALPHALINK_LANG={lang}", "--env=ALPHALINK_TEST=1", *extra,
+                   f"{APP_ID}//{branch}", *args]
+            self._spawn(cmd, log=f"app-{lang}.log")
+            app = BusApp.wait(self, timeout=60)
+            app.touch = "--touch" in args
+            time.sleep(0.8)  # the fullscreen animation
+            self.top = 0
+            return app
         cmd = ["flatpak", "run", f"--env=ALPHALINK_LANG={lang}", *extra, APP_ID, *args]
         self._spawn(cmd, log=f"app-{lang}.log")
         app = App.wait(timeout=30)

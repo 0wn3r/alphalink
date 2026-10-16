@@ -173,6 +173,20 @@ class App:
         return acc.get_name() or ""
 
     @staticmethod
+    def _state(acc, state) -> bool:
+        return acc.get_state_set().contains(state)
+
+    def sensitive(self, acc) -> bool:
+        return self._state(acc, Atspi.StateType.SENSITIVE)
+
+    def selected(self, acc) -> bool:
+        return self._state(acc, Atspi.StateType.SELECTED)
+
+    def title(self) -> str:
+        """The app window's title."""
+        return self.acc.get_child_at_index(0).get_name() or ""
+
+    @staticmethod
     def checked(acc) -> bool:
         s = acc.get_state_set()
         return s.contains(Atspi.StateType.CHECKED) or s.contains(Atspi.StateType.PRESSED)
