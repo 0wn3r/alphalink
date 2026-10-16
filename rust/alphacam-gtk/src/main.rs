@@ -1,8 +1,12 @@
 //! alphalink-cam [PART.alcam | DRAWING.SDG | DRAWING.DXF] [--select N] [--page NAME] [--touch]
 
 mod application;
+mod canvas;
+mod hold_button;
 mod i18n;
+mod input_mode;
 mod settings;
+mod test_bus;
 mod window;
 
 use gtk::prelude::*;

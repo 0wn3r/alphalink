@@ -53,6 +53,9 @@ pub fn build(options: StartOptions) -> adw::Application {
         let about = gio::ActionEntry::builder("about").activate(|app: &adw::Application, _, _| about(app)).build();
         app.add_action_entries([quit, about]);
         app.set_accels_for_action("app.quit", &["<Control>q"]);
+        if crate::test_bus::enabled() {
+            crate::test_bus::register(app.upcast_ref());
+        }
     });
     app.connect_activate(|app| window(app).present());
     app.connect_open(move |app, files, _hint| {
@@ -66,7 +69,14 @@ pub fn build(options: StartOptions) -> adw::Application {
 }
 
 fn window(app: &adw::Application) -> gtk::Window {
-    app.active_window().unwrap_or_else(|| crate::window::new(app))
+    app.active_window().unwrap_or_else(|| {
+        let win = crate::window::new(app);
+        if crate::test_bus::enabled() {
+            // no shadow or top bar before the surface: widget bounds are screen coordinates (test_bus)
+            win.fullscreen();
+        }
+        win
+    })
 }
 
 fn about(app: &adw::Application) {
