@@ -579,7 +579,7 @@ class SendByKeyboard(VirtualPort, Bus):
         self.s.hold_key("space", 2.5)
         self.snap("confirm")
         self.app.find("Send", "button")
-        self.s.key("Return")  # the confirmation's default
+        self.s.key("alt+s")  # "_Send": Return would take the default, Cancel
         expected = post(p)
         self.lathe.send(b"\x11")
         self.lathe.read_for(60, until=len(expected))
