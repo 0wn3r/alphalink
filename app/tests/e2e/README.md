@@ -33,6 +33,11 @@ AT-SPI. Every press is a libei click or tap at the widget's centre; nothing is a
 Screenshots of every step go to `app/e2e-out/<test>/` (git-ignored). Set `ALPHALINK_E2E_CURSOR=1` to draw
 the pointer in them.
 
+`test_interaction.py` covers the touch interactions the workflows do not reach (layout switching, menus by finger,
+fling, double tap, zoom buttons, the drawing tools and keypad by touch, the editor's −/+ and header buttons, play and
+scrub, hold to send by finger, finger-sized targets). It reads the app through the test bus, so it runs only with
+`ALPHALINK_E2E_BRANCH` set (the Rust app).
+
 ## How it works
 
 - **`harness.py`** starts the session with its own HOME and XDG directories, its own D-Bus session bus, PipeWire,
