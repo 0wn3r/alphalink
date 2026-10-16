@@ -5,7 +5,8 @@ Reverse-engineering notes and tools for the Superdraft **ALPHACAM / AlphaLink** 
 link to Harrison Alpha lathes. Target: Harrison **Alpha 400T** (FANUC Power Mate 0).
 
 This repo holds only our own work (notes, scripts, structured data, generated samples). The vendor software,
-manuals and photos are not included; `docs/VENDOR_FILES_SHA256.txt` identifies the exact files used.
+manuals and photos are not included; `docs/VENDOR_FILES_SHA256.txt` identifies the exact files used. Where the
+original downloads can still be found is listed in `docs/SOURCES.md`.
 
 **Start here:** `docs/ALPHA-T_STATUS.md` (current state, safe order on the machine) and `app/` (AlphaLink CAM, the
 GNOME replacement for ALPHA-T; design and status in `app/DESIGN.md`).
