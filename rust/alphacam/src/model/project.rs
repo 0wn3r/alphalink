@@ -145,11 +145,10 @@ impl Project {
         if !UNITS.contains(&self.units.as_str()) {
             return Err(units_error(&self.units));
         }
-        if let Some(u) = &self.output_units {
-            if !UNITS.contains(&u.as_str()) {
+        if let Some(u) = &self.output_units
+            && !UNITS.contains(&u.as_str()) {
                 return Err(units_error(u));
             }
-        }
         for (i, g) in self.geometry.iter_mut().enumerate() {
             if g.id().is_empty() {
                 g.set_id(format!("g{i}"));
@@ -159,11 +158,10 @@ impl Project {
             t.validate()?;
         }
         for op in &self.operations {
-            if let Operation::Thread(t) = op {
-                if t.pitch <= 0.0 {
+            if let Operation::Thread(t) = op
+                && t.pitch <= 0.0 {
                     return value(tr("thread pitch must be > 0", &[]));
                 }
-            }
         }
         for s in &mut self.setups {
             s.validate()?;
@@ -204,11 +202,10 @@ impl Project {
         if with_setups && !self.setups.is_empty() {
             m.insert("setups".into(), Value::Array(self.setups.iter().map(|s| s.to_json(false)).collect()));
         }
-        if let Some(u) = &self.output_units {
-            if *u != self.units {
+        if let Some(u) = &self.output_units
+            && *u != self.units {
                 m.insert("output_units".into(), json!(u));
             }
-        }
         Value::Object(m)
     }
 
@@ -308,8 +305,8 @@ fn as_int(v: &Value) -> Result<i64> {
 /// field is now ALPHA-T's infeed angle, where 0 is what those parts posted. Their "spring_pass" yes/no is now a
 /// count.
 fn legacy_op(mut o: Value) -> Value {
-    if o.get("type").and_then(Value::as_str) == Some("thread") {
-        if let Some(m) = o.as_object_mut() {
+    if o.get("type").and_then(Value::as_str) == Some("thread")
+        && let Some(m) = o.as_object_mut() {
             if m.get("angle").and_then(Value::as_f64) == Some(60.0) {
                 m.insert("angle".into(), json!(0.0));
             }
@@ -323,6 +320,5 @@ fn legacy_op(mut o: Value) -> Value {
                 m.insert("spring_passes".into(), json!(on as i32));
             }
         }
-    }
     o
 }

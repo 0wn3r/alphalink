@@ -261,8 +261,8 @@ pub fn check(project: &Project, preview: &Preview, library: Option<&ToolLibrary>
                     break;
                 }
             }
-            if let (Some((pieces, outer)), Some(i)) = (part, i) {
-                if inside(pieces, x, z, *outer, tol, depth.get(&i).copied().unwrap_or(tol)) {
+            if let (Some((pieces, outer)), Some(i)) = (part, i)
+                && inside(pieces, x, z, *outer, tol, depth.get(&i).copied().unwrap_or(tol)) {
                     let values: [(&str, &dyn std::fmt::Display); 2] =
                         [("x:g", &fmt_g(round(x, 3))), ("z:g", &fmt_g(round(z, 3)))];
                     if seg.kind == MoveKind::Rapid {
@@ -273,7 +273,6 @@ pub fn check(project: &Project, preview: &Preview, library: Option<&ToolLibrary>
                     }
                     break;
                 }
-            }
         }
         // tool angle: the surface a feed move leaves behind must stay out of the tool's body. Only moves along the
         // part's contour leave a surface: lead-ins and pull-offs run in air

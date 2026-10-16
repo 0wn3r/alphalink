@@ -82,11 +82,10 @@ pub fn chain(elements: &[&Element]) -> Result<Vec<Seg>> {
 /// (AREA_towards_from_chuck_end only skims the front face; FACE_towards_from_chuck_end makes one cut), so the
 /// app cuts such a contour as if it had been picked from the front.
 pub fn front_first(path: Vec<Seg>) -> Vec<Seg> {
-    if let (Some(first), Some(last)) = (path.first(), path.last()) {
-        if last.b.z > first.a.z + EPS {
+    if let (Some(first), Some(last)) = (path.first(), path.last())
+        && last.b.z > first.a.z + EPS {
             return path.iter().rev().map(|s| Seg::new(s.b, s.a, s.centre, if s.is_arc() { !s.ccw } else { false })).collect();
         }
-    }
     path
 }
 

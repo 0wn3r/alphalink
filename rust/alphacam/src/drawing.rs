@@ -479,11 +479,10 @@ pub fn measure_la(a: Point, b: Point) -> (f64, f64) {
 pub fn key_points(project: &Project) -> Vec<Point> {
     let mut pts = endpoints(project);
     for g in &project.geometry {
-        if let Element::Arc(c) = g {
-            if !pts.contains(&c.centre) {
+        if let Element::Arc(c) = g
+            && !pts.contains(&c.centre) {
                 pts.push(c.centre);
             }
-        }
     }
     pts
 }

@@ -29,7 +29,7 @@ fn latin1(bytes: &[u8]) -> String {
 }
 
 pub fn read_tl1(data: &[u8]) -> Result<ToolLibrary> {
-    if data.len() < 2 * RECORD || data.len() % RECORD != 0 {
+    if data.len() < 2 * RECORD || !data.len().is_multiple_of(RECORD) {
         return value(tr("not a TL1 tool library ({len_data} bytes)", &[("len_data", &data.len())]));
     }
     let mut tools: Vec<Tool> = vec![];
@@ -56,7 +56,7 @@ pub const TL2_RECORD: usize = 780;
 
 /// Tool number -> the picture as polylines of (Z, radius) points in mm, tip at (0, 0); arcs sampled.
 pub fn read_tl2(data: &[u8]) -> Result<BTreeMap<i32, Vec<Polyline>>> {
-    if data.len() < TL2_RECORD || data.len() % TL2_RECORD != 0 {
+    if data.len() < TL2_RECORD || !data.len().is_multiple_of(TL2_RECORD) {
         return value(tr("not a TL2 tool picture file ({len_data} bytes)", &[("len_data", &data.len())]));
     }
     let mut out = BTreeMap::new();

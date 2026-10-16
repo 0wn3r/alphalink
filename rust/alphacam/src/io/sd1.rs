@@ -353,21 +353,19 @@ pub fn read_sd1(text: &str, project: &Project) -> Result<Vec<Operation>> {
                     break;
                 }
                 if let (true, Some(z)) = (w2.g(1), w2.get('Z')) {
-                    if let Some(&last) = zs.last() {
-                        if z > last {
+                    if let Some(&last) = zs.last()
+                        && z > last {
                             backs.push(round(z - last, 6));
                         }
-                    }
                     zs.push(z);
                     if peck == 0.0 {
                         peck = round(st.z - z, 6);
                     }
                 }
-                if let (true, Some(z)) = (w2.g(0), w2.get('Z')) {
-                    if (z - st.z).abs() < 1e-9 && i + 1 < lines.len() && !gs_of(lines[i + 1])?.contains(&174) {
+                if let (true, Some(z)) = (w2.g(0), w2.get('Z'))
+                    && (z - st.z).abs() < 1e-9 && i + 1 < lines.len() && !gs_of(lines[i + 1])?.contains(&174) {
                         full = true;
                     }
-                }
                 if w2.g(4) {
                     dwell = w2.need('P')?;
                 }
