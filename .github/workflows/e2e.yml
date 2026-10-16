@@ -48,7 +48,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends gnome-shell mutter pipewire wireplumber dbus-daemon dbus-user-session \
-            at-spi2-core gir1.2-atspi-2.0 gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi python3-gi-cairo python3-cairo libei1 \
+            at-spi2-core gir1.2-atspi-2.0 gir1.2-gtk-4.0 gir1.2-adw-1 python3-gi python3-gi-cairo python3-cairo python3-pil libei1 \
             socat flatpak gsettings-desktop-schemas fonts-cantarell adwaita-icon-theme sudo ca-certificates \
             libgl1-mesa-dri libegl-mesa0 libgbm1 mesa-vulkan-drivers xdg-desktop-portal-gnome
       - name: Room on the system bus (every test session's GNOME Shell and services connect to it)
