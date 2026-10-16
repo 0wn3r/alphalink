@@ -45,6 +45,10 @@ def ngettext(singular: str, plural: str, n: int) -> str:
     return _t.ngettext(singular, plural, n)
 
 
+def pgettext(context: str, text: str) -> str:
+    return _t.pgettext(context, text)
+
+
 def N_(text: str) -> str:
     """Mark for extraction only; translate later with _()."""
     return text

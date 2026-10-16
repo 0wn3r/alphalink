@@ -15,13 +15,16 @@ from .i18n import _  # noqa: E402
 
 
 class HoldButton(Gtk.Button):
+    """`text`: the button's label (and its accessible name); used in ui/machine.blp."""
+
+    __gtype_name__ = "AlphaLinkHoldButton"
     __gsignals__ = {"held": (GObject.SignalFlags.RUN_FIRST, None, ())}
 
-    def __init__(self, label: str, hold_seconds: float = 1.5, **kw):
+    def __init__(self, text: str = "", hold_seconds: float = 1.5, **kw):
         super().__init__(**kw)
         self.hold_seconds = hold_seconds
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        self.label = Gtk.Label(label=label)
+        self.label = Gtk.Label()
         self.hint = Gtk.Label(label=_("Hold to start"))
         self.hint.add_css_class("caption")
         self.hint.add_css_class("dim-label")
@@ -30,7 +33,7 @@ class HoldButton(Gtk.Button):
         box.append(self.hint)
         box.append(self.bar)
         self.set_child(box)
-        self.update_property([Gtk.AccessibleProperty.LABEL], [label])  # the child box carries no name of its own
+        self.text = text or getattr(self, "_pending_text", "")
         self.add_css_class("hold-button")
         self._t0 = None
         self._tick = 0
@@ -44,6 +47,18 @@ class HoldButton(Gtk.Button):
         keys.connect("key-pressed", self._key_pressed)
         keys.connect("key-released", lambda *_: self._stop())
         self.add_controller(keys)
+
+    @GObject.Property(type=str, default="")
+    def text(self) -> str:
+        return self.label.get_label() if hasattr(self, "label") else ""
+
+    @text.setter
+    def text(self, value: str) -> None:
+        if not hasattr(self, "label"):  # GtkBuilder may set it before __init__ has built the child
+            self._pending_text = value
+            return
+        self.label.set_label(value or "")
+        self.update_property([Gtk.AccessibleProperty.LABEL], [value or ""])  # the child box has no name of its own
 
     def _key_pressed(self, ctl, keyval, code, state):
         from gi.repository import Gdk

@@ -64,4 +64,7 @@ alphacam_gtk/shortcuts.py
 alphacam_gtk/simulation.py
 alphacam_gtk/templates.py
 alphacam_gtk/tools_page.py
+alphacam_gtk/ui.py
 alphacam_gtk/window.py
+alphacam_gtk/ui/op-editor.ui
+alphacam_gtk/ui/window.ui

@@ -1,0 +1,290 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The Keyboard Shortcuts dialog (Ctrl+?), as the GNOME HIG asks for: the Ctrl shortcuts, then ALPHA-T's one-letter
+// keys on the Part page (hit_keys.py).
+Adw.ShortcutsDialog dialog {
+  Adw.ShortcutsSection {
+    title: _("General");
+
+    Adw.ShortcutsItem {
+      title: _("Main Menu");
+      accelerator: "F10";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Preferences");
+      accelerator: "<Control>comma";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Keyboard Shortcuts");
+      accelerator: "<Control>question";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Help");
+      accelerator: "F1";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Close Window");
+      accelerator: "<Control>w";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Quit");
+      accelerator: "<Control>q";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Files");
+
+    Adw.ShortcutsItem {
+      title: _("New Part");
+      accelerator: "<Control>n";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Open");
+      accelerator: "<Control>o";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Save");
+      accelerator: "<Control>s";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Save As");
+      accelerator: "<Shift><Control>s";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Export PRG");
+      accelerator: "<Control>e";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Editing");
+
+    Adw.ShortcutsItem {
+      title: _("Undo");
+      accelerator: "<Control>z";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Redo");
+      accelerator: "<Shift><Control>z";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Add Operation");
+      accelerator: "c";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Edit Element");
+      accelerator: "e";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Delete Element");
+      accelerator: "Delete";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Deselect or Cancel");
+      accelerator: "Escape";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("View");
+
+    Adw.ShortcutsItem {
+      title: _("Zoom In");
+      accelerator: "<Control>plus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Zoom Out");
+      accelerator: "<Control>minus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Fit Part");
+      accelerator: "<Control>0";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Search the Program");
+      accelerator: "<Control>f";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Zoom In at the Cursor");
+      accelerator: "z";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Redraw");
+      accelerator: "r";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Recall View");
+      accelerator: "v";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Cursor (Drawing Has the Focus)");
+
+    Adw.ShortcutsItem {
+      title: _("Move the Cursor by the Step");
+      accelerator: "Left Right Up Down";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Step ×10");
+      accelerator: "Page_Up";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Step ÷10");
+      accelerator: "Page_Down";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Cursor to the Middle of the View");
+      accelerator: "Home";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Cursor to X0 Z0");
+      accelerator: "End";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Use the Cursor as the Point");
+      accelerator: "Return";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Drawing Context Menu");
+      accelerator: "<Shift>F10";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Drawing Keys (Part Page)");
+
+    Adw.ShortcutsItem {
+      title: _("Find Nearest Line");
+      accelerator: "l";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Find Nearest Arc");
+      accelerator: "a";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Find Nearest Point");
+      accelerator: "p";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Find Nearest Intersection");
+      accelerator: "i";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Draw Line by X,Z");
+      accelerator: "x";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Draw Line by Length and Angle");
+      accelerator: "d";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Draw Line by Taps");
+      accelerator: "plus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Start at the Cursor");
+      accelerator: "s";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Arc");
+      accelerator: "w";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Radius at the Nearest Corner");
+      accelerator: "f";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Chamfer");
+      accelerator: "b";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Blend Arc");
+      accelerator: "o";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Trim Corner");
+      accelerator: "k";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Move Cursor to X,Z");
+      accelerator: "g";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Move Cursor by dX,dZ");
+      accelerator: "h";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Move Cursor by Length and Angle");
+      accelerator: "y";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Measure by X,Z");
+      accelerator: "m";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Measure by Length and Angle");
+      accelerator: "n";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Add Text");
+      accelerator: "t";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Erase Text");
+      accelerator: "u";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Erase the Whole Drawing");
+      accelerator: "q";
+    }
+  }
+}

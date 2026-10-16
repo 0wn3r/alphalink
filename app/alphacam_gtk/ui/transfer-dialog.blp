@@ -1,0 +1,56 @@
+using Gtk 4.0;
+using Adw 1;
+
+// Progress of one transfer (machine.py TransferDialog); Cancel stops the worker at the next byte.
+template $AlphaLinkTransferDialog: Adw.Dialog {
+  content-width: 420;
+  can-close: false;
+
+  child: Adw.ToolbarView {
+    [top]
+    Adw.HeaderBar {
+      show-end-title-buttons: false;
+    }
+
+    content: Box {
+      orientation: vertical;
+      spacing: 18;
+      margin-top: 24;
+      margin-bottom: 24;
+      margin-start: 24;
+      margin-end: 24;
+
+      Label state {
+        label: _("Opening port…");
+        wrap: true;
+
+        styles [
+          "title-3",
+        ]
+      }
+
+      ProgressBar bar {
+        show-text: true;
+      }
+
+      Label detail {
+        wrap: true;
+
+        styles [
+          "dim-label",
+        ]
+      }
+
+      Button button {
+        label: _("_Cancel");
+        use-underline: true;
+        halign: center;
+        clicked => $_cancel_or_close();
+
+        styles [
+          "pill",
+        ]
+      }
+    };
+  };
+}

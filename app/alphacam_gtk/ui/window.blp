@@ -1,0 +1,522 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The main window (DESIGN.md 6, TOUCH.md 7): the start page, then the operations sidebar with the Part, Program, Sheet,
+// Tools and Machine pages. window.py adds the pages and bars that are built from code (drawing tools, simulation,
+// Sheet, Tools, Machine) and fills the operation and template menus.
+template $AlphaLinkMainWindow: Adw.ApplicationWindow {
+  title: "AlphaLink CAM";
+  default-width: 1280;
+  default-height: 820;
+  close-request => $_close_request();
+
+  content: Adw.ToastOverlay toasts {
+    child: Stack root {
+      transition-type: crossfade;
+
+      StackPage {
+        name: "empty";
+
+        child: Adw.ToolbarView {
+          [top]
+          Adw.HeaderBar {
+            [end]
+            MenuButton {
+              icon-name: "open-menu-symbolic";
+              menu-model: start_menu;
+              primary: true;
+              tooltip-text: _("Main Menu");
+            }
+          }
+
+          content: Adw.StatusPage {
+            title: _("No Part Open");
+            icon-name: "document-open-symbolic";
+            description: _("Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF");
+
+            child: Box {
+              orientation: vertical;
+              spacing: 18;
+              halign: center;
+
+              Box {
+                spacing: 12;
+                halign: center;
+
+                Button {
+                  label: _("_New Part…");
+                  use-underline: true;
+                  action-name: "win.new";
+
+                  styles [
+                    "pill",
+                  ]
+                }
+
+                Button {
+                  label: _("_Open…");
+                  use-underline: true;
+                  action-name: "win.open";
+
+                  styles [
+                    "pill",
+                    "suggested-action",
+                  ]
+                }
+              }
+
+              // first run: the way into the exercises (a flat button, so the two pills stay the actions)
+              Button {
+                label: _("Open the _Training Manual");
+                use-underline: true;
+                action-name: "win.manual-training";
+                halign: center;
+
+                styles [
+                  "flat",
+                ]
+              }
+            };
+          };
+        };
+      }
+
+      StackPage {
+        name: "main";
+
+        child: Adw.NavigationSplitView split {
+          min-sidebar-width: 260;
+          max-sidebar-width: 340;
+          notify::collapsed => $_split_collapsed();
+
+          sidebar: Adw.NavigationPage {
+            title: _("Operations");
+
+            child: Adw.ToolbarView {
+              [top]
+              Adw.HeaderBar side_header {
+                [start]
+                MenuButton add_op_button {
+                  icon-name: "list-add-symbolic";
+                  menu-model: add_menu;
+                  tooltip-text: _("Add Operation (C)");
+                }
+              }
+
+              content: ScrolledWindow {
+                vexpand: true;
+
+                child: ListBox op_list {
+                  selection-mode: single;
+                  row-selected => $_row_selected();
+
+                  styles [
+                    "navigation-sidebar",
+                    "op-list",
+                  ]
+                };
+              };
+            };
+          };
+
+          content: Adw.NavigationPage content_page {
+            title: _("Part");
+
+            child: Adw.ToolbarView {
+              [top]
+              Adw.HeaderBar {
+                // 5 pages: icon over label fits
+                title-widget: Adw.ViewSwitcher header_switcher {
+                  stack: stack;
+                  policy: narrow;
+                };
+
+                [start]
+                Button open_button {
+                  icon-name: "document-open-symbolic";
+                  action-name: "win.open";
+                  tooltip-text: _("Open (Ctrl+O)");
+                }
+
+                [start]
+                Button save_button {
+                  icon-name: "document-save-symbolic";
+                  action-name: "win.save";
+                  tooltip-text: _("Save (Ctrl+S)");
+                }
+
+                [start]
+                Box undo_box {
+                  Button {
+                    icon-name: "edit-undo-symbolic";
+                    action-name: "win.undo";
+                    tooltip-text: _("Undo (Ctrl+Z)");
+                  }
+
+                  Button {
+                    icon-name: "edit-redo-symbolic";
+                    action-name: "win.redo";
+                    tooltip-text: _("Redo (Ctrl+Shift+Z)");
+                  }
+                }
+
+                [end]
+                MenuButton {
+                  icon-name: "open-menu-symbolic";
+                  menu-model: main_menu;
+                  primary: true;
+                  tooltip-text: _("Main Menu");
+                }
+
+                // HIG header bars: icon and label, no suggested style
+                [end]
+                Button {
+                  action-name: "win.export";
+                  tooltip-text: _("Export ALPHA-T Program (Ctrl+E)");
+
+                  child: Adw.ButtonContent {
+                    icon-name: "document-send-symbolic";
+                    label: _("_Export PRG");
+                    use-underline: true;
+                  };
+                }
+
+                [end]
+                ToggleButton lock_button {
+                  icon-name: "changes-allow-symbolic";
+                  tooltip-text: _("Touch Lock (Hold to Unlock by Touch)");
+                }
+              }
+
+              [top]
+              Adw.Banner banner {
+                button-clicked => $_show_finding();
+              }
+
+              // editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
+              // negative allocations during its slide animation here)
+              content: Box editor_split {
+                // size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the
+                // width of the Part page with the editor open
+                Adw.ViewStack stack {
+                  hhomogeneous: false;
+                  hexpand: true;
+                  notify::visible-child-name => $_page_changed();
+
+                  Adw.ViewStackPage {
+                    name: "part";
+                    title: _("Part");
+                    icon-name: "view-paged-symbolic";
+
+                    child: Box part_page {
+                      orientation: vertical;
+
+                      // Part page messages show over the drawing, above the simulation and tool bars, so they never
+                      // cover the tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
+                      Adw.ToastOverlay part_toasts {
+                        vexpand: true;
+
+                        child: Overlay part_overlay {
+                          child: $AlphaLinkLatheCanvas canvas {
+                            accessible-role: application;
+                            cursor-moved => $_cursor_moved();
+
+                            // screen readers, tests/e2e
+                            accessibility {
+                              label: _("Drawing");
+                            }
+                          };
+
+                          // shown in touch mode (T1)
+                          [overlay]
+                          Box zoom_box {
+                            orientation: vertical;
+                            spacing: 6;
+                            halign: end;
+                            valign: end;
+                            visible: false;
+
+                            styles [
+                              "canvas-zoom",
+                            ]
+
+                            Button {
+                              icon-name: "zoom-in-symbolic";
+                              action-name: "win.zoom-in";
+                              tooltip-text: _("Zoom In");
+
+                              styles [
+                                "osd",
+                                "circular",
+                              ]
+                            }
+
+                            Button {
+                              icon-name: "zoom-out-symbolic";
+                              action-name: "win.zoom-out";
+                              tooltip-text: _("Zoom Out");
+
+                              styles [
+                                "osd",
+                                "circular",
+                              ]
+                            }
+
+                            Button {
+                              icon-name: "zoom-fit-best-symbolic";
+                              action-name: "win.fit";
+                              tooltip-text: _("Fit Part");
+
+                              styles [
+                                "osd",
+                                "circular",
+                              ]
+                            }
+                          }
+                        };
+                      }
+
+                      // the simulation bar goes above this line, the drawing tools' bar below it
+                      Separator part_separator {}
+
+                      Label readout {
+                        xalign: 0;
+                        label: " ";
+
+                        styles [
+                          "readout",
+                          "dim-label",
+                        ]
+                      }
+                    };
+                  }
+
+                  Adw.ViewStackPage {
+                    name: "program";
+                    title: _("Program");
+                    icon-name: "text-x-generic-symbolic";
+
+                    child: Box {
+                      orientation: vertical;
+
+                      // search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
+                      SearchBar program_searchbar {
+                        show-close-button: true;
+
+                        child: SearchEntry program_search {
+                          placeholder-text: _("Search, or N10 to go to a block");
+                          hexpand: true;
+                          search-changed => $_program_search_changed();
+                          activate => $_program_search_next();
+                          next-match => $_program_search_next();
+                          previous-match => $_program_search_previous();
+                        };
+                      }
+
+                      ScrolledWindow {
+                        vexpand: true;
+
+                        child: TextView program_view {
+                          editable: false;
+                          cursor-visible: false;
+                          monospace: true;
+                          top-margin: 12;
+                          bottom-margin: 12;
+                          left-margin: 12;
+                          right-margin: 12;
+
+                          styles [
+                            "program-text",
+                          ]
+
+                          GestureClick {
+                            released => $_program_tapped();
+                          }
+
+                          GestureZoom {
+                            begin => $_pinch_begin();
+                            scale-changed => $_pinch_scaled();
+                          }
+                        };
+                      }
+
+                      Separator {}
+
+                      Box {
+                        // never widens the window
+                        Label program_info {
+                          xalign: 0;
+                          ellipsize: end;
+                          hexpand: true;
+
+                          styles [
+                            "readout",
+                            "dim-label",
+                          ]
+                        }
+
+                        ToggleButton {
+                          icon-name: "edit-find-symbolic";
+                          tooltip-text: _("Search (Ctrl+F)");
+                          active: bind program_searchbar.search-mode-enabled bidirectional;
+
+                          styles [
+                            "flat",
+                          ]
+                        }
+                      }
+                    };
+                  }
+                }
+
+                Revealer editor_reveal {
+                  transition-type: slide_left;
+                  reveal-child: false;
+                  notify::reveal-child => $_page_changed();
+
+                  child: $AlphaLinkOpEditor editor {};
+                }
+              };
+
+              [bottom]
+              Adw.ViewSwitcherBar switcher_bar {
+                stack: stack;
+              }
+            };
+          };
+        };
+      }
+    };
+  };
+
+  // narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane gets
+  // narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7 in
+  // portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e); the header
+  // must fit a narrow (touch: 48 px buttons) window, and its file and undo buttons are in the main menu too
+  Adw.Breakpoint {
+    condition ("max-width: 1000sp")
+
+    setters {
+      split.collapsed: true;
+      editor.width-request: 280;
+      switcher_bar.reveal: true;
+      header_switcher.visible: false;
+      open_button.visible: false;
+      save_button.visible: false;
+      undo_box.visible: false;
+    }
+  }
+
+  // below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it is
+  // open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
+  Adw.Breakpoint {
+    condition ("max-width: 700sp")
+    apply => $_small_applied();
+    unapply => $_small_unapplied();
+
+    setters {
+      split.collapsed: true;
+      editor.width-request: 280;
+      switcher_bar.reveal: true;
+      header_switcher.visible: false;
+      open_button.visible: false;
+      save_button.visible: false;
+      undo_box.visible: false;
+    }
+  }
+}
+
+// what works without a part: the Machine page (Manual Ops backup), settings, help
+menu start_menu {
+  section {
+    item (_("New Part…"), "win.new")
+    item (_("Open…"), "win.open")
+    item (_("Open Machine Page"), "win.machine-page")
+  }
+
+  section {
+    item (_("Training Manual"), "win.manual-training")
+    item (_("Reference Manual"), "win.manual-reference")
+  }
+
+  // the HIG's last group of a main menu, in its order
+  section {
+    item (_("Preferences"), "win.preferences")
+    item (_("Keyboard Shortcuts"), "win.shortcuts")
+    item (_("Help"), "win.help")
+    item (_("About AlphaLink CAM"), "app.about")
+  }
+}
+
+menu main_menu {
+  // also reachable by touch, and the header buttons hide on a narrow window
+  section {
+    item (_("New Part…"), "win.new")
+    item (_("Open…"), "win.open")
+    item (_("Save"), "win.save")
+    item (_("Save As…"), "win.save-as")
+    item (_("Save as ALPHA-T Drawing…"), "win.save-sdg")
+  }
+
+  section {
+    item (_("Undo"), "win.undo")
+    item (_("Redo"), "win.redo")
+  }
+
+  section {
+    item (_("Fit Part"), "win.fit")
+    item (_("Show Grid"), "win.show-grid")
+    item (_("Part Settings"), "win.part-settings")
+    item (_("Turn Part Around…"), "win.turn-around")
+    item (_("Remove This Setup…"), "win.remove-setup")
+    item (_("Clear Messages"), "win.clear-messages")
+  }
+
+  section {
+    label: _("Input Layout");
+
+    item {
+      label: _("Automatic");
+      action: "win.input-layout";
+      target: "auto";
+    }
+
+    item {
+      label: _("Pointer");
+      action: "win.input-layout";
+      target: "pointer";
+    }
+
+    item {
+      label: _("Touch");
+      action: "win.input-layout";
+      target: "touch";
+    }
+  }
+
+  section {
+    item (_("Training Manual"), "win.manual-training")
+    item (_("Reference Manual"), "win.manual-reference")
+  }
+
+  section {
+    item (_("Preferences"), "win.preferences")
+    item (_("Keyboard Shortcuts"), "win.shortcuts")
+    item (_("Help"), "win.help")
+    item (_("About AlphaLink CAM"), "app.about")
+  }
+}
+
+// Add Operation: the operations (window.py fills them from op_factory.OP_MENU), the job templates (workflow
+// improvements, step 4: a saved list of operations applied to this drawing), and saving one
+menu add_menu {
+  section ops_section {}
+
+  section template_section {
+    label: _("Templates");
+  }
+
+  section {
+    item (_("Save Operations as Template…"), "win.save-template")
+  }
+}

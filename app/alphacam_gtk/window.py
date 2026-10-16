@@ -8,7 +8,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk, Pango  # noqa: E402
+from gi.repository import Adw, Gdk, Gio, GLib, GObject, Gtk  # noqa: E402
 
 from alphacam.io.dxf import load_dxf  # noqa: E402
 from alphacam.io.sd1 import load_sd1, sibling, verify  # noqa: E402
@@ -31,6 +31,7 @@ from .input_mode import InputMode  # noqa: E402
 from .machine import MachinePage  # noqa: E402
 from .op_editor import OpEditor  # noqa: E402
 from .op_factory import OP_MENU, default_op, find_tool, tool_for  # noqa: E402
+from .ui import template  # noqa: E402
 
 OP_TITLES = {
     "tool_change": N_("Tool change"), "area_clear": N_("Area clear"), "face_clear": N_("Face clear"),
@@ -78,9 +79,51 @@ def alphat_name(stem: str) -> str:
     return name or "PART"
 
 
+@template("window")
 class MainWindow(Adw.ApplicationWindow):
+    """The layout is ui/window.blp; the pages and bars built from code are added here."""
+
+    __gtype_name__ = "AlphaLinkMainWindow"
+
+    toasts = Gtk.Template.Child()
+    root = Gtk.Template.Child()
+    split = Gtk.Template.Child()
+    side_header = Gtk.Template.Child()
+    add_op_button = Gtk.Template.Child()
+    op_list = Gtk.Template.Child()
+    content_page = Gtk.Template.Child()
+    header_switcher = Gtk.Template.Child()
+    open_button = Gtk.Template.Child()
+    save_button = Gtk.Template.Child()
+    undo_box = Gtk.Template.Child()
+    lock_button = Gtk.Template.Child()
+    banner = Gtk.Template.Child()
+    editor_split = Gtk.Template.Child()
+    stack = Gtk.Template.Child()
+    part_page = Gtk.Template.Child()
+    part_toasts = Gtk.Template.Child()
+    part_overlay = Gtk.Template.Child()
+    canvas = Gtk.Template.Child()
+    zoom_box = Gtk.Template.Child()
+    part_separator = Gtk.Template.Child()
+    readout = Gtk.Template.Child()
+    program_searchbar = Gtk.Template.Child()
+    program_search = Gtk.Template.Child()
+    program_view = Gtk.Template.Child()
+    program_info = Gtk.Template.Child()
+    editor_reveal = Gtk.Template.Child()
+    editor = Gtk.Template.Child()
+    switcher_bar = Gtk.Template.Child()
+    ops_section = Gtk.Template.Child()
+    template_section = Gtk.Template.Child()
+
+    # the template's signals can fire while it is being built, before __init__ sets these
+    project: Project | None = None
+    _select_guard = False
+    _small = False
+
     def __init__(self, app):
-        super().__init__(application=app, title="AlphaLink CAM", default_width=1280, default_height=820)
+        super().__init__(application=app)
         self.project: Project | None = None
         self.path: Path | None = None
         self.pv = None
@@ -91,200 +134,58 @@ class MainWindow(Adw.ApplicationWindow):
         self._refresh_id = 0
         self._editor_edit = False
         self.library = load_library()
-
-        self.toasts = Adw.ToastOverlay()
         self._toast_count = 0
-        self.root = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
-        self.toasts.set_child(self.root)
-        self.set_content(self.toasts)
+        self._switching = False
 
-        self.root.add_named(self._build_empty(), "empty")
-        self.root.add_named(self._build_main(), "main")
-        self.root.set_visible_child_name("empty")
+        self._build_main()
         self.input_mode = InputMode(self, settings()["input_layout"])
         self.input_mode.connect("changed", lambda _m, mode: (self.zoom_box.set_visible(mode == "touch"),
                                                              self.drawing.set_touch(mode == "touch")))
         self._setup_lock()
         self._install_actions()
+        self.editor._apply = self.apply_edit_from_editor
+        self.editor.on_move = self._move_selected
+        self.editor.on_delete = self._delete_selected
+        self.editor.on_close = lambda: self._select_op(None)
         self.editor.on_pick = self.drawing.start_pick
         self.editor.on_duplicate = self._duplicate_selected
         self.editor.tool_name = self._tool_name
 
-        # narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane
-        # gets narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7
-        # in portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e)
-        # below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it
-        # is open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
-        self._small = False
-        for cond, small in (("max-width: 1000sp", False), ("max-width: 700sp", True)):
-            bp = Adw.Breakpoint.new(Adw.BreakpointCondition.parse(cond))
-            bp.add_setter(self.split, "collapsed", True)
-            bp.add_setter(self.editor, "width-request", 280)
-            bp.add_setter(self.switcher_bar, "reveal", True)
-            bp.add_setter(self.header_switcher, "visible", False)
-            # the header must fit a narrow (touch: 48 px buttons) window; these are in the main menu too
-            for wdg in (self.open_button, self.save_button, self.undo_box):
-                bp.add_setter(wdg, "visible", False)
-            if small:
-                bp.connect("apply", lambda *_: self._set_small(True))
-                bp.connect("unapply", lambda *_: self._set_small(False))
-            self.add_breakpoint(bp)
-
     # --- layout -----------------------------------------------------------------------------------------
 
-    def _build_empty(self) -> Gtk.Widget:
-        page = Adw.StatusPage(title=_("No Part Open"), icon_name="document-open-symbolic",
-                              description=_("Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"))
-        btns = Gtk.Box(spacing=12, halign=Gtk.Align.CENTER)
-        new = Gtk.Button(label=_("_New Part…"), use_underline=True, action_name="win.new")
-        new.add_css_class("pill")
-        btn = Gtk.Button(label=_("_Open…"), use_underline=True, action_name="win.open")
-        btn.add_css_class("pill")
-        btn.add_css_class("suggested-action")
-        btns.append(new)
-        btns.append(btn)
-        child = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=18, halign=Gtk.Align.CENTER)
-        child.append(btns)
-        # first run: the way into the exercises (a flat button, so the two pills stay the actions)
-        manual = Gtk.Button(label=_("Open the _Training Manual"), use_underline=True, action_name="win.manual-training",
-                            halign=Gtk.Align.CENTER)
-        manual.add_css_class("flat")
-        child.append(manual)
-        page.set_child(child)
-        start_menu = Gio.Menu()  # what works without a part: the Machine page (Manual Ops backup), settings, help
-        start_menu.append(_("New Part…"), "win.new")
-        start_menu.append(_("Open…"), "win.open")
-        start_menu.append(_("Open Machine Page"), "win.machine-page")
-        start_menu.append_section(None, self._manuals_menu())
-        start_menu.append_section(None, self._standard_menu())
-        header = Adw.HeaderBar()
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=start_menu, primary=True,
-                                       tooltip_text=_("Main Menu")))
-        view = Adw.ToolbarView()
-        view.add_top_bar(header)
-        view.set_content(page)
-        return view
-
-    def _build_main(self) -> Gtk.Widget:
-        # sidebar: operations
-        self.op_list = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
-        self.op_list.add_css_class("navigation-sidebar")
-        self.op_list.add_css_class("op-list")
-        self.op_list.connect("row-selected", self._row_selected)
-        side_scroll = Gtk.ScrolledWindow(child=self.op_list, vexpand=True)
-        side = Adw.ToolbarView()
-        side_header = Adw.HeaderBar()
-        add_menu = Gio.Menu()
-        ops_section = Gio.Menu()
+    def _build_main(self) -> None:
+        """What ui/window.blp leaves to the code: the operations and templates in the Add Operation menu, the drawing
+        tools and the simulation on the Part page, the Sheet, Tools and Machine pages."""
         for label, kind in OP_MENU:
             item = Gio.MenuItem.new(label, None)
             item.set_action_and_target_value("win.add-op", GLib.Variant.new_string(kind))
-            ops_section.append_item(item)
-        add_menu.append_section(None, ops_section)
-        # job templates (workflow improvements, step 4): a saved list of operations applied to this drawing
-        self.template_section = Gio.Menu()
+            self.ops_section.append_item(item)
         self._fill_templates()
-        add_menu.append_section(_("Templates"), self.template_section)
-        save_tpl = Gio.Menu()
-        save_tpl.append(_("Save Operations as Template…"), "win.save-template")
-        add_menu.append_section(None, save_tpl)
-        self.add_op_button = Gtk.MenuButton(icon_name="list-add-symbolic", menu_model=add_menu,
-                                            tooltip_text=_("Add Operation (C)"))
-        side_header.pack_start(self.add_op_button)
         # setups of the part (setup 2: turned around), shown when there is more than one
-        self.side_header = side_header
         self.setup_switch = Adw.ToggleGroup(css_classes=["round"])
         self.setup_switch.connect("notify::active", self._setup_switched)
-        self._switching = False
-        side.add_top_bar(side_header)
-        side.set_content(side_scroll)
-        side_page = Adw.NavigationPage(title=_("Operations"), child=side)
 
-        # part view
-        self.canvas = LatheCanvas()
+        # part view: banners above the drawing, the simulation below it, then the drawing tools' bar
         self.canvas.library = self.library  # the tool pictures in the simulation
-        self.canvas.update_property([Gtk.AccessibleProperty.LABEL], [_("Drawing")])  # screen readers, tests/e2e
-        self.canvas.connect("cursor-moved", self._cursor_moved)
-        self.zoom_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6, halign=Gtk.Align.END,
-                                valign=Gtk.Align.END)
-        self.zoom_box.add_css_class("canvas-zoom")
-        for icon, action, tip in (("zoom-in-symbolic", "win.zoom-in", _("Zoom In")),
-                                  ("zoom-out-symbolic", "win.zoom-out", _("Zoom Out")),
-                                  ("zoom-fit-best-symbolic", "win.fit", _("Fit Part"))):
-            b = Gtk.Button(icon_name=icon, action_name=action, tooltip_text=tip)
-            b.add_css_class("osd")
-            b.add_css_class("circular")
-            self.zoom_box.append(b)
-        self.zoom_box.set_visible(False)  # shown in touch mode (T1)
-        overlay = Gtk.Overlay(child=self.canvas)
-        overlay.add_overlay(self.zoom_box)
-        self.readout = Gtk.Label(xalign=0, label=" ")
-        self.readout.add_css_class("readout")
-        self.readout.add_css_class("dim-label")
         self.drawing = DrawingTools(self, self.canvas)
-        overlay.add_overlay(self.drawing.chip)  # the value chip on the last drawn segment (touch)
-        part = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        part.append(self.drawing.pick_banner)
-        part.append(self.drawing.construct_banner)
-        # Part page messages show over the drawing, above the simulation and tool bars, so they never cover the
-        # tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
-        self.part_toasts = Adw.ToastOverlay(child=overlay, vexpand=True)
-        part.append(self.part_toasts)
+        self.part_overlay.add_overlay(self.drawing.chip)  # the value chip on the last drawn segment (touch)
+        self.part_page.prepend(self.drawing.construct_banner)
+        self.part_page.prepend(self.drawing.pick_banner)
         self.sim = SimulationBar(self.canvas, self._sim_line)
-        part.append(self.sim)
-        part.append(Gtk.Separator())
-        part.append(self.drawing.bar)
-        part.append(self.readout)
+        self.part_page.insert_child_after(self.sim, self.part_toasts)
+        self.part_page.insert_child_after(self.drawing.bar, self.part_separator)
 
         # program view
-        self.program_view = Gtk.TextView(editable=False, cursor_visible=False, monospace=True,
-                                         top_margin=12, bottom_margin=12, left_margin=12, right_margin=12)
-        self.program_view.add_css_class("program-text")
-        self._hl = self.program_view.get_buffer().create_tag("hl", paragraph_background="rgba(53,132,228,0.18)")
+        buf = self.program_view.get_buffer()
+        self._hl = buf.create_tag("hl", paragraph_background="rgba(53,132,228,0.18)")
         # each block starts with its label (N10, N20 ...): bold, so the blocks stand out while scrolling
-        self._block_tag = self.program_view.get_buffer().create_tag("block", weight=700)
-        tap = Gtk.GestureClick()
-        tap.connect("released", self._program_tapped)
-        self.program_view.add_controller(tap)
-        pinch = Gtk.GestureZoom()
-        pinch.connect("begin", lambda *_: setattr(self, "_pinch_base", self._font_pt))
-        pinch.connect("scale-changed", lambda g, s: self._set_font(self._pinch_base * s))
-        self.program_view.add_controller(pinch)
-        self.program_info = Gtk.Label(xalign=0, ellipsize=Pango.EllipsizeMode.END)  # never widens the window
-        self.program_info.add_css_class("readout")
-        self.program_info.add_css_class("dim-label")
-        # search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
-        self.program_search = Gtk.SearchEntry(placeholder_text=_("Search, or N10 to go to a block"), hexpand=True)
-        self.program_search.connect("search-changed", lambda e: self._program_find(e.get_text(), 0))
-        self.program_search.connect("activate", lambda e: self._program_find(e.get_text(), 1))
-        self.program_search.connect("next-match", lambda e: self._program_find(e.get_text(), 1))
-        self.program_search.connect("previous-match", lambda e: self._program_find(e.get_text(), -1))
-        self.program_searchbar = Gtk.SearchBar(child=self.program_search, show_close_button=True)
+        self._block_tag = buf.create_tag("block", weight=700)
+        self._found = buf.create_tag("found", background="rgba(246,211,45,0.55)")
         self.program_searchbar.connect_entry(self.program_search)
-        self._found = self.program_view.get_buffer().create_tag("found", background="rgba(246,211,45,0.55)")
-        prog = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        prog.append(self.program_searchbar)
-        prog.append(Gtk.ScrolledWindow(child=self.program_view, vexpand=True))
-        prog.append(Gtk.Separator())
-        info = Gtk.Box()
-        info.append(self.program_info)
-        self.program_info.set_hexpand(True)
-        find = Gtk.ToggleButton(icon_name="edit-find-symbolic", tooltip_text=_("Search (Ctrl+F)"))
-        find.add_css_class("flat")
-        find.bind_property("active", self.program_searchbar, "search-mode-enabled",
-                           GObject.BindingFlags.BIDIRECTIONAL | GObject.BindingFlags.SYNC_CREATE)
-        info.append(find)
-        prog.append(info)
         self._font_css = Gtk.CssProvider()
         Gtk.StyleContext.add_provider_for_display(self.get_display(), self._font_css,
                                                   Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 1)
 
-        # size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the width of
-        # the Part page with the editor open
-        self.stack = Adw.ViewStack(hhomogeneous=False)
-        self.stack.connect("notify::visible-child-name", lambda *_: (self._layout_editor(), self._focus_drawing()))
-        self.stack.add_titled_with_icon(part, "part", _("Part"), "view-paged-symbolic")
-        self.stack.add_titled_with_icon(prog, "program", _("Program"), "text-x-generic-symbolic")
         self.sheet = SheetPage(self)
         self.stack.add_titled_with_icon(self.sheet, "sheet", _("Sheet"), "x-office-document-symbolic")
         self.tools_page = ToolsPage(self)
@@ -292,105 +193,44 @@ class MainWindow(Adw.ApplicationWindow):
         self.machine = MachinePage(self)
         self.stack.add_titled_with_icon(self.machine, "machine", _("Machine"), "network-wired-symbolic")
 
-        header = Adw.HeaderBar()
-        self.header_switcher = Adw.ViewSwitcher(stack=self.stack, policy=Adw.ViewSwitcherPolicy.NARROW)  # 5 pages: icon over label fits
-        header.set_title_widget(self.header_switcher)
-        self.open_button = Gtk.Button(icon_name="document-open-symbolic", action_name="win.open",
-                                      tooltip_text=_("Open (Ctrl+O)"))
-        self.save_button = Gtk.Button(icon_name="document-save-symbolic", action_name="win.save",
-                                      tooltip_text=_("Save (Ctrl+S)"))
-        header.pack_start(self.open_button)
-        header.pack_start(self.save_button)
-        undo_box = self.undo_box = Gtk.Box()
-        undo_box.append(Gtk.Button(icon_name="edit-undo-symbolic", action_name="win.undo", tooltip_text=_("Undo (Ctrl+Z)")))
-        undo_box.append(Gtk.Button(icon_name="edit-redo-symbolic", action_name="win.redo",
-                                   tooltip_text=_("Redo (Ctrl+Shift+Z)")))
-        header.pack_start(undo_box)
-        menu = Gio.Menu()
-        files = Gio.Menu()  # also reachable by touch, and the header buttons hide on a narrow window
-        files.append(_("New Part…"), "win.new")
-        files.append(_("Open…"), "win.open")
-        files.append(_("Save"), "win.save")
-        files.append(_("Save As…"), "win.save-as")
-        files.append(_("Save as ALPHA-T Drawing…"), "win.save-sdg")
-        menu.append_section(None, files)
-        edit = Gio.Menu()
-        edit.append(_("Undo"), "win.undo")
-        edit.append(_("Redo"), "win.redo")
-        menu.append_section(None, edit)
-        view_menu = Gio.Menu()
-        view_menu.append(_("Fit Part"), "win.fit")
-        view_menu.append(_("Show Grid"), "win.show-grid")
-        view_menu.append(_("Part Settings"), "win.part-settings")
-        view_menu.append(_("Turn Part Around…"), "win.turn-around")
-        view_menu.append(_("Remove This Setup…"), "win.remove-setup")
-        view_menu.append(_("Clear Messages"), "win.clear-messages")
-        menu.append_section(None, view_menu)
-        layout = Gio.Menu()
-        for label, target in ((_("Automatic"), "auto"), (_("Pointer"), "pointer"), (_("Touch"), "touch")):
-            item = Gio.MenuItem.new(label, None)
-            item.set_action_and_target_value("win.input-layout", GLib.Variant.new_string(target))
-            layout.append_item(item)
-        menu.append_section(_("Input Layout"), layout)
-        menu.append_section(None, self._manuals_menu())
-        menu.append_section(None, self._standard_menu())
-        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=menu, primary=True,
-                                       tooltip_text=_("Main Menu")))
-        # HIG header bars: icon and label, no suggested style
-        export = Gtk.Button(child=Adw.ButtonContent(icon_name="document-send-symbolic", label=_("_Export PRG"),
-                                                    use_underline=True),
-                            action_name="win.export", tooltip_text=_("Export ALPHA-T Program (Ctrl+E)"))
-        header.pack_end(export)
-        self.lock_button = Gtk.ToggleButton(icon_name="changes-allow-symbolic",
-                                            tooltip_text=_("Touch Lock (Hold to Unlock by Touch)"))
-        header.pack_end(self.lock_button)
-
-        self.banner = Adw.Banner()
-        self.banner.connect("button-clicked", lambda *_: self._show_finding())
-        self.switcher_bar = Adw.ViewSwitcherBar(stack=self.stack)
-        content = Adw.ToolbarView()
-        content.add_top_bar(header)
-        content.add_top_bar(self.banner)
-        self.editor = OpEditor(self.apply_edit_from_editor, self._move_selected, self._delete_selected,
-                               lambda: self._select_op(None))
-        # editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
-        # negative allocations during its slide animation here)
-        self.editor.set_size_request(340, -1)
-        self.editor.add_css_class("editor-pane")
-        self.editor_reveal = Gtk.Revealer(child=self.editor, transition_type=Gtk.RevealerTransitionType.SLIDE_LEFT,
-                                          reveal_child=False)
-        self.editor_split = Gtk.Box()
-        self.stack.set_hexpand(True)
-        self.editor_split.append(self.stack)
-        self.editor_split.append(self.editor_reveal)
-        self.editor_reveal.connect("notify::reveal-child", lambda *_: self._layout_editor())
-        content.set_content(self.editor_split)
-        content.add_bottom_bar(self.switcher_bar)
-        self.content_page = Adw.NavigationPage(title=_("Part"), child=content)
-
-        self.split = Adw.NavigationSplitView(sidebar=side_page, content=self.content_page,
-                                             min_sidebar_width=260, max_sidebar_width=340)
+    @Gtk.Template.Callback()
+    def _split_collapsed(self, split, _p) -> None:
         # a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing
-        self.split.connect("notify::collapsed", lambda sp, _p: sp.get_collapsed() and self.project is not None
-                           and sp.set_show_content(True))
-        return self.split
+        if split.get_collapsed() and self.project is not None:
+            split.set_show_content(True)
 
-    @staticmethod
-    def _manuals_menu() -> Gio.Menu:
-        m = Gio.Menu()
-        m.append(_("Training Manual"), "win.manual-training")
-        m.append(_("Reference Manual"), "win.manual-reference")
-        return m
+    @Gtk.Template.Callback()
+    def _page_changed(self, *_a) -> None:
+        self._layout_editor()
+        self._focus_drawing()
 
-    @staticmethod
-    def _standard_menu() -> Gio.Menu:
-        """The HIG's last group of a main menu, in its order."""
-        m = Gio.Menu()
-        m.append(_("Preferences"), "win.preferences")
-        m.append(_("Keyboard Shortcuts"), "win.shortcuts")
-        m.append(_("Help"), "win.help")
-        m.append(_("About AlphaLink CAM"), "app.about")
-        return m
+    @Gtk.Template.Callback()
+    def _small_applied(self, *_a) -> None:
+        self._set_small(True)
+
+    @Gtk.Template.Callback()
+    def _small_unapplied(self, *_a) -> None:
+        self._set_small(False)
+
+    @Gtk.Template.Callback()
+    def _program_search_changed(self, entry) -> None:
+        self._program_find(entry.get_text(), 0)
+
+    @Gtk.Template.Callback()
+    def _program_search_next(self, entry) -> None:
+        self._program_find(entry.get_text(), 1)
+
+    @Gtk.Template.Callback()
+    def _program_search_previous(self, entry) -> None:
+        self._program_find(entry.get_text(), -1)
+
+    @Gtk.Template.Callback()
+    def _pinch_begin(self, *_a) -> None:
+        self._pinch_base = self._font_pt
+
+    @Gtk.Template.Callback()
+    def _pinch_scaled(self, _gesture, scale) -> None:
+        self._set_font(self._pinch_base * scale)
 
     # --- touch lock (TOUCH.md 7.4) -----------------------------------------------------------------------
 
@@ -465,7 +305,6 @@ class MainWindow(Adw.ApplicationWindow):
         add("turn-around", lambda *_: self.turn_around_dialog())
         self.remove_setup_action = add("remove-setup", lambda *_: self.remove_setup_dialog())
         self.remove_setup_action.set_enabled(False)
-        self.connect("close-request", self._close_request)
         layout = Gio.SimpleAction.new_stateful("input-layout", GLib.VariantType.new("s"),
                                                GLib.Variant.new_string(settings()["input_layout"]))
         layout.connect("change-state", self._input_layout)
@@ -1341,6 +1180,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.toast(_("Saved {name}").format(name=path.name))
         return True
 
+    @Gtk.Template.Callback()
     def _close_request(self, *_args) -> bool:
         if not self.modified():
             return False
@@ -1497,6 +1337,7 @@ class MainWindow(Adw.ApplicationWindow):
         row = self.op_list.get_selected_row()
         return None if row is None else row.get_index()
 
+    @Gtk.Template.Callback()
     def _row_selected(self, listbox, row) -> None:
         if self._select_guard:
             return
@@ -1535,6 +1376,7 @@ class MainWindow(Adw.ApplicationWindow):
         else:
             self.op_list.select_row(row)
 
+    @Gtk.Template.Callback()
     def _cursor_moved(self, canvas, x, z) -> None:
         if self.canvas.cursor is not None and self.drawing._key_pointer is not None:
             return  # the keys put the cursor; the read-out shows it until the mouse really moves (drawing_tools)
@@ -1573,7 +1415,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.program_searchbar.set_search_mode(True)
         self.program_search.grab_focus()
 
-    def _show_finding(self) -> None:
+    @Gtk.Template.Callback()
+    def _show_finding(self, *_a) -> None:
         """The banner's Show: the first warning's operation, and the drawing centred on the place."""
         if not getattr(self, "findings", None):
             return
@@ -1642,6 +1485,7 @@ class MainWindow(Adw.ApplicationWindow):
             buf.move_mark(mark, it)
             GLib.idle_add(lambda: self.program_view.scroll_to_mark(mark, 0.1, True, 0, 0) and False)
 
+    @Gtk.Template.Callback()
     def _program_tapped(self, gesture, n, x, y) -> None:
         bx, by = self.program_view.window_to_buffer_coords(Gtk.TextWindowType.WIDGET, int(x), int(y))
         ok, it = self.program_view.get_iter_at_location(bx, by)

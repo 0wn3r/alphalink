@@ -1180,21 +1180,6 @@ msgstr "Точка зміни інструмента"
 msgid "Tool start"
 msgstr "Початкова точка інструмента"
 
-msgid "Operation"
-msgstr "Операція"
-
-msgid "Move Up"
-msgstr "Перемістити вгору"
-
-msgid "Move Down"
-msgstr "Перемістити вниз"
-
-msgid "Close Editor"
-msgstr "Закрити редактор"
-
-msgid "Delete Operation"
-msgstr "Видалити операцію"
-
 msgid "Operation {n}"
 msgstr "Операція {n}"
 
@@ -1350,6 +1335,9 @@ msgstr "Час циклу"
 
 msgid "Program"
 msgstr "Програма"
+
+msgid "Operation"
+msgstr "Операція"
 
 msgid "Tool No."
 msgstr "Інстр. №"
@@ -1807,6 +1795,129 @@ msgstr "Імпортовано інструментів: {n} з {name}"
 msgid "Tool library reset to ALPHA-T's 32 standard tools"
 msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"
 
+msgid "Move Up"
+msgstr "Перемістити вгору"
+
+msgid "Move Down"
+msgstr "Перемістити вниз"
+
+msgid "Close Editor"
+msgstr "Закрити редактор"
+
+msgid "Delete Operation"
+msgstr "Видалити операцію"
+
+msgid "No Part Open"
+msgstr "Деталь не відкрито"
+
+msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
+msgstr "Відкрийте деталь AlphaLink (.alcam), креслення ALPHA-T (.SDG) або DXF"
+
+msgid "_New Part…"
+msgstr "_Нова деталь…"
+
+msgid "_Open…"
+msgstr "_Відкрити…"
+
+msgid "Open the _Training Manual"
+msgstr "Відкрити _навчальний посібник"
+
+msgid "Operations"
+msgstr "Операції"
+
+msgid "Add Operation (C)"
+msgstr "Додати операцію (C)"
+
+msgid "Part"
+msgstr "Деталь"
+
+msgid "Open (Ctrl+O)"
+msgstr "Відкрити (Ctrl+O)"
+
+msgid "Save (Ctrl+S)"
+msgstr "Зберегти (Ctrl+S)"
+
+msgid "Undo (Ctrl+Z)"
+msgstr "Відмінити (Ctrl+Z)"
+
+msgid "Redo (Ctrl+Shift+Z)"
+msgstr "Повторити (Ctrl+Shift+Z)"
+
+msgid "Export ALPHA-T Program (Ctrl+E)"
+msgstr "Експортувати програму ALPHA-T (Ctrl+E)"
+
+msgid "_Export PRG"
+msgstr "_Експорт PRG"
+
+msgid "Touch Lock (Hold to Unlock by Touch)"
+msgstr "Блокування сенсора (утримуйте, щоб розблокувати дотиком)"
+
+msgid "Drawing"
+msgstr "Креслення"
+
+msgid "Search, or N10 to go to a block"
+msgstr "Пошук або N10, щоб перейти до блоку"
+
+msgid "Search (Ctrl+F)"
+msgstr "Пошук (Ctrl+F)"
+
+msgid "New Part…"
+msgstr "Нова деталь…"
+
+msgid "Open…"
+msgstr "Відкрити…"
+
+msgid "Open Machine Page"
+msgstr "Відкрити сторінку «Верстат»"
+
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
+
+msgid "About AlphaLink CAM"
+msgstr "Про AlphaLink CAM"
+
+msgid "Save As…"
+msgstr "Зберегти як…"
+
+msgid "Save as ALPHA-T Drawing…"
+msgstr "Зберегти креслення ALPHA-T…"
+
+msgid "Show Grid"
+msgstr "Показувати сітку"
+
+msgid "Part Settings"
+msgstr "Параметри деталі"
+
+msgid "Turn Part Around…"
+msgstr "Перевернути деталь…"
+
+msgid "Remove This Setup…"
+msgstr "Видалити це встановлення…"
+
+msgid "Clear Messages"
+msgstr "Прибрати повідомлення"
+
+msgid "Input Layout"
+msgstr "Режим введення"
+
+msgid "Automatic"
+msgstr "Автоматично"
+
+msgid "Pointer"
+msgstr "Миша"
+
+msgid "Touch"
+msgstr "Сенсор"
+
+msgid "Templates"
+msgstr "Шаблони"
+
+msgid "Save Operations as Template…"
+msgstr "Зберегти операції як шаблон…"
+
 msgid "Area clear"
 msgstr "Чорнова обробка"
 
@@ -1849,54 +1960,6 @@ msgstr[0] "{n} прохід"
 msgstr[1] "{n} проходи"
 msgstr[2] "{n} проходів"
 
-msgid "No Part Open"
-msgstr "Деталь не відкрито"
-
-msgid "Open an AlphaLink part (.alcam), an ALPHA-T drawing (.SDG) or a DXF"
-msgstr "Відкрийте деталь AlphaLink (.alcam), креслення ALPHA-T (.SDG) або DXF"
-
-msgid "_New Part…"
-msgstr "_Нова деталь…"
-
-msgid "_Open…"
-msgstr "_Відкрити…"
-
-msgid "Open the _Training Manual"
-msgstr "Відкрити _навчальний посібник"
-
-msgid "New Part…"
-msgstr "Нова деталь…"
-
-msgid "Open…"
-msgstr "Відкрити…"
-
-msgid "Open Machine Page"
-msgstr "Відкрити сторінку «Верстат»"
-
-msgid "Templates"
-msgstr "Шаблони"
-
-msgid "Save Operations as Template…"
-msgstr "Зберегти операції як шаблон…"
-
-msgid "Add Operation (C)"
-msgstr "Додати операцію (C)"
-
-msgid "Operations"
-msgstr "Операції"
-
-msgid "Drawing"
-msgstr "Креслення"
-
-msgid "Search, or N10 to go to a block"
-msgstr "Пошук або N10, щоб перейти до блоку"
-
-msgid "Search (Ctrl+F)"
-msgstr "Пошук (Ctrl+F)"
-
-msgid "Part"
-msgstr "Деталь"
-
 msgid "Sheet"
 msgstr "Наладка"
 
@@ -1905,69 +1968,6 @@ msgstr "Інструменти"
 
 msgid "Machine"
 msgstr "Верстат"
-
-msgid "Open (Ctrl+O)"
-msgstr "Відкрити (Ctrl+O)"
-
-msgid "Save (Ctrl+S)"
-msgstr "Зберегти (Ctrl+S)"
-
-msgid "Undo (Ctrl+Z)"
-msgstr "Відмінити (Ctrl+Z)"
-
-msgid "Redo (Ctrl+Shift+Z)"
-msgstr "Повторити (Ctrl+Shift+Z)"
-
-msgid "Save As…"
-msgstr "Зберегти як…"
-
-msgid "Save as ALPHA-T Drawing…"
-msgstr "Зберегти креслення ALPHA-T…"
-
-msgid "Show Grid"
-msgstr "Показувати сітку"
-
-msgid "Part Settings"
-msgstr "Параметри деталі"
-
-msgid "Turn Part Around…"
-msgstr "Перевернути деталь…"
-
-msgid "Remove This Setup…"
-msgstr "Видалити це встановлення…"
-
-msgid "Clear Messages"
-msgstr "Прибрати повідомлення"
-
-msgid "Automatic"
-msgstr "Автоматично"
-
-msgid "Pointer"
-msgstr "Миша"
-
-msgid "Touch"
-msgstr "Сенсор"
-
-msgid "Input Layout"
-msgstr "Режим введення"
-
-msgid "_Export PRG"
-msgstr "_Експорт PRG"
-
-msgid "Export ALPHA-T Program (Ctrl+E)"
-msgstr "Експортувати програму ALPHA-T (Ctrl+E)"
-
-msgid "Touch Lock (Hold to Unlock by Touch)"
-msgstr "Блокування сенсора (утримуйте, щоб розблокувати дотиком)"
-
-msgid "Training Manual"
-msgstr "Навчальний посібник"
-
-msgid "Reference Manual"
-msgstr "Довідковий посібник"
-
-msgid "About AlphaLink CAM"
-msgstr "Про AlphaLink CAM"
 
 msgid "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr "Сенсор заблоковано. Утримуйте кнопку замка або клацніть її мишею, щоб розблокувати."

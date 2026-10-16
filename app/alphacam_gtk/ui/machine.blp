@@ -1,0 +1,157 @@
+using Gtk 4.0;
+using Adw 1;
+
+// The Machine page (DESIGN.md 6/7, TOUCH.md 7.4): port, live modem lines, send the program, back up / restore the
+// Manual Ops, loopback test. machine.py sets the steps texts (STEPS_*) and the values remembered in the settings.
+template $AlphaLinkMachinePage: Box {
+  orientation: vertical;
+
+  Adw.PreferencesPage {
+    Adw.PreferencesGroup {
+      title: _("Connection");
+
+      Adw.ComboRow port_row {
+        title: _("Serial port");
+        model: StringList port_model {};
+
+        [suffix]
+        Button {
+          icon-name: "view-refresh-symbolic";
+          valign: center;
+          tooltip-text: _("Rescan Ports");
+          clicked => $_rescan();
+
+          styles [
+            "flat",
+          ]
+        }
+      }
+
+      Adw.ActionRow lines_row {
+        title: _("Modem lines");
+        subtitle: _("Shown while this page is open");
+        tooltip-text: _("With the manual's cable (bridges 7-8 and 1-4-6 on the PC side) these only echo the PC's own RTS/DTR: on means the adapter is alive, not the lathe.");
+
+        [suffix]
+        Label line_cts {
+          label: "CTS";
+          valign: center;
+
+          styles [
+            "modem-line",
+          ]
+        }
+
+        [suffix]
+        Label line_dsr {
+          label: "DSR";
+          valign: center;
+
+          styles [
+            "modem-line",
+          ]
+        }
+
+        [suffix]
+        Label line_cd {
+          label: "CD";
+          valign: center;
+
+          styles [
+            "modem-line",
+          ]
+        }
+
+        [suffix]
+        Label line_ri {
+          label: "RI";
+          valign: center;
+
+          styles [
+            "modem-line",
+          ]
+        }
+      }
+
+      Adw.SpinRow delay_row {
+        title: _("Delay per character (ms)");
+        subtitle: _("2 ms works on the 400T; 0 sends at full speed");
+
+        adjustment: Adjustment {
+          lower: 0;
+          upper: 20;
+          step-increment: 0.5;
+          page-increment: 5;
+        };
+
+        digits: 1;
+      }
+
+      Adw.SwitchRow wait_row {
+        title: _("Wait for the control (DC1)");
+        subtitle: _("Nothing is sent until the lathe asks for data");
+      }
+
+      // Bluetooth serial adapters: the line is set in the adapter; some only frame 8 data bits
+      Adw.SwitchRow parity_row {
+        title: _("Parity from the app");
+        subtitle: _("For adapters without 7-bit framing: set the adapter to 9600 8N2");
+      }
+    }
+
+    Adw.PreferencesGroup send_group {
+      title: _("Send CAM program");
+
+      Adw.ActionRow send_info {
+        title: _("No program");
+        subtitle: _("Open a part first");
+      }
+
+      $AlphaLinkHoldButton send_button {
+        text: _("Send to the Lathe");
+        margin-top: 12;
+        height-request: 72;
+        held => $_confirm_send();
+
+        styles [
+          "suggested-action",
+        ]
+      }
+    }
+
+    Adw.PreferencesGroup mops_group {
+      title: _("Manual Ops");
+
+      Adw.ButtonRow {
+        title: _("Back Up Manual Ops from the Lathe…");
+        start-icon-name: "document-save-symbolic";
+        activated => $_backup();
+      }
+
+      Adw.ActionRow restore_row {
+        title: _("Restore Manual Ops");
+      }
+
+      $AlphaLinkHoldButton restore_button {
+        text: _("Restore to the Lathe…");
+        margin-top: 12;
+        height-request: 64;
+        held => $_restore_pick();
+
+        styles [
+          "destructive-action",
+        ]
+      }
+    }
+
+    Adw.PreferencesGroup test_group {
+      title: _("Cable Test");
+
+      Adw.ButtonRow {
+        title: _("Run Loopback Test");
+        start-icon-name: "media-playlist-repeat-symbolic";
+        activated => $_loopback();
+      }
+    }
+  }
+}

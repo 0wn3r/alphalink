@@ -27,6 +27,7 @@ from alphacam.model.tools import (  # noqa: E402
 
 from .op_editor import fit_spin  # noqa: E402
 from .i18n import N_, _  # noqa: E402
+from .ui import builder, template  # noqa: E402
 
 LIBRARY_PATH = Path(GLib.get_user_config_dir()) / "alphalink-cam" / "tools.json"
 TYPE_LABELS = {"turn": N_("Turning"), "groove": N_("Grooving / parting"), "thread": N_("Threading"),
@@ -48,36 +49,20 @@ def save_library(lib: ToolLibrary, path: Path = LIBRARY_PATH) -> None:
     tmp.replace(path)
 
 
+@template("tools-page")
 class ToolsPage(Gtk.Box):
+    __gtype_name__ = "AlphaLinkToolsPage"
+
+    note = Gtk.Template.Child()
+    listbox = Gtk.Template.Child()
+    editor = Gtk.Template.Child()
+
+    _building = False
+
     def __init__(self, window):
-        super().__init__(orientation=Gtk.Orientation.VERTICAL)
+        super().__init__()
         self.w = window
         self._building = False
-        # a wrapping row: the button labels are much longer in Ukrainian and must not set the window's width
-        bar = Adw.WrapBox(child_spacing=6, line_spacing=6, margin_start=12, margin_end=12, margin_top=6,
-                          margin_bottom=6)
-        for label, cb, css in ((_("_Add Tool"), self._add, None), (_("_Delete Tool"), self._delete, "destructive-action"),
-                               (_("_Import ATOOLIB.TL1…"), self._import, None),
-                               (_("_Reset to ALPHA-T Tools"), self._reset, None)):
-            b = Gtk.Button(label=label, use_underline=True)
-            if css:
-                b.add_css_class(css)
-            b.connect("clicked", lambda _b, cb=cb: cb())
-            bar.append(b)
-        self.append(bar)
-        self.note = Gtk.Label(label=_("Tool numbers are the lathe's tool memory slots."), xalign=0, wrap=True,
-                              margin_start=12, margin_end=12, margin_bottom=6)
-        self.note.add_css_class("dim-label")
-        self.append(self.note)
-        self.append(Gtk.Separator())
-        body = Gtk.Paned(position=360, vexpand=True, shrink_start_child=False, shrink_end_child=False)
-        self.listbox = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
-        self.listbox.add_css_class("navigation-sidebar")
-        self.listbox.connect("row-selected", lambda *a: self._show())
-        body.set_start_child(Gtk.ScrolledWindow(child=self.listbox, hscrollbar_policy=Gtk.PolicyType.NEVER))
-        self.editor = Gtk.ScrolledWindow(hscrollbar_policy=Gtk.PolicyType.NEVER)
-        body.set_end_child(self.editor)
-        self.append(body)
         self.fill()
 
     @property
@@ -101,7 +86,8 @@ class ToolsPage(Gtk.Box):
 
     # --- editor -----------------------------------------------------------------------------------------
 
-    def _show(self) -> None:
+    @Gtk.Template.Callback()
+    def _show(self, *_a) -> None:
         t = self.current()
         if t is None:
             self.editor.set_child(None)
@@ -166,23 +152,22 @@ class ToolsPage(Gtk.Box):
 
     # --- actions ----------------------------------------------------------------------------------------
 
-    def _add(self) -> None:
+    @Gtk.Template.Callback()
+    def _add(self, *_a) -> None:
         used = {t.number for t in self.lib.tools}
         n = next(i for i in range(1, 1000) if i not in used)
         self.lib.tools.append(Tool(n, _("New tool")))
         self._changed(n)
 
-    def _delete(self) -> None:
+    @Gtk.Template.Callback()
+    def _delete(self, *_a) -> None:
         t = self.current()
         if t is None:
             return
-        alert = Adw.AlertDialog(heading=_("Delete T{n}?").format(n=t.number),
-                                body=_("{name} is removed from your tool library. Parts that use it fall back to "
-                                       "ALPHA-T's standard tool with that number.").format(name=t.name))
-        alert.add_response("cancel", _("_Cancel"))
-        alert.add_response("delete", _("_Delete"))
-        alert.set_response_appearance("delete", Adw.ResponseAppearance.DESTRUCTIVE)
-        alert.set_close_response("cancel")
+        alert = builder("tools-dialogs").get_object("delete_alert")
+        alert.set_heading(_("Delete T{n}?").format(n=t.number))
+        alert.set_body(_("{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard "
+                         "tool with that number.").format(name=t.name))
 
         def response(_d, r):
             if r == "delete":
@@ -192,7 +177,8 @@ class ToolsPage(Gtk.Box):
         alert.connect("response", response)
         alert.present(self.w)
 
-    def _import(self) -> None:
+    @Gtk.Template.Callback()
+    def _import(self, *_a) -> None:
         filters = Gio.ListStore.new(Gtk.FileFilter)
         f = Gtk.FileFilter(name=_("ALPHA-T tool library"))
         for pat in ("*.TL1", "*.tl1"):
@@ -229,7 +215,8 @@ class ToolsPage(Gtk.Box):
 
         dlg.open(self.w, None, done)
 
-    def _reset(self) -> None:
+    @Gtk.Template.Callback()
+    def _reset(self, *_a) -> None:
         self.lib.tools[:] = standard_library().tools
         self._changed(None)
         self.w.toast(_("Tool library reset to ALPHA-T's 32 standard tools"))

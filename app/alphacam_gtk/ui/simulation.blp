@@ -1,0 +1,108 @@
+using Gtk 4.0;
+
+// The simulation transport under the drawing (TOUCH.md 7.2): first, previous pass, play/pause, next pass, last; the
+// scale scrubs move by move; then the selected operation's start, the playback speed and where the simulation is.
+template $AlphaLinkSimulationBar: Box {
+  spacing: 6;
+  margin-start: 6;
+  margin-end: 6;
+  margin-top: 4;
+  margin-bottom: 4;
+
+  styles [
+    "sim-bar",
+  ]
+
+  Button first_button {
+    icon-name: "media-skip-backward-symbolic";
+    tooltip-text: _("First Move");
+    clicked => $_first();
+
+    styles [
+      "flat",
+    ]
+  }
+
+  Button previous_button {
+    icon-name: "media-seek-backward-symbolic";
+    tooltip-text: _("Previous Pass");
+    clicked => $_previous_pass();
+
+    styles [
+      "flat",
+    ]
+  }
+
+  Button play_button {
+    icon-name: "media-playback-start-symbolic";
+    tooltip-text: _("Play / Pause");
+    clicked => $_play_clicked();
+  }
+
+  Button next_button {
+    icon-name: "media-seek-forward-symbolic";
+    tooltip-text: _("Next Pass");
+    clicked => $_next_pass();
+
+    styles [
+      "flat",
+    ]
+  }
+
+  Button last_button {
+    icon-name: "media-skip-forward-symbolic";
+    tooltip-text: _("Show All");
+    clicked => $_show_all();
+
+    styles [
+      "flat",
+    ]
+  }
+
+  Scale scale {
+    hexpand: true;
+    draw-value: false;
+
+    adjustment: Adjustment {
+      upper: 1;
+      step-increment: 1;
+    };
+
+    value-changed => $_scrubbed();
+  }
+
+  // the selected operation's first move ("run to operation")
+  Button to_op {
+    icon-name: "find-location-symbolic";
+    tooltip-text: _("Start of the Selected Operation");
+    sensitive: false;
+    clicked => $_to_op_clicked();
+
+    styles [
+      "flat",
+    ]
+  }
+
+  Button speed_button {
+    label: "1×";
+    tooltip-text: _("Playback Speed");
+    clicked => $_speed_clicked();
+
+    styles [
+      "flat",
+      "numeric",
+    ]
+  }
+
+  Label label {
+    width-chars: 12;
+    max-width-chars: 40;
+    xalign: 0;
+    ellipsize: end;
+
+    styles [
+      "caption",
+      "numeric",
+    ]
+  }
+}
