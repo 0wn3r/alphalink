@@ -68,8 +68,8 @@ pub fn build(options: StartOptions) -> adw::Application {
     app
 }
 
-fn window(app: &adw::Application) -> gtk::Window {
-    app.active_window().unwrap_or_else(|| {
+fn window(app: &adw::Application) -> crate::window::MainWindow {
+    app.active_window().and_downcast().unwrap_or_else(|| {
         let win = crate::window::new(app);
         if crate::test_bus::enabled() {
             // no shadow or top bar before the surface: widget bounds are screen coordinates (test_bus)

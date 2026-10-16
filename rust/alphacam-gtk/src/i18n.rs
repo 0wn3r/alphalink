@@ -67,3 +67,17 @@ pub fn language() -> String {
         .filter(|l| !l.is_empty())
         .unwrap_or_else(|| "en".into())
 }
+
+/// Fill a translated text's {name} fields (Python's str.format with names).
+pub fn fill(text: &str, args: &[(&str, &dyn std::fmt::Display)]) -> String {
+    let mut out = text.to_string();
+    for (name, value) in args {
+        out = out.replace(&format!("{{{name}}}"), &value.to_string());
+    }
+    out
+}
+
+/// gettext, then fill its {name} fields.
+pub fn tr(text: &str, args: &[(&str, &dyn std::fmt::Display)]) -> String {
+    fill(&gettext(text), args)
+}

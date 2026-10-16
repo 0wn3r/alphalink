@@ -357,7 +357,7 @@ impl LatheCanvas {
         (min(&zs), max(&zs), min(&rs).min(-0.12 * r1), r1)
     }
 
-    pub(super) fn user_view_change(&self) {
+    pub fn user_view_change(&self) {
         self.state_mut().auto_fit = false;
         self.queue_draw();
         self.emit_by_name::<()>("view-changed", &[]);

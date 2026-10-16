@@ -8,6 +8,7 @@
 //!   Widgets() -> a(ssssdddd)   every mapped widget: buildable id, widget name, CSS name, its text (label,
 //!                              tooltip or title), x, y, width, height
 //!   Bounds(s key) -> (bdddd)   the first mapped widget whose buildable id, widget name or text is `key`
+//!   Screenshot(s path) -> b    the active window rendered to a PNG (for failed tests)
 
 use adw::prelude::*;
 use gtk::{gio, glib};
@@ -19,6 +20,7 @@ const INTERFACE: &str = r#"<node>
   <interface name="io.github._0wn3r.AlphaLinkCAM.Test">
     <method name="Widgets"><arg type="a(ssssdddd)" direction="out"/></method>
     <method name="Bounds"><arg name="key" type="s" direction="in"/><arg type="(bdddd)" direction="out"/></method>
+    <method name="Screenshot"><arg name="path" type="s" direction="in"/><arg type="b" direction="out"/></method>
   </interface>
 </node>"#;
 
@@ -108,8 +110,27 @@ fn serve(connection: &gio::DBusConnection, app: glib::WeakRef<gtk::Application>)
                     };
                     invocation.return_value(Some(&(answer,).to_variant()));
                 }
+                "Screenshot" => {
+                    let path: String = params.get::<(String,)>().map(|(k,)| k).unwrap_or_default();
+                    invocation.return_value(Some(&(screenshot(&app, &path),).to_variant()));
+                }
                 _ => invocation.return_error(gio::DBusError::UnknownMethod, method),
             }
         })
         .build();
+}
+
+/// The active window as GTK draws it, saved as a PNG.
+fn screenshot(app: &gtk::Application, path: &str) -> bool {
+    let Some(win) = app.active_window() else {
+        return false;
+    };
+    let (w, h) = (win.width() as f64, win.height() as f64);
+    let paintable = gtk::WidgetPaintable::new(Some(&win));
+    let snapshot = gtk::Snapshot::new();
+    paintable.snapshot(&snapshot, w, h);
+    let (Some(node), Some(renderer)) = (snapshot.to_node(), win.renderer()) else {
+        return false;
+    };
+    renderer.render_texture(node, None).save_to_png(path).is_ok()
 }
