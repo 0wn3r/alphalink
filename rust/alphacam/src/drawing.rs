@@ -101,7 +101,7 @@ fn no_element(gid: &str) -> Error {
 }
 
 /// The picked contour of an operation that has one.
-fn contour_mut(op: &mut Operation) -> Option<&mut Vec<String>> {
+pub fn contour_mut(op: &mut Operation) -> Option<&mut Vec<String>> {
     match op {
         Operation::AreaClear(o) => Some(&mut o.contour),
         Operation::FaceClear(o) => Some(&mut o.contour),
