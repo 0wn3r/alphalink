@@ -629,6 +629,7 @@ UK = {
 "Operations (List Focused)": "Операції (фокус у списку)",
 "Duplicate Operation": "Дублювати операцію",
 "Pages": "Сторінки",
+"Simulation (Part Page)": "Симуляція (сторінка «Деталь»)",
 "Previous Page": "Попередня сторінка",
 "Next Page": "Наступна сторінка",
 "Zoom In at the Cursor": "Збільшити біля курсора",

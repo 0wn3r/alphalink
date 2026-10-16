@@ -131,6 +131,35 @@ Adw.ShortcutsDialog dialog {
   }
 
   Adw.ShortcutsSection {
+    title: _("Simulation (Part Page)");
+
+    Adw.ShortcutsItem {
+      title: _("Play / Pause");
+      accelerator: "F5";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous Pass");
+      accelerator: "<Control>bracketleft";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Next Pass");
+      accelerator: "<Control>bracketright";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("First Move");
+      accelerator: "<Alt>Home";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Show All");
+      accelerator: "<Alt>End";
+    }
+  }
+
+  Adw.ShortcutsSection {
     title: _("Pages");
 
     Adw.ShortcutsItem {

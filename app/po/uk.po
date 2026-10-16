@@ -1855,6 +1855,24 @@ msgstr "Операції (фокус у списку)"
 msgid "Duplicate Operation"
 msgstr "Дублювати операцію"
 
+msgid "Simulation (Part Page)"
+msgstr "Симуляція (сторінка «Деталь»)"
+
+msgid "Play / Pause"
+msgstr "Відтворити / пауза"
+
+msgid "Previous Pass"
+msgstr "Попередній прохід"
+
+msgid "Next Pass"
+msgstr "Наступний прохід"
+
+msgid "First Move"
+msgstr "Перше переміщення"
+
+msgid "Show All"
+msgstr "Показати все"
+
 msgid "Pages"
 msgstr "Сторінки"
 
@@ -1977,21 +1995,6 @@ msgstr "Стерти текст"
 
 msgid "Erase the Whole Drawing"
 msgstr "Стерти все креслення"
-
-msgid "First Move"
-msgstr "Перше переміщення"
-
-msgid "Previous Pass"
-msgstr "Попередній прохід"
-
-msgid "Play / Pause"
-msgstr "Відтворити / пауза"
-
-msgid "Next Pass"
-msgstr "Наступний прохід"
-
-msgid "Show All"
-msgstr "Показати все"
 
 msgid "Start of the Selected Operation"
 msgstr "Початок вибраної операції"

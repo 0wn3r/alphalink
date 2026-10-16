@@ -974,6 +974,20 @@ impl MainWindow {
         for (i, name) in PAGES.iter().enumerate() {
             app.set_accels_for_action(&format!("win.page::{name}"), &[&format!("<Alt>{}", i + 1)]);
         }
+        // the simulation by keys on the Part page (POINTER_KEYBOARD.md 7); F5, as Space belongs to buttons
+        let sim_actions = [
+            add("sim-play", &["F5"], |w| w.parts().sim.toggle_play()),
+            add("sim-previous-pass", &["<Control>bracketleft"], |w| w.parts().sim.step_pass(-1)),
+            add("sim-next-pass", &["<Control>bracketright"], |w| w.parts().sim.step_pass(1)),
+            add("sim-first", &["<Alt>Home"], |w| w.parts().sim.goto(Some(0))),
+            add("sim-all", &["<Alt>End"], |w| w.parts().sim.goto(None)),
+        ];
+        let on_part = move |stack: &adw::ViewStack| {
+            let part = stack.visible_child_name().as_deref() == Some("part");
+            sim_actions.iter().for_each(|a| a.set_enabled(part));
+        };
+        on_part(&self.imp().stack);
+        self.imp().stack.connect_visible_child_name_notify(on_part);
         add("page-previous", &["<Control>Page_Up"], |w| w.step_page(-1));
         add("page-next", &["<Control>Page_Down"], |w| w.step_page(1));
         let show_grid = settings().show_grid;
