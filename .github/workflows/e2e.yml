@@ -39,7 +39,7 @@ jobs:
         shell: bash
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           pattern: AlphaLinkCAM*
           merge-multiple: true
@@ -93,14 +93,14 @@ jobs:
             tail -n 200 > logs/journal.log || true
       - name: Keep the screenshots
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-screenshots
           path: app/e2e-out
           if-no-files-found: ignore
       - name: Keep the logs
         if: always()
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-logs
           path: logs
