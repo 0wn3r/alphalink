@@ -101,6 +101,20 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     w.add_controller(drag.clone());
     r.drag.replace(Some(drag.clone()));
 
+    // the middle button drags the view, also over an element or a handle (POINTER_KEYBOARD.md 3)
+    let middle = gtk::GestureDrag::builder().button(2).build();
+    let last = Rc::new(std::cell::Cell::new((0.0, 0.0)));
+    middle.connect_drag_begin(glib::clone!(#[strong] r, #[strong] last, move |_, _, _| {
+        r.stop_fling();
+        last.set((0.0, 0.0));
+    }));
+    middle.connect_drag_update(glib::clone!(#[weak] w, #[strong] last, move |_, dx, dy| {
+        let (lx, ly) = last.replace((dx, dy));
+        w.state_mut().view.pan(dx - lx, dy - ly);
+        w.user_view_change();
+    }));
+    w.add_controller(middle);
+
     let zoom = gtk::GestureZoom::new();
     zoom.connect_begin(glib::clone!(#[weak] w, #[strong] r, #[weak] drag, move |g, _| {
         if r.editing.get() {

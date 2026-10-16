@@ -686,6 +686,16 @@ impl DrawingTools {
     fn hit_key_pressed(&self, keyval: gdk::Key, code: u32, state: gdk::ModifierType) -> glib::Propagation {
         let w = self.w();
         let focus = gtk::prelude::GtkWindowExt::focus(&w);
+        let on_part = w.has_project()
+            && w.visible_dialog().is_none()
+            && w.stack().visible_child_name().as_deref() == Some("part");
+        if on_part
+            && (state & gtk::accelerator_get_default_mod_mask()) == gdk::ModifierType::CONTROL_MASK
+            && focus.as_ref().is_none_or(|f| *f == self.c.clone().upcast::<gtk::Widget>())
+            && self.pan_key(keyval)
+        {
+            return glib::Propagation::Stop;
+        }
         if state.intersects(COMMAND_KEYS)
             || !w.has_project()
             || w.visible_dialog().is_some()
@@ -887,6 +897,7 @@ impl DrawingTools {
             o.marker = Some((pt, MarkerKind::End));
         });
         self.readout(&readout_xz(pt));
+        self.follow(pt);
         if start {
             self.line_tool();
             self.finish_chain();
@@ -896,6 +907,37 @@ impl DrawingTools {
         }
         self.c.grab_focus();
         self.c.queue_draw();
+    }
+
+    /// The view follows the ALPHA-T cursor: a key that moves it past the edge pans so it stays 10 % inside
+    /// (POINTER_KEYBOARD.md 3; ALPHA-T users steer the cursor, not the view).
+    fn follow(&self, pt: Point) {
+        let (w, h) = (self.c.width() as f64, self.c.height() as f64);
+        let (sx, sy) = self.c.state().view.to_screen(pt.x, pt.z);
+        let inside = |v: f64, size: f64| {
+            let m = 0.1 * size;
+            if v < m { m - v } else if v > size - m { size - m - v } else { 0.0 }
+        };
+        let (dx, dy) = (inside(sx, w), inside(sy, h));
+        if (dx != 0.0 || dy != 0.0) && w > 0.0 && h > 0.0 {
+            self.c.state_mut().view.pan(dx, dy);
+            self.c.user_view_change();
+        }
+    }
+
+    /// Ctrl+arrows pan the view by an eighth of its size without moving the cursor (POINTER_KEYBOARD.md 3).
+    fn pan_key(&self, keyval: gdk::Key) -> bool {
+        let (w, h) = (self.c.width() as f64 / 8.0, self.c.height() as f64 / 8.0);
+        let (dx, dy) = match keyval {
+            gdk::Key::Left | gdk::Key::KP_Left => (w, 0.0),
+            gdk::Key::Right | gdk::Key::KP_Right => (-w, 0.0),
+            gdk::Key::Up | gdk::Key::KP_Up => (0.0, h),
+            gdk::Key::Down | gdk::Key::KP_Down => (0.0, -h),
+            _ => return false,
+        };
+        self.c.state_mut().view.pan(dx, dy);
+        self.c.user_view_change();
+        true
     }
 
     /// Enter on the drawing: the cursor is the next measuring point or the next point of the line or arc; with

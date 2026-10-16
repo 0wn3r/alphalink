@@ -13,8 +13,8 @@ is the implementation; the Python app is frozen.
 | § | Item | Status |
 |---|---|---|
 | 3 | Wheel pans 🧪, Shift+wheel sideways, Ctrl+wheel zooms at the pointer 🧪; Ctrl+= / Ctrl+− / Ctrl+0 🧪; double click fits | ✓ |
-| 3 | Middle-button drag pans | ✗ |
-| 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✗ |
+| 3 | Middle-button drag pans | ✓ |
+| 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✓ |
 | 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✓ |
 | 4 | Hover marker and rubber band; click points; right click menu 🧪; drag handles | ✓ |
 | 4 | Keyboard drawing: ALPHA-T letters, the command entry, arrows + Enter 🧪 | ✓ |

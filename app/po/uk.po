@@ -1921,6 +1921,9 @@ msgstr "Зменшити"
 msgid "Search the Program"
 msgstr "Пошук у програмі"
 
+msgid "Pan the View"
+msgstr "Зсунути вигляд"
+
 msgid "Zoom In at the Cursor"
 msgstr "Збільшити біля курсора"
 
