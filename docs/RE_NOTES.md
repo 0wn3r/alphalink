@@ -1292,3 +1292,12 @@ External area clear only; internal pockets and pockets with arcs on the way down
   - Face clear on a face with a recess picked from the axis (FREC, not kept): ALPHA-T makes no passes at all (H0).
   - FACE_slope/FACE_arcs (FromSD1) are exact now that X is the radius rounded before doubling.
 
+## Progress 44 (2026-10-16): the original ALPHA-T floppy (Eduard's copy in ~/alpha-work/floppy drive, not in the repo)
+- An earlier release than vendor/AlphaT: ALPHTZIP.EXE (PKSFX, PKZIP 1.x implode) holds the same ten programs dated
+  2001-07-18; ALPHA-T.EXE (401202 bytes) and ATPRINT.EXE are older than the vendor ones (2002-04-04 / 2002-03-26),
+  the other eight have the same CRCs. ATOOLIB.TL1/TL2/IM1/IM2 and USRPATH.SET are identical.
+- No MACROS folder and no MACROS.MOP: the macro listing (DESIGN open question 3) is not on this disk.
+- The copy has unreadable areas: 11 files contain runs of 0xF6 (the format filler), e.g. INSTALL.BAT, ALPHA-T.BAT and
+  ALPHA-T.SPA/NOR entirely, ALPHA-T.MES 69 %, ALPHTCNC.PRG 61 %, ATSETUP.EXE 19 %, and 11 sectors inside
+  ATMACROS.EXE's entry of ALPHTZIP.EXE.
+
