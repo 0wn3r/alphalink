@@ -1282,4 +1282,13 @@ External area clear only; internal pockets and pockets with arcs on the way down
   - A contour ending on a groove floor (AREA_ends_in_groove, `0,0 40,0 40,-20 30,-20 30,-30`): ALPHA-T steps down
     only from that end's X30 (8 passes) and leaves everything above it; the app clears from the top of the profile
     (DIFFERS_ON_PURPOSE).
+  - FOLLOW in a bore with an undercut (AREA_int_follow_dive2): the SD1 code is E-300 (the app wrote E100: fixed). The
+    main passes stop one step short of the bore's last diameter (X50, the pocket's top); the first pocket pass cuts
+    it: G0 to the tool's X at the tip path's first Z (Z-0.4), G1 out to X50 (twice), along X50 to the corner, then
+    down the line as usual.
+  - Inch drawing, inch program, steep undercut (INDI, not kept): the pocket line is 0.0001 in off; ALPHA-T seems to
+    use the exact nose radius (0.015748) for it, the rounded 0.0157 elsewhere. Metric program from an inch drawing
+    adds ALPHA-T's known 0.002 low Z.
+  - Face clear on a face with a recess picked from the axis (FREC, not kept): ALPHA-T makes no passes at all (H0).
+  - FACE_slope/FACE_arcs (FromSD1) are exact now that X is the radius rounded before doubling.
 

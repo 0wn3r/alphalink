@@ -217,7 +217,7 @@ def _op(out: _Listing, project: Project, op, library, tc_feed: float) -> None:
                                                  else round(retract / 25.4, 4))
         _contour_cycle(out, op, path, r, units, external,
                        lambda p, q: f"G71P{p}Q{q}U{_n(op.offset_x)}W{_n(op.offset_z)}D{_n(op.depth_of_cut)}"
-                                    f"R{_n(r_shown)}A45E{e + 200 if getattr(op, "follow", False) else e}"
+                                    f"R{_n(r_shown)}A45E{e + (200 if e > 0 else -200) if getattr(op, "follow", False) else e}"
                                     f"H{sum(1 for p in tp.passes if p.moves)}",
                        retract, True, e in (100, -100), face, 171, face_mode=e not in (100, -100),
                        angle=collision_angle(tool, op) if e in (100, -100) else None)

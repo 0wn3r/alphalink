@@ -108,6 +108,8 @@ GOLDEN = {
                                                                               external=False)],
     "AREA_int_dive2_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
                                                                               external=False)],
+    "AREA_int_follow_dive2_metric": [ToolChange(12, Point(100, 50), 0.12),
+                                     AreaClear(12, Point(45, 5), DIVE, feed=0.12, external=False, follow=True)],
     "FINISH_int_dive2_metric": [ToolChange(12, Point(100, 50), 0.12), FinishPass(12, Point(45, 5), DIVE, feed=0.12,
                                                                                  external=False)],
     "FINISH_face_metric": [FinishPass(3, S, MET2, face=True)],
@@ -276,7 +278,7 @@ class OperationRules(unittest.TestCase):
 
 # face clear ending on slopes/arcs: ALPHA-T's diameters differ from the exact tip path by up to 0.001 either way
 # (FACE_slope +0.0006, FACE_arcs -0.0007/+0.0008; a numeric search with a tolerance, presumably)
-SD1_KNOWN_DIFF = {"FACE_slope_metric", "FACE_arcs_metric"}
+SD1_KNOWN_DIFF: set[str] = set()  # FACE_slope/FACE_arcs: exact since X is the radius rounded before doubling
 # options whose ALPHA-T output is unsafe on these parts (cuts past the shoulder, one pass only, cuts starting inside the
 # thread, face passes cutting into the dia-60 shoulder): the app refuses AWAY with a reason instead of copying it
 REFUSED = {"AREA_away_tool5_retry_metric", "FACE_away_tool5_metric", "FACE_away_tool3_nocheck_metric",

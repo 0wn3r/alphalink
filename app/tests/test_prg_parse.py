@@ -91,6 +91,7 @@ EXPECTED_OPS = {
     "AREA_groove_and_dive_metric": [("area_clear", 29)],
     "AREA_int_dive1_metric": [("area_clear_internal", 11)],
     "AREA_int_dive2_metric": [("area_clear_internal", 11)],
+    "AREA_int_follow_dive2_metric": [("area_clear_internal", 10)],
     "FINISH_int_dive2_metric": [("finish_internal", 1)],
     "AREA_away_from_chuck_end_metric": [("area_clear", 11)],
     "AREA_towards_from_chuck_end_metric": [("area_clear", 10)],

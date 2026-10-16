@@ -180,12 +180,14 @@ def _pocket_levels(boundary, pocket, side, grid, follow=False) -> list[float]:
 
 
 def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals, side=1, here_x=None,
-                   follow_from=None, offset_z=0.0):
+                   follow_from=None, offset_z=0.0, entry_z=None):
     """ALPHA-T's passes for one pocket (DIVE1-3, IDIVE1/2, FOL3, FOLG): see the module docstring. side -1 =
     internal (mirrored in X). here_x: where the tool is (X) before the first pass, z0 the Z of the first rapid.
     follow_from: FOLLOW, where the last pass on the far wall stopped (each pass climbs the far wall back to it).
     offset_z: OFFSET Z; a rear-angle line starts that much towards the chuck from the (offset) corner, not away
     from it (OFS1: Z-38.214 for the app's former -37.814 with W0.1).
+    entry_z: the first pass also cuts the pocket's top level from the front (FOLLOW in a bore, IFOL: the main
+    passes stop one step short of it): G0 to that Z, G1 out to the top, G1 along it to the corner.
     Returns (passes, the last line Z)."""
     first, deepest, last = pocket
     top = boundary[first].a
@@ -227,7 +229,11 @@ def _pocket_passes(boundary, pocket, levels, angle, retract, feed, z0, decimals,
         if n == 0:
             up = prev + side * 2 * retract
             moves = [] if here_x is not None and abs(here_x - up) < 1e-9 else [Move(MoveKind.RAPID, up, z0)]
-            if follow_from is not None:  # FOL3: in level with the corner, then onto it
+            if entry_z is not None:  # IFOL
+                ze_ = round(entry_z, decimals)
+                moves = [Move(MoveKind.RAPID, here_x, ze_), Move(MoveKind.FEED, prev, ze_, feed),
+                         Move(MoveKind.FEED, prev, ze_, feed), Move(MoveKind.FEED, prev, round(top.z, decimals), feed)]
+            elif follow_from is not None:  # FOL3: in level with the corner, then onto it
                 zc = round(top.z, decimals)
                 moves += [Move(MoveKind.RAPID, up, zc), Move(MoveKind.FEED, prev, zc, feed),
                           Move(MoveKind.FEED, prev, zc, feed)]
@@ -301,6 +307,10 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
     prev = None  # where the previous pass stopped (FOLLOW goes back up to it)
     stops = frozenset(first for first, _, _ in pockets)
     hits = []  # (element, X, Z) where each main pass met the profile
+    entry = None
+    if op.follow and not op.external and pockets and xs and abs(xs[-1] - boundary[pockets[0][0]].a.x) < 1e-9:
+        xs = xs[:-1]  # IFOL: the bore's last diameter is the pocket's top; its first pass cuts it
+        entry = boundary[0].a.z - nose_radius  # the tip path's first Z (the drawn end point is kept)
     for x in xs:
         k, z = _end_hit(boundary, x, op.external)
         z = round(z, decimals)
@@ -342,7 +352,8 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
         moved = [q for q in passes if q.moves]
         here = moved[-1].moves[-1].x if moved else op.start.x
         more, z = _pocket_passes(boundary, pocket, levels, angle, retract, op.feed, z0, decimals, side, here,
-                                 follow_from, op.offset_z)
+                                 follow_from, op.offset_z, entry)
+        entry = None
         passes += more
         moved = [q for q in more if q.moves]
         if moved:  # the next pocket's first rapid starts where this one left the tool
