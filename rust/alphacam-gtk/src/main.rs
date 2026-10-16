@@ -5,6 +5,7 @@ mod billet;
 mod canvas;
 mod drawing_tools;
 mod help;
+mod hit_keys;
 mod hold_button;
 mod i18n;
 mod input_mode;
