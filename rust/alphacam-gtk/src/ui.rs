@@ -4,6 +4,7 @@
 use std::path::PathBuf;
 
 use gtk::glib;
+use gtk::prelude::*;
 
 pub const RESOURCE: &str = "/io/github/_0wn3r/AlphaLinkCAM";
 
@@ -27,4 +28,23 @@ pub fn data_dir() -> PathBuf {
         return installed;
     }
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/alphacam_gtk")
+}
+
+/// The local path a file dialog chose. Cancel gives None quietly; a failure, or a file with no local path, goes to
+/// the log too, so a portal problem shows up there instead of as a dialog that did nothing.
+pub fn chosen(res: Result<gtk::gio::File, glib::Error>) -> Option<PathBuf> {
+    match res {
+        Ok(file) => {
+            let path = file.path();
+            if path.is_none() {
+                glib::g_warning!("alphalink", "the file dialog chose {}, which has no local path", file.uri());
+            }
+            path
+        }
+        Err(e) if e.matches(gtk::DialogError::Dismissed) || e.matches(gtk::DialogError::Cancelled) => None,
+        Err(e) => {
+            glib::g_warning!("alphalink", "the file dialog failed: {e}");
+            None
+        }
+    }
 }

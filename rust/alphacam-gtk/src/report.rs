@@ -18,6 +18,7 @@ use gtk::{cairo, gio, glib, pango};
 
 use crate::i18n::{fill, gettext, ngettext, tr};
 use crate::settings::settings;
+use crate::ui::chosen;
 use crate::window::MainWindow;
 
 /// Month abbreviations, translated (strftime's %b is always English here: C locale).
@@ -482,11 +483,11 @@ impl SheetPage {
             .build();
         let page = self.downgrade();
         dialog.save(Some(&w), gio::Cancellable::NONE, move |res| {
-            let (Ok(file), Some(page)) = (res, page.upgrade()) else { return };
+            let (Some(path), Some(page)) = (chosen(res), page.upgrade()) else { return };
             let Some(w) = page.window() else { return };
-            let name = file.basename().map(|b| b.to_string_lossy().into_owned()).unwrap_or_default();
+            let name = path.file_name().map(|b| b.to_string_lossy().into_owned()).unwrap_or_default();
             // the project may have changed while the dialog was open (the notes edit above re-posts)
-            let (Some(project), Some(pv), Some(path)) = (w.project(), w.preview(), file.path()) else { return };
+            let (Some(project), Some(pv)) = (w.project(), w.preview()) else { return };
             let library = w.library();
             let result = write_pdf(&path, &project, &pv, &page.title(&w), &w.canvas(), Some(&library),
                                    page.imp().moves_switch.is_active());
@@ -506,14 +507,11 @@ impl SheetPage {
             .build();
         let page = self.downgrade();
         dialog.save(Some(&w), gio::Cancellable::NONE, move |res| {
-            let (Ok(file), Some(page)) = (res, page.upgrade()) else { return };
+            let (Some(path), Some(page)) = (chosen(res), page.upgrade()) else { return };
             let Some(w) = page.window() else { return };
-            let name = file.basename().map(|b| b.to_string_lossy().into_owned()).unwrap_or_default();
+            let name = path.file_name().map(|b| b.to_string_lossy().into_owned()).unwrap_or_default();
             let text = buffer_text(&page.imp().view) + "\n";
-            let result = match file.path() {
-                Some(path) => std::fs::write(path, text).map_err(|e| e.to_string()),
-                None => Err(gettext("not a local file")),
-            };
+            let result = std::fs::write(path, text).map_err(|e| e.to_string());
             match result {
                 Ok(()) => w.toast(&tr("Saved {name}", &[("name", &name)])),
                 Err(e) => w.toast(&tr("Could not save {name}: {error}", &[("name", &name), ("error", &e)])),

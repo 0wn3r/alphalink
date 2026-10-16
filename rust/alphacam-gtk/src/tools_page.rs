@@ -17,7 +17,7 @@ use gtk::{gio, glib};
 
 use crate::i18n::{gettext, tr};
 use crate::op_editor::fit_spin;
-use crate::ui::{builder, object};
+use crate::ui::{builder, chosen, object};
 use crate::window::MainWindow;
 
 /// The tool types' labels (msgids), in TOOL_TYPES order.
@@ -117,7 +117,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
-            Callbacks::bind_template_callbacks(klass);
+            super::bind_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -136,49 +136,25 @@ glib::wrapper! {
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
-/// The page a template signal came from (its emitter is the first value; handlers are not swapped).
-fn page_of(values: &[glib::Value]) -> Option<ToolsPage> {
-    let widget = values.first()?.get::<gtk::Widget>().ok()?;
-    widget.ancestor(ToolsPage::static_type()).and_downcast()
-}
 
-struct Callbacks;
-
-#[gtk::template_callbacks(functions)]
-impl Callbacks {
-    #[template_callback]
-    fn _show(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.show_current();
-        }
-    }
-
-    #[template_callback]
-    fn _add(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.add_tool();
-        }
-    }
-
-    #[template_callback]
-    fn _delete(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.delete_tool();
-        }
-    }
-
-    #[template_callback]
-    fn _import(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.import_dialog();
-        }
-    }
-
-    #[template_callback]
-    fn _reset(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.reset();
-        }
+/// Template handlers are not swapped: the template object is the last value.
+fn bind_callbacks(klass: &mut <imp::ToolsPage as ObjectSubclass>::Class) {
+    type Handler = (&'static str, fn(&ToolsPage));
+    let handlers: [Handler; 5] = [
+        ("_show", |page| { page.show_current(); }),
+        ("_add", |page| { page.add_tool(); }),
+        ("_delete", |page| { page.delete_tool(); }),
+        ("_import", |page| { page.import_dialog(); }),
+        ("_reset", |page| { page.reset(); }),
+    ];
+    let scope = klass.rust_template_scope();
+    for (name, handler) in handlers {
+        scope.add_callback(name, move |values| {
+            if let Some(page) = values.last().and_then(|v| v.get::<ToolsPage>().ok()) {
+                handler(&page);
+            }
+            None
+        });
     }
 }
 
@@ -371,9 +347,7 @@ impl ToolsPage {
         filters.append(&f);
         let dlg = gtk::FileDialog::builder().title(gettext("Import Tool Library")).filters(&filters).build();
         dlg.open(Some(&w), gio::Cancellable::NONE, glib::clone!(#[weak(rename_to = this)] self, move |res| {
-            if let Ok(file) = res
-                && let Some(path) = file.path()
-            {
+            if let Some(path) = chosen(res) {
                 this.import(&path);
             }
         }));

@@ -20,7 +20,7 @@ use gtk::{gio, glib};
 use crate::hold_button::HoldButton;
 use crate::i18n::{fill, gettext, tr};
 use crate::settings::{settings, update};
-use crate::ui::{builder, object};
+use crate::ui::{builder, chosen, object};
 use crate::window::MainWindow;
 
 const STEPS_SEND: &str =
@@ -75,7 +75,7 @@ mod dialog_imp {
 
         fn class_init(klass: &mut Self::Class) {
             klass.bind_template();
-            DialogCallbacks::bind_template_callbacks(klass);
+            super::bind_dialog_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -95,18 +95,20 @@ glib::wrapper! {
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget;
 }
 
-struct DialogCallbacks;
-
-#[gtk::template_callbacks(functions)]
-impl DialogCallbacks {
-    #[template_callback]
-    fn _cancel_or_close(#[rest] values: &[glib::Value]) {
-        let dlg = values.first().and_then(|v| v.get::<gtk::Widget>().ok()).and_then(|w| {
-            w.ancestor(TransferDialog::static_type()).and_downcast::<TransferDialog>()
+/// Template handlers are not swapped: the template object is the last value.
+fn bind_dialog_callbacks(klass: &mut <dialog_imp::TransferDialog as ObjectSubclass>::Class) {
+    type Handler = (&'static str, fn(&TransferDialog));
+    let handlers: [Handler; 1] = [
+        ("_cancel_or_close", |page| { page.cancel_or_close(); }),
+    ];
+    let scope = klass.rust_template_scope();
+    for (name, handler) in handlers {
+        scope.add_callback(name, move |values| {
+            if let Some(page) = values.last().and_then(|v| v.get::<TransferDialog>().ok()) {
+                handler(&page);
+            }
+            None
         });
-        if let Some(dlg) = dlg {
-            dlg.cancel_or_close();
-        }
     }
 }
 
@@ -250,7 +252,7 @@ mod imp {
         fn class_init(klass: &mut Self::Class) {
             HoldButton::ensure_type();
             klass.bind_template();
-            Callbacks::bind_template_callbacks(klass);
+            super::bind_callbacks(klass);
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -269,49 +271,25 @@ glib::wrapper! {
         @implements gtk::Accessible, gtk::Buildable, gtk::ConstraintTarget, gtk::Orientable;
 }
 
-/// The page a template signal came from (its emitter is the first value; handlers are not swapped).
-fn page_of(values: &[glib::Value]) -> Option<MachinePage> {
-    let widget = values.first()?.get::<gtk::Widget>().ok()?;
-    widget.ancestor(MachinePage::static_type()).and_downcast()
-}
 
-struct Callbacks;
-
-#[gtk::template_callbacks(functions)]
-impl Callbacks {
-    #[template_callback]
-    fn _rescan(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.refresh_ports();
-        }
-    }
-
-    #[template_callback]
-    fn _confirm_send(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.confirm_send();
-        }
-    }
-
-    #[template_callback]
-    fn _backup(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.backup();
-        }
-    }
-
-    #[template_callback]
-    fn _restore_pick(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.restore_pick();
-        }
-    }
-
-    #[template_callback]
-    fn _loopback(#[rest] values: &[glib::Value]) {
-        if let Some(page) = page_of(values) {
-            page.loopback_ask();
-        }
+/// Template handlers are not swapped: the template object is the last value.
+fn bind_callbacks(klass: &mut <imp::MachinePage as ObjectSubclass>::Class) {
+    type Handler = (&'static str, fn(&MachinePage));
+    let handlers: [Handler; 5] = [
+        ("_rescan", |page| { page.refresh_ports(); }),
+        ("_confirm_send", |page| { page.confirm_send(); }),
+        ("_backup", |page| { page.backup(); }),
+        ("_restore_pick", |page| { page.restore_pick(); }),
+        ("_loopback", |page| { page.loopback_ask(); }),
+    ];
+    let scope = klass.rust_template_scope();
+    for (name, handler) in handlers {
+        scope.add_callback(name, move |values| {
+            if let Some(page) = values.last().and_then(|v| v.get::<MachinePage>().ok()) {
+                handler(&page);
+            }
+            None
+        });
     }
 }
 
@@ -646,7 +624,7 @@ impl MachinePage {
             let fd = gtk::FileDialog::builder().title(gettext("Save Manual Ops Backup")).initial_name(&name).build();
             fd.save(Some(&window), gio::Cancellable::NONE, glib::clone!(#[weak] window, move |res| {
                 let fallback = log_dir().parent().map(Path::to_path_buf).unwrap_or_default().join(&name);
-                let target = res.ok().and_then(|f| f.path()).unwrap_or_else(|| fallback.clone());
+                let target = chosen(res).unwrap_or_else(|| fallback.clone());
                 // never lose a backup: fall back to the app folder
                 for place in [target, fallback] {
                     let written = std::fs::create_dir_all(place.parent().unwrap_or(Path::new(".")))
@@ -668,7 +646,7 @@ impl MachinePage {
         let fd = gtk::FileDialog::builder().title(gettext("Restore Manual Ops From")).build();
         fd.open(Some(&window), gio::Cancellable::NONE, glib::clone!(#[weak(rename_to = this)] self, #[weak] window,
             move |res| {
-                let Some(path) = res.ok().and_then(|f| f.path()) else { return };
+                let Some(path) = chosen(res) else { return };
                 let data = match std::fs::read(&path) {
                     Ok(data) => data,
                     Err(e) => {

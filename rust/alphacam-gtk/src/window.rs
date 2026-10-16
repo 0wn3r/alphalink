@@ -33,7 +33,7 @@ use crate::settings::{settings, update as update_settings};
 use crate::shortcuts::shortcuts_dialog;
 use crate::simulation::SimulationBar;
 use crate::tools_page::{ToolsPage, load_library};
-use crate::ui::{builder, object};
+use crate::ui::{builder, chosen, object};
 use crate::templates;
 
 /// a touch this soon after the Operations list scrolled stops its glide; it does not pick an operation
@@ -970,9 +970,7 @@ impl MainWindow {
             .build();
         let win = self.downgrade();
         dlg.open(Some(self), gio::Cancellable::NONE, move |res| {
-            if let (Some(win), Ok(file)) = (win.upgrade(), res)
-                && let Some(path) = file.path()
-            {
+            if let (Some(win), Some(path)) = (win.upgrade(), chosen(res)) {
                 win.load(&path);
             }
         });
@@ -1100,8 +1098,7 @@ impl MainWindow {
             .build();
         let win = self.downgrade();
         dlg.open(Some(self), gio::Cancellable::NONE, move |res| {
-            let (Some(win), Ok(file)) = (win.upgrade(), res) else { return };
-            let Some(sd1) = file.path() else { return };
+            let (Some(win), Some(sd1)) = (win.upgrade(), chosen(res)) else { return };
             let Some(project) = win.project() else { return };
             let ops = match alphacam::io::sd1::load_sd1(&sd1, &project) {
                 Ok(ops) => ops,
@@ -1924,8 +1921,8 @@ impl MainWindow {
             .build();
         let win = self.downgrade();
         dlg.save(Some(self), gio::Cancellable::NONE, move |res| {
-            let (Some(win), Ok(file)) = (win.upgrade(), res) else { return };
-            let (Some(path), Some(project)) = (file.path(), win.project()) else { return };
+            let (Some(win), Some(path)) = (win.upgrade(), chosen(res)) else { return };
+            let Some(project) = win.project() else { return };
             match alphacam::io::sdg_write::save_sdg(&project, &path) {
                 Err(e) => win.toast(&tr("Saving the drawing failed: {error}", &[("error", &e)])),
                 Ok(files) => {
@@ -1962,8 +1959,7 @@ impl MainWindow {
             .build();
         let win = self.downgrade();
         dlg.save(Some(self), gio::Cancellable::NONE, move |res| {
-            let (Some(win), Ok(file)) = (win.upgrade(), res) else { return };
-            let Some(mut path) = file.path() else { return };
+            let (Some(win), Some(mut path)) = (win.upgrade(), chosen(res)) else { return };
             if !is_alcam(&path) {
                 path.set_extension("alcam");
             }
@@ -2012,9 +2008,7 @@ impl MainWindow {
         }
         let win = self.downgrade();
         dlg.save(Some(self), gio::Cancellable::NONE, move |res| {
-            if let (Some(win), Ok(file)) = (win.upgrade(), res)
-                && let Some(prg) = file.path()
-            {
+            if let (Some(win), Some(prg)) = (win.upgrade(), chosen(res)) {
                 win.export_to(&prg);
             }
         });
