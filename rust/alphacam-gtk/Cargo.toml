@@ -1,0 +1,22 @@
+[package]
+name = "alphacam-gtk"
+description = "AlphaLink CAM: the GNOME app (GTK 4, libadwaita) on the alphacam core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[[bin]]
+name = "alphalink-cam"
+path = "src/main.rs"
+
+[dependencies]
+alphacam = { path = "../alphacam" }
+gtk.workspace = true
+adw.workspace = true
+gettext-rs.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[build-dependencies]
+glib-build-tools.workspace = true
