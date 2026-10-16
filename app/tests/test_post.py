@@ -86,6 +86,12 @@ GOLDEN = {
     "AREA_relief_groove_metric": [AreaClear(3, S, RELIEF)],
     "FINISH_relief_groove_metric": [FinishPass(3, S, RELIEF)],
     "AREA_groove_and_dive_metric": [AreaClear(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"])],
+    # FOLLOW and pre-finish with undercuts: no zones with FOLLOW, it stops where a pocket starts, the pocket passes
+    # climb its far wall back to the last pass there; the pre-finish takes the steep wall at 31 degrees
+    "AREA_follow_dive3_metric": [AreaClear(3, S, DIVE, follow=True)],
+    "AREA_follow_groove_dive_metric": [AreaClear(3, S, ["g0", "g1", "g2", "g3", "g4", "g5", "g6", "g7", "g8"], follow=True)],
+    "PREFINISH_dive3_metric": [AreaClear(3, S, DIVE, pre_finish=True)],
+    "PREFINISH_dive2_metric": [AreaClear(3, S, DIVE, pre_finish=True)],
     # the same inside a bore with T12 (55 deg boring bar, rear -31): an undercut, a steep one, its finish pass
     "AREA_int_dive1_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
                                                                               external=False)],

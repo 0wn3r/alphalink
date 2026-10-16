@@ -1247,4 +1247,17 @@ External area clear only; internal pockets and pockets with arcs on the way down
   The area clear then gives the groove no passes: what is left of it is 1.3 deep on the radius, less than the
   depth of cut 2 (the German manual: pockets shallower than the depth of cut are ignored). The groove needs a
   grooving tool; the app's safety check reports the floor the finish pass cannot reach.
+- FOLLOW and pre-finish with undercuts (2026-10-16; AREA_follow_dive3, AREA_follow_groove_dive, PREFINISH_dive2/3):
+  - FOLLOW has no zones: the stepping runs from the top in steps of 2 x depth of cut without restarting at the
+    shoulders (FOLG: 52, 48, 44 ... with no pass at the X50 shoulder), since each pass cleans the step above it.
+  - A main pass's follow stops where a pocket starts (FOL3 X56: up to X60, along it to the corner Z-21.066).
+  - The pocket levels come from the stepping grid: without FOLLOW restarted at the pocket's shoulder (so a pocket
+    with no level inside it, shallower than the depth of cut, gets no passes: RG1/RG2), with FOLLOW the main grid
+    (FOLG: X28 inside the 30 -> 27.356 groove); the floor gets the last pass only when it is a Z-parallel line.
+  - With FOLLOW each pocket pass climbs the far wall back to where the previous pass on it stopped (the first: the
+    last main pass that hit the far wall, FOL3 X60 Z-95.306) and retracts from there; the first way in is at the
+    corner's Z (G0 X62 Z-21.066, G1 X60 Z-21.066 twice) instead of on the line; between pockets the first rapid
+    stays at the current Z.
+  - Output rounding: X is the radius rounded to the output decimals, then doubled, and Z is rounded before the x2
+    (FOL3: radius 34.69443 -> X69.388, not 69.389; Z-10.53333 -> Z-21.066). All goldens still pass with it.
 

@@ -54,11 +54,12 @@ class _Writer:
         self.pos = (None, None)  # last end point, for arc I/K
 
     def _c(self, v: float) -> float:
-        """A real value in the output units (rounded first, when converted)."""
-        return v if self.k == 1.0 else round(v * self.k, self.dec)
+        """A real value in the output units, rounded to the output decimals before any scaling (FOL3: radius
+        34.69443 -> 34.694 -> X69.388; Z-10.53333 -> -10.533 -> Z-21.066)."""
+        return round(v * self.k, self.dec)
 
-    def x(self, v: float) -> str:  # a diameter: its radius is converted
-        return format_number(v if self.k == 1.0 else 2 * self._c(v / 2), self.dec)
+    def x(self, v: float) -> str:  # a diameter: its radius is rounded
+        return format_number(2 * self._c(v / 2), self.dec)
 
     def z(self, v: float) -> str:
         return format_number(self._c(v) * self.zs, self.dec)
