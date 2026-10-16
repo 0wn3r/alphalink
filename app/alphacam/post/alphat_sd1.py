@@ -255,5 +255,9 @@ def _moves(out: _Listing, moves) -> None:
     for m in moves:
         if m.kind is MoveKind.DWELL:
             out.put(f"G4P{_n(m.dwell_revs)}")
+        elif m.kind in (MoveKind.ARC_CW, MoveKind.ARC_CCW):  # I/K from where the arc starts (GRF: G2X30Z-24.5I0K-1.5)
+            sx, sz = out.pos
+            out.move(2 if m.kind is MoveKind.ARC_CW else 3, m.x, m.z,
+                     f"I{_n((m.centre_x - sx) / 2)}K{_n(m.centre_z - sz)}")
         else:
             out.move(0 if m.kind is MoveKind.RAPID else 1, m.x, m.z)

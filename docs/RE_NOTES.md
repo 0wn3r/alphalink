@@ -1317,4 +1317,10 @@ GROOVE_vee and GROOVE_vee_finishmode (tools/ac_scripts/at_groove.ks with a V gro
 single Enter). Drilling with peck 7 to Z-25 also matched (not kept: its program number came out as 7).
 - Fixed: a grooving plunge goes to the highest point of the profile *within the tip's width*; on a sloped wall
   that is the slope at the tip's edge (X33.334 at Z-22 on a 40 -> 30 wall), where the app used the wall's top (X40).
+- Round 3: GROOVE_radius_floor (+ _finishmode): a groove X30 Z-20..-30 under X40 with R1.5 at both floor corners
+  (at_groove.ks drawing replaced by mk_at_rad-style segments; two more contour Enters). A plunge onto a radius goes
+  to the radius's highest point under the tip (X30.172 at Z-29; the app took the radius's top end, X33). Finish
+  mode keeps the radii: the one at the foot of the +Z wall moves with that wall by -tip width, centre and all
+  (G2 X30 Z-24.5 I0 K-1.5), the far one stays; the SD1 G78 lists them as G2 with I/K (the app refused arcs in
+  finish mode before). AREA_int_slope_depth13 (a sloped bore, T12, depth 1.3) matched as it was.
 

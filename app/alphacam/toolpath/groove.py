@@ -17,7 +17,7 @@ from __future__ import annotations
 from ..i18n import tr
 from ..model.operations import Groove
 from ..model.geometry import Point
-from .contour import Seg, mm, points
+from .contour import Seg, mm, points, x_at
 from .toolpath import MAX_PASSES, Move, MoveKind, Pass, Toolpath, too_many
 
 RETRACT_DIA_MM = 2.0
@@ -31,8 +31,12 @@ def _depth(boundary: list[Seg], z0: float, z1: float) -> float:
             if z0 < lo < z1:
                 xs.append(max(s.a.x, s.b.x))
         elif min(hi, z1) - max(lo, z0) > 1e-9:
-            if s.is_arc:
-                xs.append(max(s.a.x, s.b.x))
+            if s.is_arc:  # its highest point under the tip: at the window's edges or its crown (GR: X30.172)
+                zc = s.centre.z
+                for z in (max(lo, z0), min(hi, z1)) + ((zc,) if max(lo, z0) < zc < min(hi, z1) else ()):
+                    x = x_at(s, z)
+                    if x is not None:
+                        xs.append(x)
             else:  # a slope: its highest point inside the tip's width (GV: X33.334 at Z-22 of a 40 -> 30 wall)
                 xs += [s.a.x + (s.b.x - s.a.x) * (z - s.a.z) / (s.b.z - s.a.z) for z in (max(lo, z0), min(hi, z1))]
     if not xs:
@@ -225,9 +229,8 @@ def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:
     """FINISH mode (#127=17, GROOVE_finishmode): one pass along the drawn profile. The tip covers Z .. Z + tip width
     (datum left), so the vertices of a wall where the profile steps down (the groove's +Z wall) move by -tip width;
     datum right covers Z - tip width .. Z and moves the walls where it steps up by +tip width instead (assumed by
-    symmetry, no sample). Rapid to (start X, first Z), feed along the profile, feed out to the start X."""
-    if any(s.is_arc for s in path):
-        raise NotImplementedError(tr("grooving finish: lines only (no sample with arcs)"))
+    symmetry, no sample). Rapid to (start X, first Z), feed along the profile, feed out to the start X. A radius
+    moves with its wall, centre and all (GRF: the R1.5 at the foot of the +Z wall by -3; the far one stays)."""
     w = op.tip_width
     pts = points(path)
     shift = [0.0] * len(pts)
@@ -241,7 +244,15 @@ def groove_finish(op: Groove, path: list[Seg]) -> Toolpath:
     zs = [round(p.z + d, 9) for p, d in zip(pts, shift)]
     sx = op.start.x
     moves = [Move(MoveKind.RAPID, sx, zs[0])]
-    moves += [Move(MoveKind.FEED, p.x, z, op.feed) for p, z in zip(pts, zs)]
+    moves.append(Move(MoveKind.FEED, pts[0].x, zs[0], op.feed))
+    for i, seg in enumerate(path):
+        p, z = pts[i + 1], zs[i + 1]
+        if seg.is_arc:
+            cz = round(seg.centre.z + (shift[i] if shift[i] == shift[i + 1] else 0.0), 9)
+            moves.append(Move(MoveKind.ARC_CCW if seg.ccw else MoveKind.ARC_CW, p.x, z, op.feed,
+                              centre_x=seg.centre.x, centre_z=cz))
+        else:
+            moves.append(Move(MoveKind.FEED, p.x, z, op.feed))
     moves.append(Move(MoveKind.FEED, sx, zs[-1], op.feed))
     return Toolpath([Pass(moves)], retract=[Move(MoveKind.RAPID, sx, op.start.z)])
 
