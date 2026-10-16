@@ -134,6 +134,12 @@ class GnomeSession:
             except subprocess.TimeoutExpired:
                 os.killpg(p.pid, signal.SIGKILL)
         self._kill_strays()
+        logs = os.environ.get("ALPHALINK_E2E_LOGS")  # CI: keep the session's logs (shell.log ...) for the report
+        if logs:
+            dest = Path(logs) / self.root.name
+            dest.mkdir(parents=True, exist_ok=True)
+            for f in self.root.glob("*.log"):
+                shutil.copy(f, dest / f.name)
         if not self.keep:
             shutil.rmtree(self.root, ignore_errors=True)
 
