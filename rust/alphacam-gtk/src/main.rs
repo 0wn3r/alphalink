@@ -8,6 +8,7 @@ mod help;
 mod hold_button;
 mod i18n;
 mod input_mode;
+mod keypad;
 mod machine;
 mod op_editor;
 mod op_factory;
