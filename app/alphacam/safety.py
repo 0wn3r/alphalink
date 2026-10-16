@@ -9,7 +9,8 @@ program is never blocked.
 * tip angle: ALPHA-T's own test before an area clear or face clear (RE_NOTES Progress 42): the tool's front and rear
   clearance angles must suit the cut's side and direction, or it says "Invalid tip angle" and drops its collision
   check;
-* uncut: a wall steeper than the tool's rear clearance in an external finish pass. ALPHA-T's collision
+* uncut: a wall steeper than the tool's rear clearance in a finish pass (away from the tool: down outside, up in a
+  bore). ALPHA-T's collision
   check (contour.limit_dives) goes down it at the rear angle instead, so material stays on the wall;
 * tool angle: a feed move diving steeper than the tool's clearance allows, when ALPHA-T's collision check is off
   (a tool without angles, or angles that fail the tip angle test): the surface it leaves behind would run into the
@@ -162,7 +163,7 @@ def check(project, preview, library=None) -> list[Finding]:
                              r=t.rear_angle, side=side, way=way), op.start.x, op.start.z)
     for i, op in enumerate(ops):  # walls ALPHA-T's collision check will not follow
         # the finish pass makes the final shape (the area clear leaves the wall to it anyway)
-        if type(op).__name__ != "FinishPass" or not op.external or op.face:
+        if type(op).__name__ != "FinishPass" or op.face:
             continue
         t = _tool(project, op.tool, library)
         angle = collision_angle(t, op)
@@ -174,7 +175,7 @@ def check(project, preview, library=None) -> list[Finding]:
         except (ValueError, KeyError):
             continue
         for el in drawn:
-            drop = (el.a.x - el.b.x) / 2
+            drop = (1 if op.external else -1) * (el.a.x - el.b.x) / 2
             if not el.is_arc and drop > 1e-6 and drop > tan * abs(el.a.z - el.b.z) + 1e-6:
                 add(i, "uncut", tr("T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the "
                                    "tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)",

@@ -80,6 +80,13 @@ GOLDEN = {
     "DIVE2_metric": [AreaClear(3, S, DIVE)],
     "DIVE3_metric": [AreaClear(3, S, DIVE)],
     "FINISH_dive2_metric": [FinishPass(3, S, DIVE)],  # the finish pass takes the steep wall at 31 degrees too
+    # the same inside a bore with T12 (55 deg boring bar, rear -31): an undercut, a steep one, its finish pass
+    "AREA_int_dive1_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
+                                                                              external=False)],
+    "AREA_int_dive2_metric": [ToolChange(12, Point(100, 50), 0.12), AreaClear(12, Point(45, 5), DIVE, feed=0.12,
+                                                                              external=False)],
+    "FINISH_int_dive2_metric": [ToolChange(12, Point(100, 50), 0.12), FinishPass(12, Point(45, 5), DIVE, feed=0.12,
+                                                                                 external=False)],
     "FINISH_face_metric": [FinishPass(3, S, MET2, face=True)],
     "DRILL_fullret_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, full_retract=True)],
     "DRILL_retract1_metric": [Drill(3, Point(0, 5), depth=-30, peck=10, retract=1)],

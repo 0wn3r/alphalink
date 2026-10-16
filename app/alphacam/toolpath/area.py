@@ -11,7 +11,7 @@ Rules from the samples (AREA1, ARC_area, SLOPE_area, OFFSET_area, INT_area, TOOL
   * pre-finish (op.pre_finish) is posted as a separate finish block, see post.alphat_prg;
   * the cut ends on the first boundary element met that spans X, with spans half-open on the side the passes come
     from (external: lo <= X < hi; internal: lo < X <= hi), so a pass exactly on a shoulder goes on to the next face;
-  * pockets (external): where the profile dips below a shoulder and comes back up (an undercut), the main passes
+  * pockets (external; mirrored in X inside a bore, IDIVE1/2): where the profile dips below a shoulder and comes back up (an undercut), the main passes
     treat it as filled and do not restart their stepping at its floor; after them each pocket gets its own passes
     (DIVE1-3, RE_NOTES Progress 43). From the shoulder's tip-path corner the tool goes down a line no steeper than
     the tool's rear clearance angle (ALPHA-T's collision check; the profile itself when that is shallower), level by
@@ -123,41 +123,45 @@ def collision_angle(tool, op) -> float | None:
     return abs(tool.rear_angle)
 
 
-def _pockets(boundary: list[Seg]) -> list[tuple[int, int, int]]:
-    """External pockets as (first, deepest, last) element indices: from the element that leaves the highest level
-    so far downwards to the one that climbs back to it (or the end of the contour)."""
+def _pockets(boundary: list[Seg], side: int = 1) -> list[tuple[int, int, int]]:
+    """Pockets as (first, deepest, last) element indices: from the element that leaves the highest level so far
+    (external; the lowest for internal work, side -1) away from the tool to the one that comes back to it (or the
+    end of the contour)."""
     out, top, k = [], -math.inf, 0
     while k < len(boundary):
         s = boundary[k]
-        if s.b.x < s.a.x - 1e-9 and s.a.x >= top - 1e-9:
-            first, level, deepest = k, s.a.x, k
-            while k < len(boundary) and boundary[k].b.x < level - 1e-9:
-                if boundary[k].b.x <= boundary[deepest].b.x + 1e-9:  # the last element at the floor
+        a, b = side * s.a.x, side * s.b.x
+        if b < a - 1e-9 and a >= top - 1e-9:
+            first, level, deepest = k, a, k
+            while k < len(boundary) and side * boundary[k].b.x < level - 1e-9:
+                if side * boundary[k].b.x <= side * boundary[deepest].b.x + 1e-9:  # the last element at the floor
                     deepest = k
                 k += 1
             out.append((first, deepest, min(k, len(boundary) - 1)))
             top = level
             k += 1
             continue
-        top = max(top, s.a.x, s.b.x)
+        top = max(top, a, b)
         k += 1
     return out
 
 
-def _pocket_passes(boundary, pocket, step, angle, retract, feed, zs, decimals):
-    """ALPHA-T's passes for one pocket (DIVE1-3): see the module docstring. Returns (passes, the last line Z)."""
+def _pocket_passes(boundary, pocket, step, angle, retract, feed, zs, decimals, side=1, here_x=None):
+    """ALPHA-T's passes for one pocket (DIVE1-3, IDIVE1): see the module docstring. side -1 = internal (mirrored in
+    X). here_x: where the tool is (X) before the first pass. Returns (passes, the last line Z)."""
     first, deepest, last = pocket
     corner = boundary[first].a
-    floor = min(min(s.a.x, s.b.x) for s in boundary[first:deepest + 1])
+    xs = [x for s in boundary[first:deepest + 1] for x in (s.a.x, s.b.x)]
+    floor = min(xs) if side > 0 else max(xs)
     s0 = boundary[first]
-    drop = (s0.a.x - s0.b.x) / 2
+    drop = side * (s0.a.x - s0.b.x) / 2
     run = abs(s0.a.z - s0.b.z)
     slope = math.degrees(math.atan2(drop, run)) if not s0.is_arc else 90.0
     line = slope if angle is None else min(slope, angle)
     tan = math.tan(math.radians(line)) if line < 90 else math.inf
 
     def on_line(x):
-        return corner.z + ((x - corner.x) / 2 / tan if tan != math.inf else 0.0)
+        return corner.z + (side * (x - corner.x) / 2 / tan if tan != math.inf else 0.0)
 
     def profile(x):  # where the way down meets level x: the profile, nearest the shoulder
         found = [z_at(s, x) for s in boundary[first:deepest + 1]
@@ -170,13 +174,13 @@ def _pocket_passes(boundary, pocket, step, angle, retract, feed, zs, decimals):
     def far(x):  # the far wall at level x
         for s in boundary[deepest + 1:]:
             lo, hi = sorted((s.a.x, s.b.x))
-            if lo != hi and lo <= x < hi:
+            if lo != hi and ((lo <= x < hi) if side > 0 else (lo < x <= hi)):
                 return round(z_at(s, x), decimals)
         return round(boundary[last].b.z, decimals)
 
     levels, x = [], corner.x
-    while x > floor + 1e-9:
-        x = round(max(x - step, floor), 9)
+    while side * x > side * floor + 1e-9:
+        x = round(side * max(side * x - step, side * floor), 9)
         levels.append(x)
         if len(levels) > MAX_PASSES:
             raise too_many(tr("area clear"))
@@ -184,16 +188,17 @@ def _pocket_passes(boundary, pocket, step, angle, retract, feed, zs, decimals):
     for n, x in enumerate(levels):
         z = cut(x)
         if n == 0:
-            up = prev + 2 * retract
+            up = prev + side * 2 * retract
             zu = round(on_line(up), decimals)
-            moves = [Move(MoveKind.RAPID, up, zs), Move(MoveKind.RAPID, up, zu), Move(MoveKind.FEED, up, zu, feed)]
+            moves = [] if here_x is not None and abs(here_x - up) < 1e-9 else [Move(MoveKind.RAPID, up, zs)]
+            moves += [Move(MoveKind.RAPID, up, zu), Move(MoveKind.FEED, up, zu, feed)]
         else:
             zp = cut(prev)
-            moves = [Move(MoveKind.RAPID, prev + 2 * retract, zp), Move(MoveKind.FEED, prev, zp, feed)]
+            moves = [Move(MoveKind.RAPID, prev + side * 2 * retract, zp), Move(MoveKind.FEED, prev, zp, feed)]
         ze = far(x)
         moves += [Move(MoveKind.FEED, x, z, feed), Move(MoveKind.FEED, x, ze, feed),
-                  Move(MoveKind.FEED, x + 2 * retract, round(ze + retract, decimals), feed),
-                  Move(MoveKind.RAPID, x + 2 * retract, z)]
+                  Move(MoveKind.FEED, x + side * 2 * retract, round(ze + retract, decimals), feed),
+                  Move(MoveKind.RAPID, x + side * 2 * retract, z)]
         passes.append(Pass(moves))
         prev = x
     return passes, cut(levels[-1]) if levels else None
@@ -211,16 +216,18 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
     boundary = translate(tip_path(path, nose_radius, op.external), op.offset_x, op.offset_z, op.external)
     bx = [p.x for p in points(boundary)]
     step = 2 * op.depth_of_cut
+    side = 1 if op.external else -1
+    pockets = _pockets(boundary, side)
+    inside = {k for first, _, last in pockets for k in range(first, last + 1)}
     if op.external:
         start, limit = max(bx), min(p.x for p in points(path)) - 2 * nose_radius
-    else:
-        start, limit = min(bx), max(bx)
+    else:  # up to the widest diameter outside the pockets (IDIVE1: 50, not the undercut's 60)
+        start = min(bx)
+        limit = max(x for k, s in enumerate(boundary) if k not in inside for x in (s.a.x, s.b.x))
     first_x = start
     # Zones: every diameter of a Z-parallel boundary line between start and limit is a pass of its own, and the
     # stepping restarts from it (inch samples: ... 2.426, 2.4, 2.2426 ...; in the metric samples the steps happened
     # to land on the shoulders, so this was invisible there).
-    pockets = _pockets(boundary) if op.external else []
-    inside = {k for first, _, last in pockets for k in range(first, last + 1)}
     walls = sorted({s.a.x for k, s in enumerate(boundary) if not s.is_arc and s.a.x == s.b.x and k not in inside
                     and min(start, limit) < s.a.x < max(start, limit)}, reverse=op.external)
     xs = []
@@ -259,10 +266,11 @@ def area_clear(op: AreaClear, path: list[Seg], nose_radius: float, units: str, d
     retract_moves = [Move(MoveKind.RAPID, op.start.x, op.start.z)]
     last_z = None
     for pocket in pockets:
+        here = passes[-1].moves[-1].x if passes else op.start.x
         more, z = _pocket_passes(boundary, pocket, step, angle, retract, op.feed,
-                                 round(op.start.z - nose_radius, decimals), decimals)
+                                 round(op.start.z - nose_radius, decimals), decimals, side, here)
         passes += more
         last_z = z if z is not None else last_z
     if last_z is not None:  # out of the last pocket: up past the part, then back to the start
-        retract_moves.insert(0, Move(MoveKind.RAPID, round(op.start.x - 2 * nose_radius, decimals), last_z))
+        retract_moves.insert(0, Move(MoveKind.RAPID, round(op.start.x - side * 2 * nose_radius, decimals), last_z))
     return Toolpath(passes, retract=retract_moves)

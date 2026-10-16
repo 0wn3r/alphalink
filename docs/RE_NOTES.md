@@ -1229,4 +1229,15 @@ External area clear only; internal pockets and pockets with arcs on the way down
   the 68 deg wall at T3's 31 deg (X40 Z-20.671 -> X30 Z-28.992) and the SD1 lists the same line, without any
   "Invalid tip angle" question. The app applies it to finish passes and the area pre-finish
   (contour.limit_dives), and its safety check now reports the wall that stays uncut ("uncut") instead of a dive.
+- Inside a bore (2026-10-16): samples AREA_int_dive1/2_metric and FINISH_int_dive2_metric, contour
+  `50,0 50,-10 60,-20 (or 60,-12) 60,-30 36,-30 36,-40 20,-40` with T12 (55 deg boring bar, front -87, rear -31,
+  r 0.4), start X45 Z5. Everything is mirrored in X: the main passes stop at the widest diameter outside the pocket
+  (X50), the pocket levels go 54, 58, 60, the way in leaves from shoulder - 2 x retract (X48), the final rapid is
+  X start + 2r (X45.8). Unlike outside, there is no first rapid to X48 at Z start - r: the tool is already at X48
+  after the last main pass (the app emits it only when the tool is elsewhere). The steep wall (68 deg) is taken at
+  31 deg in the area passes, the finish pass and both SD1 listings, as outside.
+- Driving ALPHA-T for these (tools/mk_at_script.py): `--tool` keys for T12 are Right x 9 (the tool picker has 6 tools
+  a page, cursor on the current T3), Return, Down (MC OPTIONS: FEEDRATE -> EXECUTE), Return; area clear INTERNAL is
+  `--menu "key Down;key Down;key Down;key Down;key Return"` with `--exec 5`, finish INTERNAL `--menu "key Down;key
+  Down;key Return"` with `--exec 2`; the start point decides the end the contour is picked from (X45 Z5 for X50 Z0).
 

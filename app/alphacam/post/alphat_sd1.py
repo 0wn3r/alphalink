@@ -113,8 +113,7 @@ def _contour_cycle(out: _Listing, op, path, r: float, units: str, external: bool
         # the finish pass lists its path moved by the offsets, the first point only across its element
         # (OFFSET_finish, INT_finish_offset); area and face clear list the path as drawn
         cp = translate(cp, op.offset_x, op.offset_z, external)
-    if external:
-        cp = limit_dives(cp, angle)
+    cp = limit_dives(cp, angle, side)
     first, last = cp[0].a, cp[-1].b
     approach = _leg(units, APPROACH_MM)
     out_leg = _leg(units, lead_out_mm)

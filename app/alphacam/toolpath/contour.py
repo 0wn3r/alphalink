@@ -269,17 +269,18 @@ def limits(pts: list[Point], nose_radius: float) -> tuple[float, float]:
     return min(p.x for p in pts) - 4 * nose_radius, min(p.z for p in pts) - 2 * nose_radius
 
 
-def limit_dives(path: list[Seg], angle: float | None) -> list[Seg]:
+def limit_dives(path: list[Seg], angle: float | None, side: int = 1) -> list[Seg]:
     """ALPHA-T's collision check on a profile (external work): a line dropping away from the tool (X falling as Z
     goes towards the chuck) steeper than the tool's rear clearance angle is replaced by a line at that angle from
     the same start down to the same diameter, and the next element starts there (FDIVE2: tip path X40 Z-20.671 ->
-    X30 Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way)."""
+    X30 Z-28.992 instead of Z-22.671; the SD1 lists the nose-centre path the same way). side -1: internal work,
+    X rising away from the boring bar (FIDIVE2: X50 Z-10.671 -> X60 Z-18.992)."""
     if angle is None or angle <= 0:
         return path
     tan = math.tan(math.radians(angle))
     out = list(path)
     for k, s in enumerate(out):
-        drop = (s.a.x - s.b.x) / 2
+        drop = side * (s.a.x - s.b.x) / 2
         if s.is_arc or drop <= 1e-9 or drop <= tan * abs(s.a.z - s.b.z) + 1e-9:
             continue
         end = Point(s.b.x, s.a.z - drop / tan)
