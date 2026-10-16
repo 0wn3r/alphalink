@@ -66,7 +66,7 @@ jobs:
       - name: Run the tests
         run: |
           cd app
-          ALPHALINK_E2E=1 python3 -m tests.e2e.run -j 2 2>&1 | tee ../logs/e2e.log
+          ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$PWD/../logs/sessions python3 -m tests.e2e.run -j 2 2>&1 | tee ../logs/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Keep the screenshots
         if: always()
@@ -85,6 +85,8 @@ jobs:
       - name: Show the end of the logs as annotations (readable without signing in)
         if: failure()
         run: |
+          first=$(ls -d logs/sessions/*/ 2>/dev/null | head -1)
+          [ -n "$first" ] && cp "$first/shell.log" logs/first-session-shell.log 2>/dev/null
           for f in logs/*.log; do
             [ -f "$f" ] || continue
             echo "::error title=$(basename $f)::$(tail -n 40 "$f" | sed 's/%/%25/g' | sed ':a;N;$!ba;s/\n/%0A/g')"
