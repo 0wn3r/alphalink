@@ -1,0 +1,24 @@
+# The Rust port (rust/): build, clippy and tests (the post against every case the Python app exports with
+# tools/export_rust_fixtures.py).
+name: Rust
+
+on:
+  push:
+    branches: [main]
+    paths: ["rust/**", "samples/**", ".github/workflows/rust.yml"]
+  pull_request:
+    paths: ["rust/**", "samples/**", ".github/workflows/rust.yml"]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: rust
+    steps:
+      - uses: actions/checkout@v7
+      - run: rustup toolchain install stable --profile minimal --component clippy
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
