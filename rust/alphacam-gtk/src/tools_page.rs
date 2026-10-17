@@ -140,12 +140,10 @@ glib::wrapper! {
 /// Template handlers are not swapped: the template object is the last value.
 fn bind_callbacks(klass: &mut <imp::ToolsPage as ObjectSubclass>::Class) {
     type Handler = (&'static str, fn(&ToolsPage));
-    let handlers: [Handler; 5] = [
+    let handlers: [Handler; 3] = [
         ("_show", |page| { page.show_current(); }),
         ("_add", |page| { page.add_tool(); }),
-        ("_delete", |page| { page.delete_tool(); }),
         ("_import", |page| { page.import_dialog(); }),
-        ("_reset", |page| { page.reset(); }),
     ];
     let scope = klass.rust_template_scope();
     for (name, handler) in handlers {
@@ -162,6 +160,12 @@ impl ToolsPage {
     pub fn new(window: &MainWindow) -> Self {
         let page: Self = glib::Object::new();
         page.imp().window.set(Some(window));
+        // the ⋮ menu's Reset to ALPHA-T Tools
+        let actions = gio::SimpleActionGroup::new();
+        let reset = gio::SimpleAction::new("reset", None);
+        reset.connect_activate(glib::clone!(#[weak] page, move |_, _| page.reset()));
+        actions.add_action(&reset);
+        page.insert_action_group("tools", Some(&actions));
         page.fill(None);
         page
     }
@@ -212,6 +216,14 @@ impl ToolsPage {
         imp.building.set(true);
         let page = adw::PreferencesPage::new();
         let g = adw::PreferencesGroup::builder().title(format!("T{}", t.number)).build();
+        let delete = gtk::Button::builder()
+            .icon_name("user-trash-symbolic")
+            .tooltip_text(gettext("Delete Tool"))
+            .valign(gtk::Align::Center)
+            .css_classes(["flat"])
+            .build();
+        delete.connect_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| this.delete_tool()));
+        g.set_header_suffix(Some(&delete));
         page.add(&g);
 
         let name = adw::EntryRow::builder().title(gettext("Name")).text(&t.name).show_apply_button(true).build();
@@ -341,7 +353,7 @@ impl ToolsPage {
         let Some(w) = self.window() else { return };
         let filters = gio::ListStore::new::<gtk::FileFilter>();
         let f = gtk::FileFilter::new();
-        f.set_name(Some(&gettext("ALPHA-T tool library")));
+        f.set_name(Some(&gettext("ALPHA-T tool library (ATOOLIB.TL1)")));
         for pat in ["*.TL1", "*.tl1"] {
             f.add_pattern(pat);
         }

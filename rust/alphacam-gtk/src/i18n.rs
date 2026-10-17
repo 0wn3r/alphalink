@@ -67,6 +67,14 @@ pub fn init(language: &str) {
     alphacam::i18n::set_translator(|text| gettextrs::gettext(text));
 }
 
+/// Marks a literal in a table for tools/update_translations.py (gettext's N_): it is translated later, by gettext().
+macro_rules! n_ {
+    ($s:literal) => {
+        $s
+    };
+}
+pub(crate) use n_;
+
 pub fn gettext(text: &str) -> String {
     gettextrs::gettext(text)
 }

@@ -29,7 +29,7 @@ use crate::canvas::view::ViewTransform;
 use crate::canvas::widget::MarkerKind;
 use crate::canvas::LatheCanvas;
 use crate::hit_keys::{Hit, cursor_key, hit_action, key_char, step_key};
-use crate::i18n::{gettext, ngettext, fill, tr};
+use crate::i18n::{fill, gettext, n_, ngettext, tr};
 use crate::ui::{builder, object};
 use crate::window::MainWindow;
 
@@ -89,9 +89,9 @@ const LETTER_MENU: &[(&str, char)] = &[
     ("Move Cursor by Length and Angle", 'y'),
     ("Measure by X,Z", 'm'),
     ("Measure by Length and Angle", 'n'),
-    ("Add Text", 't'),
-    ("Erase Text", 'u'),
 ];
+/// the text commands: a section of their own after the cursor and measure ones
+const TEXT_MENU: &[(&str, char)] = &[("Add Text", 't'), ("Erase Text", 'u')];
 /// (name, label, tooltip with the one-letter keys of hit_keys.rs)
 const TOOLS: &[(&str, &str, &str)] = &[
     ("select", "Select", "Select an element or an operation. Press L or A to select the nearest line or arc"),
@@ -136,14 +136,27 @@ impl EntryMode {
     }
 }
 
-/// What the command entry says while no command asks for anything: how to use the active tool.
-fn tool_hint_text(tool: &str) -> Option<&'static str> {
+/// What the command entry says while no command asks for anything: the active tool in a few words, short enough
+/// for the touch layout's narrow entry. The whole guidance (`tool_guide`) goes to the read-out line.
+fn tool_hint_text(tool: &str) -> String {
     match tool {
-        "select" => Some("Tap an element or an operation; L or A finds the nearest line or arc"),
-        "fillet" | "chamfer" => Some("Tap a corner, or move the cursor near it and press Enter"),
-        "corner" => Some("Tap two lines, or move the cursor to each and press Enter"),
-        _ => None,
+        "select" => gettext("Tap an element or an operation"),
+        "fillet" | "chamfer" => gettext("Tap a corner"),
+        "corner" => gettext("Tap two lines"),
+        "arc" => gettext("Arc: X,Z or @dX,dZ, then Enter"),
+        _ => gettext("X,Z or @dX,dZ, then Enter"),
     }
+}
+
+/// How to use the active tool, in full: shown in the read-out line when the tool is chosen.
+fn tool_guide(tool: &str) -> String {
+    gettext(match tool {
+        "select" => "Tap an element or an operation; L or A finds the nearest line or arc",
+        "fillet" | "chamfer" => "Tap a corner, or move the cursor near it and press Enter",
+        "corner" => "Tap two lines, or move the cursor to each and press Enter",
+        "arc" => EntryMode::Arc.hint(),
+        _ => EntryMode::Point.hint(),
+    })
 }
 
 static RE_COORD: LazyLock<Regex> =
@@ -317,7 +330,7 @@ impl DrawingTools {
         this.palette.set_active_name(Some("select"));
         this.palette.connect_active_name_notify(weak!(this, move |_| this.palette_changed()));
 
-        this.entry.set_placeholder_text(Some(&gettext(tool_hint_text("select").unwrap_or_default())));
+        this.entry.set_placeholder_text(Some(&tool_hint_text("select")));
         this.entry.connect_activate(weak!(this, move |_| this.entry_activate()));
         let entry_keys = gtk::EventControllerKey::new();
         entry_keys.set_propagation_phase(gtk::PropagationPhase::Capture);
@@ -329,7 +342,9 @@ impl DrawingTools {
         this.edit_el.connect_clicked(weak!(this, move |_| this.edit_selected_element()));
         this.keypad_button.connect_clicked(weak!(this, move |_| this.open_keypad()));
 
+        // sections with headings, so 19 items read as four groups (HIG: menus)
         let menu = gio::Menu::new();
+        let construct = gio::Menu::new();
         for (label, kind, key) in CONSTRUCT_MENU {
             let item = gio::MenuItem::new(Some(&gettext(label)), None);
             if let Some(key) = key {
@@ -337,24 +352,27 @@ impl DrawingTools {
                 item.set_attribute_value("accel", Some(&key.to_variant()));
             }
             item.set_action_and_target_value(Some("win.construct"), Some(&kind.to_variant()));
-            menu.append_item(&item);
+            construct.append_item(&item);
         }
+        menu.append_section(Some(&gettext("Construct")), &construct);
         let features = gio::Menu::new();
         for (label, kind) in FEATURE_MENU {
             let item = gio::MenuItem::new(Some(&gettext(label)), None);
             item.set_action_and_target_value(Some("win.construct"), Some(&kind.to_variant()));
             features.append_item(&item);
         }
-        menu.append_section(None, &features);
+        menu.append_section(Some(&gettext("Features")), &features);
         // ALPHA-T's letter commands with dialogs, reachable without a keyboard (POINTER_KEYBOARD.md 4)
-        let letters = gio::Menu::new();
-        for (label, key) in LETTER_MENU {
-            let item = gio::MenuItem::new(Some(&gettext(label)), None);
-            item.set_attribute_value("accel", Some(&key.to_string().to_variant()));
-            item.set_action_and_target_value(Some("win.hit-key"), Some(&key.to_string().to_variant()));
-            letters.append_item(&item);
+        for (title, items) in [(n_!("Cursor and Measure"), LETTER_MENU), (n_!("Text"), TEXT_MENU)] {
+            let section = gio::Menu::new();
+            for (label, key) in items {
+                let item = gio::MenuItem::new(Some(&gettext(label)), None);
+                item.set_attribute_value("accel", Some(&key.to_string().to_variant()));
+                item.set_action_and_target_value(Some("win.hit-key"), Some(&key.to_string().to_variant()));
+                section.append_item(&item);
+            }
+            menu.append_section(Some(&gettext(title)), &section);
         }
-        menu.append_section(None, &letters);
         let hit_key = gio::SimpleAction::new("hit-key", Some(glib::VariantTy::STRING));
         hit_key.connect_activate(weak!(this, move |_, v| {
             if let Some(c) = v.and_then(|v| v.get::<String>()).and_then(|s| s.chars().next()) {
@@ -367,6 +385,15 @@ impl DrawingTools {
         erase.append(Some(&gettext("Erase Drawing…")), Some("win.erase-drawing"));
         menu.append_section(None, &erase);
         more.set_menu_model(Some(&menu));
+        // the headed menu is about 800 px tall: on a short screen (a Surface in landscape) it scrolls inside the
+        // window instead of opening past the screen edge, where X11 does not show it at all
+        if let Some(popover) = more.popover() {
+            popover.connect_show(|p| {
+                if let (Some(sw), Some(root)) = (p.child().and_downcast::<gtk::ScrolledWindow>(), p.root()) {
+                    sw.set_max_content_height((root.height() - 120).max(240));
+                }
+            });
+        }
         let erase_action = gio::SimpleAction::new("erase-drawing", None);
         erase_action.connect_activate(weak!(this, move |_, _| {
             if this.w().has_project() {
@@ -508,11 +535,7 @@ impl DrawingTools {
     }
 
     fn tool_hint(&self) -> String {
-        let tool = self.tool();
-        match tool_hint_text(&tool) {
-            Some(t) => gettext(t),
-            None => gettext(if tool == "arc" { EntryMode::Arc } else { EntryMode::Point }.hint()),
-        }
+        tool_hint_text(&self.tool())
     }
 
     pub fn set_tool(&self, name: &str) {
@@ -525,6 +548,7 @@ impl DrawingTools {
         self.done.set_visible(matches!(name, "line" | "arc"));
         if self.s.borrow().entry_mode == EntryMode::Point {
             self.entry.set_placeholder_text(Some(&self.tool_hint()));
+            self.readout(&tool_guide(name));
         }
         self.select_element_(None);
         if name != "select" {

@@ -2,7 +2,7 @@ using Gtk 4.0;
 using Adw 1;
 
 // The operation editor pane (TOUCH.md 7.1); op_editor.py fills the scrolled part with rows made from the operation's
-// fields.
+// fields. Delete Operation is a row at the bottom, next to Duplicate, so the title fits the header in touch mode.
 template $AlphaLinkOpEditor: Box {
   orientation: vertical;
   width-request: 340;
@@ -41,16 +41,6 @@ template $AlphaLinkOpEditor: Box {
       clicked => $_close();
     }
 
-    [end]
-    Button {
-      icon-name: "user-trash-symbolic";
-      tooltip-text: _("Delete Operation");
-      clicked => $_delete();
-
-      styles [
-        "destructive-action",
-      ]
-    }
   }
 
   ScrolledWindow scroll {

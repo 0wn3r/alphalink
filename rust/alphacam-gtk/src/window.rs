@@ -27,7 +27,7 @@ use crate::i18n::{gettext, ngettext, tr};
 use crate::input_mode::{InputMode, Mode, Preference};
 use crate::machine::MachinePage;
 use crate::op_editor::{EditorHooks, OpEditor, fit_spin};
-use crate::op_factory::{default_op, op_menu, tool_for};
+use crate::op_factory::{OP_NAMES, default_op, op_menu, tool_for};
 use crate::report::SheetPage;
 use crate::settings::{PROGRAM_FONT_PT, settings, update as update_settings};
 use crate::shortcuts::shortcuts_dialog;
@@ -47,17 +47,7 @@ const OP_KIND_TOOL_CHANGE: i64 = 1;
 const PAGES: [&str; 5] = ["part", "program", "sheet", "tools", "machine"];
 
 pub fn op_title(op: &Operation) -> String {
-    let base = match op {
-        Operation::ToolChange(_) => "Tool change",
-        Operation::AreaClear(_) => "Area clear",
-        Operation::FaceClear(_) => "Face clear",
-        Operation::Groove(_) => "Grooving",
-        Operation::FinishPass(_) => "Finish pass",
-        Operation::Drill(_) => "Drilling",
-        Operation::Thread(_) => "Threading",
-        Operation::Dwell(_) => "Dwell",
-        Operation::MoveTo(_) => "Move / rapid",
-    };
+    let base = OP_NAMES.iter().find(|(kind, _, _)| *kind == op.type_name()).map_or("", |(_, _, row)| *row);
     let mut title = gettext(base);
     let external = match op {
         Operation::AreaClear(o) => o.external,
@@ -183,6 +173,10 @@ mod imp {
         #[template_child]
         pub split: TemplateChild<adw::NavigationSplitView>,
         #[template_child]
+        pub content_header: TemplateChild<adw::HeaderBar>,
+        #[template_child]
+        pub open_button: TemplateChild<gtk::Button>,
+        #[template_child]
         pub side_header: TemplateChild<adw::HeaderBar>,
         #[template_child]
         pub add_op_button: TemplateChild<gtk::MenuButton>,
@@ -226,6 +220,8 @@ mod imp {
         pub ops_section: TemplateChild<gio::Menu>,
         #[template_child]
         pub template_section: TemplateChild<gio::Menu>,
+        #[template_child]
+        pub undo_section: TemplateChild<gio::Menu>,
 
         pub state: RefCell<State>,
         pub library: RefCell<Rc<ToolLibrary>>,
@@ -714,6 +710,38 @@ impl MainWindow {
             imp.ops_section.append_item(&item);
         }
         self.fill_templates();
+        // the narrow window's way back to the operations: libadwaita's own back button has no accessible name, so
+        // this one says where it goes
+        let back = gtk::Button::builder()
+            .icon_name("go-previous-symbolic")
+            .tooltip_text(gettext("Operations"))
+            .visible(false)
+            .build();
+        back.update_property(&[gtk::accessible::Property::Label(&gettext("Operations"))]);
+        back.connect_clicked(glib::clone!(#[weak(rename_to = split)] imp.split, move |_| split.set_show_content(false)));
+        imp.content_header.set_show_back_button(false);
+        imp.content_header.pack_start(&back);
+        if let Some(start) = imp.open_button.parent().and_downcast::<gtk::Box>() {
+            start.reorder_child_after(&back, gtk::Widget::NONE);
+        }
+        let show_back = glib::clone!(#[weak] back, move |split: &adw::NavigationSplitView| {
+            back.set_visible(split.is_collapsed() && split.shows_content())
+        });
+        show_back(&imp.split);
+        imp.split.connect_collapsed_notify(show_back.clone());
+        imp.split.connect_show_content_notify(show_back);
+        // Undo and Redo in the main menu only while the narrow window hides the header's buttons
+        // (both breakpoints hide them; the box's own visible notify is not emitted when a breakpoint unapplies)
+        let sync_undo = |win: &Self| {
+            let section = win.imp().undo_section.get();
+            section.remove_all();
+            if win.current_breakpoint().is_some() {
+                section.append(Some(&gettext("Undo")), Some("win.undo"));
+                section.append(Some(&gettext("Redo")), Some("win.redo"));
+            }
+        };
+        sync_undo(self);
+        self.connect_current_breakpoint_notify(sync_undo);
         // setups of the part (setup 2: turned around), shown when there is more than one
         let setup_switch = adw::ToggleGroup::new();
         setup_switch.add_css_class("round");
@@ -741,7 +769,10 @@ impl MainWindow {
 
         // program view
         let buf = imp.program_view.buffer();
-        let hl = buf.create_tag(Some("hl"), &[("paragraph-background", &"rgba(53,132,228,0.18)")]).expect("tag");
+        // the selected operation's blocks: a light tint, so the text stays easy to read (not the selection's solid blue)
+        let hl = buf.create_tag(Some("hl"), &[("paragraph-background", &"rgba(53,132,228,0.10)")]).expect("tag");
+        // the simulation's current line: a stronger tint of the same blue over the operation's
+        buf.create_tag(Some("sim"), &[("paragraph-background", &"rgba(53,132,228,0.28)")]).expect("tag");
         // each block starts with its label (N10, N20 ...): bold, so the blocks stand out while scrolling
         let block_tag = buf.create_tag(Some("block"), &[("weight", &700i32)]).expect("tag");
         let found = buf.create_tag(Some("found"), &[("background", &"rgba(246,211,45,0.55)")]).expect("tag");
@@ -1918,6 +1949,17 @@ impl MainWindow {
             let code = CODES[(r.selected() as usize).min(2)];
             update_settings(|s| s.language = code.into());
         });
+        // the main menu's former Input Layout section: the same stateful action
+        const LAYOUTS: [&str; 3] = ["auto", "pointer", "touch"];
+        let layout: adw::ComboRow = object(&b, "pref_input_layout_row");
+        let now = self.action_state("input-layout").and_then(|v| v.get::<String>()).unwrap_or_default();
+        layout.set_selected(LAYOUTS.iter().position(|l| *l == now).unwrap_or(0) as u32);
+        let win = self.downgrade();
+        layout.connect_selected_notify(move |r| {
+            if let Some(win) = win.upgrade() {
+                win.change_action_state("input-layout", &LAYOUTS[(r.selected() as usize).min(2)].to_variant());
+            }
+        });
         object::<adw::Dialog>(&b, "preferences").present(Some(self));
     }
 
@@ -2481,7 +2523,11 @@ impl MainWindow {
         let Some(it) = buf.iter_at_line(line as i32 - 1) else { return };
         let mut end = it;
         end.forward_to_line_end();
-        buf.select_range(&it, &end);
+        if let Some(tag) = buf.tag_table().lookup("sim") {
+            buf.remove_tag(&tag, &buf.start_iter(), &buf.end_iter());
+            buf.apply_tag(&tag, &it, &end);
+        }
+        buf.place_cursor(&it);
         let mark = buf.mark("sim").unwrap_or_else(|| buf.create_mark(Some("sim"), &it, true));
         buf.move_mark(&mark, &it);
         view.scroll_to_mark(&mark, 0.2, false, 0.0, 0.0);

@@ -63,6 +63,11 @@ class ToolsPage(Gtk.Box):
         super().__init__()
         self.w = window
         self._building = False
+        actions = Gio.SimpleActionGroup()
+        reset = Gio.SimpleAction.new("reset", None)
+        reset.connect("activate", self._reset)
+        actions.add_action(reset)
+        self.insert_action_group("tools", actions)
         self.fill()
 
     @property
@@ -159,8 +164,7 @@ class ToolsPage(Gtk.Box):
         self.lib.tools.append(Tool(n, _("New tool")))
         self._changed(n)
 
-    @Gtk.Template.Callback()
-    def _delete(self, *_a) -> None:
+    def _delete(self, *_a) -> None:  # the Rust app's Delete Tool is in the tool's header
         t = self.current()
         if t is None:
             return
@@ -215,8 +219,7 @@ class ToolsPage(Gtk.Box):
 
         dlg.open(self.w, None, done)
 
-    @Gtk.Template.Callback()
-    def _reset(self, *_a) -> None:
+    def _reset(self, *_a) -> None:  # the ⋮ menu's tools.reset
         self.lib.tools[:] = standard_library().tools
         self._changed(None)
         self.w.toast(_("Tool library reset to ALPHA-T's 32 standard tools"))
