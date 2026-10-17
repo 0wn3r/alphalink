@@ -1588,6 +1588,12 @@ msgstr "_Імпортувати"
 msgid "Help"
 msgstr "Довідка"
 
+msgid "Training Manual"
+msgstr "Навчальний посібник"
+
+msgid "Reference Manual"
+msgstr "Довідковий посібник"
+
 msgid "Send this program?"
 msgstr "Надіслати цю програму?"
 
@@ -1684,9 +1690,6 @@ msgstr "Перемістити вниз"
 msgid "Close Editor"
 msgstr "Закрити редактор"
 
-msgid "Delete Operation"
-msgstr "Видалити операцію"
-
 msgid "Part Settings"
 msgstr "Параметри деталі"
 
@@ -1749,6 +1752,24 @@ msgstr "мм/хв"
 
 msgid "seconds for the operator to change a tool"
 msgstr "секунд оператору на зміну інструмента"
+
+msgid "Input"
+msgstr "Введення"
+
+msgid "Input layout"
+msgstr "Режим введення"
+
+msgid "Automatic follows the last finger or mouse"
+msgstr "«Автоматично» стежить за останнім дотиком чи мишею"
+
+msgid "Automatic"
+msgstr "Автоматично"
+
+msgid "Pointer"
+msgstr "Миша"
+
+msgid "Touch"
+msgstr "Сенсор"
 
 msgid "Language"
 msgstr "Мова"
@@ -1863,6 +1884,9 @@ msgstr "Операції (фокус у списку)"
 
 msgid "Duplicate Operation"
 msgstr "Дублювати операцію"
+
+msgid "Delete Operation"
+msgstr "Видалити операцію"
 
 msgid "Simulation (Part Page)"
 msgstr "Симуляція (сторінка «Деталь»)"
@@ -2035,17 +2059,17 @@ msgstr "_Видалити"
 msgid "_Add Tool"
 msgstr "_Додати інструмент"
 
-msgid "_Delete Tool"
-msgstr "_Видалити інструмент"
+msgid "_Import Tool Library…"
+msgstr "_Імпорт бібліотеки інструментів…"
 
-msgid "_Import ATOOLIB.TL1…"
-msgstr "_Імпорт ATOOLIB.TL1…"
-
-msgid "_Reset to ALPHA-T Tools"
-msgstr "_Скинути до інструментів ALPHA-T"
+msgid "More Tool Actions"
+msgstr "Інші дії з інструментами"
 
 msgid "Tool numbers are the lathe's tool memory slots."
 msgstr "Номери інструментів — це комірки пам’яті інструментів верстата."
+
+msgid "Reset to ALPHA-T Tools"
+msgstr "Скинути до інструментів ALPHA-T"
 
 msgid "Opening port…"
 msgstr "Відкриття порту…"
@@ -2122,12 +2146,6 @@ msgstr "Відкрити…"
 msgid "Open Machine Page"
 msgstr "Відкрити сторінку «Верстат»"
 
-msgid "Training Manual"
-msgstr "Навчальний посібник"
-
-msgid "Reference Manual"
-msgstr "Довідковий посібник"
-
 msgid "About AlphaLink CAM"
 msgstr "Про AlphaLink CAM"
 
@@ -2145,21 +2163,6 @@ msgstr "Перевернути деталь…"
 
 msgid "Remove This Setup…"
 msgstr "Видалити це встановлення…"
-
-msgid "Clear Messages"
-msgstr "Прибрати повідомлення"
-
-msgid "Input Layout"
-msgstr "Режим введення"
-
-msgid "Automatic"
-msgstr "Автоматично"
-
-msgid "Pointer"
-msgstr "Миша"
-
-msgid "Touch"
-msgstr "Сенсор"
 
 msgid "Templates"
 msgstr "Шаблони"
@@ -2397,3 +2400,72 @@ msgstr "Програма {number} · {units} · рядків: {lines} · {size} 
 
 msgid "incomplete (see banner)"
 msgstr "неповна (див. повідомлення вгорі)"
+
+msgid "Tap an element or an operation"
+msgstr "Торкніться елемента або операції"
+
+msgid "Tap a corner"
+msgstr "Торкніться кута"
+
+msgid "Tap two lines"
+msgstr "Торкніться двох ліній"
+
+msgid "Arc: X,Z or @dX,dZ, then Enter"
+msgstr "Дуга: X,Z або @dX,dZ, потім Enter"
+
+msgid "X,Z or @dX,dZ, then Enter"
+msgstr "X,Z або @dX,dZ, потім Enter"
+
+msgid "Construct"
+msgstr "Побудова"
+
+msgid "Features"
+msgstr "Елементи деталі"
+
+msgid "Cursor and Measure"
+msgstr "Курсор і вимірювання"
+
+msgid "Tool memory slot"
+msgstr "Номер у пам’яті ЧПК"
+
+msgid "Allowance, radius"
+msgstr "Припуск, на радіус"
+
+msgid "Allowance"
+msgstr "Припуск"
+
+msgid "0 = one plunge"
+msgstr "0 = одним врізанням"
+
+msgid "Radius; then × √n"
+msgstr "На радіус; далі × √n"
+
+msgid "0 = from the depth"
+msgstr "0 = за глибиною"
+
+msgid "At the final diameter"
+msgstr "На кінцевому діаметрі"
+
+msgid "0° = straight in"
+msgstr "0° = прямо"
+
+msgid "Off = boring"
+msgstr "Вимкнено = розточування"
+
+msgid "After the roughing"
+msgstr "Після чорнової обробки"
+
+msgid "Off = facing"
+msgstr "Вимкнено = торцювання"
+
+msgid "Cleans up each step"
+msgstr "Зачищає кожен уступ"
+
+msgid "Pulls off to the axis"
+msgstr "Відведення до осі"
+
+msgid "Delete Tool"
+msgstr "Видалити інструмент"
+
+msgid "ALPHA-T tool library (ATOOLIB.TL1)"
+msgstr "Бібліотека інструментів ALPHA-T (ATOOLIB.TL1)"

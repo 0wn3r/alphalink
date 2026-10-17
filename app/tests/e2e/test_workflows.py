@@ -262,7 +262,7 @@ class SmallWindow(Surface):
         self.launch(str(self.part(p)))
         self.assertTrue(self.app.exists("Drawing"))
         self.snap("opens-on-drawing")
-        self.press("Back", contains=True)
+        self.press("Operations", "button")  # the narrow layout's back button
         self.s.click(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
         self.app.find("Close Editor")
         self.assertFalse(self.app.exists("Drawing"), "the editor should have the whole page")
@@ -1233,8 +1233,8 @@ class WorkflowSteps456(Surface):
         path = self.part(p)
         self.launch(str(path))
         self.press("Main Menu", "toggle button")
-        self.app.press(acc=self.app.menu_items()[10])  # New, Open, Save, Save As, Save SDG | Undo, Redo | Fit, Grid,
-        self.app.find("Turn Part Around", contains=True)  # Part Settings, Turn Part Around…
+        self.app.press(acc=[i for i in self.app.menu_items() if i.text.startswith("Turn Part Around")][0])
+        self.app.find("Turn Part Around", contains=True)
         self.snap("dialog")
         self.press("Turn Around", "button")
         self.app.find("Setup 2, program", contains=True, showing=False)

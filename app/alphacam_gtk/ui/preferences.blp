@@ -109,6 +109,23 @@ Adw.PreferencesDialog preferences {
     }
 
     Adw.PreferencesGroup {
+      title: _("Input");
+
+      Adw.ComboRow pref_input_layout_row {
+        title: _("Input layout");
+        subtitle: _("Automatic follows the last finger or mouse");
+
+        model: StringList {
+          strings [
+            _("Automatic"),
+            _("Pointer"),
+            _("Touch"),
+          ]
+        };
+      }
+    }
+
+    Adw.PreferencesGroup {
       title: _("Language");
       description: _("Takes effect after restarting the app.");
 

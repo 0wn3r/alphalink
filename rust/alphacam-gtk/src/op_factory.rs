@@ -9,22 +9,23 @@ use alphacam::model::Project;
 
 use crate::i18n::gettext;
 
+/// Each operation kind's names, from one place: (kind, in menus (header capitalization), in the list and the
+/// editor (sentence case)), in the Add Operation menu's order.
+pub const OP_NAMES: &[(&str, &str, &str)] = &[
+    ("area_clear", "Area Clear", "Area clear"),
+    ("finish", "Finish Pass", "Finish pass"),
+    ("face_clear", "Face Clear", "Face clear"),
+    ("groove", "Grooving", "Grooving"),
+    ("thread", "Threading", "Threading"),
+    ("drill", "Drilling", "Drilling"),
+    ("tool_change", "Tool Change", "Tool change"),
+    ("dwell", "Dwell", "Dwell"),
+    ("move", "Move / Rapid", "Move / rapid"),
+];
+
 /// (menu label, operation kind) in the Add Operation menu's order
 pub fn op_menu() -> Vec<(String, &'static str)> {
-    [
-        ("Area Clear", "area_clear"),
-        ("Finish Pass", "finish"),
-        ("Face Clear", "face_clear"),
-        ("Grooving", "groove"),
-        ("Threading", "thread"),
-        ("Drilling", "drill"),
-        ("Tool Change", "tool_change"),
-        ("Dwell", "dwell"),
-        ("Move / Rapid", "move"),
-    ]
-    .into_iter()
-    .map(|(label, kind)| (gettext(label), kind))
-    .collect()
+    OP_NAMES.iter().map(|(kind, menu, _)| (gettext(menu), *kind)).collect()
 }
 
 pub fn current_tool(project: &Project, at: usize) -> i32 {

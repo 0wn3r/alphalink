@@ -62,7 +62,10 @@ class Bus(Surface):
         return sorted(bs, key=lambda w: w.x)
 
     def tap(self, name=None, role=None, acc=None, contains=False) -> None:
-        self.s.tap(*self.app.center(name, role, acc, contains))
+        x, y = self.app.center(name, role, acc, contains)
+        if not (0 <= x < self.s.width and 0 <= y < self.s.height):
+            self.fail(f"{name or (acc.text if acc else '')!r} is off the screen at {x:.0f},{y:.0f}; scroll first")
+        self.s.tap(x, y)
 
     def view(self):
         """Where two screen spots of the drawing are, in drawing coordinates (the view, as numbers)."""
@@ -118,8 +121,13 @@ class InputLayout(Bus):
         zoom buttons and the Keypad, not only the bigger buttons)."""
         path = self.part(shaft())
         self.launch(str(path))
-        self.tap("Main Menu", "toggle button")
-        self.tap(acc=[i for i in self.app.menu_items() if i.text == "Touch"][0])
+        self.s.key("ctrl+comma")  # Preferences ▸ Input ▸ Input layout
+        time.sleep(0.8)
+        self.tap(acc=self.app.labelled("Input layout", "row"))
+        time.sleep(0.6)
+        self.tap(acc=[w for w in self.app.widgets() if w.text == "Touch" and w.w > 0 and w.css in ("row", "label")][-1])
+        time.sleep(0.5)
+        self.s.key("Escape")
         time.sleep(0.5)
         self.assertTrue(self.touch_only())
         self.s.key("ctrl+q")
@@ -483,6 +491,8 @@ class EditorByTouch(Bus):
         self.tap("Move Up", "button")
         time.sleep(0.5)
         self.assertEqual([type(o).__name__ for o in self.saved(path).operations], ["FinishPass", "AreaClear"])
+        self.s.scroll(self.s.width - 150, self.s.height * 0.6, 15)  # Delete Operation is at the end of the editor
+        time.sleep(0.4)
         self.tap("Delete Operation", "button")
         time.sleep(0.5)
         for name in ("Delete", "_Delete"):

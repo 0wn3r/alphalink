@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Regenerate app/po/alphalink-cam.pot from the sources (the Python code and the compiled interface files), rebuild app/po/uk.po from app/po/uk_translations.py, and
+"""Regenerate app/po/alphalink-cam.pot from the sources (the Python code, the compiled interface files, and the Rust
+app's gettext("…") / tr("…") / n_!("…") literals that the Python code does not have), rebuild app/po/uk.po from
+app/po/uk_translations.py, and
 compile the catalogs into app/alphacam_gtk/locale/<lang>/LC_MESSAGES/alphalink-cam.mo.
 Needs xgettext and msgfmt (gettext). Run from anywhere: python3 tools/update_translations.py"""
 
@@ -18,6 +20,23 @@ def quote(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
 
 
+def rust_only(pot: str) -> str:
+    """POT entries for the Rust app's literal gettext("…"), tr("…") and n_!("…") strings that the POT does not have yet
+    (xgettext here has no Rust parser)."""
+    # each msgid in its escaped form, its continued lines joined (as the Rust literal is written)
+    known = {"".join(re.findall(r'"(.*)"', b)) for b in re.findall(r'\nmsgid ((?:".*"\n)+)', pot)}
+    out, seen = [], set()
+    for path in sorted((APP.parent / "rust" / "alphacam-gtk" / "src").rglob("*.rs")):
+        text = re.sub(r"\\\n\s*", "", path.read_text())  # a string continued on the next line
+        for m in re.finditer(r'\b(?:gettext|tr|n_!)\(\s*"((?:[^"\\]|\\.)*)"', text):
+            raw = m.group(1)
+            if not raw or raw in known or raw in seen:
+                continue
+            seen.add(raw)
+            out.append(f"\n#: {path.relative_to(APP.parent)}\nmsgid \"{raw}\"\nmsgstr \"\"\n")
+    return "".join(out)
+
+
 def main() -> int:
     sources = sorted(str(p.relative_to(APP)) for d in ("alphacam", "alphacam_gtk") for p in (APP / d).rglob("*.py"))
     sources += sorted(str(p.relative_to(APP)) for p in (APP / "alphacam_gtk" / "ui").glob("*.ui"))  # tools/build_ui.py
@@ -27,6 +46,8 @@ def main() -> int:
                     "--package-version=0.1.0", "--sort-by-file", "-f", "po/POTFILES", "-o", "po/alphalink-cam.pot"],
                    cwd=APP, check=True)
     pot = (PO / "alphalink-cam.pot").read_text()
+    pot += rust_only(pot)
+    (PO / "alphalink-cam.pot").write_text(pot)
     ids = re.findall(r'\nmsgid ((?:".*"\n)+)(?:msgid_plural ((?:".*"\n)+))?', pot)
 
     def unq(block):

@@ -16,20 +16,20 @@ use alphacam::toolpath::contour::chain;
 use gtk::{gdk, glib};
 use serde_json::{Value, json};
 
-use crate::i18n::{fill, gettext, ngettext, tr};
+use crate::i18n::{fill, gettext, n_, ngettext, tr};
 
-/// (label, subtitle, lower, upper, step, digits) of a number field
+/// (label, subtitle, lower, upper, step, digits) of a number field; a subtitle fits one line of the editor pane
 type NumberSpec = (&'static str, Option<&'static str>, f64, f64, f64, u32);
 
 const NUMBERS: &[(&str, NumberSpec)] = &[
-    ("tool", ("Tool", Some("Tool memory slot on the control"), 1.0, 99.0, 1.0, 0)),
+    ("tool", ("Tool", Some(n_!("Tool memory slot")), 1.0, 99.0, 1.0, 0)),
     ("feed", ("Feed", Some("Per revolution"), 0.001, 5.0, 0.01, 3)),
     ("depth_of_cut", ("Depth of cut", Some("Per pass, radius"), 0.01, 50.0, 0.1, 3)),
-    ("offset_x", ("Offset X", Some("Finish allowance, radius"), -10.0, 10.0, 0.05, 3)),
-    ("offset_z", ("Offset Z", Some("Finish allowance"), -10.0, 10.0, 0.05, 3)),
+    ("offset_x", ("Offset X", Some(n_!("Allowance, radius")), -10.0, 10.0, 0.05, 3)),
+    ("offset_z", ("Offset Z", Some(n_!("Allowance")), -10.0, 10.0, 0.05, 3)),
     ("finish_offset_x", ("Finish offset X", None, -10.0, 10.0, 0.05, 3)),
     ("finish_offset_z", ("Finish offset Z", None, -10.0, 10.0, 0.05, 3)),
-    ("peck_depth", ("Peck depth", Some("0 = plunge in one go"), 0.0, 50.0, 0.5, 3)),
+    ("peck_depth", ("Peck depth", Some(n_!("0 = one plunge")), 0.0, 50.0, 0.5, 3)),
     ("stepover", ("Stepover", None, 0.01, 50.0, 0.1, 3)),
     ("tip_width", ("Tip width", None, 0.01, 50.0, 0.1, 3)),
     ("z_shift", ("Z shift", None, -500.0, 500.0, 1.0, 3)),
@@ -38,25 +38,25 @@ const NUMBERS: &[(&str, NumberSpec)] = &[
     ("depth", ("Hole bottom Z", Some("Absolute"), -1000.0, 0.0, 1.0, 3)),
     ("peck", ("Peck", Some("0 = no pecking"), 0.0, 100.0, 1.0, 3)),
     ("pitch", ("Pitch", None, 0.01, 20.0, 0.05, 3)),
-    ("cut_depth", ("First cut depth", Some("Radius; cut n goes to first × √n"), 0.01, 5.0, 0.05, 3)),
-    ("cuts", ("Number of cuts", Some("0 = from the first cut depth"), 0.0, 500.0, 1.0, 0)),
+    ("cut_depth", ("First cut depth", Some(n_!("Radius; then × √n")), 0.01, 5.0, 0.05, 3)),
+    ("cuts", ("Number of cuts", Some(n_!("0 = from the depth")), 0.0, 500.0, 1.0, 0)),
     ("lead_in", ("Lead in", None, 0.0, 50.0, 0.5, 3)),
     ("retract", ("Retract distance", None, 0.01, 50.0, 0.1, 3)),
     ("lead_out", ("Lead out", None, 0.0, 50.0, 0.5, 3)),
-    ("spring_passes", ("Spring passes", Some("Extra cuts at the final diameter"), 0.0, 9.0, 1.0, 0)),
-    ("angle", ("Infeed angle", Some("Degrees; 0 = straight in"), 0.0, 60.0, 1.0, 1)),
+    ("spring_passes", ("Spring passes", Some(n_!("At the final diameter")), 0.0, 9.0, 1.0, 0)),
+    ("angle", ("Infeed angle", Some(n_!("0° = straight in")), 0.0, 60.0, 1.0, 1)),
     ("revs", ("Dwell", Some("Revolutions"), 0.1, 100.0, 1.0, 1)),
 ];
 
 /// field, (label, subtitle)
 const SWITCHES: &[(&str, (&str, Option<&str>))] = &[
-    ("external", ("External", Some("Off = internal (boring)"))),
+    ("external", ("External", Some(n_!("Off = boring")))),
     ("towards", ("Towards the chuck", None)),
-    ("pre_finish", ("Pre-finish pass", Some("A finish pass after the roughing, pulling off by the retract distance"))),
+    ("pre_finish", ("Pre-finish pass", Some(n_!("After the roughing")))),
     ("full_retract", ("Full retract", None)),
-    ("front", ("Front", Some("Off = FACE: across the front face"))),
-    ("follow", ("Follow contour", Some("Each pass also cleans up the step it leaves"))),
-    ("face", ("Face", Some("Finish a face: pulls off towards the axis"))),
+    ("front", ("Front", Some(n_!("Off = facing")))),
+    ("follow", ("Follow contour", Some(n_!("Cleans up each step")))),
+    ("face", ("Face", Some(n_!("Pulls off to the axis")))),
     ("rapid", ("Rapid", Some("Off = feed move"))),
 ];
 
@@ -308,11 +308,10 @@ pub struct EditorHooks {
 /// The header's buttons. The template scope passes (emitter, signal values..., template object).
 fn bind_callbacks(klass: &mut <imp::OpEditor as ObjectSubclass>::Class) {
     type Handler = (&'static str, fn(&EditorHooks));
-    let handlers: [Handler; 4] = [
+    let handlers: [Handler; 3] = [
         ("_move_up", |h| (h.on_move)(-1)),
         ("_move_down", |h| (h.on_move)(1)),
         ("_close", |h| (h.on_close)()),
-        ("_delete", |h| (h.on_delete)()),
     ];
     let scope = klass.rust_template_scope();
     for (name, handler) in handlers {
@@ -548,6 +547,20 @@ impl OpEditor {
                 }
             });
             more.add(&dup);
+            // the header kept only Move Up/Down and Close, so the operation's name fits there by touch too
+            let delete = adw::ButtonRow::builder()
+                .title(gettext("Delete Operation"))
+                .start_icon_name("user-trash-symbolic")
+                .build();
+            // added, not set: the builder's css-classes would drop the row's own "button" style
+            delete.add_css_class("destructive-action");
+            let weak = self.downgrade();
+            delete.connect_activated(move |_| {
+                if let Some(h) = weak.upgrade().and_then(|ed| ed.hooks()) {
+                    (h.on_delete)();
+                }
+            });
+            more.add(&delete);
             page.add(&more);
         }
         imp.scroll.set_child(Some(&page));

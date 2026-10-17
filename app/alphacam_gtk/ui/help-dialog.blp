@@ -1,7 +1,8 @@
 using Gtk 4.0;
 using Adw 1;
 
-// In-app help (F1): help.py fills the box with the help page's headings, paragraphs and list items.
+// In-app help (F1): help.py fills the box with the help page's headings, paragraphs and list items. The two manuals
+// open from the buttons at the top (they were in the main menu before).
 template $AlphaLinkHelpDialog: Adw.Dialog {
   title: _("Help");
   content-width: 720;
@@ -10,6 +11,32 @@ template $AlphaLinkHelpDialog: Adw.Dialog {
   child: Adw.ToolbarView {
     [top]
     Adw.HeaderBar {}
+
+    [top]
+    Box {
+      spacing: 12;
+      halign: center;
+      margin-top: 6;
+      margin-bottom: 6;
+
+      Button {
+        label: _("Training Manual");
+        action-name: "win.manual-training";
+
+        styles [
+          "pill",
+        ]
+      }
+
+      Button {
+        label: _("Reference Manual");
+        action-name: "win.manual-reference";
+
+        styles [
+          "pill",
+        ]
+      }
+    }
 
     content: ScrolledWindow {
       vexpand: true;

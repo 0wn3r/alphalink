@@ -124,7 +124,7 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
 
             child: Adw.ToolbarView {
               [top]
-              Adw.HeaderBar {
+              Adw.HeaderBar content_header {
                 // 5 pages: icon over label fits
                 title-widget: Adw.ViewSwitcher header_switcher {
                   stack: stack;
@@ -279,9 +279,12 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
                       // the simulation bar goes above this line, the drawing tools' bar below it
                       Separator part_separator {}
 
+                      // the pointer's X and Z, or the active tool's guidance (it wraps in a narrow window)
                       Label readout {
                         xalign: 0;
                         label: " ";
+                        wrap: true;
+                        wrap-mode: word_char;
 
                         styles [
                           "readout",
@@ -459,10 +462,8 @@ menu main_menu {
     item (_("Save as ALPHA-T Drawing…"), "win.save-sdg")
   }
 
-  section {
-    item (_("Undo"), "win.undo")
-    item (_("Redo"), "win.redo")
-  }
+  // Undo and Redo, filled only while the header's undo buttons are hidden (a narrow window)
+  section undo_section {}
 
   section {
     item (_("Fit Part"), "win.fit")
@@ -470,36 +471,9 @@ menu main_menu {
     item (_("Part Settings"), "win.part-settings")
     item (_("Turn Part Around…"), "win.turn-around")
     item (_("Remove This Setup…"), "win.remove-setup")
-    item (_("Clear Messages"), "win.clear-messages")
   }
 
-  section {
-    label: _("Input Layout");
-
-    item {
-      label: _("Automatic");
-      action: "win.input-layout";
-      target: "auto";
-    }
-
-    item {
-      label: _("Pointer");
-      action: "win.input-layout";
-      target: "pointer";
-    }
-
-    item {
-      label: _("Touch");
-      action: "win.input-layout";
-      target: "touch";
-    }
-  }
-
-  section {
-    item (_("Training Manual"), "win.manual-training")
-    item (_("Reference Manual"), "win.manual-reference")
-  }
-
+  // the input layout is in Preferences, the manuals in Help, and Esc clears the messages
   section {
     item (_("Preferences"), "win.preferences")
     item (_("Keyboard Shortcuts"), "win.shortcuts")
