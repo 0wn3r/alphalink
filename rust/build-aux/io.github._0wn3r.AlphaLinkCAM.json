@@ -5,6 +5,7 @@
   "sdk": "org.gnome.Sdk",
   "sdk-extensions": ["org.freedesktop.Sdk.Extension.rust-stable"],
   "command": "alphalink-cam",
+  "separate-locales": false,
   "finish-args": [
     "--share=ipc",
     "--socket=wayland",
@@ -34,6 +35,8 @@
         "install -Dm644 app/alphacam_gtk/help/*.md -t ${FLATPAK_DEST}/share/alphalink-cam/help",
         "install -Dm644 app/alphacam_gtk/manuals/*.pdf -t ${FLATPAK_DEST}/share/alphalink-cam/manuals",
         "for mo in app/alphacam_gtk/locale/*/LC_MESSAGES/alphalink-cam.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo ${FLATPAK_DEST}/share/locale/$lang/LC_MESSAGES/alphalink-cam.mo; done",
+        "localedef -i uk_UA -f UTF-8 ./uk_UA.UTF-8 || test -f uk_UA.UTF-8/LC_MESSAGES/SYS_LC_MESSAGES",
+        "install -Dm644 uk_UA.UTF-8/LC_MESSAGES/SYS_LC_MESSAGES -t ${FLATPAK_DEST}/lib/alphalink-cam/locale/uk_UA.UTF-8/LC_MESSAGES",
         "install -Dm644 app/data/io.github._0wn3r.AlphaLinkCAM.desktop -t ${FLATPAK_DEST}/share/applications",
         "install -Dm644 app/data/io.github._0wn3r.AlphaLinkCAM.metainfo.xml -t ${FLATPAK_DEST}/share/metainfo",
         "install -Dm644 app/data/icons/hicolor/scalable/apps/io.github._0wn3r.AlphaLinkCAM.svg -t ${FLATPAK_DEST}/share/icons/hicolor/scalable/apps",

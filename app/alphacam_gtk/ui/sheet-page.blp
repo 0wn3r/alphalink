@@ -1,4 +1,5 @@
 using Gtk 4.0;
+using Adw 1;
 
 // The Sheet page: the setup sheet (report.py), a switch that adds the tool moves, the operator's notes, and saving it
 // as text or PDF.
@@ -12,13 +13,19 @@ template $AlphaLinkSheetPage: Box {
     margin-top: 6;
     margin-bottom: 6;
 
-    Label {
-      label: _("Tool moves");
-    }
-
-    Switch moves_switch {
+    // a whole row to tap, not a bare switch (finger-sized, TOUCH.md)
+    ListBox {
+      selection-mode: none;
       valign: center;
-      notify::active => $_moves_toggled();
+
+      styles [
+        "boxed-list",
+      ]
+
+      Adw.SwitchRow moves_switch {
+        title: _("Tool moves");
+        notify::active => $_moves_toggled();
+      }
     }
 
     Label time_label {

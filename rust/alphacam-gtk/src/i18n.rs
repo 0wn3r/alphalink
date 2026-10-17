@@ -23,6 +23,15 @@ fn locale_dir() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../app/alphacam_gtk/locale")
 }
 
+/// The app's own locale, uk_UA.UTF-8's LC_MESSAGES alone (the Flatpak builds it with localedef): enough for
+/// gettext to honour LANGUAGE where the system has only the C locales.
+fn bundled_locales() -> PathBuf {
+    if let Ok(dir) = std::env::var("ALPHALINK_LOCPATH") {
+        return dir.into();
+    }
+    PathBuf::from(option_env!("ALPHALINK_PREFIX").unwrap_or("/app")).join("lib/alphalink-cam/locale")
+}
+
 /// Set up gettext before any widget is built.
 pub fn init(language: &str) {
     let forced = std::env::var("ALPHALINK_LANG").ok().filter(|l| !l.is_empty()).unwrap_or_else(|| language.into());
@@ -38,13 +47,19 @@ pub fn init(language: &str) {
         if matches!(current.as_deref(), None | Some("C") | Some("POSIX") | Some("C.UTF-8") | Some("C.utf8")) {
             let lang = forced.split(['_', '.', ':']).next().unwrap_or("");
             let own = format!("{lang}_{}.UTF-8", if lang == "uk" { "UA".to_string() } else { lang.to_uppercase() });
-            for candidate in [own.as_str(), "en_US.UTF-8", "en_GB.UTF-8", "C.UTF-8"] {
+            let found = [own.as_str(), "en_US.UTF-8", "en_GB.UTF-8"].into_iter().any(|candidate| {
                 // SAFETY: still at startup, before any other thread exists
-                if unsafe { setlocale(LocaleCategory::LcMessages, candidate) }.is_some() {
-                    break;
-                }
+                unsafe { setlocale(LocaleCategory::LcMessages, candidate) }.is_some()
+            });
+            // none installed (a system or runtime with only the C locales): the app's own, messages only
+            if !found && bundled_locales().join("uk_UA.UTF-8").exists() {
+                // SAFETY: still at startup, before any other thread exists
+                unsafe { std::env::set_var("LOCPATH", bundled_locales()) };
+                unsafe { setlocale(LocaleCategory::LcMessages, "uk_UA.UTF-8") };
             }
         }
+        // gtk_init's own setlocale(LC_ALL, "") would undo the messages locale chosen here
+        gtk::disable_setlocale();
     }
     let _ = bindtextdomain(DOMAIN, locale_dir());
     let _ = bind_textdomain_codeset(DOMAIN, "UTF-8");

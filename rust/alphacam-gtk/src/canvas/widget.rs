@@ -396,9 +396,8 @@ impl LatheCanvas {
             let mut s = self.state_mut();
             if let Some(before) = s.before_fit.take() {
                 s.view = before;
-                s.auto_fit = false;
                 drop(s);
-                self.queue_draw();
+                self.user_view_change();
                 return;
             }
             s.before_fit = Some(s.view);
@@ -410,10 +409,9 @@ impl LatheCanvas {
         let (w, h) = (self.width() as f64, self.height() as f64);
         {
             let mut s = self.state_mut();
-            s.auto_fit = false;
             s.view.zoom_at(w / 2.0, h / 2.0, factor);
         }
-        self.queue_draw();
+        self.user_view_change();
     }
 
     pub(super) fn pointer_moved(&self, x: f64, y: f64) {
