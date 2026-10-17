@@ -1,5 +1,7 @@
 /* touch density (TOUCH.md 3): bigger targets once the user works with a finger */
 window.touch button { min-height: 48px; min-width: 48px; }
+/* an AdwToggleGroup's toggles are "toggle" nodes, not buttons: a short label ("Arc", "Кут") was 41 px wide */
+window.touch toggle-group > toggle { min-width: 48px; }
 window.touch .op-list row { min-height: 64px; }
 .op-list row { min-height: 52px; }
 .canvas-zoom button { min-width: 40px; min-height: 40px; }
