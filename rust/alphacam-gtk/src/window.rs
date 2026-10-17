@@ -657,6 +657,9 @@ impl MainWindow {
         self.connect_visible_dialog_notify(|win| {
             if let Some(dlg) = win.visible_dialog() {
                 crate::op_editor::keypad_on_touch_all(&dlg);
+                if let Some(alert) = dlg.downcast_ref::<adw::AlertDialog>() {
+                    type_first_field(alert);
+                }
             }
         });
         self.setup_program_keys();
@@ -2605,6 +2608,44 @@ fn set_feed(op: &mut Operation, feed: f64) {
         Operation::MoveTo(o) => o.feed = feed,
         Operation::Thread(_) | Operation::Dwell(_) => {}
     }
+}
+
+/// A dialog asking for values opens on its first field, and Enter in any field applies (POINTER_KEYBOARD.md 9): the
+/// alert would otherwise focus its default button, so typed digits went nowhere.
+fn type_first_field(alert: &adw::AlertDialog) {
+    let Some(extra) = alert.extra_child() else { return };
+    let mut fields: Vec<gtk::Widget> = vec![];
+    let mut stack = vec![extra];
+    while let Some(w) = stack.pop() {
+        if let Some(spin) = w.downcast_ref::<gtk::SpinButton>() {
+            spin.set_activates_default(true);
+            fields.push(w.clone());
+            continue;
+        }
+        if let Some(e) = w.downcast_ref::<gtk::Entry>() {
+            e.set_activates_default(true);
+            fields.push(w.clone());
+            continue;
+        }
+        if let Some(e) = w.downcast_ref::<adw::EntryRow>() {
+            e.set_activates_default(true);
+            fields.push(w.clone());
+            continue;
+        }
+        // depth first, in order
+        let mut children = vec![];
+        let mut c = w.first_child();
+        while let Some(child) = c {
+            c = child.next_sibling();
+            children.push(child);
+        }
+        stack.extend(children.into_iter().rev());
+    }
+    let Some(first) = fields.into_iter().find(|f| f.is_visible() && f.is_sensitive()) else { return };
+    // after the alert has put the focus on its default button
+    glib::idle_add_local_once(move || {
+        first.grab_focus();
+    });
 }
 
 #[cfg(test)]
