@@ -124,7 +124,7 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
     let st = state.clone();
     drag.connect_drag_begin(move |gesture, x, y| {
         // a finger or the pen, which cannot type either (POINTER_KEYBOARD.md 10); the mouse works as before
-        let source = gesture.current_event_device().map(|d| d.source());
+        let source = crate::input_mode::event_source(gesture);
         if !matches!(source, Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen)) {
             gesture.set_state(gtk::EventSequenceState::Denied);
             return;
