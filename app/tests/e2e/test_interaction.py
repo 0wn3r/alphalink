@@ -1441,6 +1441,7 @@ class LatheTrouble(VirtualPort, Bus):
         self.snap("pulled")
         said = self.state()
         self.assertFalse(said.startswith("Sent "), f"a cut transfer reported as sent: {said!r}")
+        self.assertIn("incomplete", said, "the operator must learn the program on the lathe is incomplete")
         self.assertLess(len(self.lathe.got), len(expected))
         lock = self.app.find("Touch Lock", "toggle button", contains=True)
         self.assertFalse(self.app.checked(lock), "the touch lock should come off when the send ends")
