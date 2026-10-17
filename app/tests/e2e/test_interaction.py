@@ -33,6 +33,19 @@ def two_ops() -> Project:
 class Bus(Surface):
     """Helpers on top of the test bus."""
 
+    needs_state = False  # the POINTER_KEYBOARD.md tests read State(), which came with that work
+
+    def launch(self, *args: str, lang: str | None = None):
+        app = super().launch(*args, lang=lang)
+        if self.needs_state:
+            from gi.repository import GLib
+
+            try:
+                app.state()
+            except GLib.Error:
+                self.skipTest("this build has no State() on its test bus (before POINTER_KEYBOARD.md)")
+        return app
+
     def spin(self, title: str):
         """The spin button of the editor row `title`."""
         return self.app.all(title, "spinbutton")[0]
@@ -584,3 +597,444 @@ class SendByKeyboard(VirtualPort, Bus):
         self.lathe.send(b"\x11")
         self.lathe.read_for(60, until=len(expected))
         self.assertEqual(bytes(self.lathe.got), expected)
+
+
+# --- POINTER_KEYBOARD.md (approved 2026-10-17): one class per section, keys through libei, state from the bus ------
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardShortcutFixes(Bus):
+    """§12: Delete deletes the selected element anywhere on the Part page outside a text field."""
+
+    needs_state = True
+
+    def test_delete_key_away_from_the_drawing(self):
+        path = self.part(shaft())
+        self.launch(str(path))
+        self.s.type("g40,-12\n")
+        self.s.type("l")  # select g1
+        time.sleep(0.3)
+        self.assertEqual(self.app.state()["drawing"]["selected_element"], "g1")
+        self.s.click(*self.app.center("Operations", "label"))  # the focus leaves the drawing
+        self.s.key("Delete")
+        time.sleep(0.4)
+        self.assertEqual([e.id for e in self.saved(path).geometry], ["g0", "g2", "g3", "g4"])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardOperations(Bus):
+    """§6: Alt+↑ / Alt+↓ reorder, Ctrl+D duplicates, Delete deletes with an Undo, all with the list focused."""
+
+    needs_state = True
+
+    def focus_row(self, title: str) -> None:
+        self.s.click(*self.app.center(acc=self.app.labelled(title, "list item")))
+        time.sleep(0.4)
+
+    def kinds(self, path) -> list[str]:
+        return [type(o).__name__ for o in self.saved(path).operations]
+
+    def test_alt_arrows_reorder(self):
+        path = self.part(two_ops())
+        self.launch(str(path))
+        self.focus_row("Finish pass")
+        self.s.key("alt+Up")
+        time.sleep(0.4)
+        self.assertEqual(self.kinds(path), ["FinishPass", "AreaClear"])
+        self.s.key("alt+Down")
+        time.sleep(0.4)
+        self.assertEqual(self.kinds(path), ["AreaClear", "FinishPass"])
+        self.assertEqual(self.app.state()["selected_op"], 1, "the moved operation should stay selected")
+
+    def test_ctrl_d_duplicates(self):
+        path = self.part(with_op())
+        self.launch(str(path))
+        self.focus_row("Area clear")
+        self.s.key("ctrl+d")
+        time.sleep(0.4)
+        self.assertEqual(self.kinds(path), ["AreaClear", "AreaClear"])
+
+    def test_delete_key_deletes_with_undo(self):
+        path = self.part(two_ops())
+        self.launch(str(path))
+        self.focus_row("Area clear")
+        self.s.key("Delete")
+        time.sleep(0.5)
+        self.assertEqual(self.kinds(path), ["FinishPass"])
+        self.s.key("ctrl+z")
+        time.sleep(0.4)
+        self.assertEqual(self.kinds(path), ["AreaClear", "FinishPass"])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardPages(Bus):
+    """§9: Alt+1 … Alt+5 and Ctrl+PgUp / Ctrl+PgDn switch pages."""
+
+    needs_state = True
+
+    def test_alt_numbers_and_ctrl_page_keys(self):
+        self.launch(str(self.part(with_op())))
+        seen = []
+        for n in range(1, 6):
+            self.s.key(f"alt+{n}")
+            time.sleep(0.4)
+            seen.append(self.app.state()["page"])
+        self.assertEqual(len(set(seen)), 5, seen)
+        self.s.key("alt+1")
+        time.sleep(0.3)
+        self.s.key("ctrl+Page_Down")
+        time.sleep(0.4)
+        self.assertEqual(self.app.state()["page"], seen[1])
+        self.s.key("ctrl+Page_Up")
+        time.sleep(0.4)
+        self.assertEqual(self.app.state()["page"], seen[0])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardSimulation(Bus):
+    """§7: F5 plays and pauses; Ctrl+[ / Ctrl+] step passes; Alt+Home / Alt+End; PgUp / PgDn on the slider."""
+
+    needs_state = True
+
+    def sim(self) -> int:
+        return self.app.state()["sim_index"]
+
+    def test_f5_plays_and_pauses(self):
+        self.launch(str(self.part(with_op())))
+        self.s.key("alt+Home")
+        time.sleep(0.3)
+        start = self.sim()
+        self.s.key("F5")
+        time.sleep(1.5)
+        self.s.key("F5")
+        played = self.sim()
+        self.assertGreater(played, start, "F5 should play")
+        time.sleep(1.0)
+        self.assertEqual(self.sim(), played, "F5 again should pause")
+
+    def test_ctrl_brackets_step_passes_and_alt_home_end(self):
+        self.launch(str(self.part(with_op())))
+        self.s.key("alt+Home")
+        time.sleep(0.3)
+        first = self.sim()
+        self.s.key("ctrl+]")
+        time.sleep(0.3)
+        one = self.sim()
+        self.s.key("ctrl+]")
+        time.sleep(0.3)
+        two = self.sim()
+        self.assertLess(first, one)
+        self.assertLess(one, two)
+        self.s.key("ctrl+[")
+        time.sleep(0.3)
+        self.assertEqual(self.sim(), one)
+        self.s.key("alt+End")
+        time.sleep(0.3)
+        self.assertIsNone(self.sim(), "Alt+End shows every move (no position)")
+
+    def moves(self) -> tuple[int, int]:
+        """The read-out under the drawing: "n/total · …"."""
+        n, total = self.app.find("/", "label", contains=True).text.split(" ")[0].split("/")
+        return int(n), int(total)
+
+    def test_page_keys_on_the_slider(self):
+        self.launch(str(self.part(with_op())))
+        self.s.key("alt+Home")
+        self.s.click(*self.app.center(acc=self.app.find(None, "scale")))  # the slider takes the keys
+        self.s.key("Home")
+        time.sleep(0.3)
+        a, total = self.moves()
+        self.s.key("Page_Up")  # GtkScale: Page Up goes forward on a horizontal slider, Page Down back
+        time.sleep(0.3)
+        b, _ = self.moves()
+        self.assertAlmostEqual(b - a, max(1, total / 10), delta=1, msg=f"PgUp moved {b - a} of {total}")
+        self.s.key("Page_Down")
+        time.sleep(0.3)
+        self.assertEqual(self.moves()[0], a)
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardProgram(Bus):
+    """§8: the caret selects its block's operation (Enter, or a search hit); Ctrl+= sizes the font, remembered."""
+
+    needs_state = True
+
+    def program(self, project):
+        path = self.part(project)
+        self.launch(str(path))
+        self.s.key("alt+2")
+        time.sleep(0.6)
+        return path
+
+    def test_search_hit_and_enter_select_the_operation(self):
+        p = two_ops()
+        self.program(p)
+        self.s.key("ctrl+f")
+        time.sleep(0.4)
+        self.s.type("N40\n")  # the finish pass (N10 tool change, N20 area clear, N40 finish pass)
+        time.sleep(0.5)
+        st = self.app.state()
+        self.assertEqual(st["operations"][st["selected_op"]], "Finish pass", st)
+        self.s.key("Escape")
+        time.sleep(0.3)
+        # the caret two lines into the area clear's block, by keys from the top; Enter selects that operation
+        lines = post(p).decode("ascii").splitlines()
+        n20 = next(i for i, line in enumerate(lines) if line.startswith("N20"))
+        self.s.key("ctrl+Home")
+        for _ in range(n20 + 2):
+            self.s.key("Down")
+        self.s.key("Return")
+        time.sleep(0.4)
+        st = self.app.state()
+        self.assertGreaterEqual(st["program_caret_line"], n20 + 2, st)  # the line numbering may start at 1
+        self.assertEqual(st["operations"][st["selected_op"]], "Area clear", st)
+
+    def test_ctrl_plus_sizes_the_font_and_it_is_remembered(self):
+        path = self.program(with_op())
+        before = self.app.state()["program_font_pt"]
+        self.s.key("ctrl+plus")
+        self.s.key("ctrl+plus")
+        time.sleep(0.4)
+        bigger = self.app.state()["program_font_pt"]
+        self.assertGreater(bigger, before)
+        self.s.key("ctrl+q")
+        time.sleep(1.5)
+        self.launch(str(path))
+        self.assertEqual(self.app.state()["program_font_pt"], bigger, "the font size should be remembered")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardCanvas(Bus):
+    """§3: Ctrl+arrows pan an eighth of the view; the view follows the ALPHA-T cursor; middle-button drag pans."""
+
+    needs_state = True
+
+    def origin(self):
+        v = self.app.state()["view"]
+        return v["ox"], v["oy"]
+
+    def test_ctrl_arrows_pan_an_eighth(self):
+        self.launch(str(self.part(shaft())))
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        ox, oy = self.origin()
+        self.s.key("ctrl+Right")
+        time.sleep(0.3)
+        ox1, oy1 = self.origin()
+        self.assertAlmostEqual(abs(ox1 - ox), w / 8, delta=w / 40, msg=f"{ox} -> {ox1}")
+        self.assertAlmostEqual(oy1, oy, delta=1)
+        self.s.key("ctrl+Down")
+        time.sleep(0.3)
+        self.assertAlmostEqual(abs(self.origin()[1] - oy1), h / 8, delta=h / 40)
+
+    def test_view_follows_the_cursor(self):
+        self.launch(str(self.part(shaft())))
+        before = self.origin()
+        for _ in range(12):
+            self.s.key("Page_Up")  # step ×10 each: the cursor runs far off to the side
+            self.s.key("Right")
+        time.sleep(0.4)
+        self.assertNotEqual(self.origin(), before, "the view should follow the cursor off the edge")
+        x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        cz = self.app.state()["drawing"]["cursor"]
+        self.snap("followed")
+        self.assertTrue(cz, "the cursor should be reported")
+
+    def test_middle_button_drag_pans(self):
+        self.launch(str(self.part(shaft())))
+        ox, oy = self.origin()
+        x, y = self.empty_spot()
+        self.s.move(x + 3, y + 3)
+        self.s.move(x, y)
+        self.s.input.button(0x112, True)  # BTN_MIDDLE
+        for k in range(1, 11):
+            self.s.move(x - 15 * k, y + 8 * k)
+            time.sleep(0.03)
+        self.s.input.button(0x112, False)
+        time.sleep(0.4)
+        ox1, oy1 = self.origin()
+        self.assertAlmostEqual(abs(ox1 - ox), 150, delta=20)
+        self.assertAlmostEqual(abs(oy1 - oy), 80, delta=20)
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardDrawing(Bus):
+    """§4 / §5: [ and ] walk the profile; Space adds or removes elements while picking a contour."""
+
+    needs_state = True
+
+    def test_bracket_keys_walk_the_profile(self):
+        self.launch(str(self.part(shaft())))
+        self.s.type("g0,0\n")
+        self.s.type("l")  # g0, the face at Z0
+        time.sleep(0.3)
+        walked = [self.app.state()["drawing"]["selected_element"]]
+        for _ in range(4):
+            self.s.key("]")
+            time.sleep(0.2)
+            walked.append(self.app.state()["drawing"]["selected_element"])
+        self.assertEqual(walked, ["g0", "g1", "g2", "g3", "g4"])
+        self.s.key("[")
+        time.sleep(0.2)
+        self.assertEqual(self.app.state()["drawing"]["selected_element"], "g3")
+
+    def test_pick_contour_with_space(self):
+        p = with_op()
+        p.operations[0].contour = []
+        path = self.part(p)
+        self.launch(str(path))
+        self.s.click(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.4)
+        self.press("Pick Contour on the Drawing", "button")
+        time.sleep(0.4)
+        self.assertIsNotNone(self.app.state()["drawing"]["picking"])
+        picked = []
+        for _ in range(3):  # g0 → g1, g2, g3
+            self.s.key("]")
+            time.sleep(0.2)
+            at = self.app.state()["drawing"]["pick_at"]
+            self.s.key("space")
+            time.sleep(0.2)
+            picked.append(at)
+        self.s.key("space")  # again on the last one: out
+        time.sleep(0.3)
+        self.assertEqual(self.app.state()["drawing"]["picked"], picked[:2], picked)
+        self.s.key("Return")
+        time.sleep(0.4)
+        self.assertEqual(self.saved(path).operations[0].contour, picked[:2])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardConstruction(Bus):
+    """§4: a construction finished by keys: Enter takes the element at the cursor, the number dialog takes the
+    typed value, Tab moves between the dashed solutions and Enter takes the highlighted one."""
+
+    needs_state = True
+
+    def test_parallel_line_by_keys(self):
+        path = self.part(shaft())
+        self.launch(str(path))
+        self.press("More Drawing Commands", "toggle button")
+        self.app.press(acc=[i for i in self.app.menu_items() if i.text.startswith("Parallel")][0])
+        time.sleep(0.4)
+        self.assertTrue(self.app.state()["drawing"]["constructing"])
+        self.s.type("g40,-12\n")  # the cursor onto g1, Ø40 from Z0 to Z-25
+        self.s.key("Return")  # takes g1
+        time.sleep(0.5)
+        self.s.type("5\n")  # the distance (radius)
+        time.sleep(0.5)
+        self.snap("solutions")
+        self.s.key("Tab")
+        time.sleep(0.3)
+        self.s.key("Return")
+        time.sleep(0.5)
+        self.assertFalse(self.app.state()["drawing"]["constructing"])
+        new = self.saved(path).geometry[-1]
+        self.assertEqual(new.a.x, new.b.x, "a line along Z")
+        self.assertIn(round(new.a.x, 3), (30.0, 50.0), f"5 mm from Ø40, not {new.a.x}")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardZoomAndKeypad(Bus):
+    """§3 and §11: z zooms at the ALPHA-T cursor; i toggles ABS / INC in the keypad."""
+
+    needs_state = True
+
+    def on_screen(self, x: float, z: float) -> tuple[float, float]:
+        """Where the drawing's X (diameter), Z is, from the bus's view (scale px/mm, origin ox, oy)."""
+        v = self.app.state()["view"]
+        return v["ox"] + z * v["scale"], v["oy"] - x / 2 * v["scale"]
+
+    def test_z_zooms_at_the_cursor(self):
+        self.launch(str(self.part(shaft())))
+        self.s.type("g60,-40\n")
+        time.sleep(0.3)
+        scale = self.app.state()["view"]["scale"]
+        before = self.on_screen(60, -40)
+        self.s.type("z")
+        time.sleep(0.4)
+        self.assertGreater(self.app.state()["view"]["scale"], scale * 1.1, "z should zoom in")
+        after = self.on_screen(60, -40)
+        self.assertAlmostEqual(after[0], before[0], delta=2, msg="the cursor's point should stay where it was")
+        self.assertAlmostEqual(after[1], before[1], delta=2, msg="the cursor's point should stay where it was")
+
+    def test_i_toggles_incremental_in_the_keypad(self):
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path), "--touch")
+        self.tap("Line", "radio button")
+        self.tap("Keypad", "button")
+        self.app.find("✓", "button")
+        time.sleep(0.3)
+        self.s.type("40,0\n")  # X 40, Z 0 by the keyboard
+        time.sleep(0.4)
+        self.tap("Keypad", "button")
+        self.app.find("✓", "button")
+        time.sleep(0.3)
+        self.s.type("i")  # incremental
+        self.s.type("0,-25\n")
+        time.sleep(0.4)
+        self.tap("Done", "button")
+        self.assertEqual([(e.a, e.b) for e in self.saved(path).geometry], [(Point(40, 0), Point(40, -25))])
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class MoreMenuWithoutLetters(Bus):
+    """§4: Text, Measure, Line by Length and Angle and Move Cursor are in the More menu (finger and pen)."""
+
+    needs_state = True
+
+    def test_more_menu_reaches_the_letter_commands(self):
+        self.launch(str(self.part(shaft())), "--touch")
+        self.tap("More Drawing Commands", "toggle button")
+        items = [i.text for i in self.app.menu_items()]
+        self.snap("more")
+        for label in ("Add Text", "Erase Text", "Measure by X,Z", "Measure by Length and Angle",
+                      "Draw Line by Length and Angle", "Move Cursor to X,Z", "Move Cursor by dX,dZ"):
+            self.assertTrue(any(i.startswith(label) for i in items), f"{label!r} not in {items}")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class NumbersEverywhere(Bus):
+    """§11: a finger on any number field opens the keypad, not the system keyboard."""
+
+    needs_state = True
+
+    def number_texts(self):
+        """The typing part of each visible spin button (its centre is the − button), top to bottom."""
+        ws = self.app.widgets()
+        spins = [w for w in ws if w.css == "spinbutton" and w.w > 0]
+        texts = [t for t in ws if t.css == "text" and t.w > 0
+                 and any(sp.x <= t.x + t.w / 2 <= sp.x + sp.w and sp.y <= t.y + t.h / 2 <= sp.y + sp.h for sp in spins)]
+        return sorted(texts, key=lambda t: t.y)
+
+    def keypad_sets(self, field_title: str, digits: str) -> None:
+        sb = self.app.all(field_title, "spinbutton")[0]
+        self.s.tap(*self.app.center(acc=sb))
+        self.app.find("✓", "button")
+        for k in list(digits) + ["✓"]:
+            self.tap(k, "button")
+        time.sleep(0.3)
+
+    def test_edit_values_keypad_by_finger(self):
+        p = shaft()
+        path = self.part(p)
+        self.launch(str(path), "--touch")
+        to_screen = self.calibrate()
+        self.s.hold(*to_screen(40, -12), 1.2, touch=True)
+        self.tap(acc=[i for i in self.app.menu_items() if i.text == "Edit Values…"][0])
+        time.sleep(0.5)
+        self.snap("edit")
+        rows = self.number_texts()
+        self.assertTrue(rows, "Edit Values… should show number fields")
+        self.s.tap(*self.app.center(acc=rows[0]))
+        self.app.find("✓", "button")
+        self.assertTrue(self.app.exists("⌫", "button"), "the keypad, not the system keyboard")
+
+    def test_new_part_keypad_by_finger(self):
+        self.launch("--touch")
+        self.tap("New Part…", "button")
+        time.sleep(0.5)
+        rows = self.number_texts()
+        self.assertTrue(rows)
+        self.s.tap(*self.app.center(acc=rows[0]))
+        self.app.find("✓", "button")
+        self.snap("keypad")

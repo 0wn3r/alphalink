@@ -222,6 +222,12 @@ class BusApp:
         n = self._now(w)
         return n.value or n.text
 
+    def state(self) -> dict:
+        """The app's own state as the bus reports it (page, view, tool, simulation, operations, program...)."""
+        import json
+
+        return json.loads(self._call("State", None, "(s)")[0])
+
     def title(self) -> str:
         return self._call("Title", None, "(s)")[0]
 
