@@ -24,6 +24,8 @@ const FLING_DECAY: f64 = 0.92;
 const FLING_MIN: f64 = 40.0;
 /// the finger's speed at the lift is measured over its last this many ms at least
 const VELOCITY_SPAN_MS: u32 = 16;
+/// a finger that keeps still this long before it lifts flings nothing
+const REST_MS: u32 = 50;
 /// the drag keeps its press and this many last moves
 const VELOCITY_MOVES: usize = 16;
 /// a pen that moves further than this before the long press time is drawing or dragging, not holding
@@ -216,10 +218,12 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     w.add_controller(zoom);
 
     let swipe = gtk::GestureSwipe::new();
-    swipe.connect_swipe(glib::clone!(#[weak] w, #[strong] r, move |_, vx, vy| {
+    swipe.connect_swipe(glib::clone!(#[weak] w, #[strong] r, move |g, vx, vy| {
         // GTK's swipe velocity came out far below the finger's (the e2e flick of 200 px at 3000 px/s carried only
-        // 58 px further): the finger's own speed over its last moves wins when higher
-        let (ox, oy) = r.velocity();
+        // 58 px further): the finger's own speed over its last moves wins when higher, unless it rested before the lift
+        let (time, last) = (g.current_event_time(), r.samples.borrow().back().map(|s| s.0));
+        let rested = last.is_some_and(|t| time > t && time - t > REST_MS);
+        let (ox, oy) = if rested { (0.0, 0.0) } else { r.velocity() };
         glib::g_debug!("alphalink-cam", "fling: GTK {:.0} px/s, moves {:.0} px/s over {:?}", vx.hypot(vy),
             ox.hypot(oy), r.samples.borrow());
         let (vx, vy) = if ox.hypot(oy) > vx.hypot(vy) { (ox, oy) } else { (vx, vy) };
