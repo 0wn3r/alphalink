@@ -874,4 +874,7 @@ UK = {
 "Off = facing": "Вимкнено = торцювання",
 "Cleans up each step": "Зачищає кожен уступ",
 "Pulls off to the axis": "Відведення до осі",
+"The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again.": "Зв’язок обірвався після {done} з {total} байт. Програма на верстаті неповна: перевірте кабель і надішліть її знову.",
+"The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are incomplete: check the cable and restore them again.": "Зв’язок обірвався після {done} з {total} байт. Ручні операції на верстаті неповні: перевірте кабель і відновіть їх знову.",
+"The connection was lost after {n} bytes. The backup is incomplete; it is saved marked PARTIAL. Check the cable and back up again.": "Зв’язок обірвався після {n} байт. Копія неповна; її збережено з позначкою PARTIAL. Перевірте кабель і створіть копію знову.",
 }

@@ -323,7 +323,14 @@ pub fn receive(
             log.add(format!("stopped by the user after {} bytes, {percents} %; last bytes: {}", out.len(), tail(&out)));
             return Err(Error::Cancelled(out));
         }
-        let chunk = ser.read(256)?;
+        let chunk = match ser.read(256) {
+            Ok(chunk) => chunk,
+            Err(Error::Io(message)) if !out.is_empty() => {
+                log.add(format!("port failed after {} bytes ({message}); last bytes: {}", out.len(), tail(&out)));
+                return Err(Error::ConnectionLost { message, data: out });
+            }
+            Err(e) => return Err(e),
+        };
         let now = Instant::now();
         let since = now.duration_since(t_last);
         if !chunk.is_empty() {
