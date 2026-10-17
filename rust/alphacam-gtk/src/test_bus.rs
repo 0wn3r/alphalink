@@ -17,6 +17,9 @@
 //!                              Program page's font size and caret line, and
 //!                              the drawing's selected element, ALPHA-T cursor, picking and construction
 //!   Screenshot(s path) -> b    the active window rendered to a PNG (for failed tests)
+//!   ForceSource(s source) -> b every press counts as "pen" or "touch" from now on ("" for the real device again):
+//!                              the layout switching, the canvas hit radius, the keypad on numbers and the long
+//!                              press, for tests without a tablet device
 //!
 //! Popovers (menus) are surfaces of their own: their widgets are placed by the popover's position on its parent.
 
@@ -34,6 +37,7 @@ const INTERFACE: &str = r#"<node>
     <method name="Title"><arg type="s" direction="out"/></method>
     <method name="State"><arg type="s" direction="out"/></method>
     <method name="Screenshot"><arg name="path" type="s" direction="in"/><arg type="b" direction="out"/></method>
+    <method name="ForceSource"><arg name="source" type="s" direction="in"/><arg type="b" direction="out"/></method>
   </interface>
 </node>"#;
 
@@ -209,6 +213,11 @@ fn serve(connection: &gio::DBusConnection, app: glib::WeakRef<gtk::Application>)
                         .map(|w| w.test_state().to_string())
                         .unwrap_or_default();
                     invocation.return_value(Some(&(state,).to_variant()));
+                }
+                "ForceSource" => {
+                    let source: String = params.get::<(String,)>().map(|(k,)| k).unwrap_or_default();
+                    crate::input_mode::force_source(&source);
+                    invocation.return_value(Some(&(true,).to_variant()));
                 }
                 "Screenshot" => {
                     let path: String = params.get::<(String,)>().map(|(k,)| k).unwrap_or_default();

@@ -22,6 +22,8 @@ use super::widget::LatheCanvas;
 const FLING_DECAY: f64 = 0.92;
 /// px/s
 const FLING_MIN: f64 = 40.0;
+/// the finger's speed at the lift is measured over its last this many ms
+const VELOCITY_WINDOW_MS: u32 = 100;
 /// a pen that moves further than this before the long press time is drawing or dragging, not holding
 const PEN_SLOP_PX: f64 = 8.0;
 
@@ -29,7 +31,7 @@ const PEN_SLOP_PX: f64 = 8.0;
 type PenHold = RefCell<Option<(glib::SourceId, (f64, f64))>>;
 
 pub fn source(controller: &impl IsA<gtk::EventController>) -> Source {
-    match controller.current_event_device().map(|d| d.source()) {
+    match crate::input_mode::event_source(controller) {
         Some(gdk::InputSource::Touchscreen) => Source::Touch,
         // GTK 4 gives the eraser end this source too (its tool says Eraser): a pointer like the tip, erasing nothing
         Some(gdk::InputSource::Pen) => Source::Pen,
@@ -59,9 +61,59 @@ pub struct Router {
     pinch_centre: Cell<(f64, f64)>,
     last_tap: Cell<Option<(f64, f64)>>,
     drag: RefCell<Option<gtk::GestureDrag>>,
+    /// the drag's recent positions (event time ms, dx, dy) for the fling's velocity
+    samples: RefCell<std::collections::VecDeque<(u32, f64, f64)>>,
+    /// a pen (or a forced source's) press waiting to become a long press
+    hold: PenHold,
 }
 
 impl Router {
+    fn sample(&self, time: u32, dx: f64, dy: f64) {
+        let mut s = self.samples.borrow_mut();
+        s.push_back((time, dx, dy));
+        while s.front().is_some_and(|(t, _, _)| time.wrapping_sub(*t) > VELOCITY_WINDOW_MS) {
+            s.pop_front();
+        }
+    }
+
+    /// px/s over the drag's last [`VELOCITY_WINDOW_MS`]; zero when the events carry no time apart.
+    fn velocity(&self) -> (f64, f64) {
+        let s = self.samples.borrow();
+        let (Some(&(t0, x0, y0)), Some(&(t1, x1, y1))) = (s.front(), s.back()) else { return (0.0, 0.0) };
+        let dt = t1.wrapping_sub(t0) as f64 / 1000.0;
+        if dt <= 0.0 {
+            return (0.0, 0.0);
+        }
+        ((x1 - x0) / dt, (y1 - y0) / dt)
+    }
+
+    /// A long press by timer, for the pen and for a forced source (the touch long press is GTK's own).
+    fn hold_start(self: &Rc<Self>, w: &LatheCanvas, x: f64, y: f64) {
+        self.hold_stop();
+        let delay = w.settings().gtk_long_press_time().max(1) as u64;
+        let r = Rc::downgrade(self);
+        let id = glib::timeout_add_local_once(Duration::from_millis(delay), glib::clone!(#[weak] w, move || {
+            let Some(r) = r.upgrade() else { return };
+            r.hold.take();
+            r.long.set(true);
+            w.long_press(x, y);
+        }));
+        *self.hold.borrow_mut() = Some((id, (x, y)));
+    }
+
+    fn hold_move(&self, x: f64, y: f64) {
+        let start = self.hold.borrow().as_ref().map(|(_, p)| *p);
+        if start.is_some_and(|(x0, y0)| (x - x0).hypot(y - y0) > PEN_SLOP_PX) {
+            self.hold_stop();
+        }
+    }
+
+    fn hold_stop(&self) {
+        if let Some((id, _)) = self.hold.take() {
+            id.remove();
+        }
+    }
+
     fn stop_fling(&self) {
         if let Some(id) = self.fling.take() {
             id.remove();
@@ -76,11 +128,23 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     drag.connect_drag_begin(glib::clone!(#[weak] w, #[strong] r, move |g, x, y| {
         r.stop_fling();
         r.last_drag.set((0.0, 0.0));
+        r.samples.borrow_mut().clear();
+        r.sample(g.current_event_time(), 0.0, 0.0);
+        // a forced source on a mouse or a libei pointer (the test bus): its long press by timer, as the pen's
+        let real = g.current_event_device().map(|d| d.source());
+        if crate::input_mode::forced_source().is_some()
+            && !matches!(real, Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen))
+        {
+            r.hold_start(&w, x, y);
+        }
         // decided at press time by the hit test with the event's source radius (5.3): a handle moves, space pans
         r.editing.set(w.handle_hooks().is_some_and(|h| h.begin(x, y, source(g))));
         r.start.set((x, y));
     }));
-    drag.connect_drag_update(glib::clone!(#[weak] w, #[strong] r, move |_, dx, dy| {
+    drag.connect_drag_update(glib::clone!(#[weak] w, #[strong] r, move |g, dx, dy| {
+        r.sample(g.current_event_time(), dx, dy);
+        let (x0, y0) = r.start.get();
+        r.hold_move(x0 + dx, y0 + dy);
         if r.editing.get() {
             let (x0, y0) = r.start.get();
             if let Some(h) = w.handle_hooks() {
@@ -96,6 +160,7 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
         w.user_view_change();
     }));
     drag.connect_drag_end(glib::clone!(#[weak] w, #[strong] r, move |_, _, _| {
+        r.hold_stop();
         if r.editing.get() {
             r.editing.set(false);
             r.edited.set(true);
@@ -154,7 +219,13 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     w.add_controller(zoom);
 
     let swipe = gtk::GestureSwipe::new();
-    swipe.connect_swipe(glib::clone!(#[weak] w, #[strong] r, move |_, vx, vy| fling(&w, &r, vx, vy)));
+    swipe.connect_swipe(glib::clone!(#[weak] w, #[strong] r, move |_, vx, vy| {
+        // GTK's swipe velocity came out far below the finger's (the e2e flick of 200 px at 3000 px/s carried only
+        // 58 px further): the finger's own speed over its last moves wins when higher
+        let (ox, oy) = r.velocity();
+        let (vx, vy) = if ox.hypot(oy) > vx.hypot(vy) { (ox, oy) } else { (vx, vy) };
+        fling(&w, &r, vx, vy)
+    }));
     w.add_controller(swipe);
 
     // long press (touch): the context menu at the finger (TOUCH.md 4)
@@ -168,30 +239,9 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     // long press with the pen: the same menu, so a pen without a barrel button reaches it (POINTER_KEYBOARD.md 10).
     // A stylus-only gesture, as a long press that also listens to the mouse upsets the mouse's own gestures.
     let pen = gtk::GestureStylus::new();
-    let timer: Rc<PenHold> = Rc::default();
-    let stop = |t: &PenHold| {
-        if let Some((id, _)) = t.take() {
-            id.remove();
-        }
-    };
-    pen.connect_down(glib::clone!(#[weak] w, #[strong] r, #[strong] timer, move |_, x, y| {
-        stop(&timer);
-        let delay = w.settings().gtk_long_press_time().max(1) as u64;
-        let id = glib::timeout_add_local_once(Duration::from_millis(delay), glib::clone!(#[weak] w, #[strong] r,
-            #[strong] timer, move || {
-                timer.take();
-                r.long.set(true);
-                w.long_press(x, y);
-            }));
-        *timer.borrow_mut() = Some((id, (x, y)));
-    }));
-    pen.connect_motion(glib::clone!(#[strong] timer, move |_, x, y| {
-        let start = timer.borrow().as_ref().map(|(_, p)| *p);
-        if start.is_some_and(|(x0, y0)| (x - x0).hypot(y - y0) > PEN_SLOP_PX) {
-            stop(&timer);
-        }
-    }));
-    pen.connect_up(move |_, _, _| stop(&timer));
+    pen.connect_down(glib::clone!(#[weak] w, #[strong] r, move |_, x, y| r.hold_start(&w, x, y)));
+    pen.connect_motion(glib::clone!(#[strong] r, move |_, x, y| r.hold_move(x, y)));
+    pen.connect_up(glib::clone!(#[strong] r, move |_, _, _| r.hold_stop()));
     w.add_controller(pen);
 
     // right click: the same context menu as a long press (HIG: Menu key and Shift+F10 too, drawing tools)

@@ -10,6 +10,32 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use gtk::{gdk, glib};
 
+thread_local! {
+    /// the test bus's ForceSource (ALPHALINK_TEST=1 only): every press counts as this source
+    static FORCED: Cell<Option<gdk::InputSource>> = const { Cell::new(None) };
+}
+
+/// Make every press count as `source` ("pen", "touch"; anything else: the real device again), for the e2e tests,
+/// which have no tablet device.
+pub fn force_source(source: &str) {
+    FORCED.with(|f| {
+        f.set(match source {
+            "pen" => Some(gdk::InputSource::Pen),
+            "touch" => Some(gdk::InputSource::Touchscreen),
+            _ => None,
+        })
+    });
+}
+
+pub fn forced_source() -> Option<gdk::InputSource> {
+    FORCED.with(Cell::get)
+}
+
+/// The source of the event a controller is handling: the forced one, else its device's.
+pub fn event_source(controller: &impl IsA<gtk::EventController>) -> Option<gdk::InputSource> {
+    forced_source().or_else(|| controller.current_event_device().map(|d| d.source()))
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
     Pointer,
@@ -123,7 +149,7 @@ impl InputMode {
         {
             return false;
         }
-        if event.device().is_none_or(|d| d.source() != gdk::InputSource::Touchscreen) {
+        if forced_source().or_else(|| event.device().map(|d| d.source())) != Some(gdk::InputSource::Touchscreen) {
             return false;
         }
         let mut target = event.position().and_then(|(x, y)| self.window.pick(x, y, gtk::PickFlags::DEFAULT));
@@ -137,7 +163,7 @@ impl InputMode {
     }
 
     fn pressed(&self, gesture: &gtk::GestureClick) {
-        let source = gesture.current_event_device().map(|d| d.source());
+        let source = event_source(gesture);
         // the pen keeps the layout as it is (a user alternating pen and finger sees no reflow) and shows its helpers;
         // a mouse or touchpad press hides them again
         let pen = matches!(source, Some(gdk::InputSource::Pen));
