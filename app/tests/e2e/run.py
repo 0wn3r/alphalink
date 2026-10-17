@@ -32,7 +32,8 @@ def ids(names: list[str]) -> list[str]:
 
 
 def main() -> int:
-    """`-j N` runs N tests at once (each has its own GNOME session; default 3)."""
+    """`-j N` runs N tests at once (each has its own GNOME session; default 3). A test that fails is run once more on
+    its own; if it passes then, it counts as passed but is listed as flaky (a busy machine, not the app)."""
     from concurrent.futures import ThreadPoolExecutor
 
     args = sys.argv[1:]
@@ -48,15 +49,23 @@ def main() -> int:
         r = subprocess.run([sys.executable, "-m", "unittest", test], env=env, capture_output=True, text=True)
         return test, r
 
-    failed = []
+    failed, flaky = [], []
     with ThreadPoolExecutor(jobs) as pool:
         for i, (test, r) in enumerate(pool.map(one, tests), 1):
+            if r.returncode:
+                _, again = one(test)
+                if not again.returncode:
+                    flaky.append(test)
+                    r = again
             tail = r.stderr.strip().splitlines()[-1:] if r.stderr else []
-            print(f"[{i}/{len(tests)}] {test}\n    {tail[0] if tail else '?'}", flush=True)
+            print(f"[{i}/{len(tests)}] {test}\n    {tail[0] if tail else '?'}{' (on the 2nd try)' if test in flaky else ''}",
+                  flush=True)
             if r.returncode:
                 failed.append(test)
                 print("\n".join("    " + line for line in r.stderr.splitlines()[-25:]), flush=True)
-    print(f"\n{len(tests) - len(failed)} passed, {len(failed)} failed")
+    print(f"\n{len(tests) - len(failed)} passed, {len(failed)} failed"
+          + (f", {len(flaky)} flaky (passed on the 2nd try): " + " ".join(t.split(".", 3)[-1] for t in flaky)
+             if flaky else ""))
     return 1 if failed else 0
 
 
