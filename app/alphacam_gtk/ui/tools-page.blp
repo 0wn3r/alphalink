@@ -22,25 +22,16 @@ template $AlphaLinkToolsPage: Box {
     }
 
     Button {
-      label: _("_Delete Tool");
-      use-underline: true;
-      clicked => $_delete();
-
-      styles [
-        "destructive-action",
-      ]
-    }
-
-    Button {
-      label: _("_Import ATOOLIB.TL1…");
+      label: _("_Import Tool Library…");
       use-underline: true;
       clicked => $_import();
     }
 
-    Button {
-      label: _("_Reset to ALPHA-T Tools");
-      use-underline: true;
-      clicked => $_reset();
+    // Delete Tool is a button in the selected tool's header (tools_page); the rarely used Reset sits in this menu
+    MenuButton {
+      icon-name: "view-more-symbolic";
+      tooltip-text: _("More Tool Actions");
+      menu-model: tools_menu;
     }
   }
 
@@ -81,5 +72,11 @@ template $AlphaLinkToolsPage: Box {
     end-child: ScrolledWindow editor {
       hscrollbar-policy: never;
     };
+  }
+}
+
+menu tools_menu {
+  section {
+    item (_("Reset to ALPHA-T Tools"), "tools.reset")
   }
 }

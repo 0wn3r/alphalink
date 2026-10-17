@@ -178,8 +178,7 @@ class OpEditor(Gtk.Box):
     def _close(self, *_a) -> None:
         self.on_close()
 
-    @Gtk.Template.Callback()
-    def _delete(self, *_a) -> None:
+    def _delete(self, *_a) -> None:  # the Rust app moved Delete Operation out of the header
         self.on_delete()
 
     def show_op(self, project, index: int, title: str) -> None:
