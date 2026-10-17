@@ -306,6 +306,7 @@ impl MachinePage {
         imp.send_info.set_use_markup(false);
         let st = settings();
         imp.delay_row.set_value(st.char_delay_ms);
+        crate::op_editor::keypad_on_touch(&*imp.delay_row);
         imp.delay_row.connect_value_notify(glib::clone!(#[weak] page, move |row| page.delay_changed(row)));
         imp.wait_row.set_active(st.wait_xon);
         imp.wait_row.connect_active_notify(|r| update(|s| s.wait_xon = r.is_active()));

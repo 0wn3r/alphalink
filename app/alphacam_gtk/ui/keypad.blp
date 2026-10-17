@@ -32,7 +32,9 @@ template $AlphaLinkKeypad: Adw.Dialog {
     };
   };
 
+  // capture: Enter means ✓ even when a field button has the focus (POINTER_KEYBOARD.md 11)
   EventControllerKey {
+    propagation-phase: capture;
     key-pressed => $_hw_key();
   }
 }

@@ -149,7 +149,8 @@ impl SimulationBar {
         let imp = self.imp();
         let n = self.moves() as f64;
         imp.guard.set(true);
-        imp.scale.adjustment().configure(n, 0.0, n, 1.0, 10.0, 0.0);
+        // PgUp / PgDn on the slider: a tenth of the moves (POINTER_KEYBOARD.md 7)
+        imp.scale.adjustment().configure(n, 0.0, n, 1.0, (n / 10.0).round().max(1.0), 0.0);
         imp.guard.set(false);
         self.set_sim(None);
         self.select_op(imp.selected_op.get()); // new moves: is the selected operation still in them

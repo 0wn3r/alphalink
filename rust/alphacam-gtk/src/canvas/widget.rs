@@ -75,6 +75,8 @@ pub struct Overlay {
     pub marker: Option<(Point, MarkerKind)>,
     /// construction choices
     pub previews: Vec<PreviewShape>,
+    /// the choice Tab has highlighted (taken by Enter), drawn solid
+    pub preview_hl: Option<usize>,
     /// end points of the selected element, draggable (TOUCH.md 5.2)
     pub handles: Vec<Point>,
     /// (X, Z) where the safety check found a problem: red rings
@@ -417,6 +419,11 @@ impl LatheCanvas {
     pub(super) fn pointer_moved(&self, x: f64, y: f64) {
         let (xd, z) = {
             let mut s = self.state_mut();
+            if s.pointer == (x, y) {
+                // GTK repeats the pointer's place when the layout changes under it: not a move, so the read-out
+                // keeps what a key put there (a selected element's description)
+                return;
+            }
             s.pointer = (x, y);
             s.view.to_world(x, y)
         };
@@ -822,10 +829,14 @@ impl LatheCanvas {
             }
             let _ = cr.show_text(&text);
         }
-        for pv in &o.previews {
+        for (i, pv) in o.previews.iter().enumerate() {
             Self::rgb(s, cr, "feed", 0.9);
-            cr.set_line_width(2.0);
-            cr.set_dash(&[6.0, 4.0], 0.0);
+            if o.preview_hl == Some(i) {
+                cr.set_line_width(4.0);
+            } else {
+                cr.set_line_width(2.0);
+                cr.set_dash(&[6.0, 4.0], 0.0);
+            }
             match *pv {
                 PreviewShape::Line(a, b) => Self::polyline(v, cr, &[(a.x, a.z), (b.x, b.z)]),
                 PreviewShape::Arc(a, c, b) => Self::polyline(v, cr, &arc_polyline(a, c, b, 32)),

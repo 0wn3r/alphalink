@@ -235,6 +235,12 @@ impl Keypad {
             Some('-') => self.key("±"),
             _ if keyval == gdk::Key::BackSpace => self.key("⌫"),
             Some(',') => self.key("→"),
+            // ABS / INC, as Tab is the next field (POINTER_KEYBOARD.md 11)
+            Some('i' | 'I') => {
+                if self.imp().state.borrow().abs_button.as_ref().is_some_and(|b| b.is_sensitive()) {
+                    self.key("ABS");
+                }
+            }
             _ if keyval == gdk::Key::Tab => self.key("→"),
             _ if keyval == gdk::Key::Return || keyval == gdk::Key::KP_Enter => self.done(),
             _ => return false,
