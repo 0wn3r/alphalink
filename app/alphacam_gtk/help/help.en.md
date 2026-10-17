@@ -23,7 +23,7 @@ AlphaLink CAM makes programs for the Harrison Alpha 400T lathe (FANUC Power Mate
 ## Pages
 
 - **Part**: the drawing, the toolpaths and the drawing tools.
-- **Program**: the program text exactly as it goes to the lathe. Ctrl+F searches it; N10 goes to block 10.
+- **Program**: the program text exactly as it goes to the lathe. Ctrl+F searches it; N10 goes to block 10. Tapping or clicking a line, Enter on the caret's line, or a search hit selects the operation that block belongs to. Pinch, Ctrl+wheel or Ctrl+= / Ctrl+− / Ctrl+0 change the text size here; it is remembered.
 - **Sheet**: the setup sheet: tools, operations and every tool move as text, like ALPHA-T's print. Save as Text writes it to a file. It shows each block's restart number (#140) and any tool warnings. It also gives a cycle time estimate (per operation and in total), takes notes for the operator, and **Save as PDF…** writes a printable sheet: the part with its toolpaths, the tools in loading order and the notes, then the sheet.
 - **Tools**: the tool library (tool memory slots of the control, nose radius, type, default feed). Each tool can carry its surface speed (m/min) and a spindle limit for the cycle time.
 - **Machine**: sending programs, Manual Ops backup and restore, and the cable test.
@@ -69,6 +69,8 @@ The tools are in the bar under the drawing.
   - **Mirror Image**: as in ALPHA-T, copies the whole drawing mirrored about the spindle axis (the lower half), then asks whether it is correct; No takes it back.
   - **Standard Thread…**: on the selected diameter line, or tap the line when asked. Pick the standard (ISO metric, or UNC / UNF inch threads, converted on a mm part), the size (M6 to M64, or 1/4" to 2") and the pitch (coarse first); the line goes to the nominal diameter, the minor-diameter line is drawn under it, a relief groove with DIN 76 proportions is cut at its back end (it can be switched off), and a Threading operation with its tool change is added.
   - **Chamfer Outside Corners…** / **Round Outside Corners…**: one size on every outside corner of the profile at once; change single corners afterwards with Chamfer or Fillet.
+  - **Draw Line by Length and Angle**, **Move Cursor**, **Measure**, **Add Text** and **Erase Text** do what ALPHA-T's letter keys do (see ALPHA-T keys), for a finger or a pen.
+  - With the keyboard: Enter takes the element nearest the cursor, a number dialog takes the typed value with Enter, and where there are several answers Tab moves between the dashed ones and Enter takes it.
 
 ## Operations
 
@@ -104,7 +106,7 @@ New operations take the outer profile, not thread or construction lines; Groovin
 
 Keep **Towards the chuck** on. ALPHA-T's AWAY programs are unsafe (they cut past the shoulder, into the diameter or start inside the thread), so the app refuses them and says why. A contour picked from the chuck end is cut as if picked from the front: ALPHA-T's own programs for that only skim the face or make one cut.
 
-Use the arrows in the editor header to move an operation up or down, and the bin to delete it (Undo brings it back). If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed.
+Use the arrows in the editor header to move an operation up or down, and the bin to delete it (Undo brings it back). With the operations list or the editor focused, Alt+↑ / Alt+↓ move it, Ctrl+D duplicates it and Delete deletes it. If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed.
 
 Drag a row by its handle to reorder the operations; **Duplicate Operation** at the end of the editor copies one.
 
@@ -112,7 +114,7 @@ Before export the app checks every move. A cut into the part, a move into the ch
 
 ## Simulation
 
-The buttons under the drawing step through the toolpath: first move, previous pass, play / pause, next pass, show all. The label shows the move, the operation, the pass and the program line. The 1× button changes the speed, the button next to it jumps to the start of the selected operation, and tapping a toolpath jumps there. The tool is drawn at its tip: a simple shape from its type and angles, or ALPHA-T's own picture of it once the library has been imported from ATOOLIB.TL1 with its ATOOLIB.TL2 in the same folder.
+The buttons under the drawing step through the toolpath: first move, previous pass, play / pause, next pass, show all. The label shows the move, the operation, the pass and the program line. Keys: F5 plays and pauses, Ctrl+[ and Ctrl+] go to the previous and next pass, Alt+Home to the first move and Alt+End shows all; on the slider PgUp and PgDn move a tenth. The 1× button changes the speed, the button next to it jumps to the start of the selected operation, and tapping a toolpath jumps there. The tool is drawn at its tip: a simple shape from its type and angles, or ALPHA-T's own picture of it once the library has been imported from ATOOLIB.TL1 with its ATOOLIB.TL2 in the same folder.
 
 ## Sending to the lathe
 
@@ -145,11 +147,13 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 
 ## Touch and pen
 
-- One finger drags the view, two fingers pinch to zoom, double tap fits the part (again returns).
+- One finger drags the view (a quick flick keeps it moving), two fingers pinch to zoom, double tap fits the part (again returns).
 - A faint grid follows the zoom (1, 2 or 5 × 10ⁿ mm); every fifth line is labelled at the edges, X as a diameter. Main menu ▸ Show Grid turns it off.
 - Mouse: wheel pans up and down, Shift+wheel pans sideways, Ctrl+wheel zooms, Ctrl+0 fits.
 - **Touch Lock** (padlock in the header) ignores touches, for example while coolant is running; hold it to unlock by touch. Mouse and keyboard keep working.
-- Main menu ▸ Input Layout switches between Automatic, Pointer and Touch layouts.
+- Main menu ▸ Input Layout switches between Automatic, Pointer and Touch layouts. Automatic follows the last two presses: finger, or mouse and touchpad.
+- In the touch layout the + − and Fit buttons are on the drawing, and a finger on any number field opens the keypad instead of the system keyboard.
+- **Pen**: it draws and picks precisely, like a mouse, and does not switch the layout. After a pen press the zoom buttons and the Keypad button show, the keypad opens for number fields, and a long press with the pen opens the drawing's menu; the barrel button is a right click.
 
 ## Keyboard shortcuts
 
@@ -157,8 +161,12 @@ The .PRG sets variables for the lathe's Harrison macros and calls them with M-co
 - Ctrl+Z undo, Ctrl+Shift+Z or Ctrl+Y redo.
 - Ctrl+0 fit, Ctrl++ zoom in, Ctrl+- zoom out.
 - Esc finishes the line being drawn, cancels contour picking or a command, or deselects, and takes the keyboard out of the X,Z entry.
-- Delete removes the selected drawing element.
+- Delete removes the selected drawing element, anywhere on the Part page outside a text field.
 - Ctrl+F searches the program. Shift+F10 or the Menu key (or a right click) opens the drawing's menu.
+- Alt+1 … Alt+5 open the Part, Program, Sheet, Tools and Machine pages; Ctrl+PgUp and Ctrl+PgDn go to the previous and next page.
+- Ctrl+arrows pan the drawing by an eighth of the view; the view also follows the cursor when the arrow keys move it past the edge. A middle-button drag pans too.
+- Hold Space or Enter on Send to the Lathe or Restore to the Lathe for the same 1.5 s as a finger; the confirmation opens when you let go, and Alt+S (Alt+R) confirms, since Cancel is the default.
+- In the keypad: digits, `.`, `-` changes the sign, Backspace, Tab or `,` the next field, `i` switches ABS / INC, Enter is ✓.
 - Ctrl+, preferences, Ctrl+? all keyboard shortcuts, F1 this help, Ctrl+W close the window, Ctrl+Q quit.
 - Main menu ▸ Training Manual and Reference Manual open the full manuals (PDF) in the PDF viewer.
 
@@ -172,17 +180,17 @@ On the Part page ALPHA-T's one-letter commands work as in ALPHA-T, also while th
 - **S** starts a line at the cursor.
 - **G** moves the cursor to X,Z, **H** moves it by dX,dZ, **Y** by length,angle. With the Line tool the next line starts there.
 - **P** jumps to the nearest point (a line or arc end, an arc centre), **I** to the nearest intersection.
-- **L** or **A** finds the nearest line or arc; then **-** or Delete erases it.
+- **L** or **A** finds the nearest line or arc; then **-** or Delete erases it. **[** and **]** select the previous and next element along the profile.
 - **F** radius at the corner nearest the cursor, **O** blend arc between two elements (ALPHA-T's 2 PKT RADIUS, More ▸ Blend Arc), **K** trim corner (the Corner tool).
 - **M** measures X and Z between two points, **N** length and angle. Tap the points, or move the cursor and press Enter; the nearest point is used.
 - **T** puts text at the cursor, **U** erases the nearest text.
 - **Q** erases all of the drawing after asking (Enter erases, Esc does not). Undo brings it back. By touch: **More ▸ Erase Drawing…**.
-- **Z** zooms in, **R** redraws the whole part, **V** goes back to the view before.
+- **Z** zooms in at the cursor, **R** redraws the whole part (fits it), **V** goes back to the view before.
 - **C** opens the operations menu (ALPHA-T's CAM menu).
 - The arrow keys move the cursor, PgUp and PgDn make the step 10 times bigger or smaller, Home puts it in the middle of the view, End on X0 Z0, and Enter takes it as the next point.
 - With Fillet or Chamfer, Enter picks the corner nearest the cursor: type the size and press Enter again. With Corner, Enter picks the line nearest the cursor.
 - These keys act while the drawing has the keyboard: it takes it when a part opens, when you come back to the Part page, when you click the drawing or pick a drawing tool, and after Esc in the X,Z entry. The focus ring round the drawing shows it once you use the keys.
-- Picking a contour, **3** or Enter finishes it.
+- Picking a contour, Space adds or removes the element at the cursor (**L**, **A**, **[** and **]** move between them), **3** or Enter finishes it.
 - Added here (free in ALPHA-T): **E** edits the selected element, **B** is the Chamfer tool, **W** the Arc tool.
 - Not mapped: Tab. F1 stays this help. Esc also clears the messages at the bottom (or main menu ▸ Clear Messages).
 

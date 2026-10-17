@@ -262,6 +262,8 @@ class BusApp:
     def press(self, name: str | None = None, role: str | None = None, contains: bool = False, acc=None) -> None:
         """A real click (or, in touch mode, a tap) at the widget's centre."""
         x, y = self.center(name, role, acc, contains)
+        if not (0 <= x < self.s.width and 0 <= y < self.s.height):  # scrolled away: a press there hits nothing
+            raise NotFound(f"{name or (acc.text if acc else '')!r} is off the screen at {x:.0f},{y:.0f}; scroll first")
         if self.touch:
             self.s.tap(x, y)
         else:

@@ -9,6 +9,7 @@ app (ALPHALINK_E2E_BRANCH, see README); the Python app has no bus and is waiting
 from __future__ import annotations
 
 import os
+import re
 import time
 import unittest
 
@@ -369,7 +370,14 @@ class DrawingByTouch(Bus):
         self.assertEqual([(e.a, e.b) for e in g], [(Point(40, 0), Point(40, -25))])
 
     def chip(self):
-        return self.app.find("Ø ", "button", contains=True)
+        """The value chip: "Ø 40", "Z -25" or "X26 Z-38"."""
+        end = time.time() + 5
+        while True:
+            hits = [w for w in self.app.widgets() if w.css == "button" and w.w > 0
+                    and re.match(r"^(Ø |Z |X-?\d)", w.text)]
+            if hits or time.time() > end:
+                return hits[0] if hits else self.app.find("Ø ", "button", contains=True)
+            time.sleep(0.2)
 
     def test_value_chip_follows_the_zoom_buttons(self):
         path, to_screen = self.blank()
@@ -385,6 +393,38 @@ class DrawingByTouch(Bus):
         after = self.app.rect(self.chip())
         self.assertNotEqual(before[:2], after[:2], "the chip stayed where the point was before the zoom")
         self.assertLess(abs(after[1] + after[3] / 2 - end[1]), 80, "the chip should sit by the last point")
+
+    def chip_gap(self, x: float, z: float) -> float:
+        """Pixels between the chip's nearest edge and the drawing point X (diameter), Z, by the bus's view."""
+        v = self.app.state()["view"]
+        dx0, dy0, _w, _h = self.app.rect(self.app.find("Drawing"))  # the view's origin is in the drawing's pixels
+        px, py = dx0 + v["ox"] + z * v["scale"], dy0 + v["oy"] - x / 2 * v["scale"]
+        cx, cy, cw, ch = self.app.rect(self.chip())
+        dx = max(cx - px, 0, px - (cx + cw))
+        dy = max(cy - py, 0, py - (cy + ch))
+        return (dx * dx + dy * dy) ** 0.5
+
+    def test_value_chip_stays_by_the_point_while_panning(self):
+        """Eduard's video 2026-10-17: panning by finger while drawing left the chip behind (and doubled)."""
+        path, to_screen = self.blank()
+        self.tap("Line", "radio button")
+        self.s.tap(*to_screen(0, 0))
+        self.s.tap(*to_screen(40, -30))
+        self.assertLess(self.chip_gap(40, -30), 40, "the chip should start beside the last point")
+        x, y = self.empty_spot()
+        self.s.input.touches([(x, y)], [(x - 150, y + 120)], 20, 0.3)  # a slow pan, the finger rests: no fling
+        time.sleep(0.5)
+        self.snap("panned")
+        self.assertLess(self.chip_gap(40, -30), 40, "after a pan the chip should be beside the point again")
+        self.s.input.touches([(x - 300, y)], [(x - 220, y)], 4, 0.0)  # a short flick right: the point stays in view
+        gaps = []
+        for _ in range(8):  # during the fling
+            time.sleep(0.1)
+            gaps.append(round(self.chip_gap(40, -30)))
+        time.sleep(1.0)
+        self.snap("flung")
+        gaps.append(round(self.chip_gap(40, -30)))
+        self.assertLess(max(gaps), 40, f"the chip lagged behind the point while the view moved: {gaps} px")
 
     def test_value_chip_hides_when_the_point_leaves_the_view(self):
         path, to_screen = self.blank()
@@ -1271,3 +1311,81 @@ class PenByTestSeam(Bus):
         self.s.click(*self.app.center(acc=texts[0]))
         self.app.find("✓", "button")
         self.assertTrue(self.app.exists("⌫", "button"))
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class MachineMore(VirtualPort, Bus):
+    """The Machine page's other transfers over the virtual port: Restore Manual Ops (hold, pick, confirm) and the
+    cable's loopback test."""
+
+    def open_machine(self):
+        port = os.path.realpath(f"{self.pty}-app")
+        self.app = self.s.launch_app("en", args=(str(self.part(with_op())),), env={"ALPHALINK_TEST_PORTS": port})
+        time.sleep(1.0)
+        self.s.key("alt+5")
+        time.sleep(0.6)
+
+    def test_restore_manual_ops(self):
+        from alphacam.link.serial_link import manops_load_bytes
+
+        data = b"%\r\nO1001\r\nM29\r\nG65 P63 A1. B2.\r\nG65 P63 A3. B4.\r\nM30\r\n%\r\n"
+        ops = self.s.root / "home" / "OPS.MOP"
+        ops.write_bytes(data)
+        self.open_machine()
+        x, y = self.app.center(acc=self.app.labelled("Restore to the Lathe…", "button"))
+        self.s.hold(x, y, 2.5)
+        from .a11y import App
+
+        App.wait(15, names=("org.gnome.Nautilus", "xdg-desktop-portal-gnome", "Nautilus"))
+        time.sleep(1.0)
+        self.s.key("ctrl+l")
+        self.s.type(str(ops) + "\n")
+        time.sleep(0.8)
+        self.s.key("Return")
+        self.app.find("Restore Manual Ops?", contains=True, timeout=10)
+        self.snap("confirm")
+        self.s.key("alt+r")
+        expected = manops_load_bytes(data)
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(20, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)
+        self.wait_for(lambda: self.app.exists("Sent ", contains=True), 10, "the restore to finish")
+
+    def test_loopback_with_an_echoing_cable(self):
+        import threading
+
+        self.open_machine()
+        stop = threading.Event()
+
+        def echo():  # the 2-3 bridge: whatever goes out comes back
+            while not stop.is_set():
+                n0 = len(self.lathe.got)
+                self.lathe.read_for(0.05)
+                if len(self.lathe.got) > n0:
+                    self.lathe.send(bytes(self.lathe.got[n0:]))
+
+        t = threading.Thread(target=echo, daemon=True)
+        t.start()
+        try:
+            self.s.scroll(self.s.width * 0.6, self.s.height * 0.6, 15)  # the Cable Test is at the bottom of the page
+            self.press("Run Loopback Test", "button")
+            self.app.find("Run the loopback test?", contains=True)
+            self.s.key("Return")  # the default: Run Test
+            self.wait_for(lambda: self.app.exists("Loopback OK", contains=True), 10, "the loopback result")
+            self.snap("ok")
+        finally:
+            stop.set()
+            t.join(1)
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class DrawingByTouch200(DrawingByTouch):
+    """The drawing by touch at the Surface's real 200 % (the value chip went astray there, 2026-10-17)."""
+
+    def setUp(self):
+        from .harness import GnomeSession
+        from .test_workflows import OUT
+
+        self.s = GnomeSession(*LANDSCAPE, scale=2.0).__enter__()
+        self.out = OUT / f"{self.__class__.__name__}-{self._testMethodName}"
+        self.n = 0
