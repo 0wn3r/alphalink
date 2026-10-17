@@ -186,8 +186,19 @@ In the keypad, `i` toggles ABS / INC (✓), since Tab is "next field".
 
 Every row above gets an end-to-end test with real input through libei, reading the app through its test bus
 (`ALPHALINK_TEST=1`), in `app/tests/e2e/test_interaction.py`; they run on GitHub for every push (the Rust job). The
-pen has no libei device yet: its items are tested by forcing the Touch layout until the harness can send tablet
-events (or `uinput` can stand in for a pen).
+pen cannot be faked there: libei (1.5) has no tablet device, and headless GNOME Shell reads no `uinput` devices. Its
+§10 logic is tested through a test-only switch on the bus (`ForceSource("pen")`: every press counts as a pen), and
+the pen itself on the Surface with this checklist (Automatic layout, the Type Cover off):
+
+1. Draw a few lines with the pen tip: the snap marker follows the hovering pen; the layout stays as it was (the
+   buttons do not grow or shrink) after switching between pen and finger several times.
+2. The zoom buttons and the Keypad button are shown after the first pen press; − zooms out, + in, Fit fits.
+3. Tap the value chip and an operation's number with the pen: the keypad opens; type a value; ✓ sets it.
+4. Hold the pen tip on a line for about a second: the drawing's menu opens (Edit Values…, Delete, Zoom Here,
+   Fit Part). Press the barrel button on a line: the same menu.
+5. Pick an element at a corner with the pen: it takes the nearer line (10 px reach), not both.
+6. Hold the pen on Send to the Lathe for 1.5 s: the confirmation opens; Cancel.
+7. Turn the pen over (eraser end) and tap a line: it selects it, nothing is erased.
 
 Already covered: Ctrl+wheel at the pointer, Ctrl+0 / Ctrl+−, wheel pan, Shift+F10 and Delete, Escape closing
 Preferences and the keypad, Space held to send, a mouse click unlocking the touch lock, the Automatic layout
