@@ -22,8 +22,10 @@ use super::widget::LatheCanvas;
 const FLING_DECAY: f64 = 0.92;
 /// px/s
 const FLING_MIN: f64 = 40.0;
-/// the finger's speed at the lift is measured over its last this many ms
-const VELOCITY_WINDOW_MS: u32 = 100;
+/// the finger's speed at the lift is measured over its last few moves, at most this many ms...
+const VELOCITY_SPAN_MS: u32 = 50;
+/// ...and this many moves
+const VELOCITY_MOVES: usize = 3;
 /// a pen that moves further than this before the long press time is drawing or dragging, not holding
 const PEN_SLOP_PX: f64 = 8.0;
 
@@ -61,7 +63,7 @@ pub struct Router {
     pinch_centre: Cell<(f64, f64)>,
     last_tap: Cell<Option<(f64, f64)>>,
     drag: RefCell<Option<gtk::GestureDrag>>,
-    /// the drag's recent positions (event time ms, dx, dy) for the fling's velocity
+    /// the drag's press and last moves (event time ms, dx, dy) for the fling's velocity
     samples: RefCell<std::collections::VecDeque<(u32, f64, f64)>>,
     /// a pen (or a forced source's) press waiting to become a long press
     hold: PenHold,
@@ -71,20 +73,14 @@ impl Router {
     fn sample(&self, time: u32, dx: f64, dy: f64) {
         let mut s = self.samples.borrow_mut();
         s.push_back((time, dx, dy));
-        while s.front().is_some_and(|(t, _, _)| time.wrapping_sub(*t) > VELOCITY_WINDOW_MS) {
-            s.pop_front();
+        if s.len() > VELOCITY_MOVES + 2 {
+            s.remove(1); // the press stays first
         }
     }
 
-    /// px/s over the drag's last [`VELOCITY_WINDOW_MS`]; zero when the events carry no time apart.
+    /// The finger's speed at the lift, px/s; zero when the events carry no time apart.
     fn velocity(&self) -> (f64, f64) {
-        let s = self.samples.borrow();
-        let (Some(&(t0, x0, y0)), Some(&(t1, x1, y1))) = (s.front(), s.back()) else { return (0.0, 0.0) };
-        let dt = t1.wrapping_sub(t0) as f64 / 1000.0;
-        if dt <= 0.0 {
-            return (0.0, 0.0);
-        }
-        ((x1 - x0) / dt, (y1 - y0) / dt)
+        velocity(self.samples.borrow_mut().make_contiguous())
     }
 
     /// A long press by timer, for the pen and for a forced source (the touch long press is GTK's own).
@@ -338,8 +334,37 @@ fn fling(w: &LatheCanvas, r: &Rc<Router>, vx: f64, vy: f64) {
     r.fling.replace(Some(id));
 }
 
+/// px/s from the last [`VELOCITY_MOVES`] moves within [`VELOCITY_SPAN_MS`] of the last one, `samples` being
+/// (event time ms, dx, dy) with the press first: the press counts only when a single move follows it, as a finger
+/// that rested before the flick would average the speed down.
+fn velocity(samples: &[(u32, f64, f64)]) -> (f64, f64) {
+    let moves = if samples.len() > 2 { &samples[1..] } else { samples };
+    let Some(&(t1, x1, y1)) = moves.last() else { return (0.0, 0.0) };
+    let (t0, x0, y0) = moves.iter().rev().take(VELOCITY_MOVES + 1)
+        .take_while(|(t, _, _)| t1.wrapping_sub(*t) <= VELOCITY_SPAN_MS)
+        .last().copied().unwrap_or((t1, x1, y1));
+    let dt = t1.wrapping_sub(t0) as f64 / 1000.0;
+    if dt <= 0.0 {
+        return (0.0, 0.0);
+    }
+    ((x1 - x0) / dt, (y1 - y0) / dt)
+}
+
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn velocity_is_the_last_moves() {
+        // rested 80 ms after the press, then 50 px per 16 ms
+        let s = [(0, 0.0, 0.0), (80, 0.0, 0.0), (96, 50.0, 0.0), (112, 100.0, 0.0), (128, 150.0, 0.0), (144, 200.0, 0.0)];
+        let (vx, vy) = super::velocity(&s);
+        assert!((vx - 3125.0).abs() < 1.0 && vy == 0.0, "{vx}");
+        // the press and a single move
+        assert_eq!(super::velocity(&[(0, 0.0, 0.0), (20, 0.0, 40.0)]), (0.0, 2000.0));
+        // no time apart
+        assert_eq!(super::velocity(&[(5, 0.0, 0.0), (5, 9.0, 0.0), (5, 18.0, 0.0)]), (0.0, 0.0));
+        assert_eq!(super::velocity(&[]), (0.0, 0.0));
+    }
+
     #[test]
     fn shift_scroll() {
         assert_eq!(super::shift_scroll(0.0, 2.0, true), (2.0, 0.0));
