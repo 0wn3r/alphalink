@@ -349,7 +349,7 @@ mod imp {
     #[template(resource = "/io/github/_0wn3r/AlphaLinkCAM/ui/sheet-page.ui")]
     pub struct SheetPage {
         #[template_child]
-        pub moves_switch: TemplateChild<gtk::Switch>,
+        pub moves_switch: TemplateChild<adw::SwitchRow>,
         #[template_child]
         pub time_label: TemplateChild<gtk::Label>,
         #[template_child]

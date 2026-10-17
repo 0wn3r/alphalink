@@ -609,12 +609,15 @@ impl MainWindow {
         self.build_main();
         let input_mode = self.parts().input_mode.clone();
         let win = self.downgrade();
-        input_mode.connect_changed(move |mode| {
+        let apply = move |mode: Mode| {
             if let Some(win) = win.upgrade() {
                 win.imp().zoom_box.set_visible(mode == Mode::Touch);
                 win.parts().drawing.set_touch(mode == Mode::Touch);
             }
-        });
+        };
+        // the mode was already chosen (from the saved layout) before this handler existed
+        apply(input_mode.mode());
+        input_mode.connect_changed(apply);
         self.setup_lock();
         self.guard_list_taps();
         self.install_actions();

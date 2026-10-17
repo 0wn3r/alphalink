@@ -1,7 +1,8 @@
 //! HoldButton (TOUCH.md 7.4): an action that only fires after the button is held for `hold-seconds`.
 //!
 //! A progress bar inside the button fills while it is held; letting go early cancels. Keyboard: Space/Enter must
-//! be held as well (key repeat keeps it going), so a stray tap or keypress never starts a transfer.
+//! be held as well (key repeat keeps it going), so a stray tap or keypress never starts a transfer; "held" comes when
+//! the key is let go, so its repeats don't land in the confirmation that follows.
 
 use std::cell::{Cell, RefCell};
 use std::sync::OnceLock;
@@ -29,6 +30,9 @@ mod imp {
         pub bar: gtk::ProgressBar,
         pub t0: Cell<Option<Instant>>,
         pub tick: RefCell<Option<glib::SourceId>>,
+        /// held with Space/Enter: "held" waits for the key's release, so its repeats don't answer the dialog it opens
+        pub by_key: Cell<bool>,
+        pub full: Cell<bool>,
     }
 
     impl Default for HoldButton {
@@ -40,6 +44,8 @@ mod imp {
                 bar: gtk::ProgressBar::new(),
                 t0: Cell::new(None),
                 tick: RefCell::default(),
+                by_key: Cell::new(false),
+                full: Cell::new(false),
             }
         }
     }
@@ -75,19 +81,26 @@ mod imp {
             press.connect_released(glib::clone!(#[weak] obj, move |_, _, _, _| obj.imp().stop()));
             press.connect_cancel(glib::clone!(#[weak] obj, move |_, _| obj.imp().stop()));
             obj.add_controller(press);
-            let keys = gtk::EventControllerKey::new();
+            // capture: GtkButton's own Space/Enter activation would take the key first
+            let keys = gtk::EventControllerKey::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
             keys.connect_key_pressed(glib::clone!(#[weak] obj, #[upgrade_or] glib::Propagation::Proceed,
                 move |_, key, _, _| {
                     if matches!(key, gdk::Key::space | gdk::Key::Return | gdk::Key::KP_Enter) {
-                        if obj.imp().t0.get().is_none() {
-                            obj.imp().start();
+                        let imp = obj.imp();
+                        if imp.t0.get().is_none() && !imp.full.get() {
+                            imp.by_key.set(true);
+                            imp.start();
                         }
                         return glib::Propagation::Stop;
                     }
                     glib::Propagation::Proceed
                 }));
-            keys.connect_key_released(glib::clone!(#[weak] obj, move |_, _, _, _| obj.imp().stop()));
+            keys.connect_key_released(glib::clone!(#[weak] obj, move |_, _, _, _| obj.imp().key_released()));
             obj.add_controller(keys);
+            // a key held while the focus moves away never comes up here
+            let focus = gtk::EventControllerFocus::new();
+            focus.connect_leave(glib::clone!(#[weak] obj, move |_| obj.imp().stop()));
+            obj.add_controller(focus);
         }
     }
 
@@ -125,17 +138,32 @@ mod imp {
             if frac >= 1.0 {
                 self.t0.set(None);
                 self.tick.take(); // returning Break removes the source
-                self.bar.set_fraction(0.0);
-                self.obj().emit_by_name::<()>("held", &[]);
+                if self.by_key.get() {
+                    self.full.set(true); // the bar stays full until the key comes up
+                } else {
+                    self.bar.set_fraction(0.0);
+                    self.obj().emit_by_name::<()>("held", &[]);
+                }
                 return glib::ControlFlow::Break;
             }
             glib::ControlFlow::Continue
+        }
+
+        fn key_released(&self) {
+            if self.full.get() {
+                self.stop();
+                self.obj().emit_by_name::<()>("held", &[]);
+            } else {
+                self.stop();
+            }
         }
 
         fn stop(&self) {
             if let Some(id) = self.tick.take() {
                 id.remove();
             }
+            self.by_key.set(false);
+            self.full.set(false);
             self.t0.set(None);
             self.bar.set_fraction(0.0);
         }
