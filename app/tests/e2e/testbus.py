@@ -222,6 +222,10 @@ class BusApp:
         n = self._now(w)
         return n.value or n.text
 
+    def force_source(self, source: str) -> None:
+        """Test-only: every press counts as `source` ("pen", "touch"; "" is off). libei has no pen device."""
+        self._call("ForceSource", GLib.Variant("(s)", (source,)), None)
+
     def state(self) -> dict:
         """The app's own state as the bus reports it (page, view, tool, simulation, operations, program...)."""
         import json

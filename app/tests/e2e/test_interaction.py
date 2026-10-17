@@ -1224,3 +1224,50 @@ class ShortcutsWindow(Bus):
         time.sleep(0.4)
         self.assertTrue(self.app.menu_items(timeout=2), "c opens Add Operation")
         self.esc()
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class PenByTestSeam(Bus):
+    """§10 through the bus's ForceSource("pen"): libei clicks counted as pen presses. The app's own pen rules, not
+    GTK's stylus events (the Surface checklist in POINTER_KEYBOARD.md §13 covers those)."""
+
+    needs_state = True
+
+    def pen(self, *args: str):
+        self.launch(*args)
+        from gi.repository import GLib
+
+        try:
+            self.app.force_source("pen")
+        except GLib.Error:
+            self.skipTest("this build has no ForceSource on its test bus")
+
+    def test_pen_does_not_flip_the_layout_and_gets_its_helpers(self):
+        self.pen(str(self.part(shaft())))
+        for _ in range(2):
+            self.s.click(*self.app.center("Operations", "label"))
+        time.sleep(0.5)
+        big = self.app.rect(self.app.find("Undo (Ctrl+Z)", "button"))
+        self.assertLess(big[3], 48, "a pen should not switch to the touch layout")
+        self.assertTrue(self.app.exists("Zoom Out", "button"), "the pen gets the zoom buttons")
+        self.assertTrue(self.app.exists("Keypad", "button"), "the pen gets the Keypad button")
+
+    def test_pen_long_press_opens_the_menu(self):
+        p = shaft()
+        self.pen(str(self.part(p)))
+        to_screen = self.calibrate()
+        self.s.hold(*to_screen(40, -12), 1.2)  # a pen held on g1
+        items = [i.text for i in self.app.menu_items()]
+        self.snap("menu")
+        self.assertIn("Edit Values…", items)
+
+    def test_pen_tap_on_an_editor_number_opens_the_keypad(self):
+        self.pen(str(self.part(with_op())))
+        self.s.click(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        sb = self.app.all("Feed", "spinbutton")[0]
+        texts = [t for t in self.app.widgets() if t.css == "text" and t.w > 0
+                 and sb.x <= t.x + t.w / 2 <= sb.x + sb.w and sb.y <= t.y + t.h / 2 <= sb.y + sb.h]
+        self.s.click(*self.app.center(acc=texts[0]))
+        self.app.find("✓", "button")
+        self.assertTrue(self.app.exists("⌫", "button"))
