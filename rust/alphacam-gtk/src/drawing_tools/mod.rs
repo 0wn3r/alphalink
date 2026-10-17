@@ -81,6 +81,17 @@ const FEATURE_MENU: &[(&str, &str)] = &[
     ("Chamfer Outside Corners…", "corners-chamfer"),
     ("Round Outside Corners…", "corners-round"),
 ];
+/// ALPHA-T's letter commands that open a dialog: a section of the More menu, so a finger or a pen reaches them
+const LETTER_MENU: &[(&str, char)] = &[
+    ("Draw Line by Length and Angle", 'd'),
+    ("Move Cursor to X,Z", 'g'),
+    ("Move Cursor by dX,dZ", 'h'),
+    ("Move Cursor by Length and Angle", 'y'),
+    ("Measure by X,Z", 'm'),
+    ("Measure by Length and Angle", 'n'),
+    ("Add Text", 't'),
+    ("Erase Text", 'u'),
+];
 /// (name, label, tooltip with the one-letter keys of hit_keys.rs)
 const TOOLS: &[(&str, &str, &str)] = &[
     ("select", "Select", "Select an element or an operation. Press L or A to select the nearest line or arc"),
@@ -228,6 +239,8 @@ struct St {
     /// an end point being dragged
     mov: Option<Move>,
     touch: bool,
+    /// picking a contour by keys: the element Space adds or removes ([ ] l a move it)
+    pick_at: Option<String>,
 }
 
 impl Default for St {
@@ -248,6 +261,7 @@ impl Default for St {
             ctx_at: (0.0, 0.0),
             mov: None,
             touch: false,
+            pick_at: None,
         }
     }
 }
@@ -332,6 +346,22 @@ impl DrawingTools {
             features.append_item(&item);
         }
         menu.append_section(None, &features);
+        // ALPHA-T's letter commands with dialogs, reachable without a keyboard (POINTER_KEYBOARD.md 4)
+        let letters = gio::Menu::new();
+        for (label, key) in LETTER_MENU {
+            let item = gio::MenuItem::new(Some(&gettext(label)), None);
+            item.set_attribute_value("accel", Some(&key.to_string().to_variant()));
+            item.set_action_and_target_value(Some("win.hit-key"), Some(&key.to_string().to_variant()));
+            letters.append_item(&item);
+        }
+        menu.append_section(None, &letters);
+        let hit_key = gio::SimpleAction::new("hit-key", Some(glib::VariantTy::STRING));
+        hit_key.connect_activate(weak!(this, move |_, v| {
+            if let Some(c) = v.and_then(|v| v.get::<String>()).and_then(|s| s.chars().next()) {
+                this.hit_key(c);
+            }
+        }));
+        window.add_action(&hit_key);
         // ALPHA-T's Q, reachable by touch too (Eduard 2026-10-16: no way to clear the drawing in touch mode)
         let erase = gio::Menu::new();
         erase.append(Some(&gettext("Erase Drawing…")), Some("win.erase-drawing"));
@@ -446,6 +476,20 @@ impl DrawingTools {
     /// the keyboard put the cursor (the read-out shows it until the pointer really moves)
     pub fn key_pointer(&self) -> bool {
         self.s.borrow().key_pointer.is_some()
+    }
+
+    /// What the end-to-end tests read through the test bus (test_bus.rs State).
+    pub fn test_state(&self) -> serde_json::Value {
+        let s = self.s.borrow();
+        serde_json::json!({
+            "selected_element": s.selected,
+            "cursor": s.cursor.map(|c| [c.x, c.z]),
+            "picking": s.pick_op,
+            "constructing": s.construct.is_some(),
+            "chain": s.points.len(),
+            "picked": self.c.state().overlay.picked.clone(),
+            "pick_at": s.pick_at,
+        })
     }
 
     pub fn select_element(&self, id: Option<&str>) {
@@ -660,16 +704,18 @@ impl DrawingTools {
             self.c.emit_by_name::<()>("canvas-long-pressed", &[&x, &z, &sx, &sy, &el]);
             return glib::Propagation::Stop;
         }
-        let (chain, pick, selected) = {
+        let back = keyval == gdk::Key::ISO_Left_Tab || state.contains(gdk::ModifierType::SHIFT_MASK);
+        if matches!(keyval, gdk::Key::Tab | gdk::Key::KP_Tab | gdk::Key::ISO_Left_Tab)
+            && self.cycle_choice(if back { -1 } else { 1 })
+        {
+            return glib::Propagation::Stop;
+        }
+        let (chain, pick) = {
             let s = self.s.borrow();
-            (!s.points.is_empty(), s.pick_op.is_some(), s.selected.is_some())
+            (!s.points.is_empty(), s.pick_op.is_some())
         };
         if keyval == gdk::Key::Escape && (chain || pick) {
             if pick { self.cancel_pick() } else { self.finish_chain() }
-            return glib::Propagation::Stop;
-        }
-        if matches!(keyval, gdk::Key::Delete | gdk::Key::BackSpace) && selected {
-            self.delete_selected_element();
             return glib::Propagation::Stop;
         }
         glib::Propagation::Proceed
@@ -678,6 +724,16 @@ impl DrawingTools {
     fn hit_key_pressed(&self, keyval: gdk::Key, code: u32, state: gdk::ModifierType) -> glib::Propagation {
         let w = self.w();
         let focus = gtk::prelude::GtkWindowExt::focus(&w);
+        let on_part = w.has_project()
+            && w.visible_dialog().is_none()
+            && w.stack().visible_child_name().as_deref() == Some("part");
+        if on_part
+            && (state & gtk::accelerator_get_default_mod_mask()) == gdk::ModifierType::CONTROL_MASK
+            && focus.as_ref().is_none_or(|f| *f == self.c.clone().upcast::<gtk::Widget>())
+            && self.pan_key(keyval)
+        {
+            return glib::Propagation::Stop;
+        }
         if state.intersects(COMMAND_KEYS)
             || !w.has_project()
             || w.visible_dialog().is_some()
@@ -687,7 +743,15 @@ impl DrawingTools {
             return glib::Propagation::Proceed;
         }
         let name = keyval.name().map(|n| n.to_string()).unwrap_or_default();
-        let on_canvas = focus.is_none_or(|f| f == self.c.clone().upcast::<gtk::Widget>());
+        let on_canvas = focus.as_ref().is_none_or(|f| *f == self.c.clone().upcast::<gtk::Widget>());
+        // Delete erases the selected element wherever the Part page has the focus (POINTER_KEYBOARD.md 5)
+        if matches!(keyval, gdk::Key::Delete | gdk::Key::KP_Delete | gdk::Key::BackSpace)
+            && self.s.borrow().selected.is_some()
+            && focus.as_ref().is_none_or(|f| w.stack().child_by_name("part").is_some_and(|page| f.is_ancestor(&page)) || on_canvas)
+        {
+            self.delete_selected_element();
+            return glib::Propagation::Stop;
+        }
         let done = if cursor_key(&name).is_some()
             || step_key(&name).is_some()
             || matches!(name.as_str(), "Home" | "End" | "Return" | "KP_Enter")
@@ -720,6 +784,23 @@ impl DrawingTools {
             let s = self.s.borrow();
             (s.pick_op.is_some(), s.selected.clone(), s.cursor)
         };
+        if matches!(c, '[' | ']') {
+            return self.walk_profile(if c == ']' { 1 } else { -1 }, picking);
+        }
+        if picking {
+            match c {
+                ' ' => return self.pick_key(),
+                'l' | 'a' | 'L' | 'A' => {
+                    let kind = if c.eq_ignore_ascii_case(&'l') { Kind::Line } else { Kind::Arc };
+                    let found = self.project().and_then(|p| drawing::nearest_element(&p, cur.unwrap_or_default(), Some(kind)));
+                    if let Some(gid) = found {
+                        self.set_pick_at(Some(gid));
+                    }
+                    return true;
+                }
+                _ => {}
+            }
+        }
         let Some(action) = hit_action(c, picking, selected.is_some()) else { return false };
         let Some(p) = self.project() else { return false };
         let w = self.w();
@@ -769,7 +850,9 @@ impl DrawingTools {
                 None => self.set_tool("fillet"),
                 Some(corner) => self.size_popover("fillet", corner),
             },
-            Hit::Blend => self.start_construct("blend"), // ALPHA-T's O: 2 PKT RADIUS
+            // ALPHA-T's O: 2 PKT RADIUS; O again takes the cursor as the next point, as on DOS
+            Hit::Blend if self.constructing("blend") => return self.accept_cursor(),
+            Hit::Blend => self.start_construct("blend"),
             Hit::Corner => self.set_tool("corner"),
             Hit::Chamfer => self.set_tool("chamfer"),
             Hit::Arc => self.set_tool("arc"),
@@ -796,7 +879,16 @@ impl DrawingTools {
             Hit::ZoomIn | Hit::Fit => {
                 let view = self.c.state().view;
                 self.s.borrow_mut().prev_view = Some(view);
-                if action == Hit::ZoomIn { self.c.zoom(1.25) } else { self.c.fit() }
+                match (action, cur) {
+                    (Hit::Fit, _) => self.c.fit(),
+                    // ALPHA-T's Z zooms in at the cursor (the middle of the view when there is none)
+                    (_, Some(c)) => {
+                        let (sx, sy) = view.to_screen(c.x, c.z);
+                        self.c.state_mut().view.zoom_at(sx, sy, 1.25);
+                        self.c.user_view_change();
+                    }
+                    _ => self.c.zoom(1.25),
+                }
             }
             Hit::RecallView => {
                 let prev = self.s.borrow().prev_view;
@@ -862,6 +954,7 @@ impl DrawingTools {
             o.marker = Some((pt, MarkerKind::End));
         });
         self.readout(&readout_xz(pt));
+        self.follow(pt);
         if start {
             self.line_tool();
             self.finish_chain();
@@ -873,6 +966,37 @@ impl DrawingTools {
         self.c.queue_draw();
     }
 
+    /// The view follows the ALPHA-T cursor: a key that moves it past the edge pans so it stays 10 % inside
+    /// (POINTER_KEYBOARD.md 3; ALPHA-T users steer the cursor, not the view).
+    fn follow(&self, pt: Point) {
+        let (w, h) = (self.c.width() as f64, self.c.height() as f64);
+        let (sx, sy) = self.c.state().view.to_screen(pt.x, pt.z);
+        let inside = |v: f64, size: f64| {
+            let m = 0.1 * size;
+            if v < m { m - v } else if v > size - m { size - m - v } else { 0.0 }
+        };
+        let (dx, dy) = (inside(sx, w), inside(sy, h));
+        if (dx != 0.0 || dy != 0.0) && w > 0.0 && h > 0.0 {
+            self.c.state_mut().view.pan(dx, dy);
+            self.c.user_view_change();
+        }
+    }
+
+    /// Ctrl+arrows pan the view by an eighth of its size without moving the cursor (POINTER_KEYBOARD.md 3).
+    fn pan_key(&self, keyval: gdk::Key) -> bool {
+        let (w, h) = (self.c.width() as f64 / 8.0, self.c.height() as f64 / 8.0);
+        let (dx, dy) = match keyval {
+            gdk::Key::Left | gdk::Key::KP_Left => (w, 0.0),
+            gdk::Key::Right | gdk::Key::KP_Right => (-w, 0.0),
+            gdk::Key::Up | gdk::Key::KP_Up => (0.0, h),
+            gdk::Key::Down | gdk::Key::KP_Down => (0.0, -h),
+            _ => return false,
+        };
+        self.c.state_mut().view.pan(dx, dy);
+        self.c.user_view_change();
+        true
+    }
+
     /// Enter on the drawing: the cursor is the next measuring point or the next point of the line or arc; with
     /// Fillet or Chamfer it picks the corner nearest the cursor, with Corner the nearest line.
     fn accept_cursor(&self) -> bool {
@@ -882,7 +1006,9 @@ impl DrawingTools {
         };
         let Some(cursor) = cursor else { return false };
         let tool = self.tool();
-        if measuring {
+        if self.s.borrow().construct.is_some() {
+            self.construct_key(cursor);
+        } else if measuring {
             self.measure_point(cursor);
         } else if tool == "line" {
             self.add_point(cursor);
@@ -1169,11 +1295,12 @@ impl DrawingTools {
         }));
     }
 
-    /// Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6).
-    pub fn set_touch(&self, touch: bool) {
-        self.keypad_button.set_visible(touch);
+    /// Touch mode: the keypad replaces the system keyboard for points (TOUCH.md 6). The pen gets the keypad and the
+    /// value chip too, but keeps the pointer's handles (POINTER_KEYBOARD.md 10).
+    pub fn set_touch(&self, touch: bool, pen: bool) {
+        self.keypad_button.set_visible(touch || pen);
         self.c.state_mut().handle_px = if touch { 12.0 } else { 6.0 };
-        self.s.borrow_mut().touch = touch;
+        self.s.borrow_mut().touch = touch || pen;
         self.place_chip();
     }
 
@@ -1378,6 +1505,65 @@ impl DrawingTools {
         self.pick_banner.set_revealed(true);
         self.cancel_pick_btn.set_visible(true);
         w.layout_editor(); // a small window shows the drawing while picking
+        self.c.grab_focus(); // Space, [ ] and Enter pick from the keyboard (POINTER_KEYBOARD.md 5)
+    }
+
+    /// `[` / `]`: the previous / next element along the profile, in the contour order the operations use
+    /// (POINTER_KEYBOARD.md 5); while picking a contour it moves the element Space adds.
+    fn walk_profile(&self, step: i32, picking: bool) -> bool {
+        let Some(project) = self.project() else { return false };
+        let (now, cur) = {
+            let s = self.s.borrow();
+            (if picking { s.pick_at.clone() } else { s.selected.clone() }, s.cursor)
+        };
+        // nothing current yet: the first press takes the element nearest the cursor (or the profile's first)
+        let first = now.is_none();
+        let now = now.or_else(|| cur.and_then(|c| drawing::nearest_element(&project, c, None)));
+        let groups = drawing::components(&project);
+        let group = match &now {
+            Some(gid) => groups.into_iter().find(|g| g.contains(gid)),
+            None => Some(drawing::outer_profile(&project)),
+        };
+        let Some(group) = group.filter(|g| !g.is_empty()) else { return false };
+        let order = drawing::pick_order(&project, &group).unwrap_or(group);
+        let next = match now.as_ref().and_then(|g| order.iter().position(|x| x == g)) {
+            Some(i) if !first => order[(i as i32 + step).rem_euclid(order.len() as i32) as usize].clone(),
+            Some(i) => order[i].clone(),
+            None => order[0].clone(),
+        };
+        if picking {
+            self.set_pick_at(Some(next));
+        } else {
+            self.set_tool("select");
+            self.select_element_(Some(next));
+        }
+        true
+    }
+
+    /// The element Space adds or removes while picking, outlined and named in the read-out.
+    fn set_pick_at(&self, gid: Option<String>) {
+        self.s.borrow_mut().pick_at = gid.clone();
+        self.c.overlay(|o| o.highlight = gid.iter().cloned().collect());
+        if let Some(gid) = gid {
+            self.readout(&format!("{gid} {}", self.element_label(&gid)));
+        }
+    }
+
+    /// Space while picking: add or remove the element [ ] l a moved to, or else the one nearest the cursor.
+    fn pick_key(&self) -> bool {
+        let (at, cur) = {
+            let s = self.s.borrow();
+            (s.pick_at.clone(), s.cursor)
+        };
+        let gid = at.or_else(|| self.project().and_then(|p| drawing::nearest_element(&p, cur.unwrap_or_default(), None)));
+        match gid {
+            Some(gid) => {
+                self.toggle_pick(&gid);
+                self.set_pick_at(Some(gid));
+                true
+            }
+            None => false,
+        }
     }
 
     fn toggle_pick(&self, gid: &str) {
@@ -1425,6 +1611,7 @@ impl DrawingTools {
 
     fn cancel_pick(&self) {
         self.s.borrow_mut().pick_op = None;
+        self.set_pick_at(None);
         self.c.overlay(|o| o.picked.clear());
         self.pick_banner.set_revealed(false);
         self.cancel_pick_btn.set_visible(false);

@@ -13,7 +13,7 @@ use alphacam::error::Error;
 use alphacam::model::{Element, Operation, Project};
 use alphacam::py::{fmt_g, round, round_int};
 use alphacam::toolpath::contour::chain;
-use gtk::glib;
+use gtk::{gdk, glib};
 use serde_json::{Value, json};
 
 use crate::i18n::{fill, gettext, ngettext, tr};
@@ -111,12 +111,24 @@ struct Touch {
 /// the screen; a finger on − or + steps the value. Both only for a still tap, on release: a finger that moves scrolls
 /// the editor instead (Eduard 2026-10-16: swiping through the parameters kept opening the keypad and changing
 /// values). The touch is taken on press (no focus, so no system keyboard), so the scrolling is done here. The mouse
-/// and keyboard work as before.
-pub fn keypad_on_touch(row: &adw::SpinRow) {
-    let drag = gtk::GestureDrag::builder().touch_only(true).propagation_phase(gtk::PropagationPhase::Capture).build();
+/// and keyboard work as before. `row` is an adw::SpinRow or a gtk::SpinButton (POINTER_KEYBOARD.md 11: every number
+/// field a finger can reach); a second call on the same widget does nothing.
+pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
+    let row = row.upcast_ref::<gtk::Widget>();
+    if row.has_css_class("keypad-on-touch") {
+        return;
+    }
+    row.add_css_class("keypad-on-touch");
+    let drag = gtk::GestureDrag::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
     let state = Rc::new(RefCell::new(Touch::default()));
     let st = state.clone();
     drag.connect_drag_begin(move |gesture, x, y| {
+        // a finger or the pen, which cannot type either (POINTER_KEYBOARD.md 10); the mouse works as before
+        let source = gesture.current_event_device().map(|d| d.source());
+        if !matches!(source, Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen)) {
+            gesture.set_state(gtk::EventSequenceState::Denied);
+            return;
+        }
         let Some(row) = gesture.widget() else { return };
         let mut w = row.pick(x, y, gtk::PickFlags::DEFAULT);
         let mut what = None;
@@ -165,25 +177,67 @@ pub fn keypad_on_touch(row: &adw::SpinRow) {
             (s.what.take(), s.moved)
         };
         let Some(what) = what.filter(|_| !moved) else { return };
-        let Some(row) = gesture.widget().and_downcast::<adw::SpinRow>() else { return };
+        let Some(row) = gesture.widget() else { return };
+        let Some(spin) = spin_button(&row) else { return };
         match what {
             Touched::Up | Touched::Down => {
-                let step = row.adjustment().step_increment();
-                row.set_value(row.value() + if what == Touched::Up { step } else { -step });
+                let step = spin.adjustment().step_increment();
+                spin.set_value(spin.value() + if what == Touched::Up { step } else { -step });
             }
             Touched::Number => {
-                let title = row.title();
-                let value = format!("{:.*}", row.digits() as usize, row.value());
-                let weak = row.downgrade();
+                let title = number_title(&row);
+                let value = format!("{:.*}", spin.digits() as usize, spin.value());
+                let weak = spin.downgrade();
                 crate::keypad::keypad(&row, Some(&title), &[("v", value)], &[("v", &title)], move |text| {
-                    if let (Some(row), Ok(v)) = (weak.upgrade(), text.parse::<f64>()) {
-                        row.set_value(v);
+                    if let (Some(spin), Ok(v)) = (weak.upgrade(), text.parse::<f64>()) {
+                        spin.set_value(v);
                     }
                 });
             }
         }
     });
     row.add_controller(drag);
+}
+
+/// [`keypad_on_touch`] for every spin row, and every spin button outside one, under `root`.
+pub fn keypad_on_touch_all(root: &impl IsA<gtk::Widget>) {
+    let mut stack: Vec<gtk::Widget> = vec![root.clone().upcast()];
+    while let Some(w) = stack.pop() {
+        if w.is::<adw::SpinRow>() || w.is::<gtk::SpinButton>() {
+            keypad_on_touch(&w);
+            continue;
+        }
+        let mut c = w.first_child();
+        while let Some(child) = c {
+            c = child.next_sibling();
+            stack.push(child);
+        }
+    }
+}
+
+/// The spin button that holds a number field's value: the widget itself or the one inside a spin row.
+fn spin_button(w: &gtk::Widget) -> Option<gtk::SpinButton> {
+    let mut stack = vec![w.clone()];
+    while let Some(w) = stack.pop() {
+        if let Ok(spin) = w.clone().downcast::<gtk::SpinButton>() {
+            return Some(spin);
+        }
+        let mut c = w.first_child();
+        while let Some(child) = c {
+            c = child.next_sibling();
+            stack.push(child);
+        }
+    }
+    None
+}
+
+/// The keypad's title: the row's title, else the dialog's.
+fn number_title(w: &gtk::Widget) -> String {
+    let row = w.downcast_ref::<adw::PreferencesRow>().cloned().or_else(|| w.ancestor(adw::PreferencesRow::static_type()).and_downcast());
+    if let Some(row) = row.filter(|r| !r.title().is_empty()) {
+        return row.title().into();
+    }
+    w.ancestor(adw::Dialog::static_type()).and_downcast::<adw::Dialog>().map(|d| d.title().into()).unwrap_or_default()
 }
 
 mod imp {

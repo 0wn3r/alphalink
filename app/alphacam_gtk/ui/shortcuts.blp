@@ -77,7 +77,7 @@ Adw.ShortcutsDialog dialog {
 
     Adw.ShortcutsItem {
       title: _("Redo");
-      accelerator: "<Shift><Control>z";
+      accelerator: "<Shift><Control>z <Control>y";
     }
 
     Adw.ShortcutsItem {
@@ -92,7 +92,27 @@ Adw.ShortcutsDialog dialog {
 
     Adw.ShortcutsItem {
       title: _("Delete Element");
-      accelerator: "Delete";
+      accelerator: "Delete minus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous / Next Element Along the Profile");
+      accelerator: "bracketleft bracketright";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Add or Remove the Element at the Cursor (Picking)");
+      accelerator: "space";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Next / Previous Solution (Construction)");
+      accelerator: "Tab <Shift>Tab";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Finish Picking the Contour");
+      accelerator: "3 Return";
     }
 
     Adw.ShortcutsItem {
@@ -102,11 +122,127 @@ Adw.ShortcutsDialog dialog {
   }
 
   Adw.ShortcutsSection {
+    title: _("Operations (List Focused)");
+
+    Adw.ShortcutsItem {
+      title: _("Move Up");
+      accelerator: "<Alt>Up";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Move Down");
+      accelerator: "<Alt>Down";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Duplicate Operation");
+      accelerator: "<Control>d";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Delete Operation");
+      accelerator: "Delete";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Simulation (Part Page)");
+
+    Adw.ShortcutsItem {
+      title: _("Play / Pause");
+      accelerator: "F5";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous Pass");
+      accelerator: "<Control>bracketleft";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Next Pass");
+      accelerator: "<Control>bracketright";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("First Move");
+      accelerator: "<Alt>Home";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Show All");
+      accelerator: "<Alt>End";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Program Page");
+
+    Adw.ShortcutsItem {
+      title: _("Select the Line's Operation");
+      accelerator: "Return";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Larger Text");
+      accelerator: "<Control>plus <Control>equal";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Smaller Text");
+      accelerator: "<Control>minus";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Normal Text Size");
+      accelerator: "<Control>0";
+    }
+  }
+
+  Adw.ShortcutsSection {
+    title: _("Pages");
+
+    Adw.ShortcutsItem {
+      title: _("Part");
+      accelerator: "<Alt>1";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Program");
+      accelerator: "<Alt>2";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Sheet");
+      accelerator: "<Alt>3";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Tools");
+      accelerator: "<Alt>4";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Machine");
+      accelerator: "<Alt>5";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Previous Page");
+      accelerator: "<Control>Page_Up";
+    }
+
+    Adw.ShortcutsItem {
+      title: _("Next Page");
+      accelerator: "<Control>Page_Down";
+    }
+  }
+
+  Adw.ShortcutsSection {
     title: _("View");
 
     Adw.ShortcutsItem {
       title: _("Zoom In");
-      accelerator: "<Control>plus";
+      accelerator: "<Control>plus <Control>equal";
     }
 
     Adw.ShortcutsItem {
@@ -125,12 +261,17 @@ Adw.ShortcutsDialog dialog {
     }
 
     Adw.ShortcutsItem {
+      title: _("Pan the View");
+      accelerator: "<Control>Left <Control>Right <Control>Up <Control>Down";
+    }
+
+    Adw.ShortcutsItem {
       title: _("Zoom In at the Cursor");
       accelerator: "z";
     }
 
     Adw.ShortcutsItem {
-      title: _("Redraw");
+      title: _("Fit Part (ALPHA-T Redraw)");
       accelerator: "r";
     }
 

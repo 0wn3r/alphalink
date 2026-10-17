@@ -36,7 +36,12 @@ pub struct Settings {
     pub tool_change_s: f64,
     /// Bluetooth adapters with 8-bit framing only: 8N2 on the adapter, parity made by the app
     pub soft_parity: bool,
+    /// the Program page's font size in points (pinch, Ctrl+= / Ctrl+− / Ctrl+0, Ctrl+wheel)
+    pub program_font_pt: f64,
 }
+
+/// The Program page's font size before any change (Ctrl+0 returns to it).
+pub const PROGRAM_FONT_PT: f64 = 11.0;
 
 impl Default for Settings {
     fn default() -> Self {
@@ -57,6 +62,7 @@ impl Default for Settings {
             rapid_rate: 6000.0,
             tool_change_s: 30.0,
             soft_parity: false,
+            program_font_pt: PROGRAM_FONT_PT,
         }
     }
 }

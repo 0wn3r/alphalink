@@ -318,7 +318,8 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
 
                         child: TextView program_view {
                           editable: false;
-                          cursor-visible: false;
+                          // a caret to read by (arrows, PgUp / PgDn); Enter selects its operation (POINTER_KEYBOARD.md 8)
+                          cursor-visible: true;
                           monospace: true;
                           top-margin: 12;
                           bottom-margin: 12;

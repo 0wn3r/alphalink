@@ -13,27 +13,27 @@ is the implementation; the Python app is frozen.
 | § | Item | Status |
 |---|---|---|
 | 3 | Wheel pans 🧪, Shift+wheel sideways, Ctrl+wheel zooms at the pointer 🧪; Ctrl+= / Ctrl+− / Ctrl+0 🧪; double click fits | ✓ |
-| 3 | Middle-button drag pans | ✗ |
-| 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✗ |
-| 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✗ (about the centre today) |
+| 3 | Middle-button drag pans | ✓ |
+| 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✓ |
+| 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✓ |
 | 4 | Hover marker and rubber band; click points; right click menu 🧪; drag handles | ✓ |
 | 4 | Keyboard drawing: ALPHA-T letters, the command entry, arrows + Enter 🧪 | ✓ |
-| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✗ |
-| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✗ |
-| 5 | Shift+F10 / Menu 🧪 and Delete 🧪 on the drawing | ✓ (drawing focused only) |
-| 5 | `[` / `]` select the previous / next element along the profile | ✗ |
-| 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✗ |
-| 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✗ (arrows ✓) |
-| 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider | ✗ |
-| 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✗ |
-| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered | ✗ |
-| 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn | ✗ |
+| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✓ |
+| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✓ |
+| 5 | Shift+F10 / Menu 🧪 on the drawing; Delete 🧪 anywhere on the Part page outside text | ✓ |
+| 5 | `[` / `]` select the previous / next element along the profile | ✓ |
+| 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✓ |
+| 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✓ |
+| 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider | ✓ |
+| 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✓ |
+| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered | ✓ |
+| 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn | ✓ |
 | 9 | Hold to send by Space / Enter 🧪; confirmations default to Cancel, Alt+S sends 🧪 | ✓ |
 | 9 | Escape closes dialogs and the keypad before it cancels or deselects 🧪 | ✓ |
-| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✗ |
-| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✗ (op editor only) |
-| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ (`i` ✗) |
-| 12 | The Shortcuts window matches what the keys do | ✗ (`z`, `r`, Delete differ) |
+| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✓ (not yet tried with a real pen) |
+| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✓ |
+| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ |
+| 12 | The Shortcuts window matches what the keys do | ✓ |
 
 ## 1. Who uses which input
 
@@ -84,23 +84,23 @@ chamfers, corners, measuring, text and the cursor commands. Two things are missi
 
 - **Construction commands** (Tangent, Tangent at Angle, Parallel, Split Arc, Blend `o`, Mirror): Enter takes the
   element or point nearest the cursor, as Corner does; when the command offers several solutions (drawn dashed),
-  **Tab and Shift+Tab move the highlight between them and Enter takes it** (✗). Escape cancels. ALPHA-T's own `o`
+  **Tab and Shift+Tab move the highlight between them and Enter takes it** (✓). Escape cancels. ALPHA-T's own `o`
   then finishes as it did on DOS.
 - Nothing else needs new keys; the shortcut list in §12 must be corrected.
 
 **Touch and pen without letters.** Text (`t`), Erase Text (`u`), Measure (`m`, `n`), Line by Length and Angle (`d`)
-and Move Cursor (`g`, `h`, `y`) get items in the **More** menu (✗), each opening the same dialog the letter does.
+and Move Cursor (`g`, `h`, `y`) get items in the **More** menu, each opening the same dialog the letter does (✓).
 Today a finger reaches them only by typing the letter into the command entry, and a pen not at all.
 
 ## 5. Selecting and editing elements
 
 | Action | Mouse | Keyboard | Pen |
 |---|---|---|---|
-| Select | click (6 px radius) | `l` / `a` nearest line / arc to the cursor; **`[` / `]` previous / next element along the profile** (✗) | tap (10 px) |
+| Select | click (6 px radius) | `l` / `a` nearest line / arc to the cursor; **`[` / `]` previous / next element along the profile** (✓) | tap (10 px) |
 | Context menu | right click | Shift+F10 or Menu at the cursor | long press (§10) or barrel button |
 | Edit exact values | right click → Edit Values…; E | E | menu → Edit Values… with the keypad (§11) |
 | Delete | right click → Delete; trash button | Delete, Backspace or `-` **whenever the Part page has the focus outside a text field** (✗: drawing focus only for Delete) | menu → Delete; trash button |
-| Pick a contour | click elements, Done | **Space adds or removes the element nearest the cursor**, `l`/`a` and `[`/`]` move between them, Enter or `3` finishes (✗) | tap elements |
+| Pick a contour | click elements, Done | **Space adds or removes the element nearest the cursor**, `l`/`a` and `[`/`]` move between them, Enter or `3` finishes (✓) | tap elements |
 
 `[` and `]` follow the order of the profile (the contour order the operations use), so a keyboard user can walk
 the part one element at a time and see each one's description in the read-out.
@@ -153,7 +153,7 @@ F5 stays free in GNOME apps and ALPHA-T, and Space must stay free for buttons an
 
 ## 10. Pen
 
-The pen is precise, so it keeps the pointer layout's density, but it cannot type and has no wheel. Proposed (✗):
+The pen is precise, so it keeps the pointer layout's density, but it cannot type and has no wheel (✓; libei has no tablet devices, so only a real pen can test it):
 
 1. **A pen press does not count in Automatic.** Only the mouse, the touchpad and the touchscreen switch the
    layout, so a user alternating pen and finger does not see the window reflow back and forth.
@@ -168,9 +168,9 @@ The pen is precise, so it keeps the pointer layout's density, but it cannot type
 
 `keypad_on_touch` (the op editor's numbers) becomes the rule for **every** number field a finger or pen can reach:
 Edit Values…, New Part (billet), Preferences, the Tools page, the construction dialogs, the fillet "Other" size and
-the Machine page delay (✗). A still tap opens the keypad with that one field; a swipe scrolls; −/+ step.
+the Machine page delay (✓). A still tap opens the keypad with that one field; a swipe scrolls; −/+ step.
 
-In the keypad, `i` toggles ABS / INC (✗), since Tab is "next field".
+In the keypad, `i` toggles ABS / INC (✓), since Tab is "next field".
 
 ## 12. Shortcuts window corrections
 
