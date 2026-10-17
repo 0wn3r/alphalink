@@ -112,6 +112,7 @@ impl Router {
 
     fn stop_fling(&self) {
         if let Some(id) = self.fling.take() {
+            glib::g_debug!("alphalink-cam", "fling: stopped by a new gesture");
             id.remove();
         }
     }
@@ -219,6 +220,8 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
         // GTK's swipe velocity came out far below the finger's (the e2e flick of 200 px at 3000 px/s carried only
         // 58 px further): the finger's own speed over its last moves wins when higher
         let (ox, oy) = r.velocity();
+        glib::g_debug!("alphalink-cam", "fling: GTK {:.0} px/s, moves {:.0} px/s over {:?}", vx.hypot(vy),
+            ox.hypot(oy), r.samples.borrow());
         let (vx, vy) = if ox.hypot(oy) > vx.hypot(vy) { (ox, oy) } else { (vx, vy) };
         fling(&w, &r, vx, vy)
     }));
@@ -310,7 +313,9 @@ fn fling(w: &LatheCanvas, r: &Rc<Router>, vx: f64, vy: f64) {
         return;
     }
     r.stop_fling();
-    let state = Cell::new((vx, vy, Instant::now()));
+    let start = Instant::now();
+    let travel = Cell::new(0.0);
+    let state = Cell::new((vx, vy, start));
     let weak_r = Rc::downgrade(r);
     let id = glib::timeout_add_local(Duration::from_millis(16), glib::clone!(#[weak] w,
         #[upgrade_or] glib::ControlFlow::Break, move || {
@@ -318,12 +323,14 @@ fn fling(w: &LatheCanvas, r: &Rc<Router>, vx: f64, vy: f64) {
             let now = Instant::now();
             let dt = (now - t).as_secs_f64();
             w.state_mut().view.pan(vx * dt, vy * dt);
+            travel.set(travel.get() + vx.hypot(vy) * dt);
             let decay = FLING_DECAY.powf(dt / 0.016);
             vx *= decay;
             vy *= decay;
             state.set((vx, vy, now));
             w.user_view_change();
             if vx.abs() < FLING_MIN && vy.abs() < FLING_MIN {
+                glib::g_debug!("alphalink-cam", "fling: {:.0} px in {:?}", travel.get(), start.elapsed());
                 if let Some(r) = weak_r.upgrade() {
                     r.fling.take(); // returning Break removes the source
                 }
