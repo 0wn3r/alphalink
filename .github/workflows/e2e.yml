@@ -1,5 +1,5 @@
-# End-to-end UI tests (app/tests/e2e) on GitHub's machines instead of a developer's laptop: the Flatpak built by
-# the Flatpak workflow's job is installed in an Ubuntu container with GNOME Shell, which runs headless with a
+# End-to-end UI tests (app/tests/e2e) on GitHub's machines instead of a developer's laptop, on the Rust app (the
+# Python app is frozen and no longer tested here): the Flatpak built by the first job is installed in an Ubuntu container with GNOME Shell, which runs headless with a
 # virtual monitor; the tests drive the app with libei (virtual touchscreen, pointer and keyboard). Screenshots of
 # every step are kept as a download on the run's page.
 name: End-to-end
@@ -17,8 +17,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - app: python
-            manifest: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
           - app: rust
             manifest: rust/build-aux/io.github._0wn3r.AlphaLinkCAM.json
     runs-on: ubuntu-latest
@@ -42,8 +40,6 @@ jobs:
       matrix:
         # the Rust app is read through its test bus (ALPHALINK_TEST=1), which test_interaction.py needs
         include:
-          - app: python
-            branch: ""
           - app: rust
             branch: master
     # the runner VM itself, not a container: GNOME Shell needs systemd-logind on the system bus
