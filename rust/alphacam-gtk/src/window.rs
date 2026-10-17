@@ -2617,8 +2617,7 @@ fn type_first_field(alert: &adw::AlertDialog) {
     let mut fields: Vec<gtk::Widget> = vec![];
     let mut stack = vec![extra];
     while let Some(w) = stack.pop() {
-        if let Some(spin) = w.downcast_ref::<gtk::SpinButton>() {
-            spin.set_activates_default(true);
+        if w.is::<gtk::SpinButton>() {
             fields.push(w.clone());
             continue;
         }
@@ -2640,6 +2639,47 @@ fn type_first_field(alert: &adw::AlertDialog) {
             children.push(child);
         }
         stack.extend(children.into_iter().rev());
+    }
+    // a spin button's Enter only commits its value: Enter in any number field also gives the alert its default
+    // response (caught before the spin button takes the key)
+    if fields.iter().any(|f| f.is::<gtk::SpinButton>()) {
+        let keys = gtk::EventControllerKey::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+        let weak = alert.downgrade();
+        keys.connect_key_pressed(move |_, key, _, _| {
+            if !matches!(key, gdk::Key::Return | gdk::Key::KP_Enter | gdk::Key::ISO_Enter) {
+                return glib::Propagation::Proceed;
+            }
+            let Some(alert) = weak.upgrade() else { return glib::Propagation::Proceed };
+            let focus = alert.root().and_then(|r| r.focus());
+            let Some(spin) = focus.and_then(|f| {
+                f.downcast_ref::<gtk::SpinButton>().cloned().or_else(|| f.ancestor(gtk::SpinButton::static_type()).and_downcast())
+            }) else {
+                return glib::Propagation::Proceed;
+            };
+            spin.update();
+            let Some(response) = alert.default_response().filter(|r| alert.is_response_enabled(r)) else {
+                return glib::Propagation::Proceed;
+            };
+            // its own button, so the alert closes as after a click (a closing alert otherwise also answers its
+            // close response)
+            let label = alert.response_label(&response);
+            let mut stack: Vec<gtk::Widget> = vec![alert.clone().upcast()];
+            while let Some(w) = stack.pop() {
+                if let Some(b) = w.downcast_ref::<gtk::Button>()
+                    && b.label().is_some_and(|l| l == label)
+                {
+                    b.emit_clicked();
+                    return glib::Propagation::Stop;
+                }
+                let mut c = w.first_child();
+                while let Some(child) = c {
+                    c = child.next_sibling();
+                    stack.push(child);
+                }
+            }
+            glib::Propagation::Proceed
+        });
+        alert.add_controller(keys);
     }
     let Some(first) = fields.into_iter().find(|f| f.is_visible() && f.is_sensitive()) else { return };
     // after the alert has put the focus on its default button
