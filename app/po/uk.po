@@ -1843,8 +1843,80 @@ msgstr "Редагувати елемент"
 msgid "Delete Element"
 msgstr "Видалити елемент"
 
+msgid "Previous / Next Element Along the Profile"
+msgstr "Попередній / наступний елемент уздовж профілю"
+
+msgid "Add or Remove the Element at the Cursor (Picking)"
+msgstr "Додати або прибрати елемент біля курсора (вибір)"
+
+msgid "Next / Previous Solution (Construction)"
+msgstr "Наступний / попередній розв’язок (побудова)"
+
+msgid "Finish Picking the Contour"
+msgstr "Завершити вибір контуру"
+
 msgid "Deselect or Cancel"
 msgstr "Зняти вибір або скасувати"
+
+msgid "Operations (List Focused)"
+msgstr "Операції (фокус у списку)"
+
+msgid "Duplicate Operation"
+msgstr "Дублювати операцію"
+
+msgid "Simulation (Part Page)"
+msgstr "Симуляція (сторінка «Деталь»)"
+
+msgid "Play / Pause"
+msgstr "Відтворити / пауза"
+
+msgid "Previous Pass"
+msgstr "Попередній прохід"
+
+msgid "Next Pass"
+msgstr "Наступний прохід"
+
+msgid "First Move"
+msgstr "Перше переміщення"
+
+msgid "Show All"
+msgstr "Показати все"
+
+msgid "Program Page"
+msgstr "Сторінка «Програма»"
+
+msgid "Select the Line's Operation"
+msgstr "Вибрати операцію рядка"
+
+msgid "Larger Text"
+msgstr "Більший текст"
+
+msgid "Smaller Text"
+msgstr "Менший текст"
+
+msgid "Normal Text Size"
+msgstr "Звичайний розмір тексту"
+
+msgid "Pages"
+msgstr "Сторінки"
+
+msgid "Part"
+msgstr "Деталь"
+
+msgid "Sheet"
+msgstr "Наладка"
+
+msgid "Tools"
+msgstr "Інструменти"
+
+msgid "Machine"
+msgstr "Верстат"
+
+msgid "Previous Page"
+msgstr "Попередня сторінка"
+
+msgid "Next Page"
+msgstr "Наступна сторінка"
 
 msgid "View"
 msgstr "Вигляд"
@@ -1858,11 +1930,14 @@ msgstr "Зменшити"
 msgid "Search the Program"
 msgstr "Пошук у програмі"
 
+msgid "Pan the View"
+msgstr "Зсунути вигляд"
+
 msgid "Zoom In at the Cursor"
 msgstr "Збільшити біля курсора"
 
-msgid "Redraw"
-msgstr "Перемалювати"
+msgid "Fit Part (ALPHA-T Redraw)"
+msgstr "Вписати деталь (перемалювання ALPHA-T)"
 
 msgid "Recall View"
 msgstr "Повернути вигляд"
@@ -1948,21 +2023,6 @@ msgstr "Стерти текст"
 msgid "Erase the Whole Drawing"
 msgstr "Стерти все креслення"
 
-msgid "First Move"
-msgstr "Перше переміщення"
-
-msgid "Previous Pass"
-msgstr "Попередній прохід"
-
-msgid "Play / Pause"
-msgstr "Відтворити / пауза"
-
-msgid "Next Pass"
-msgstr "Наступний прохід"
-
-msgid "Show All"
-msgstr "Показати все"
-
 msgid "Start of the Selected Operation"
 msgstr "Початок вибраної операції"
 
@@ -2022,9 +2082,6 @@ msgstr "Операції"
 
 msgid "Add Operation (C)"
 msgstr "Додати операцію (C)"
-
-msgid "Part"
-msgstr "Деталь"
 
 msgid "Open (Ctrl+O)"
 msgstr "Відкрити (Ctrl+O)"
@@ -2151,15 +2208,6 @@ msgid_plural "{n} passes"
 msgstr[0] "{n} прохід"
 msgstr[1] "{n} проходи"
 msgstr[2] "{n} проходів"
-
-msgid "Sheet"
-msgstr "Наладка"
-
-msgid "Tools"
-msgstr "Інструменти"
-
-msgid "Machine"
-msgstr "Верстат"
 
 msgid "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr "Сенсор заблоковано. Утримуйте кнопку замка або клацніть її мишею, щоб розблокувати."

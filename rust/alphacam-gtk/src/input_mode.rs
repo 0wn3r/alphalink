@@ -43,6 +43,8 @@ pub struct InputMode {
     mode: Cell<Mode>,
     last: Cell<Option<Mode>>,
     locked: Cell<bool>,
+    /// the last press was the pen's (POINTER_KEYBOARD.md 10): its helpers show until a mouse or touchpad press
+    pen: Cell<bool>,
     pub lock_exempt: RefCell<Vec<gtk::Widget>>,
     on_changed: RefCell<Vec<Listener<Mode>>>,
     on_lock_changed: RefCell<Vec<Listener<bool>>>,
@@ -59,6 +61,7 @@ impl InputMode {
             }),
             last: Cell::new(None),
             locked: Cell::new(false),
+            pen: Cell::new(false),
             lock_exempt: RefCell::default(),
             on_changed: RefCell::default(),
             on_lock_changed: RefCell::default(),
@@ -84,6 +87,11 @@ impl InputMode {
 
     pub fn mode(&self) -> Mode {
         self.mode.get()
+    }
+
+    /// The pen's helpers (zoom buttons, keypad) are shown.
+    pub fn pen(&self) -> bool {
+        self.pen.get()
     }
 
     pub fn locked(&self) -> bool {
@@ -129,7 +137,19 @@ impl InputMode {
     }
 
     fn pressed(&self, gesture: &gtk::GestureClick) {
-        let touch = gesture.current_event_device().is_some_and(|d| d.source() == gdk::InputSource::Touchscreen);
+        let source = gesture.current_event_device().map(|d| d.source());
+        // the pen keeps the layout as it is (a user alternating pen and finger sees no reflow) and shows its helpers;
+        // a mouse or touchpad press hides them again
+        let pen = matches!(source, Some(gdk::InputSource::Pen));
+        let touch = source == Some(gdk::InputSource::Touchscreen);
+        if pen || !touch {
+            if self.pen.replace(pen) != pen {
+                self.apply();
+            }
+            if pen {
+                return;
+            }
+        }
         let kind = if touch { Mode::Touch } else { Mode::Pointer };
         if self.preference.get() == Preference::Auto && self.last.get() == Some(kind) && kind != self.mode.get() {
             self.mode.set(kind);

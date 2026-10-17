@@ -22,10 +22,16 @@ use super::widget::LatheCanvas;
 const FLING_DECAY: f64 = 0.92;
 /// px/s
 const FLING_MIN: f64 = 40.0;
+/// a pen that moves further than this before the long press time is drawing or dragging, not holding
+const PEN_SLOP_PX: f64 = 8.0;
+
+/// the pen's pending long press: its timer and where the pen went down
+type PenHold = RefCell<Option<(glib::SourceId, (f64, f64))>>;
 
 pub fn source(controller: &impl IsA<gtk::EventController>) -> Source {
     match controller.current_event_device().map(|d| d.source()) {
         Some(gdk::InputSource::Touchscreen) => Source::Touch,
+        // GTK 4 gives the eraser end this source too (its tool says Eraser): a pointer like the tip, erasing nothing
         Some(gdk::InputSource::Pen) => Source::Pen,
         _ => Source::Mouse,
     }
@@ -101,6 +107,20 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     w.add_controller(drag.clone());
     r.drag.replace(Some(drag.clone()));
 
+    // the middle button drags the view, also over an element or a handle (POINTER_KEYBOARD.md 3)
+    let middle = gtk::GestureDrag::builder().button(2).build();
+    let last = Rc::new(std::cell::Cell::new((0.0, 0.0)));
+    middle.connect_drag_begin(glib::clone!(#[strong] r, #[strong] last, move |_, _, _| {
+        r.stop_fling();
+        last.set((0.0, 0.0));
+    }));
+    middle.connect_drag_update(glib::clone!(#[weak] w, #[strong] last, move |_, dx, dy| {
+        let (lx, ly) = last.replace((dx, dy));
+        w.state_mut().view.pan(dx - lx, dy - ly);
+        w.user_view_change();
+    }));
+    w.add_controller(middle);
+
     let zoom = gtk::GestureZoom::new();
     zoom.connect_begin(glib::clone!(#[weak] w, #[strong] r, #[weak] drag, move |g, _| {
         if r.editing.get() {
@@ -144,6 +164,35 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
         w.long_press(x, y);
     }));
     w.add_controller(hold);
+
+    // long press with the pen: the same menu, so a pen without a barrel button reaches it (POINTER_KEYBOARD.md 10).
+    // A stylus-only gesture, as a long press that also listens to the mouse upsets the mouse's own gestures.
+    let pen = gtk::GestureStylus::new();
+    let timer: Rc<PenHold> = Rc::default();
+    let stop = |t: &PenHold| {
+        if let Some((id, _)) = t.take() {
+            id.remove();
+        }
+    };
+    pen.connect_down(glib::clone!(#[weak] w, #[strong] r, #[strong] timer, move |_, x, y| {
+        stop(&timer);
+        let delay = w.settings().gtk_long_press_time().max(1) as u64;
+        let id = glib::timeout_add_local_once(Duration::from_millis(delay), glib::clone!(#[weak] w, #[strong] r,
+            #[strong] timer, move || {
+                timer.take();
+                r.long.set(true);
+                w.long_press(x, y);
+            }));
+        *timer.borrow_mut() = Some((id, (x, y)));
+    }));
+    pen.connect_motion(glib::clone!(#[strong] timer, move |_, x, y| {
+        let start = timer.borrow().as_ref().map(|(_, p)| *p);
+        if start.is_some_and(|(x0, y0)| (x - x0).hypot(y - y0) > PEN_SLOP_PX) {
+            stop(&timer);
+        }
+    }));
+    pen.connect_up(move |_, _, _| stop(&timer));
+    w.add_controller(pen);
 
     // right click: the same context menu as a long press (HIG: Menu key and Shift+F10 too, drawing tools)
     let menu = gtk::GestureClick::builder().button(3).build();
