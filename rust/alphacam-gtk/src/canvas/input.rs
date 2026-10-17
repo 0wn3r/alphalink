@@ -22,10 +22,10 @@ use super::widget::LatheCanvas;
 const FLING_DECAY: f64 = 0.92;
 /// px/s
 const FLING_MIN: f64 = 40.0;
-/// the finger's speed at the lift is measured over its last few moves, at most this many ms...
-const VELOCITY_SPAN_MS: u32 = 50;
-/// ...and this many moves
-const VELOCITY_MOVES: usize = 3;
+/// the finger's speed at the lift is measured over its last this many ms at least
+const VELOCITY_SPAN_MS: u32 = 16;
+/// the drag keeps its press and this many last moves
+const VELOCITY_MOVES: usize = 16;
 /// a pen that moves further than this before the long press time is drawing or dragging, not holding
 const PEN_SLOP_PX: f64 = 8.0;
 
@@ -73,7 +73,7 @@ impl Router {
     fn sample(&self, time: u32, dx: f64, dy: f64) {
         let mut s = self.samples.borrow_mut();
         s.push_back((time, dx, dy));
-        if s.len() > VELOCITY_MOVES + 2 {
+        if s.len() > VELOCITY_MOVES + 1 {
             s.remove(1); // the press stays first
         }
     }
@@ -334,15 +334,14 @@ fn fling(w: &LatheCanvas, r: &Rc<Router>, vx: f64, vy: f64) {
     r.fling.replace(Some(id));
 }
 
-/// px/s from the last [`VELOCITY_MOVES`] moves within [`VELOCITY_SPAN_MS`] of the last one, `samples` being
-/// (event time ms, dx, dy) with the press first: the press counts only when a single move follows it, as a finger
-/// that rested before the flick would average the speed down.
+/// px/s over the shortest stretch of at least [`VELOCITY_SPAN_MS`] that ends at the last move, `samples` being
+/// (event time ms, dx, dy) with the press first: a finger that rested before the flick does not average the speed
+/// down, and moves that arrive in a burst with (nearly) equal times reach back to an earlier one. The whole drag when
+/// it is shorter than that.
 fn velocity(samples: &[(u32, f64, f64)]) -> (f64, f64) {
-    let moves = if samples.len() > 2 { &samples[1..] } else { samples };
-    let Some(&(t1, x1, y1)) = moves.last() else { return (0.0, 0.0) };
-    let (t0, x0, y0) = moves.iter().rev().take(VELOCITY_MOVES + 1)
-        .take_while(|(t, _, _)| t1.wrapping_sub(*t) <= VELOCITY_SPAN_MS)
-        .last().copied().unwrap_or((t1, x1, y1));
+    let Some(&(t1, x1, y1)) = samples.last() else { return (0.0, 0.0) };
+    let Some(&(t0, x0, y0)) = samples.iter().rev().find(|(t, _, _)| t1.wrapping_sub(*t) >= VELOCITY_SPAN_MS)
+        .or(samples.first()) else { return (0.0, 0.0) };
     let dt = t1.wrapping_sub(t0) as f64 / 1000.0;
     if dt <= 0.0 {
         return (0.0, 0.0);
@@ -360,7 +359,12 @@ mod tests {
         assert!((vx - 3125.0).abs() < 1.0 && vy == 0.0, "{vx}");
         // the press and a single move
         assert_eq!(super::velocity(&[(0, 0.0, 0.0), (20, 0.0, 40.0)]), (0.0, 2000.0));
-        // no time apart
+        // moves that arrive in a burst: back to the move before it
+        let s = [(0, 0.0, 0.0), (16, 50.0, 0.0), (32, 100.0, 0.0), (63, 150.0, 0.0), (64, 200.0, 0.0)];
+        assert_eq!(super::velocity(&s), (3125.0, 0.0));
+        let s = [(0, 0.0, 0.0), (64, 50.0, 0.0), (64, 100.0, 0.0), (64, 200.0, 0.0)];
+        assert_eq!(super::velocity(&s), (3125.0, 0.0));
+        // no time apart at all
         assert_eq!(super::velocity(&[(5, 0.0, 0.0), (5, 9.0, 0.0), (5, 18.0, 0.0)]), (0.0, 0.0));
         assert_eq!(super::velocity(&[]), (0.0, 0.0));
     }
