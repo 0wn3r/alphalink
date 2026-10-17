@@ -91,10 +91,22 @@ class Surface(unittest.TestCase):
         pts = []
         for fx, fy in ((0.2, 0.2), (0.8, 0.8)):
             sx, sy = x + w * fx, y + h * fy
-            for d in (6, 3, 0):
-                self.s.move(sx + d, sy + d)
-                time.sleep(0.1)
-            name = self.app.readout().split()
+            name = []
+            for _attempt in range(3):  # a busy machine (CI, 200 %) can be slow to show the read-out
+                for d in (6, 3, 0):
+                    self.s.move(sx + d, sy + d)
+                    time.sleep(0.1)
+                end = time.time() + 2
+                while time.time() < end:
+                    name = self.app.readout().split()
+                    if len(name) >= 4:
+                        break
+                    time.sleep(0.1)
+                if len(name) >= 4:
+                    break
+            if len(name) < 4:
+                self.snap("no-readout")
+                self.fail(f"no pointer read-out at {sx:.0f},{sy:.0f}: {self.app.readout()!r}")
             pts.append((sx, sy, float(name[1]), float(name[3])))
         (sx0, sy0, x0, z0), (sx1, sy1, x1, z1) = pts
         kz, kx = (z1 - z0) / (sx1 - sx0), (x1 - x0) / (sy1 - sy0)

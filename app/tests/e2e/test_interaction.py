@@ -16,7 +16,7 @@ from alphacam.model import Arc, Line, Point
 from alphacam.model.project import Billet, Project
 from alphacam.post.alphat_prg import post
 
-from .test_workflows import LANDSCAPE, Surface, VirtualPort, shaft, with_op
+from .test_workflows import HALF, LANDSCAPE, PORTRAIT, Surface, VirtualPort, shaft, with_op
 
 ENABLED = os.environ.get("ALPHALINK_E2E") == "1" and bool(os.environ.get("ALPHALINK_E2E_BRANCH"))
 MIN_TARGET_PX = 44  # the smallest finger target (GNOME HIG: "at least 44 px" on touch)
@@ -163,6 +163,46 @@ class TouchTargets(Bus):
         self.assertEqual({k: v for k, v in found.items() if v}, {})
 
 
+class TouchTargetsByPageKeys(TouchTargets):
+    """The same check in other shapes and languages: the pages by Alt+1 … Alt+5 (names differ in Ukrainian), and
+    no control cut off at the screen's edge."""
+
+    needs_state = True
+
+    def cut_off(self) -> list[str]:
+        sw, sh = self.s.width, self.s.height
+        return [f"{w.name} {w.text or w.id!r} at {w.x:.0f},{w.y:.0f} {w.w:.0f}×{w.h:.0f}" for w in self.app.widgets()
+                if w.css in ("button", "toggle", "menubutton") and w.sensitive and w.w > 0
+                and w.x < sw and w.y < sh and w.x + w.w > 0 and w.y + w.h > 0  # on screen at all
+                and (w.x < -1 or w.x + w.w > sw + 1) and w.y + w.h <= sh]  # but sticking out sideways
+
+    def test_controls_are_finger_sized(self):
+        self.launch(str(self.part(two_ops())), "--touch")
+        small, cut = {}, {}
+        for n, page in enumerate(("part", "program", "sheet", "tools", "machine"), 1):
+            self.s.key(f"alt+{n}")
+            time.sleep(0.6)
+            self.snap(page)
+            small[page], cut[page] = self.small_targets(), self.cut_off()
+        self.assertEqual({k: v for k, v in small.items() if v}, {}, "too small for a finger")
+        self.assertEqual({k: v for k, v in cut.items() if v}, {}, "cut off at the edge")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsPortrait(TouchTargetsByPageKeys):
+    size = PORTRAIT
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsHalf(TouchTargetsByPageKeys):
+    size = HALF
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsUkrainian(TouchTargetsByPageKeys):
+    lang = "uk"
+
+
 @unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
 class MenusByTouch(Bus):
     """Popover menus driven by finger: Eduard 2026-10-16, a tapped + menu item closed the menu and added nothing."""
@@ -226,7 +266,7 @@ class CanvasNavigation(Bus):
         moved_px = abs(after[0][1] - before[0][1]) / self.mm_per_px
         self.snap("flung")
         # the finger itself moves the view 200 px; the fling adds to it
-        self.assertGreater(moved_px, 230, f"the view moved {moved_px:.0f} px for a 200 px flick")
+        self.assertGreater(moved_px, 500, f"the view moved {moved_px:.0f} px for a 200 px flick")
 
     def test_zoom_buttons(self):
         self.launch(str(self.part(shaft())), "--touch")
@@ -1038,3 +1078,196 @@ class NumbersEverywhere(Bus):
         self.s.tap(*self.app.center(acc=rows[0]))
         self.app.find("✓", "button")
         self.snap("keypad")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class ShortcutsWindow(Bus):
+    """§12: every key the Shortcuts window lists does what it says (read on the bus). One session, Escape between."""
+
+    needs_state = True
+
+    def st(self):
+        return self.app.state()
+
+    def esc(self, n: int = 2) -> None:
+        for _ in range(n):
+            self.s.key("Escape")
+            time.sleep(0.25)
+
+    def drawing_focus(self) -> None:
+        self.s.key("alt+1")
+        x, y = self.empty_spot()
+        self.s.click(x, y)  # the drawing takes the keys (Select tool: a click on nothing selects nothing)
+        time.sleep(0.3)
+
+    def opens(self, key: str, what: str) -> None:
+        """`key` opens something with a ✕ or more widgets than before; Escape closes it again."""
+        n = len(self.app.widgets())
+        self.s.key(key)
+        time.sleep(0.8)
+        self.assertGreater(len(self.app.widgets()), n, f"{key} should open {what}")
+        self.esc()
+        time.sleep(0.3)
+
+    def test_general_files_and_view_keys(self):
+        path = self.part(two_ops())
+        self.launch(str(path))
+        self.opens("ctrl+comma", "Preferences")
+        self.opens("ctrl+question", "Keyboard Shortcuts")
+        self.opens("ctrl+n", "New Part")
+        self.opens("F10", "the main menu")
+        self.drawing_focus()
+        fit = self.st()["view"]["scale"]
+        self.s.key("ctrl+plus")
+        time.sleep(0.3)
+        self.assertGreater(self.st()["view"]["scale"], fit, "Ctrl++ zooms in")
+        self.s.key("ctrl+minus")
+        self.s.key("ctrl+minus")
+        time.sleep(0.3)
+        self.assertLess(self.st()["view"]["scale"], fit, "Ctrl+− zooms out")
+        self.s.key("ctrl+0")
+        time.sleep(0.3)
+        self.assertAlmostEqual(self.st()["view"]["scale"], fit, delta=fit * 0.01, msg="Ctrl+0 fits")
+        self.s.type("z")
+        time.sleep(0.3)
+        self.assertGreater(self.st()["view"]["scale"], fit, "z zooms in")
+        self.s.type("r")
+        time.sleep(0.3)
+        self.assertAlmostEqual(self.st()["view"]["scale"], fit, delta=fit * 0.01, msg="r fits (ALPHA-T Redraw)")
+        self.s.key("ctrl+f")
+        time.sleep(0.4)
+        self.assertEqual(self.st()["page"], "program", "Ctrl+F searches the program")
+        self.esc()
+
+    def test_cursor_keys(self):
+        self.launch(str(self.part(shaft())))
+        self.drawing_focus()
+        self.s.key("End")  # X0 Z0
+        time.sleep(0.2)
+        self.assertEqual(self.st()["drawing"]["cursor"], [0.0, 0.0], "End: the cursor to X0 Z0")
+        self.s.key("Right")
+        time.sleep(0.2)
+        step = self.st()["drawing"]["cursor"][1]
+        self.assertGreater(step, 0, "→ moves the cursor along +Z by the step")
+        self.s.key("Page_Up")  # step ×10
+        self.s.key("Right")
+        time.sleep(0.2)
+        self.assertAlmostEqual(self.st()["drawing"]["cursor"][1] - step, step * 10, delta=step * 0.01)
+        self.s.key("Page_Down")
+        self.s.key("Page_Down")  # step ÷100 from there: ÷10 of the first
+        self.s.key("Left")
+        time.sleep(0.2)
+        self.assertAlmostEqual(self.st()["drawing"]["cursor"][1], step * 11 - step / 10, delta=step * 0.01)
+        self.s.key("Home")  # the middle of the view
+        time.sleep(0.2)
+        self.assertNotEqual(self.st()["drawing"]["cursor"], [0.0, 0.0])
+
+    def test_drawing_letter_keys(self):
+        path = self.part(shaft())
+        self.launch(str(path))
+        self.drawing_focus()
+        self.s.type("g40,-12\n")
+        self.assertEqual(self.st()["drawing"]["cursor"], [40.0, -12.0], "g moves the cursor to X,Z")
+        self.s.type("h0,-3\n")
+        self.assertEqual(self.st()["drawing"]["cursor"], [40.0, -15.0], "h moves it by dX,dZ")
+        self.s.type("l")
+        time.sleep(0.2)
+        self.assertEqual(self.st()["drawing"]["selected_element"], "g1", "l finds the nearest line")
+        self.s.type("e")
+        time.sleep(0.5)
+        self.assertTrue(self.app.exists("Apply", "button"), "e edits the element")
+        self.esc(1)
+        self.s.key("Delete")
+        time.sleep(0.3)
+        self.assertEqual(self.st()["elements"], 4, "Delete deletes it")
+        self.s.key("ctrl+z")
+        time.sleep(0.3)
+        self.assertEqual(self.st()["elements"], 5, "Ctrl+Z undoes")
+        self.s.key("shift+ctrl+z")
+        time.sleep(0.3)
+        self.assertEqual(self.st()["elements"], 4, "Shift+Ctrl+Z redoes")
+        self.s.key("ctrl+z")
+        self.esc()
+        self.s.type("p")
+        time.sleep(0.2)
+        self.assertIn(self.st()["drawing"]["cursor"], ([40.0, -25.0], [40.0, 0.0]), "p: the nearest point")
+        for key, tool in (("w", "arc"), ("k", "corner"), ("b", "chamfer"), ("+", "line")):
+            self.s.type(key)
+            time.sleep(0.3)
+            self.assertEqual(self.st()["tool"], tool, f"{key} picks the {tool} tool")
+            self.esc()
+        for key, what in (("f", "the radius at the nearest corner"),):
+            self.drawing_focus()
+            self.s.type("g40,-25\n")  # at the corner between g1 and g2
+            n = len(self.app.widgets())
+            self.s.type(key)
+            time.sleep(0.5)
+            self.assertGreater(len(self.app.widgets()), n, f"{key} should ask for {what}")
+            self.esc()
+        self.s.type("o")
+        time.sleep(0.3)
+        self.assertTrue(self.st()["drawing"]["constructing"], "o starts a blend arc")
+        self.esc()
+        self.opens("shift+F10", "the drawing's menu")
+        for key, what in (("t", "Add Text"), ("m", "Measure by X,Z"), ("d", "Line by Length and Angle"),
+                          ("q", "Erase the Whole Drawing")):
+            self.drawing_focus()
+            n, said = len(self.app.widgets()), self.st()["readout"]
+            self.s.type(key)
+            time.sleep(0.6)
+            asked = len(self.app.widgets()) > n or self.st()["readout"] != said  # a dialog, or a prompt
+            self.assertTrue(asked, f"{key} should ask for {what}")
+            self.esc()
+        self.assertEqual(self.st()["elements"], 5, "nothing above changed the drawing for good")
+        self.drawing_focus()
+        self.s.type("c")
+        time.sleep(0.4)
+        self.assertTrue(self.app.menu_items(timeout=2), "c opens Add Operation")
+        self.esc()
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class PenByTestSeam(Bus):
+    """§10 through the bus's ForceSource("pen"): libei clicks counted as pen presses. The app's own pen rules, not
+    GTK's stylus events (the Surface checklist in POINTER_KEYBOARD.md §13 covers those)."""
+
+    needs_state = True
+
+    def pen(self, *args: str):
+        self.launch(*args)
+        from gi.repository import GLib
+
+        try:
+            self.app.force_source("pen")
+        except GLib.Error:
+            self.skipTest("this build has no ForceSource on its test bus")
+
+    def test_pen_does_not_flip_the_layout_and_gets_its_helpers(self):
+        self.pen(str(self.part(shaft())))
+        for _ in range(2):
+            self.s.click(*self.app.center("Operations", "label"))
+        time.sleep(0.5)
+        big = self.app.rect(self.app.find("Undo (Ctrl+Z)", "button"))
+        self.assertLess(big[3], 48, "a pen should not switch to the touch layout")
+        self.assertTrue(self.app.exists("Zoom Out", "button"), "the pen gets the zoom buttons")
+        self.assertTrue(self.app.exists("Keypad", "button"), "the pen gets the Keypad button")
+
+    def test_pen_long_press_opens_the_menu(self):
+        p = shaft()
+        self.pen(str(self.part(p)))
+        to_screen = self.calibrate()
+        self.s.hold(*to_screen(40, -12), 1.2)  # a pen held on g1
+        items = [i.text for i in self.app.menu_items()]
+        self.snap("menu")
+        self.assertIn("Edit Values…", items)
+
+    def test_pen_tap_on_an_editor_number_opens_the_keypad(self):
+        self.pen(str(self.part(with_op())))
+        self.s.click(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.5)
+        sb = self.app.all("Feed", "spinbutton")[0]
+        texts = [t for t in self.app.widgets() if t.css == "text" and t.w > 0
+                 and sb.x <= t.x + t.w / 2 <= sb.x + sb.w and sb.y <= t.y + t.h / 2 <= sb.y + sb.h]
+        self.s.click(*self.app.center(acc=texts[0]))
+        self.app.find("✓", "button")
+        self.assertTrue(self.app.exists("⌫", "button"))
