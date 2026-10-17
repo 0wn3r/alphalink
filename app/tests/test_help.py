@@ -29,12 +29,16 @@ class Help(unittest.TestCase):
                     self.assertNotIn("**", markup)
 
     def test_shortcuts_documented_exist(self):
-        """Every Ctrl shortcut the help names is bound in the window."""
+        """Every Ctrl shortcut the help names is bound in the window: as an accelerator, or (the Rust app, which
+        shares this help) in a key handler with Ctrl held."""
         src = (HELP_DIR.parent / "window.py").read_text() + (HELP_DIR.parent / "application.py").read_text()
+        rust = HELP_DIR.parents[2] / "rust/alphacam-gtk/src"
+        if rust.is_dir():
+            src += "".join(f.read_text() for f in rust.rglob("*.rs"))
         text = (HELP_DIR / "help.en.md").read_text("utf-8")
         for key in set(re.findall(r"Ctrl\+([A-Z0-9,])\b", text)):
             name = {",": "comma"}.get(key, key.lower())
-            self.assertRegex(src, rf"<Control>(<Shift>)?{re.escape(name)}\"", key)
+            self.assertRegex(src, rf"<Control>(<Shift>)?{re.escape(name)}\"|gdk::Key::{re.escape(name)}\b[^\n]*\bctrl\b", key)
         self.assertIn('"F1"', src)
 
 
