@@ -16,7 +16,7 @@ from alphacam.model import Arc, Line, Point
 from alphacam.model.project import Billet, Project
 from alphacam.post.alphat_prg import post
 
-from .test_workflows import LANDSCAPE, Surface, VirtualPort, shaft, with_op
+from .test_workflows import HALF, LANDSCAPE, PORTRAIT, Surface, VirtualPort, shaft, with_op
 
 ENABLED = os.environ.get("ALPHALINK_E2E") == "1" and bool(os.environ.get("ALPHALINK_E2E_BRANCH"))
 MIN_TARGET_PX = 44  # the smallest finger target (GNOME HIG: "at least 44 px" on touch)
@@ -161,6 +161,46 @@ class TouchTargets(Bus):
             self.snap(page)
             found[page] = self.small_targets()
         self.assertEqual({k: v for k, v in found.items() if v}, {})
+
+
+class TouchTargetsByPageKeys(TouchTargets):
+    """The same check in other shapes and languages: the pages by Alt+1 … Alt+5 (names differ in Ukrainian), and
+    no control cut off at the screen's edge."""
+
+    needs_state = True
+
+    def cut_off(self) -> list[str]:
+        sw, sh = self.s.width, self.s.height
+        return [f"{w.name} {w.text or w.id!r} at {w.x:.0f},{w.y:.0f} {w.w:.0f}×{w.h:.0f}" for w in self.app.widgets()
+                if w.css in ("button", "toggle", "menubutton") and w.sensitive and w.w > 0
+                and w.x < sw and w.y < sh and w.x + w.w > 0 and w.y + w.h > 0  # on screen at all
+                and (w.x < -1 or w.x + w.w > sw + 1) and w.y + w.h <= sh]  # but sticking out sideways
+
+    def test_controls_are_finger_sized(self):
+        self.launch(str(self.part(two_ops())), "--touch")
+        small, cut = {}, {}
+        for n, page in enumerate(("part", "program", "sheet", "tools", "machine"), 1):
+            self.s.key(f"alt+{n}")
+            time.sleep(0.6)
+            self.snap(page)
+            small[page], cut[page] = self.small_targets(), self.cut_off()
+        self.assertEqual({k: v for k, v in small.items() if v}, {}, "too small for a finger")
+        self.assertEqual({k: v for k, v in cut.items() if v}, {}, "cut off at the edge")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsPortrait(TouchTargetsByPageKeys):
+    size = PORTRAIT
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsHalf(TouchTargetsByPageKeys):
+    size = HALF
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class TouchTargetsUkrainian(TouchTargetsByPageKeys):
+    lang = "uk"
 
 
 @unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
