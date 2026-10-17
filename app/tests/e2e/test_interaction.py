@@ -1399,3 +1399,217 @@ class DrawingByTouch200(DrawingByTouch):
         self.s = GnomeSession(*LANDSCAPE, scale=2.0).__enter__()
         self.out = OUT / f"{self.__class__.__name__}-{self._testMethodName}"
         self.n = 0
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class LatheTrouble(VirtualPort, Bus):
+    """A lathe or cable that misbehaves: the app must say what happened and never let a half program pass for a
+    sent one."""
+
+    def start_send(self) -> bytes:
+        p = shaft()
+        from alphacam_gtk.op_factory import default_op
+
+        p.operations += [default_op("area_clear", p, 0), default_op("finish", p, 1)]
+        port = os.path.realpath(f"{self.pty}-app")
+        self.app = self.s.launch_app("en", args=(str(self.part(p)),), env={"ALPHALINK_TEST_PORTS": port})
+        time.sleep(1.0)
+        self.s.key("alt+5")
+        time.sleep(0.6)
+        self.s.hold(*self.app.center(acc=self.app.labelled("Send to the Lathe", "button")), 2.5)
+        self.press("Send", "button")
+        time.sleep(0.5)
+        return post(p)
+
+    def state(self) -> str:
+        """The transfer dialog's message."""
+        for w in self.app.widgets():
+            if w.id == "state" and w.css == "label" and w.w > 0:
+                return w.text
+        return ""
+
+    def finished(self) -> bool:
+        return self.app.exists("Close", "button") and bool(self.state())
+
+    def test_cable_pulled_mid_send(self):
+        expected = self.start_send()
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(10, until=600)
+        self.socat.kill()  # the cable comes out
+        self.socat.wait(5)
+        self.wait_for(self.finished, 20, "the send to give up")
+        self.snap("pulled")
+        said = self.state()
+        self.assertFalse(said.startswith("Sent "), f"a cut transfer reported as sent: {said!r}")
+        self.assertLess(len(self.lathe.got), len(expected))
+        lock = self.app.find("Touch Lock", "toggle button", contains=True)
+        self.assertFalse(self.app.checked(lock), "the touch lock should come off when the send ends")
+
+    def test_pause_storm(self):
+        """Twenty pauses (DC3) and resumes (DC1) in a row: never more than 10 characters after a pause, and the
+        program arrives whole."""
+        expected = self.start_send()
+        self.lathe.send(b"\x11")
+        for _ in range(20):
+            self.lathe.read_for(5, until=len(self.lathe.got) + 100)
+            self.lathe.send(b"\x13")
+            self.assertLessEqual(self.lathe.read_for(0.3), 10, "more than 10 characters after DC3")
+            self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)
+        self.wait_for(lambda: self.state().startswith("Sent "), 10, "the send to finish")
+
+    def test_garbage_from_the_lathe(self):
+        """Noise on the line (bytes that are not DC1 / DC3) is ignored."""
+        expected = self.start_send()
+        self.lathe.send(b"\x11")
+        for junk in (b"\x00", b"\xff\xfe", b"ABC\r\n", b"%", b"\x12\x14"):
+            self.lathe.read_for(5, until=len(self.lathe.got) + 200)
+            self.lathe.send(junk)
+        self.lathe.read_for(60, until=len(expected))
+        self.assertEqual(bytes(self.lathe.got), expected)
+
+    def test_silent_lathe_then_cancel(self):
+        """The lathe never asks (no DC1): nothing goes out; Cancel stops cleanly, still nothing."""
+        self.start_send()
+        self.assertEqual(self.lathe.read_for(4.0), 0, "bytes sent without DC1")
+        self.press("Cancel", "button")
+        self.wait_for(self.finished, 10, "the cancel to finish")
+        self.snap("cancelled")
+        self.assertFalse(self.state().startswith("Sent "))
+        self.lathe.send(b"\x11")
+        self.assertEqual(self.lathe.read_for(1.0), 0, "bytes sent after Cancel")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class KeyboardOnlyJob(VirtualPort, Bus):
+    """A whole job without the mouse or a finger: new part, the profile typed, an operation, save, export, send."""
+
+    needs_state = True
+
+    def chooser_name(self, name: str) -> None:
+        from .a11y import App
+
+        App.wait(15, names=("org.gnome.Nautilus", "xdg-desktop-portal-gnome", "Nautilus"))
+        time.sleep(1.0)
+        self.s.key("ctrl+a")
+        self.s.type(name + "\n")
+        time.sleep(1.5)
+
+    def focus_on(self, text: str, tries: int = 60) -> None:
+        """Tab until the widget labelled `text` has the keyboard."""
+        target = self.app.labelled(text, "button")
+        for _ in range(tries):
+            if self.app.focused(target):
+                return
+            self.s.key("Tab")
+            time.sleep(0.1)
+        self.fail(f"Tab never reached {text!r}")
+
+    def test_new_part_to_the_lathe_by_keys(self):
+        port = os.path.realpath(f"{self.pty}-app")
+        self.app = self.s.launch_app("en", env={"ALPHALINK_TEST_PORTS": port})
+        time.sleep(1.0)
+        self.s.key("ctrl+n")
+        time.sleep(0.8)
+        self.s.key("Return")  # Create, with the default billet
+        time.sleep(0.8)
+        self.s.type("x0,0\n40,0\n40,-25\n60,-25\n60,-50\n")
+        self.s.key("Escape")
+        time.sleep(0.3)
+        self.assertEqual(self.app.state()["elements"], 4)
+        self.s.type("c")  # ALPHA-T's CAM menu: Add Operation
+        self.app.menu_items()
+        self.s.key("Return")  # the first item, Area Clear
+        time.sleep(0.8)
+        self.assertEqual(self.app.state()["operations"], ["Area clear"])
+        self.s.key("ctrl+s")
+        self.chooser_name("kbd.alcam")
+        path = self.s.root / "home/kbd.alcam"
+        self.wait_for(path.exists, 10, "kbd.alcam")
+        p = Project.load(path)
+        self.assertEqual(len(p.operations), 1)
+        self.s.key("ctrl+e")
+        self.chooser_name("KBD.PRG")
+        prg = self.s.root / "home/KBD.PRG"
+        self.wait_for(prg.exists, 10, "KBD.PRG")
+        self.assertEqual(prg.read_bytes(), post(p))
+        self.s.key("alt+5")
+        time.sleep(0.6)
+        self.focus_on("Send to the Lathe")
+        self.s.hold_key("space", 2.5)
+        self.app.find("Send", "button")
+        self.s.key("alt+s")
+        self.lathe.send(b"\x11")
+        self.lathe.read_for(60, until=len(post(p)))
+        self.assertEqual(bytes(self.lathe.got), post(p))
+
+
+def big_part(steps: int = 150, ops: int = 12) -> Project:
+    """A long stepped shaft: 2 × `steps` lines (300 by default) and `ops` operations over it."""
+    from alphacam_gtk.op_factory import default_op
+
+    p = Project(billet=Billet(100, 6 * steps + 20), first_tool=3)
+    pts, z = [(0.0, 0.0)], 0.0
+    for i in range(steps):
+        x = 20.0 + 70.0 * i / steps
+        pts += [(x, z), (x, z - 6.0)] if i else [(x, 0.0), (x, -6.0)]
+        z -= 6.0
+    pts = [pts[0]] + pts[1:]
+    p.geometry += [Line(Point(*a), Point(*b)) for a, b in zip(pts, pts[1:]) if a != b]
+    for i, g in enumerate(p.geometry):
+        g.id = f"g{i}"
+    for i in range(ops):
+        p.operations.append(default_op("area_clear" if i % 2 == 0 else "finish", p, len(p.operations)))
+    return p
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class BigPart(Bus):
+    """Hundreds of elements and a dozen operations: the app stays responsive (a bus call is answered only when the
+    main loop is free, so its delay is how long the screen was stuck). Limits are generous, for a busy CI machine."""
+
+    needs_state = True
+
+    def stuck_ms(self) -> float:
+        t = time.monotonic()
+        self.app.state()
+        return (time.monotonic() - t) * 1000
+
+    def test_big_part_stays_responsive(self):
+        p = big_part()
+        path = self.part(p)
+        t0 = time.monotonic()
+        self.launch(str(path), "--touch")
+        opened = time.monotonic() - t0
+        self.assertGreaterEqual(self.app.state()["elements"], 290)
+        timings = {"open s": round(opened, 1)}
+        worst = 0.0
+        x, y = self.empty_spot()
+        import threading
+
+        for _ in range(3):  # pans, asking the app all the while
+            t = threading.Thread(target=self.s.input.touches, args=([(x, y)], [(x - 300, y + 100)], 20, 0.2))
+            t.start()
+            while t.is_alive():
+                worst = max(worst, self.stuck_ms())
+            t.join()
+        timings["pan ms"] = round(worst)
+        t = time.monotonic()
+        self.s.key("alt+2")
+        timings["program page ms"] = round((time.monotonic() - t) * 1000 + self.stuck_ms())
+        self.s.key("alt+1")
+        self.s.key("alt+Home")
+        self.s.key("F5")
+        time.sleep(1.5)
+        self.s.key("F5")
+        self.assertGreater(self.app.state()["sim_index"] or 0, 10, "the simulation should play")
+        t = time.monotonic()
+        self.s.key("ctrl+s")
+        self.wait_for(lambda: path.stat().st_mtime > t0 + opened, 10, "the save")
+        timings["save s"] = round(time.monotonic() - t, 1)
+        print("big part timings:", timings, flush=True)
+        self.assertLess(opened, 15, timings)
+        self.assertLess(timings["pan ms"], 500, timings)
+        self.assertLess(timings["program page ms"], 3000, timings)
+        self.assertLess(timings["save s"], 5, timings)
