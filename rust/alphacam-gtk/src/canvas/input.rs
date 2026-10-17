@@ -220,12 +220,16 @@ pub fn install(w: &LatheCanvas) -> Rc<Router> {
     let swipe = gtk::GestureSwipe::new();
     swipe.connect_swipe(glib::clone!(#[weak] w, #[strong] r, move |g, vx, vy| {
         // GTK's swipe velocity came out far below the finger's (the e2e flick of 200 px at 3000 px/s carried only
-        // 58 px further): the finger's own speed over its last moves wins when higher, unless it rested before the lift
+        // 58 px further): the finger's own speed over its last moves wins when higher
         let (time, last) = (g.current_event_time(), r.samples.borrow().back().map(|s| s.0));
         let rested = last.is_some_and(|t| time > t && time - t > REST_MS);
-        let (ox, oy) = if rested { (0.0, 0.0) } else { r.velocity() };
-        glib::g_debug!("alphalink-cam", "fling: GTK {:.0} px/s, moves {:.0} px/s over {:?}", vx.hypot(vy),
-            ox.hypot(oy), r.samples.borrow());
+        let (ox, oy) = r.velocity();
+        glib::g_debug!("alphalink-cam", "fling: GTK {:.0} px/s, moves {:.0} px/s over {:?}{}", vx.hypot(vy),
+            ox.hypot(oy), r.samples.borrow(), if rested { ", rested: none" } else { "" });
+        if rested {
+            r.edited.set(false); // as fling() would
+            return; // as on a phone: stopping before letting go stops the view too (GTK's speed ignores the rest)
+        }
         let (vx, vy) = if ox.hypot(oy) > vx.hypot(vy) { (ox, oy) } else { (vx, vy) };
         fling(&w, &r, vx, vy)
     }));
