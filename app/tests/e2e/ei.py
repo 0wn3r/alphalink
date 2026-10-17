@@ -77,7 +77,7 @@ class EI:
         end = time.time() + timeout
         fd = _lib.ei_get_fd(self.ei)
         while True:
-            select.select([fd], [], [], 0.02)
+            select.select([fd], [], [], max(0.0, min(0.02, end - time.time())))
             _lib.ei_dispatch(self.ei)
             while True:
                 ev = _lib.ei_get_event(self.ei)
@@ -112,9 +112,9 @@ class EI:
             self._pump(lambda: bool(self.devices.get(cap)), 5)
         return self.devices[cap]
 
-    def _frame(self, dev) -> None:
+    def _frame(self, dev, wait: float = 0.05) -> None:
         _lib.ei_device_frame(dev, _lib.ei_now(self.ei))
-        self._pump()
+        self._pump(timeout=wait)
 
     # --- devices ---------------------------------------------------------------------------------------------------
 
@@ -178,7 +178,7 @@ class EI:
             for i in range(1, steps + 1):
                 for t, (x0, y0), (x1, y1) in zip(ts, start, end):
                     _lib.ei_touch_motion(t, x0 + (x1 - x0) * i / steps, y0 + (y1 - y0) * i / steps)
-                self._frame(dev)
+                self._frame(dev, wait=0)  # a frame every 16 ms, as a finger gives (a pumped frame took 50 ms more)
                 time.sleep(0.016)
         time.sleep(hold)
         for t in ts:
