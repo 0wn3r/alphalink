@@ -266,7 +266,7 @@ class CanvasNavigation(Bus):
         moved_px = abs(after[0][1] - before[0][1]) / self.mm_per_px
         self.snap("flung")
         # the finger itself moves the view 200 px; the fling adds to it
-        self.assertGreater(moved_px, 230, f"the view moved {moved_px:.0f} px for a 200 px flick")
+        self.assertGreater(moved_px, 300, f"the view moved {moved_px:.0f} px for a 200 px flick")
 
     def test_zoom_buttons(self):
         self.launch(str(self.part(shaft())), "--touch")
