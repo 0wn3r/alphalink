@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 20:35+0000\n"
+"POT-Creation-Date: 2026-10-17 21:36+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3489,6 +3489,18 @@ msgstr ""
 
 #: rust/alphacam-gtk/src/drawing_tools/mod.rs
 msgid "Cursor and Measure"
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "The connection was lost after {n} bytes. The backup is incomplete; it is saved marked PARTIAL. Check the cable and back up again."
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are incomplete: check the cable and restore them again."
 msgstr ""
 
 #: rust/alphacam-gtk/src/op_editor.rs

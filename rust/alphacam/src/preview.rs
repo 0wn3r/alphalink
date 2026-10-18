@@ -64,7 +64,7 @@ fn message(e: &Error) -> String {
         Error::NotImplemented(_) => "NotImplementedError".into(),
         Error::Cancelled(_) => "Cancelled".into(),
         Error::TransferTimeout { .. } => "TransferTimeout".into(),
-        Error::Io(_) => "OSError".into(),
+        Error::Io(_) | Error::ConnectionLost { .. } => "OSError".into(),
     }
 }
 

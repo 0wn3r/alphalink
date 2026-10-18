@@ -18,7 +18,7 @@ use alphacam::link::serial_link::{
 use gtk::{gio, glib};
 
 use crate::hold_button::HoldButton;
-use crate::i18n::{fill, gettext, tr};
+use crate::i18n::{fill, gettext, n_, tr};
 use crate::settings::{settings, update};
 use crate::ui::{builder, chosen, object};
 use crate::window::MainWindow;
@@ -565,7 +565,15 @@ impl MachinePage {
             move |ser, ctx, log| {
                 ctx.post(Ui::State(waiting));
                 let mut progress = ctx.progress(sending);
-                send(ser, &data, &opts, Some(&mut |d, t| progress(d, Some(t))), Some(&ctx.cancel), Some(log))
+                let mut sent = 0;
+                let result = send(ser, &data, &opts, Some(&mut |d, t| {
+                    sent = d;
+                    progress(d, Some(t))
+                }), Some(&ctx.cancel), Some(&mut *log));
+                result.map_err(|e| lost_while_sending(e, sent, data.len(), log, n_!(
+                    "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: \
+                     check the cable and send it again."
+                )))
             },
             |dlg, n| dlg.finish(true, &tr("Sent {n} bytes. Check the program list on the control.", &[("n", &n)])),
         );
@@ -591,10 +599,13 @@ impl MachinePage {
                 Some(&mut *log),
                 Some(&mut quiet),
             );
-            let (data, complete) = match received {
-                Ok(data) => (data, true),
+            let (data, ended) = match received {
+                Ok(data) => (data, Ended::Complete),
                 // the end mark never came: keep what arrived, marked partial
-                Err(Error::TransferTimeout { data, .. } | Error::Cancelled(data)) if !data.is_empty() => (data, false),
+                Err(Error::TransferTimeout { data, .. } | Error::Cancelled(data)) if !data.is_empty() => {
+                    (data, Ended::NoEndMark)
+                }
+                Err(Error::ConnectionLost { data, .. }) => (data, Ended::Lost),
                 Err(e) => return Err(e),
             };
             // the raw bytes next to the log, whatever happens to the save dialog
@@ -603,23 +614,32 @@ impl MachinePage {
                 Ok(()) => log.add(format!("raw bytes kept in {}", raw.display())),
                 Err(err) => log.add(format!("raw bytes not kept: {err}")),
             }
-            Ok((data, complete))
+            Ok((data, ended))
         };
         let page = self.downgrade();
-        self.run(gettext("Back Up Manual Ops"), work, move |dlg, (data, complete): (Vec<u8>, bool)| {
-            if complete {
-                dlg.finish(true, &tr("Received {n} bytes.", &[("n", &data.len())]));
-            } else {
-                dlg.finish(
+        self.run(gettext("Back Up Manual Ops"), work, move |dlg, (data, ended): (Vec<u8>, Ended)| {
+            let n = data.len();
+            match ended {
+                Ended::Complete => dlg.finish(true, &tr("Received {n} bytes.", &[("n", &n)])),
+                Ended::NoEndMark => dlg.finish(
                     false,
                     &tr(
                         "Received {n} bytes without the end mark. If the lathe had finished, the backup is probably \
                          whole; it is saved marked PARTIAL. Keep the lathe's ops until a restore of it has been \
                          checked.",
-                        &[("n", &data.len())],
+                        &[("n", &n)],
                     ),
-                );
+                ),
+                Ended::Lost => dlg.finish(
+                    false,
+                    &tr(
+                        "The connection was lost after {n} bytes. The backup is incomplete; it is saved marked \
+                         PARTIAL. Check the cable and back up again.",
+                        &[("n", &n)],
+                    ),
+                ),
             }
+            let complete = ended == Ended::Complete;
             let Some(window) = page.upgrade().and_then(|p| p.window()) else { return };
             let name = now(if complete { "MANOPS-%Y%m%d-%H%M.MOP" } else { "MANOPS-%Y%m%d-%H%M-PARTIAL.MOP" });
             let fd = gtk::FileDialog::builder().title(gettext("Save Manual Ops Backup")).initial_name(&name).build();
@@ -682,7 +702,15 @@ impl MachinePage {
             gettext("Restore Manual Ops"),
             move |ser, ctx, log| {
                 let mut progress = ctx.progress(sending);
-                send(ser, &payload, &opts, Some(&mut |d, t| progress(d, Some(t))), Some(&ctx.cancel), Some(log))
+                let mut sent = 0;
+                let result = send(ser, &payload, &opts, Some(&mut |d, t| {
+                    sent = d;
+                    progress(d, Some(t))
+                }), Some(&ctx.cancel), Some(&mut *log));
+                result.map_err(|e| lost_while_sending(e, sent, payload.len(), log, n_!(
+                    "The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are \
+                     incomplete: check the cable and restore them again."
+                )))
             },
             |dlg, n| dlg.finish(true, &tr("Sent {n} bytes.", &[("n", &n)])),
         );
@@ -737,6 +765,28 @@ impl MachinePage {
 }
 
 /// The port error as the user can act on it.
+/// How a Manual Ops backup ended.
+#[derive(Clone, Copy, PartialEq)]
+enum Ended {
+    Complete,
+    /// the lathe stopped (or the user did) before the end mark
+    NoEndMark,
+    /// the port failed: a cable pulled, an adapter unplugged
+    Lost,
+}
+
+/// A send whose port failed after some bytes went out: say what that leaves on the lathe (message: an n_! text with
+/// {done} and {total}); the system's own words go to the log.
+fn lost_while_sending(e: Error, sent: usize, total: usize, log: &mut TransferLog, message: &str) -> Error {
+    match e {
+        Error::Io(system) if sent > 0 => {
+            log.add(format!("port failed after {sent} of {total} bytes: {system}"));
+            Error::Io(tr(message, &[("done", &sent), ("total", &total)]))
+        }
+        e => e,
+    }
+}
+
 fn port_error(text: &str) -> String {
     if text.contains("Permission denied") {
         return gettext(
@@ -802,6 +852,18 @@ mod tests {
         assert!(!is_manops(b"  "));
         assert_eq!(bytes_repr(b"%\r\nO1'\x93\\"), r#"b"%\r\nO1'\x93\\""#);
         assert_eq!(bytes_repr(b""), "b''");
+    }
+
+    #[test]
+    fn lost_mid_send_says_what_is_left_on_the_lathe() {
+        let mut log = TransferLog::new();
+        let text = "lost after {done} of {total}";
+        let e = lost_while_sending(Error::Io("Input/output error".into()), 601, 4166, &mut log, text);
+        assert_eq!(e.to_string(), "lost after 601 of 4166");
+        assert!(log.text().contains("port failed after 601 of 4166 bytes: Input/output error"));
+        // before the first byte the port's own message stays (it may be "Permission denied" or similar)
+        let e = lost_while_sending(Error::Io("Permission denied".into()), 0, 4166, &mut log, text);
+        assert_eq!(e.to_string(), "Permission denied");
     }
 
     #[test]

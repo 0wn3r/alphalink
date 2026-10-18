@@ -354,3 +354,42 @@ fn test_ports_only_in_end_to_end_tests() {
         [("/dev/pts/98".to_string(), "test port".to_string()), ("/dev/pts/99".to_string(), "test port".to_string())]
     );
 }
+
+/// Delivers its bytes, then fails like a pulled cable.
+struct Pulled {
+    inp: Vec<u8>,
+}
+
+impl Port for Pulled {
+    fn read(&mut self, n: usize) -> alphacam::Result<Vec<u8>> {
+        if self.inp.is_empty() {
+            return Err(Error::Io("Input/output error (os error 5)".into()));
+        }
+        let n = n.min(self.inp.len());
+        Ok(self.inp.drain(..n).collect())
+    }
+    fn write(&mut self, _: &[u8]) -> alphacam::Result<usize> {
+        Err(Error::Io("Input/output error (os error 5)".into()))
+    }
+    fn in_waiting(&mut self) -> alphacam::Result<usize> {
+        Ok(self.inp.len())
+    }
+    fn reset_input_buffer(&mut self) -> alphacam::Result<()> {
+        Ok(())
+    }
+}
+
+#[test]
+fn receive_keeps_what_arrived_before_the_cable_was_pulled() {
+    let r = sl::receive(&mut Pulled { inp: b"%\r\nO1001\r\n".to_vec() }, None, None, None, None, None, None);
+    match r {
+        Err(Error::ConnectionLost { message, data }) => {
+            assert_eq!(data, b"%\r\nO1001\r\n");
+            assert!(message.contains("Input/output error"), "{message}");
+        }
+        r => panic!("{r:?}"),
+    }
+    // nothing arrived: the port's own error
+    let r = sl::receive(&mut Pulled { inp: vec![] }, None, None, None, None, None, None);
+    assert!(matches!(r, Err(Error::Io(_))), "{r:?}");
+}

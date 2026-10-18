@@ -19,6 +19,10 @@ pub enum Error {
     /// The port or a file failed (Python's OSError / SerialException), with the system's message.
     #[error("{0}")]
     Io(String),
+    /// The port failed in the middle of a receive (a cable pulled, an adapter unplugged): the system's message, and
+    /// the bytes that arrived before it, never thrown away.
+    #[error("{message}")]
+    ConnectionLost { message: String, data: Vec<u8> },
 }
 
 impl From<std::io::Error> for Error {
