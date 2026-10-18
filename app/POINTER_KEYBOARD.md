@@ -1,6 +1,6 @@
 # AlphaLink CAM: mouse, keyboard and pen design
 
-Status: **design draft 1** (2026-10-17). Companion to `app/TOUCH.md` (touch) and `app/DESIGN.md` (section 6, user
+Status: **built** (design 2026-10-17, built in PR #8, decluttered in PR #10, 2026-10-18). Companion to `app/TOUCH.md` (touch) and `app/DESIGN.md` (section 6, user
 interface). It covers the other three ways in: a mouse or touchpad, the keyboard (a workshop PC, or the Surface's
 Type Cover), and the Surface Pen. It closes the gaps found by the input-mode parity check of 2026-10-16: every
 feature should be reachable from every input, and nothing should need a second one. The Rust app (`rust/alphacam-gtk`)
@@ -8,32 +8,32 @@ is the implementation; the Python app is frozen.
 
 ## Implementation status
 
-✓ works today · ✗ proposed here, not built yet. 🧪 = an end-to-end test with real input (libei, `app/tests/e2e`).
+✓ works · 🧪 = an end-to-end test with real input (libei, `app/tests/e2e/test_interaction.py`).
 
 | § | Item | Status |
 |---|---|---|
 | 3 | Wheel pans 🧪, Shift+wheel sideways, Ctrl+wheel zooms at the pointer 🧪; Ctrl+= / Ctrl+− / Ctrl+0 🧪; double click fits | ✓ |
-| 3 | Middle-button drag pans | ✓ |
-| 3 | Keyboard pan: Ctrl+arrows; the view follows the ALPHA-T cursor off the edge | ✓ |
-| 3 | `z` zooms at the cursor (as the Shortcuts window says) | ✓ |
+| 3 | Middle-button drag pans 🧪 | ✓ |
+| 3 | Keyboard pan: Ctrl+arrows 🧪; the view follows the ALPHA-T cursor off the edge 🧪 | ✓ |
+| 3 | `z` zooms at the cursor (as the Shortcuts window says) 🧪 | ✓ |
 | 4 | Hover marker and rubber band; click points; right click menu 🧪; drag handles | ✓ |
 | 4 | Keyboard drawing: ALPHA-T letters, the command entry, arrows + Enter 🧪 | ✓ |
-| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) | ✓ |
-| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) | ✓ |
+| 4 | Construction commands finished by keys (Enter picks, Tab cycles the dashed solutions) 🧪 | ✓ |
+| 4 | Text, Measure, Line by length and angle in the More menu (reachable without letters) 🧪 | ✓ |
 | 5 | Shift+F10 / Menu 🧪 on the drawing; Delete 🧪 anywhere on the Part page outside text | ✓ |
-| 5 | `[` / `]` select the previous / next element along the profile | ✓ |
-| 5 | Pick contour by keys: Space adds or removes the element at the cursor | ✓ |
-| 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) | ✓ |
-| 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider | ✓ |
-| 8 | Program: a visible caret; Enter or a search hit selects the line's operation | ✓ |
-| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered | ✓ |
-| 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn | ✓ |
+| 5 | `[` / `]` select the previous / next element along the profile 🧪 | ✓ |
+| 5 | Pick contour by keys: Space adds or removes the element at the cursor 🧪 | ✓ |
+| 6 | Operations list: arrows select; Alt+↑ / Alt+↓ move; Ctrl+D duplicates; Delete deletes (Undo toast) 🧪 | ✓ |
+| 7 | Simulation: F5 play / pause, Ctrl+[ / Ctrl+] previous / next pass, Alt+Home / Alt+End first / all; PgUp/PgDn on the slider 🧪 | ✓ |
+| 8 | Program: a visible caret; Enter or a search hit selects the line's operation 🧪 | ✓ |
+| 8 | Program font: Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel while the Program page is shown; remembered 🧪 | ✓ |
+| 9 | Pages: Alt+1 … Alt+5, Ctrl+PgUp / Ctrl+PgDn 🧪 | ✓ |
 | 9 | Hold to send by Space / Enter 🧪; confirmations default to Cancel, Alt+S sends 🧪 | ✓ |
 | 9 | Escape closes dialogs and the keypad before it cancels or deselects 🧪 | ✓ |
-| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu | ✓ (not yet tried with a real pen) |
-| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen | ✓ |
-| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC | ✓ |
-| 12 | The Shortcuts window matches what the keys do | ✓ |
+| 10 | Pen: does not flip the Automatic layout; keypad and zoom buttons for the pen; long press = menu 🧪 (through ForceSource) | ✓ (not yet tried with a real pen) |
+| 11 | The keypad for every number field (dialogs, Preferences, Tools page) for finger and pen 🧪 | ✓ |
+| 11 | Keypad keys: digits, `.`, `-`, Backspace, Tab / `,` next, Enter ✓; `i` toggles ABS / INC 🧪 | ✓ |
+| 12 | The Shortcuts window matches what the keys do 🧪 | ✓ |
 
 ## 1. Who uses which input
 
@@ -41,13 +41,13 @@ is the implementation; the Python app is frozen.
   coordinates. They expect the keys to keep working, and they draw with the mouse when it is quicker.
 - **Surface Pro 7 with the Type Cover.** The same, plus a touchpad: two-finger scroll and pinch.
 - **Surface Pen.** Precise like a mouse, but with no wheel, no keyboard when the cover is off, and a barrel button
-  that GNOME may or may not report as a right click. Today the app treats it as a mouse, which leaves it without
+  that GNOME may or may not report as a right click. Before this design the app treated it as a mouse, which left it without
   zoom out and without a way to type a number.
 
 ## 2. Principles
 
 1. **Every action from every input.** A feature reachable only by touch, only by mouse or only by keys is a bug.
-   The gaps today are in the parity list (`docs/INPUT_PARITY.md`, 2026-10-16); this document assigns each one a way in.
+   The gaps of 2026-10-16 are in the parity list (`docs/INPUT_PARITY.md`, 2026-10-16); this document assigns each one a way in.
 2. **Keyboard-complete, GNOME first.** Standard GNOME keys keep their meaning (HIG, "Keyboard"): Ctrl+N/O/S/Q/W,
    Ctrl+Z / Ctrl+Shift+Z, Ctrl+F, F10 for the main menu, Shift+F10 / Menu for a context menu, F1 for help, Ctrl+?
    for the shortcuts, Escape to close or cancel, Tab and F6 to move between regions, Alt+number for pages.
@@ -65,8 +65,8 @@ is the implementation; the Python app is frozen.
 
 | Action | Mouse / touchpad | Keyboard | Pen |
 |---|---|---|---|
-| Pan | drag on empty space; wheel; Shift+wheel sideways; touchpad two-finger scroll; **middle-button drag** (✗) | **Ctrl+arrows: an eighth of the view** (✗). **The view follows the ALPHA-T cursor** when an arrow moves it past the edge, with a 10 % margin (✗) | drag on empty space |
-| Zoom in / out | Ctrl+wheel at the pointer; touchpad pinch | Ctrl+= / Ctrl+− about the centre; **`z` at the cursor** (✗: centre today) | **zoom buttons** (§10) |
+| Pan | drag on empty space; wheel; Shift+wheel sideways; touchpad two-finger scroll; **middle-button drag** | **Ctrl+arrows: an eighth of the view**. **The view follows the ALPHA-T cursor** when an arrow moves it past the edge, with a 10 % margin | drag on empty space |
+| Zoom in / out | Ctrl+wheel at the pointer; touchpad pinch | Ctrl+= / Ctrl+− about the centre; **`z` at the cursor** | **zoom buttons** (§10) |
 | Fit / back | double click; main menu Fit Part | Ctrl+0; `r` (ALPHA-T "Redraw" = fit); `v` recalls the view | double tap |
 | Zoom here | right click → Zoom Here | Menu → Zoom Here (at the cursor) | long press or barrel button (§10) |
 
@@ -79,7 +79,7 @@ view. Ctrl+arrows covers the rest without moving the cursor.
 opens the drawing menu; a drag on a selected element's end handle moves it with snapping. Precision comes from the
 keyboard: type `x,z` or `@dx,dz` and Enter at any time, or E to edit the values.
 
-**Keyboard.** The ALPHA-T letters, the command entry and arrows + Enter work today for lines, arcs, fillets,
+**Keyboard.** The ALPHA-T letters, the command entry and arrows + Enter worked before this design for lines, arcs, fillets,
 chamfers, corners, measuring, text and the cursor commands. Two things are missing:
 
 - **Construction commands** (Tangent, Tangent at Angle, Parallel, Split Arc, Blend `o`, Mirror): Enter takes the
@@ -90,7 +90,7 @@ chamfers, corners, measuring, text and the cursor commands. Two things are missi
 
 **Touch and pen without letters.** Text (`t`), Erase Text (`u`), Measure (`m`, `n`), Line by Length and Angle (`d`)
 and Move Cursor (`g`, `h`, `y`) get items in the **More** menu, each opening the same dialog the letter does (✓).
-Today a finger reaches them only by typing the letter into the command entry, and a pen not at all.
+Before, a finger reached them only by typing the letter into the command entry, and a pen not at all.
 
 ## 5. Selecting and editing elements
 
@@ -99,7 +99,7 @@ Today a finger reaches them only by typing the letter into the command entry, an
 | Select | click (6 px radius) | `l` / `a` nearest line / arc to the cursor; **`[` / `]` previous / next element along the profile** (✓) | tap (10 px) |
 | Context menu | right click | Shift+F10 or Menu at the cursor | long press (§10) or barrel button |
 | Edit exact values | right click → Edit Values…; E | E | menu → Edit Values… with the keypad (§11) |
-| Delete | right click → Delete; trash button | Delete, Backspace or `-` **whenever the Part page has the focus outside a text field** (✗: drawing focus only for Delete) | menu → Delete; trash button |
+| Delete | right click → Delete; trash button | Delete, Backspace or `-` **whenever the Part page has the focus outside a text field** | menu → Delete; trash button |
 | Pick a contour | click elements, Done | **Space adds or removes the element nearest the cursor**, `l`/`a` and `[`/`]` move between them, Enter or `3` finishes (✓) | tap elements |
 
 `[` and `]` follow the order of the profile (the contour order the operations use), so a keyboard user can walk
@@ -111,9 +111,9 @@ the part one element at a time and see each one's description in the read-out.
 |---|---|---|
 | Select | click a row | ↑ / ↓ (✓), Home / End |
 | Open the editor | click | Enter (✓) |
-| Reorder | drag the handle; Move Up / Down in the editor | **Alt+↑ / Alt+↓** (✗) |
-| Duplicate | the editor's last row | **Ctrl+D** (✗) |
-| Delete | the editor's trash | **Delete** (✗), with the Undo toast |
+| Reorder | drag the handle; Move Up / Down in the editor | **Alt+↑ / Alt+↓** |
+| Duplicate | the editor's last row | **Ctrl+D** |
+| Delete | the editor's trash | **Delete**, with the Undo toast |
 | Add | + menu | `c` on the drawing (✓), or Tab to + and Enter |
 | Numbers | type, −/+, wheel | type, ↑ / ↓ steps, PgUp / PgDn ten steps |
 
@@ -124,10 +124,10 @@ the editor focused, so the editor's header buttons are no longer the only way.
 
 | Action | Mouse | Keyboard (anywhere on the Part page) |
 |---|---|---|
-| Play / pause | ▶ | **F5** (✗) |
-| Previous / next pass | ◀◀ / ▶▶ | **Ctrl+[ / Ctrl+]** (✗) |
-| First move / show all | ⏮ / ⏭ | **Alt+Home / Alt+End** (✗) |
-| Scrub | drag the slider, wheel | the slider focused: ← / → one move, **PgUp / PgDn a tenth** (✗: no page step), Home / End |
+| Play / pause | ▶ | **F5** |
+| Previous / next pass | ◀◀ / ▶▶ | **Ctrl+[ / Ctrl+]** |
+| First move / show all | ⏮ / ⏭ | **Alt+Home / Alt+End** |
+| Scrub | drag the slider, wheel | the slider focused: ← / → one move, **PgUp / PgDn a tenth**, Home / End |
 | Jump to a toolpath | click it | the operation's "Start of the Selected Operation" |
 
 F5 stays free in GNOME apps and ALPHA-T, and Space must stay free for buttons and the hold-to-send.
@@ -136,15 +136,15 @@ F5 stays free in GNOME apps and ALPHA-T, and Space must stay free for buttons an
 
 - **A visible caret** in the program text (read-only, as in a viewer): arrows, PgUp/PgDn, Ctrl+Home/End move it.
   **Enter selects the operation that owns the caret's block**, as a tap or click on the line does, and a search
-  hit (Ctrl+F, Enter) selects it too (✗).
+  hit (Ctrl+F, Enter) selects it too.
 - **Font size:** while the Program page is shown, Ctrl+= / Ctrl+− / Ctrl+0 and Ctrl+wheel change the program's
-  font (7 to 32 pt, as the pinch does) instead of zooming the hidden drawing (✗). The size is remembered in the
+  font (7 to 32 pt, as the pinch does) instead of zooming the hidden drawing. The size is remembered in the
   settings (TOUCH.md 7.3 asks for the same).
 
 ## 9. Pages, Machine page, dialogs
 
 - **Pages:** Alt+1 Part, Alt+2 Program, Alt+3 Sheet, Alt+4 Tools, Alt+5 Machine, and Ctrl+PgUp / Ctrl+PgDn for
-  previous / next (✗). F6 / Shift+F6 cycle the regions (operations, page, bottom bar).
+  previous / next. F6 / Shift+F6 cycle the regions (operations, page, bottom bar).
 - **Hold to send / restore:** a press held 1.5 s by finger, mouse button, Space or Enter (✓). With keys the
   confirmation opens on the release (key repeat must not press its buttons). The confirmation defaults to
   Cancel; Alt+S sends (✓).
@@ -174,7 +174,7 @@ In the keypad, `i` toggles ABS / INC (✓), since Tab is "next field".
 
 ## 12. Shortcuts window corrections
 
-| Listed | Does today | Change |
+| Listed | Did (2026-10-16) | Change (built) |
 |---|---|---|
 | `z` Zoom In at the Cursor | zooms about the centre | zoom at the cursor (as listed) |
 | `r` Redraw | fits the part | list it as "Fit Part (ALPHA-T Redraw)" |

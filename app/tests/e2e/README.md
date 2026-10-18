@@ -5,26 +5,21 @@ Surface Pro 7's logical sizes: 2736×1824 at 200 % gives 1368×912 landscape, 91
 for half the screen.
 
 ```
-flatpak-builder --user --install ...            # build and install the app first (see docs/HANDOVER.md)
-python3 -m tests.e2e.run                        # all 29 tests, each in its own process, 3 at once (about 5 minutes)
-python3 -m tests.e2e.run Touch SmallWindow      # some classes or test names
-python3 -m tests.e2e.run -j 1 FileDialogs       # one at a time
-ALPHALINK_E2E_BRANCH=rust ALPHALINK_E2E_FLATPAK=~/.local/share/flatpak-e2e-rust python3 -m tests.e2e.run
+flatpak-builder --user --install ...                                # build and install the app first (docs/HANDOVER.md)
+ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run                # all ~125 tests, 3 at once (about 30 minutes)
+ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run Touch BigPart  # some classes or test names
+ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run -j 1 FileDialogs
 ```
 
-The Rust app has the same app id, so it is tested from an installation of its own: with two branches of one app
-in one installation, GNOME's file chooser portal answers with paths the app cannot open. Once:
+A failed test is run once more on its own; if it passes then, it counts as passed and is listed as flaky.
+`test_interaction.py` is the bigger half: touch, mouse, keyboard and pen (through the bus's `ForceSource`)
+interactions, finger-sized controls in every shape and language, a misbehaving lathe (`LatheTrouble`), a whole job by
+keyboard only, and a big part's timings (`BigPart`).
 
-```
-export FLATPAK_USER_DIR=~/.local/share/flatpak-e2e-rust
-flatpak remote-add --user flathub https://dl.flathub.org/repo/flathub.flatpakrepo
-flatpak install --user flathub org.gnome.Platform//51
-flatpak config --user --set extra-languages uk
-```
-
-and after each build (`flatpak-builder --default-branch=rust --repo=rust-repo ...` from the Rust manifest, without
-`FLATPAK_USER_DIR`): `flatpak remote-add --user --no-gpg-verify rust-build rust-repo` once, then
-`flatpak install --user --reinstall rust-build io.github._0wn3r.AlphaLinkCAM//rust` with `FLATPAK_USER_DIR` set.
+Keep one branch of the app id per Flatpak installation: with two branches side by side, GNOME's file chooser portal
+answers with paths the app cannot open. To test another build next to the installed one, install it into an
+installation of its own (`FLATPAK_USER_DIR=~/.local/share/flatpak-e2e-x`, with `org.gnome.Platform//51` and
+`flatpak config --user --set extra-languages uk` there) and point the harness at it with `ALPHALINK_E2E_FLATPAK`.
 
 With `ALPHALINK_E2E_BRANCH` the harness runs that branch with `ALPHALINK_TEST=1` and reads widget positions,
 text and states from the app's own test bus (`testbus.py`, see `rust/alphacam-gtk/src/test_bus.rs`) instead of
@@ -33,10 +28,8 @@ AT-SPI. Every press is a libei click or tap at the widget's centre; nothing is a
 Screenshots of every step go to `app/e2e-out/<test>/` (git-ignored). Set `ALPHALINK_E2E_CURSOR=1` to draw
 the pointer in them.
 
-`test_interaction.py` covers the touch interactions the workflows do not reach (layout switching, menus by finger,
-fling, double tap, zoom buttons, the drawing tools and keypad by touch, the editor's −/+ and header buttons, play and
-scrub, hold to send by finger, finger-sized targets). It reads the app through the test bus, so it runs only with
-`ALPHALINK_E2E_BRANCH` set (the Rust app).
+Without `ALPHALINK_E2E_BRANCH` the workflow tests run the frozen Python app through AT-SPI and `test_interaction.py`
+is skipped.
 
 ## How it works
 
