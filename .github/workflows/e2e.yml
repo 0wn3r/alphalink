@@ -29,7 +29,7 @@ jobs:
         with:
           bundle: AlphaLinkCAM-${{ matrix.app }}.flatpak
           manifest-path: ${{ matrix.manifest }}
-          cache-key: flatpak-builder-e2e-${{ matrix.app }}-${{ github.sha }}
+          cache-key: flatpak-builder-rust-${{ hashFiles('rust/build-aux/*.json', 'rust/Cargo.lock') }}  # shared with the Rust workflow's Flatpak job
           run-tests: false
 
   e2e:

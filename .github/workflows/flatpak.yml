@@ -3,10 +3,12 @@
 # bundle as a download on the run's page.
 name: Flatpak
 
-on:
+on:  # the Python app is frozen: only when its code, the samples or this file change
   push:
     branches: [main]
+    paths: ["app/**", "samples/**", ".github/workflows/flatpak.yml"]
   pull_request:
+    paths: ["app/**", "samples/**", ".github/workflows/flatpak.yml"]
   workflow_dispatch:
 
 jobs:
@@ -22,4 +24,4 @@ jobs:
         with:
           bundle: AlphaLinkCAM.flatpak
           manifest-path: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
-          cache-key: flatpak-builder-${{ github.sha }}
+          cache-key: flatpak-builder-python-${{ hashFiles('app/build-aux/flatpak/*.json', 'app/build-aux/flatpak/*.yaml', 'app/build-aux/flatpak/*.yml') }}
