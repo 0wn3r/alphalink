@@ -2425,6 +2425,15 @@ msgstr "Елементи деталі"
 msgid "Cursor and Measure"
 msgstr "Курсор і вимірювання"
 
+msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
+msgstr "Зв’язок обірвався після {done} з {total} байт. Програма на верстаті неповна: перевірте кабель і надішліть її знову."
+
+msgid "The connection was lost after {n} bytes. The backup is incomplete; it is saved marked PARTIAL. Check the cable and back up again."
+msgstr "Зв’язок обірвався після {n} байт. Копія неповна; її збережено з позначкою PARTIAL. Перевірте кабель і створіть копію знову."
+
+msgid "The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are incomplete: check the cable and restore them again."
+msgstr "Зв’язок обірвався після {done} з {total} байт. Ручні операції на верстаті неповні: перевірте кабель і відновіть їх знову."
+
 msgid "Tool memory slot"
 msgstr "Номер у пам’яті ЧПК"
 
