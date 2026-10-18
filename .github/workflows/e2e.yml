@@ -109,6 +109,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-screenshots-${{ matrix.app }}
+          retention-days: 7
           path: app/e2e-out
           if-no-files-found: ignore
       - name: Keep the logs
@@ -116,6 +117,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-logs-${{ matrix.app }}
+          retention-days: 7
           path: logs
           if-no-files-found: ignore
       - name: Show the end of the logs as annotations (readable without signing in)
