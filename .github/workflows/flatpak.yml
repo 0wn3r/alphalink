@@ -1,4 +1,4 @@
-# Builds the Flatpak on every push and pull request, runs the unit tests inside it (the manifest's test-commands:
+# The frozen Python app: builds its Flatpak and runs the Python reference core's unit tests inside it (the manifest's test-commands:
 # the ALPHA-T golden posts and the rest; the GTK widget tests need a display and are skipped here), and keeps the
 # bundle as a download on the run's page.
 name: Flatpak
@@ -23,5 +23,6 @@ jobs:
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
         with:
           bundle: AlphaLinkCAM.flatpak
+          upload-artifact: false  # the frozen Python app has the same app id: its bundle would replace the Rust app
           manifest-path: app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json
           cache-key: flatpak-builder-python-${{ hashFiles('app/build-aux/flatpak/*.json', 'app/build-aux/flatpak/*.yaml', 'app/build-aux/flatpak/*.yml') }}
