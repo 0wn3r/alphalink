@@ -25,6 +25,9 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v7
+      - name: The commit About shows (flatpak-builder copies the tree without .git)
+        shell: bash
+        run: echo "${GITHUB_SHA::12}" > rust/build-aux/commit
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
         with:
           bundle: AlphaLinkCAM-${{ matrix.app }}.flatpak

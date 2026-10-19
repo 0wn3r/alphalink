@@ -16,7 +16,7 @@ import unittest
 from pathlib import Path
 from shutil import which as shutil_which
 
-from .part import Arc, Billet, Line, Point, Project, post
+from .part import Arc, Billet, Line, Point, Project, has_sdg, post, sdg
 
 ENABLED = os.environ.get("ALPHALINK_E2E") == "1"
 OUT = Path(os.environ.get("ALPHALINK_E2E_OUT", Path(__file__).resolve().parents[2] / "e2e-out"))
@@ -691,26 +691,16 @@ def green_pixels(im) -> set:
     return {(x - x0, y - y0) for x, y in pts}
 
 
-def _python_core() -> bool:  # the ALPHA-T comparison writes its drawing with the Python reference core
-    try:
-        import alphacam.io.sdg_write  # noqa: F401
-    except ImportError:
-        return False
-    return True
-
-
-@unittest.skipUnless(ENABLED and ALPHAT.exists() and shutil_which("dosbox-x") and _python_core(),
-                     "needs ALPHA-T, dosbox-x and the Python core")
+@unittest.skipUnless(ENABLED and ALPHAT.exists() and shutil_which("dosbox-x"), "needs ALPHA-T and dosbox-x")
 class AlphaTReads(Surface):
     """ALPHA-T itself opens what the app writes."""
 
     def test_app_written_drawing_looks_like_alpha_t_own(self):
         """The app's .SDG of the AREA1 shaft and ALPHA-T's own AREA1 drawing show the same part profile."""
-        from alphacam.io.sdg import load_sdg
-        from alphacam.io.sdg_write import save_sdg
-
+        if not has_sdg():
+            self.skipTest("the command line tool has no `sdg` yet")
         own = SAMPLES / "AREA1_metric.SDG"
-        mine = save_sdg(load_sdg(own), self.s.root / "MINE.SDG")[0]
+        mine = sdg(own, self.s.root / "MINE.SDG")  # read and written back by the app's own code
         a = alphat_screen(self.s, {"OWN": own}, "OWN")
         b = alphat_screen(self.s, {"MINE": mine}, "MINE")
         self.out.mkdir(parents=True, exist_ok=True)
