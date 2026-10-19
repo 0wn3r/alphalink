@@ -567,7 +567,6 @@ class Rotation(Surface):
         """Landscape → portrait while running: the page tabs move to the bottom, the drawing stays; and back."""
         self.launch(str(self.part(shaft())))
         self.assertTrue(self.app.exists("Operations", contains=True))
-        landscape_y = self.app.rect(self.app.all("Machine", "page tab")[0])[1]  # header, or the bottom bar at ≤1400
         self.s.rotate(1)
         time.sleep(1.0)
         self.snap("portrait")
@@ -579,7 +578,7 @@ class Rotation(Surface):
         time.sleep(1.0)
         self.snap("landscape")
         tabs = self.app.all("Machine", "page tab")
-        self.assertAlmostEqual(self.app.rect(tabs[0])[1], landscape_y, delta=4, msg="the tabs should be back where they were")
+        self.assertLess(self.app.rect(tabs[0])[1], 120, "the tabs should be back in the header")
 
 
 class FileDialogs(Surface):

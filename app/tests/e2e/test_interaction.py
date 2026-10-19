@@ -236,15 +236,9 @@ class MenusByTouch(Bus):
         self.launch(str(path), "--touch")
         self.tap("More Drawing Commands", "toggle button")
         time.sleep(0.6)  # the popover slides in: its items move until it settles
-        # on the Surface the menu is taller than the room above the toolbar: a finger swipe must bring Erase
-        # Drawing, at its end, into sight (a press where it is clipped hits nothing)
-        top = self.app.find("Circle…", "menu item")
-        x = top.x + top.w / 2
-        self.s.input.touches([(x, top.y + 500)], [(x, top.y + 100)], 60, 0.3)
-        time.sleep(0.8)
-        self.snap("swiped")
         erase = self.app.find("Erase Drawing…", "menu item")
-        self.assertGreater(top.y, self.app._now(top).y, "a finger swipe should scroll the More menu")
+        bar = self.app.find("More Drawing Commands", "toggle button")
+        self.assertLess(erase.y + erase.h, bar.y, "the whole menu should fit above the tools (a finger can't scroll it)")
         self.tap(acc=erase)
         self.app.find("Erase All of the Drawing?", contains=True)
         self.snap("asked")
@@ -450,8 +444,9 @@ class DrawingByTouch(Bus):
         self.s.tap(*to_screen(40, 0))
         self.assertTrue(self.app.exists("Ø ", "button", contains=True))
         x, y = self.empty_spot()
-        self.s.input.touches([(x, y)], [(x - 900, y)], 30, 0.3)  # pan the point far off to the left
-        time.sleep(0.8)
+        for _ in range(2):  # pan the point far off to the left: 1800 px, more than the drawing is wide
+            self.s.input.touches([(x, y)], [(x - 900, y)], 30, 0.3)
+            time.sleep(0.8)
         self.snap("panned")
         self.assertFalse(self.app.exists("Ø ", "button", contains=True), "the chip should hide off-screen")
 
@@ -1084,10 +1079,17 @@ class MoreMenuWithoutLetters(Bus):
     def test_more_menu_reaches_the_letter_commands(self):
         self.launch(str(self.part(shaft())), "--touch")
         self.tap("More Drawing Commands", "toggle button")
+        time.sleep(0.6)
         items = [i.text for i in self.app.menu_items()]
         self.snap("more")
-        for label in ("Add Text", "Erase Text", "Measure by X,Z", "Measure by Length and Angle",
-                      "Draw Line by Length and Angle", "Move Cursor to X,Z", "Move Cursor by dX,dZ"):
+        for label in ("Add Text", "Erase Text"):
+            self.assertTrue(any(i.startswith(label) for i in items), f"{label!r} not in {items}")
+        self.tap(acc=self.app.find("Cursor and Measure", "menu item"))  # the submenu
+        time.sleep(0.6)
+        items = [i.text for i in self.app.menu_items()]
+        self.snap("cursor-and-measure")
+        for label in ("Measure by X,Z", "Measure by Length and Angle", "Draw Line by Length and Angle",
+                      "Move Cursor to X,Z", "Move Cursor by dX,dZ"):
             self.assertTrue(any(i.startswith(label) for i in items), f"{label!r} not in {items}")
 
 
