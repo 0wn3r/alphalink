@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 21:00+0000\n"
+"POT-Creation-Date: 2026-10-19 22:45+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1282,8 +1282,7 @@ msgstr ""
 msgid "Tool memory slot on the control"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:24 alphacam_gtk/report.py:93
-#: alphacam_gtk/report.py:112
+#: alphacam_gtk/op_editor.py:24
 msgid "Feed"
 msgstr ""
 
@@ -1303,7 +1302,7 @@ msgstr ""
 msgid "Finish allowance, radius"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:26 alphacam_gtk/report.py:104
+#: alphacam_gtk/op_editor.py:26
 msgid "Offset X"
 msgstr ""
 
@@ -1311,7 +1310,7 @@ msgstr ""
 msgid "Finish allowance"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:27 alphacam_gtk/report.py:105
+#: alphacam_gtk/op_editor.py:27
 msgid "Offset Z"
 msgstr ""
 
@@ -1372,8 +1371,7 @@ msgstr ""
 msgid "Peck"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:38 alphacam_gtk/report.py:110
-#: alphacam_gtk/ui/drawing-dialogs.ui:170
+#: alphacam_gtk/op_editor.py:38 alphacam_gtk/ui/drawing-dialogs.ui:170
 msgid "Pitch"
 msgstr ""
 
@@ -1712,97 +1710,8 @@ msgid_plural "{n} tool changes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/report.py:69
-msgid "DATE"
-msgstr ""
-
-#: alphacam_gtk/report.py:69
-msgid "TITLE"
-msgstr ""
-
 #: alphacam_gtk/report.py:72
 msgid "  (no program)"
-msgstr ""
-
-#: alphacam_gtk/report.py:74 alphacam_gtk/report.py:206
-#: alphacam_gtk/ui/preferences.ui:86
-msgid "Cycle time"
-msgstr ""
-
-#: alphacam_gtk/report.py:74 alphacam_gtk/report.py:204
-#: alphacam_gtk/ui/part-settings.ui:48 alphacam_gtk/ui/shortcuts.ui:256
-#: alphacam_gtk/ui/window.ui:318
-msgid "Program"
-msgstr ""
-
-#: alphacam_gtk/report.py:91 alphacam_gtk/report.py:102
-#: alphacam_gtk/ui/op-editor.ui:23
-msgid "Operation"
-msgstr ""
-
-#: alphacam_gtk/report.py:91 alphacam_gtk/report.py:102
-msgid "Tool No."
-msgstr ""
-
-#: alphacam_gtk/report.py:93 alphacam_gtk/ui/preferences.ui:118
-#: alphacam_gtk/window.py:43
-msgid "Tool change"
-msgstr ""
-
-#: alphacam_gtk/report.py:104
-msgid "Maximum X"
-msgstr ""
-
-#: alphacam_gtk/report.py:104
-msgid "Tool Start X"
-msgstr ""
-
-#: alphacam_gtk/report.py:105
-msgid "Maximum Z"
-msgstr ""
-
-#: alphacam_gtk/report.py:105
-msgid "Tool Start Z"
-msgstr ""
-
-#: alphacam_gtk/report.py:106
-msgid "Op. No."
-msgstr ""
-
-#: alphacam_gtk/report.py:106
-msgid "Total Passes"
-msgstr ""
-
-#: alphacam_gtk/report.py:108
-msgid "Depth Of Cut"
-msgstr ""
-
-#: alphacam_gtk/report.py:115
-msgid "Time"
-msgstr ""
-
-#: alphacam_gtk/report.py:121
-msgid "Block"
-msgstr ""
-
-#: alphacam_gtk/report.py:121
-msgid "Restart #140"
-msgstr ""
-
-#: alphacam_gtk/report.py:122
-msgid "one per pass"
-msgstr ""
-
-#: alphacam_gtk/report.py:134
-msgid "Pass No."
-msgstr ""
-
-#: alphacam_gtk/report.py:140
-msgid "RAPID TO"
-msgstr ""
-
-#: alphacam_gtk/report.py:142
-msgid "FEED  TO"
 msgstr ""
 
 #: alphacam_gtk/report.py:144
@@ -1813,20 +1722,9 @@ msgstr ""
 msgid "ARC CW TO"
 msgstr ""
 
-#: alphacam_gtk/report.py:145
-msgid "centre"
-msgstr ""
-
-#: alphacam_gtk/report.py:147
-msgid "THREAD TO"
-msgstr ""
-
-#: alphacam_gtk/report.py:149
-msgid "DWELL"
-msgstr ""
-
-#: alphacam_gtk/report.py:149
-msgid "revs"
+#: alphacam_gtk/report.py:204 alphacam_gtk/ui/part-settings.ui:48
+#: alphacam_gtk/ui/shortcuts.ui:256 alphacam_gtk/ui/window.ui:318
+msgid "Program"
 msgstr ""
 
 #: alphacam_gtk/report.py:204 alphacam_gtk/ui/billet-group.ui:13
@@ -1838,20 +1736,12 @@ msgstr ""
 msgid "Billet"
 msgstr ""
 
-#: alphacam_gtk/report.py:205
-msgid "bore"
+#: alphacam_gtk/report.py:206 alphacam_gtk/ui/preferences.ui:100
+msgid "Cycle time"
 msgstr ""
 
 #: alphacam_gtk/report.py:206
 msgid "Date"
-msgstr ""
-
-#: alphacam_gtk/report.py:220
-msgid "Tools, in loading order"
-msgstr ""
-
-#: alphacam_gtk/report.py:225 alphacam_gtk/report.py:289
-msgid "Notes"
 msgstr ""
 
 #: alphacam_gtk/report.py:276
@@ -1861,6 +1751,10 @@ msgstr ""
 #: alphacam_gtk/report.py:278
 #, python-brace-format
 msgid "SETUP {n}"
+msgstr ""
+
+#: alphacam_gtk/report.py:289
+msgid "Notes"
 msgstr ""
 
 #: alphacam_gtk/report.py:295
@@ -2021,7 +1915,7 @@ msgstr ""
 msgid "m/min, for the cycle time; 0 = a default for the type"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:124 alphacam_gtk/ui/preferences.ui:90
+#: alphacam_gtk/tools_page.py:124 alphacam_gtk/ui/preferences.ui:104
 msgid "Spindle limit"
 msgstr ""
 
@@ -2448,6 +2342,10 @@ msgstr ""
 msgid "_Create"
 msgstr ""
 
+#: alphacam_gtk/ui/op-editor.ui:23
+msgid "Operation"
+msgstr ""
+
 #: alphacam_gtk/ui/op-editor.ui:29 alphacam_gtk/ui/shortcuts.ui:157
 msgid "Move Up"
 msgstr ""
@@ -2525,61 +2423,73 @@ msgstr ""
 msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:87
+#: alphacam_gtk/ui/preferences.ui:84
+msgid "Lathe memory"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:85
+msgid "KB for CAM programs; Send asks before sending a bigger one"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:101
 msgid ""
 "For the estimate on the setup sheet; the tools' surface speeds are on the "
 "Tools page"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:91
+#: alphacam_gtk/ui/preferences.ui:105
 msgid "rpm"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:104
+#: alphacam_gtk/ui/preferences.ui:118
 msgid "Rapid rate"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:105
+#: alphacam_gtk/ui/preferences.ui:119
 msgid "mm/min"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:119
+#: alphacam_gtk/ui/preferences.ui:132 alphacam_gtk/window.py:43
+msgid "Tool change"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:133
 msgid "seconds for the operator to change a tool"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:134
+#: alphacam_gtk/ui/preferences.ui:148
 msgid "Input"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:137
+#: alphacam_gtk/ui/preferences.ui:151
 msgid "Input layout"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:138
+#: alphacam_gtk/ui/preferences.ui:152
 msgid "Automatic follows the last finger or mouse"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:142
+#: alphacam_gtk/ui/preferences.ui:156
 msgid "Automatic"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:143
+#: alphacam_gtk/ui/preferences.ui:157
 msgid "Pointer"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:144
+#: alphacam_gtk/ui/preferences.ui:158
 msgid "Touch"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:154 alphacam_gtk/ui/preferences.ui:158
+#: alphacam_gtk/ui/preferences.ui:168 alphacam_gtk/ui/preferences.ui:172
 msgid "Language"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:155
+#: alphacam_gtk/ui/preferences.ui:169
 msgid "Takes effect after restarting the app."
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:162
+#: alphacam_gtk/ui/preferences.ui:176
 msgid "Same as the desktop"
 msgstr ""
 
@@ -3495,6 +3405,14 @@ msgid "Cursor and Measure"
 msgstr ""
 
 #: rust/alphacam-gtk/src/machine.rs
+msgid "Program too big for the lathe?"
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send it only if the lathe has more memory; otherwise split the part into two programs."
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
 msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
 msgstr ""
 
@@ -3556,6 +3474,98 @@ msgstr ""
 
 #: rust/alphacam-gtk/src/op_editor.rs
 msgid "Pulls off to the axis"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "TITLE"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "DATE"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool Start X"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Maximum X"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool Start Z"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Maximum Z"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Op. No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Total Passes"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Depth Of Cut"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Time"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "one per pass"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Block"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Restart #140"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Pass No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "RAPID TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "FEED  TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "centre"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "THREAD TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "DWELL"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "revs"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "bore"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tools, in loading order"
 msgstr ""
 
 #: rust/alphacam-gtk/src/tools_page.rs

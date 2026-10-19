@@ -34,6 +34,8 @@ pub struct Settings {
     pub rapid_rate: f64,
     /// seconds the operator needs to change a tool
     pub tool_change_s: f64,
+    /// KB of CAM program memory on the control (ATSEND: "File too big for standard memory"); Send asks above it
+    pub lathe_memory_kb: f64,
     /// Bluetooth adapters with 8-bit framing only: 8N2 on the adapter, parity made by the app
     pub soft_parity: bool,
     /// the Program page's font size in points (pinch, Ctrl+= / Ctrl+− / Ctrl+0, Ctrl+wheel)
@@ -61,6 +63,7 @@ impl Default for Settings {
             spindle_max: 2500.0,
             rapid_rate: 6000.0,
             tool_change_s: 30.0,
+            lathe_memory_kb: 16.0,
             soft_parity: false,
             program_font_pt: PROGRAM_FONT_PT,
         }

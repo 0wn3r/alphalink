@@ -65,6 +65,18 @@ Adw.PreferencesDialog preferences {
         title: _("Also save the ALPHA-T drawing (.SDG)");
         subtitle: _("Next to the program, so DOS ALPHA-T can open the part");
       }
+
+      Adw.SpinRow pref_memory_row {
+        title: _("Lathe memory");
+        subtitle: _("KB for CAM programs; Send asks before sending a bigger one");
+
+        adjustment: Adjustment {
+          lower: 1;
+          upper: 1024;
+          step-increment: 1;
+          page-increment: 16;
+        };
+      }
     }
 
     Adw.PreferencesGroup {
