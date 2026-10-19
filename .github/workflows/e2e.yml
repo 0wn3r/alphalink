@@ -83,6 +83,10 @@ jobs:
             flatpak install --user -y --noninteractive flathub org.gnome.Platform//51 &&
             flatpak install --user -y --noninteractive bundle/*.flatpak' 2>&1 | tee logs/install.log
           exit ${PIPESTATUS[0]}
+      - name: The Rust command line tool (the programs the tests expect)
+        run: |
+          cargo build --release -q -p alphacam-cli --manifest-path rust/Cargo.toml
+          sudo install -m 755 rust/target/release/alphacam /usr/local/bin/alphacam
       - name: Run the tests
         run: |
           set +e  # GitHub's bash stops at the first failing command; the results below must still be written

@@ -14,19 +14,17 @@ import time
 import unittest
 from pathlib import Path
 
-from alphacam.model import Arc, Line, Point
-from alphacam.model.project import Billet, Project
-from alphacam.post.alphat_prg import post
+from .part import Arc, Billet, Line, Point, Project, post
 
 from .test_workflows import HALF, LANDSCAPE, PORTRAIT, Surface, VirtualPort, shaft, with_op
 
-ENABLED = os.environ.get("ALPHALINK_E2E") == "1" and bool(os.environ.get("ALPHALINK_E2E_BRANCH"))
+ENABLED = os.environ.get("ALPHALINK_E2E") == "1"
 MIN_TARGET_PX = 44  # the smallest finger target (GNOME HIG: "at least 44 px" on touch)
 
 
 def two_ops() -> Project:
     p = with_op("area_clear")
-    from alphacam_gtk.op_factory import default_op
+    from .part import default_op
 
     p.operations.append(default_op("finish", p, 1))
     return p
@@ -96,7 +94,7 @@ class Bus(Surface):
         time.sleep(0.6)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class InputLayout(Bus):
     """TOUCH.md 3: the layout follows the last input in Automatic, and a saved choice holds from the start."""
 
@@ -139,7 +137,7 @@ class InputLayout(Bus):
         self.assertTrue(self.app.exists("Keypad", "button"), "the Keypad button is missing after a restart")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class TouchTargets(Bus):
     """Every control a finger can reach is at least MIN_TARGET_PX in both directions, on each page."""
 
@@ -198,27 +196,27 @@ class TouchTargetsByPageKeys(TouchTargets):
         self.assertEqual({k: v for k, v in cut.items() if v}, {}, "cut off at the edge")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class TouchTargetsPortrait(TouchTargetsByPageKeys):
     size = PORTRAIT
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class TouchTargetsHalf(TouchTargetsByPageKeys):
     size = HALF
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class TouchTargetsUkrainian(TouchTargetsByPageKeys):
     lang = "uk"
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class MenusByTouch(Bus):
     """Popover menus driven by finger: Eduard 2026-10-16, a tapped + menu item closed the menu and added nothing."""
 
     def test_every_add_operation_item_by_tap(self):
-        from alphacam_gtk.op_factory import OP_MENU
+        from .part import OP_MENU
 
         path = self.part(shaft())
         self.launch(str(path), "--touch")
@@ -237,7 +235,11 @@ class MenusByTouch(Bus):
         path = self.part(shaft())
         self.launch(str(path), "--touch")
         self.tap("More Drawing Commands", "toggle button")
-        self.tap(acc=[i for i in self.app.menu_items() if i.text == "Erase Drawing…"][0])
+        time.sleep(0.6)  # the popover slides in: its items move until it settles
+        erase = self.app.find("Erase Drawing…", "menu item")
+        bar = self.app.find("More Drawing Commands", "toggle button")
+        self.assertLess(erase.y + erase.h, bar.y, "the whole menu should fit above the tools (a finger can't scroll it)")
+        self.tap(acc=erase)
         self.app.find("Erase All of the Drawing?", contains=True)
         self.snap("asked")
         self.tap("Erase", "button")
@@ -248,7 +250,7 @@ class MenusByTouch(Bus):
         self.assertEqual(len(self.saved(path).geometry), 5, "Undo should bring the drawing back")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class CanvasNavigation(Bus):
     """TOUCH.md 4: fling, double tap, the zoom buttons, long-press Zoom Here / Fit Part."""
 
@@ -311,7 +313,7 @@ class CanvasNavigation(Bus):
         self.assertViewEqual(self.view(), fit)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class DrawingByTouch(Bus):
     """TOUCH.md 5.2 and 6: the other drawing tools, the keypad's keys and the value chip, all by finger."""
 
@@ -442,8 +444,9 @@ class DrawingByTouch(Bus):
         self.s.tap(*to_screen(40, 0))
         self.assertTrue(self.app.exists("Ø ", "button", contains=True))
         x, y = self.empty_spot()
-        self.s.input.touches([(x, y)], [(x - 900, y)], 30, 0.3)  # pan the point far off to the left
-        time.sleep(0.8)
+        for _ in range(2):  # pan the point far off to the left: 1800 px, more than the drawing is wide
+            self.s.input.touches([(x, y)], [(x - 900, y)], 30, 0.3)
+            time.sleep(0.8)
         self.snap("panned")
         self.assertFalse(self.app.exists("Ø ", "button", contains=True), "the chip should hide off-screen")
 
@@ -460,7 +463,7 @@ class DrawingByTouch(Bus):
         self.assertEqual(len(self.saved(path).geometry), 5)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class EditorByTouch(Bus):
     """TOUCH.md 7.1: a still tap on − / + steps the value; the editor's header buttons by finger."""
 
@@ -509,7 +512,7 @@ class EditorByTouch(Bus):
         self.assertFalse(self.app.exists("Depth of cut", "spinbutton"), "the editor should close")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class SimulationByTouch(Bus):
     """TOUCH.md 7.2: Play / Pause and the scrub slider by finger; the program search button by finger."""
 
@@ -546,7 +549,7 @@ class SimulationByTouch(Bus):
         self.assertTrue([e for e in self.app.all(None, "entry") if "N20" in self.app.text(e)])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class SendByTouch(VirtualPort, Bus):
     """TOUCH.md 7.4: a finger held on Send to the Lathe sends; the screen locks against taps while it runs."""
 
@@ -571,7 +574,7 @@ class SendByTouch(VirtualPort, Bus):
         self.wait_for(lambda: not self.app.checked(lock), 5, "the lock to come off after the send")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardAndMouse(Bus):
     """The same features without a finger (the input-mode parity list of 2026-10-16)."""
 
@@ -659,13 +662,13 @@ class KeyboardAndMouse(Bus):
         self.assertEqual(len(handles), 2)
         hx, hy = self.app.center(acc=handles[1])
         tx, ty = self.app.center(acc=self.app.labelled("Area clear", "list item"))
-        self.s.input.touches([(hx, hy)], [(tx, ty - 10)], 25, 0.4)
+        self.s.input.touches([(hx, hy)], [(tx, ty - 10)], 60, 0.4)  # a slow drag, not a flick
         time.sleep(0.8)
         self.snap("reordered")
         self.assertEqual([type(o).__name__ for o in self.saved(path).operations], ["FinishPass", "AreaClear"])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class SendByKeyboard(VirtualPort, Bus):
     """TOUCH.md 7.4 by keys: Space held on Send to the Lathe starts it, as a held finger does."""
 
@@ -693,7 +696,7 @@ class SendByKeyboard(VirtualPort, Bus):
 # --- POINTER_KEYBOARD.md (approved 2026-10-17): one class per section, keys through libei, state from the bus ------
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardShortcutFixes(Bus):
     """§12: Delete deletes the selected element anywhere on the Part page outside a text field."""
 
@@ -712,7 +715,7 @@ class KeyboardShortcutFixes(Bus):
         self.assertEqual([e.id for e in self.saved(path).geometry], ["g0", "g2", "g3", "g4"])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardOperations(Bus):
     """§6: Alt+↑ / Alt+↓ reorder, Ctrl+D duplicates, Delete deletes with an Undo, all with the list focused."""
 
@@ -757,7 +760,7 @@ class KeyboardOperations(Bus):
         self.assertEqual(self.kinds(path), ["AreaClear", "FinishPass"])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardPages(Bus):
     """§9: Alt+1 … Alt+5 and Ctrl+PgUp / Ctrl+PgDn switch pages."""
 
@@ -781,7 +784,7 @@ class KeyboardPages(Bus):
         self.assertEqual(self.app.state()["page"], seen[0])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardSimulation(Bus):
     """§7: F5 plays and pauses; Ctrl+[ / Ctrl+] step passes; Alt+Home / Alt+End; PgUp / PgDn on the slider."""
 
@@ -844,7 +847,7 @@ class KeyboardSimulation(Bus):
         self.assertEqual(self.moves()[0], a)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardProgram(Bus):
     """§8: the caret selects its block's operation (Enter, or a search hit); Ctrl+= sizes the font, remembered."""
 
@@ -894,7 +897,7 @@ class KeyboardProgram(Bus):
         self.assertEqual(self.app.state()["program_font_pt"], bigger, "the font size should be remembered")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardCanvas(Bus):
     """§3: Ctrl+arrows pan an eighth of the view; the view follows the ALPHA-T cursor; middle-button drag pans."""
 
@@ -947,7 +950,7 @@ class KeyboardCanvas(Bus):
         self.assertAlmostEqual(abs(oy1 - oy), 80, delta=20)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardDrawing(Bus):
     """§4 / §5: [ and ] walk the profile; Space adds or removes elements while picking a contour."""
 
@@ -994,7 +997,7 @@ class KeyboardDrawing(Bus):
         self.assertEqual(self.saved(path).operations[0].contour, picked[:2])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardConstruction(Bus):
     """§4: a construction finished by keys: Enter takes the element at the cursor, the number dialog takes the
     typed value, Tab moves between the dashed solutions and Enter takes the highlighted one."""
@@ -1024,7 +1027,7 @@ class KeyboardConstruction(Bus):
         self.assertIn(round(new.a.x, 3), (30.0, 50.0), f"5 mm from Ø40, not {new.a.x}")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardZoomAndKeypad(Bus):
     """§3 and §11: z zooms at the ALPHA-T cursor; i toggles ABS / INC in the keypad."""
 
@@ -1067,7 +1070,7 @@ class KeyboardZoomAndKeypad(Bus):
         self.assertEqual([(e.a, e.b) for e in self.saved(path).geometry], [(Point(40, 0), Point(40, -25))])
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class MoreMenuWithoutLetters(Bus):
     """§4: Text, Measure, Line by Length and Angle and Move Cursor are in the More menu (finger and pen)."""
 
@@ -1076,14 +1079,21 @@ class MoreMenuWithoutLetters(Bus):
     def test_more_menu_reaches_the_letter_commands(self):
         self.launch(str(self.part(shaft())), "--touch")
         self.tap("More Drawing Commands", "toggle button")
+        time.sleep(0.6)
         items = [i.text for i in self.app.menu_items()]
         self.snap("more")
-        for label in ("Add Text", "Erase Text", "Measure by X,Z", "Measure by Length and Angle",
-                      "Draw Line by Length and Angle", "Move Cursor to X,Z", "Move Cursor by dX,dZ"):
+        for label in ("Add Text", "Erase Text"):
+            self.assertTrue(any(i.startswith(label) for i in items), f"{label!r} not in {items}")
+        self.tap(acc=self.app.find("Cursor and Measure", "menu item"))  # the submenu
+        time.sleep(0.6)
+        items = [i.text for i in self.app.menu_items()]
+        self.snap("cursor-and-measure")
+        for label in ("Measure by X,Z", "Measure by Length and Angle", "Draw Line by Length and Angle",
+                      "Move Cursor to X,Z", "Move Cursor by dX,dZ"):
             self.assertTrue(any(i.startswith(label) for i in items), f"{label!r} not in {items}")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class NumbersEverywhere(Bus):
     """§11: a finger on any number field opens the keypad, not the system keyboard."""
 
@@ -1131,7 +1141,7 @@ class NumbersEverywhere(Bus):
         self.snap("keypad")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class ShortcutsWindow(Bus):
     """§12: every key the Shortcuts window lists does what it says (read on the bus). One session, Escape between."""
 
@@ -1277,7 +1287,7 @@ class ShortcutsWindow(Bus):
         self.esc()
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class PenByTestSeam(Bus):
     """§10 through the bus's ForceSource("pen"): libei clicks counted as pen presses. The app's own pen rules, not
     GTK's stylus events (the Surface checklist in POINTER_KEYBOARD.md §13 covers those)."""
@@ -1324,7 +1334,7 @@ class PenByTestSeam(Bus):
         self.assertTrue(self.app.exists("⌫", "button"))
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class MachineMore(VirtualPort, Bus):
     """The Machine page's other transfers over the virtual port: Restore Manual Ops (hold, pick, confirm) and the
     cable's loopback test."""
@@ -1337,7 +1347,7 @@ class MachineMore(VirtualPort, Bus):
         time.sleep(0.6)
 
     def test_restore_manual_ops(self):
-        from alphacam.link.serial_link import manops_load_bytes
+        from .part import manops_load_bytes
 
         data = b"%\r\nO1001\r\nM29\r\nG65 P63 A1. B2.\r\nG65 P63 A3. B4.\r\nM30\r\n%\r\n"
         ops = self.s.root / "home" / "OPS.MOP"
@@ -1389,7 +1399,7 @@ class MachineMore(VirtualPort, Bus):
             t.join(1)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class DrawingByTouch200(DrawingByTouch):
     """The drawing by touch at the Surface's real 200 % (the value chip went astray there, 2026-10-17)."""
 
@@ -1402,14 +1412,14 @@ class DrawingByTouch200(DrawingByTouch):
         self.n = 0
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class LatheTrouble(VirtualPort, Bus):
     """A lathe or cable that misbehaves: the app must say what happened and never let a half program pass for a
     sent one."""
 
     def start_send(self) -> bytes:
         p = shaft()
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         p.operations += [default_op("area_clear", p, 0), default_op("finish", p, 1)]
         port = os.path.realpath(f"{self.pty}-app")
@@ -1483,7 +1493,7 @@ class LatheTrouble(VirtualPort, Bus):
         self.assertEqual(self.lathe.read_for(1.0), 0, "bytes sent after Cancel")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class KeyboardOnlyJob(VirtualPort, Bus):
     """A whole job without the mouse or a finger: new part, the profile typed, an operation, save, export, send."""
 
@@ -1549,7 +1559,7 @@ class KeyboardOnlyJob(VirtualPort, Bus):
 
 def big_part(steps: int = 150, ops: int = 12) -> Project:
     """A long stepped shaft: 2 × `steps` lines (300 by default) and `ops` operations over it."""
-    from alphacam_gtk.op_factory import default_op
+    from .part import default_op
 
     p = Project(billet=Billet(100, 6 * steps + 20), first_tool=3)
     pts, z = [(0.0, 0.0)], 0.0
@@ -1566,7 +1576,7 @@ def big_part(steps: int = 150, ops: int = 12) -> Project:
     return p
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class BigPart(Bus):
     """Hundreds of elements and a dozen operations: the app stays responsive (a bus call is answered only when the
     main loop is free, so its delay is how long the screen was stuck). Limits are generous, for a busy CI machine."""
@@ -1617,7 +1627,7 @@ class BigPart(Bus):
         self.assertLess(timings["save s"], 5, timings)
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class EditorSwipes(Bus):
     """Eduard's video 2026-10-19: a swipe that starts on an editor number scrolled the editor in jumps, about half as
     far as the finger. The editor must follow the finger 1:1 wherever the swipe starts, without going back."""
@@ -1656,7 +1666,7 @@ class EditorSwipes(Bus):
         self.check(lambda r: r.x + 40, "the title")
 
 
-@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class SurfaceReplay(Bus):
     """Eduard's own finger, recorded on the Surface (libinput record, 2026-10-19) and replayed through libei: each
     swipe started on an editor number must scroll the editor as far as the same swipe started on a row's title, and
@@ -1686,19 +1696,91 @@ class SurfaceReplay(Bus):
         time.sleep(0.5)
         return y_of() - before, trace
 
-    def test_recorded_swipes_on_numbers_follow_the_finger(self):
-        """From a number the editor follows Eduard's finger 1:1 (GTK's own scrolling, from a title, adds a fling)."""
-        from .replay import load, travel
+    def test_recorded_swipes_on_numbers_scroll_like_on_titles(self):
+        """From a number the editor moves as it does from a row's title (with the same coast after the lift), and a
+        swipe never opens the keypad."""
+        from .replay import load
 
         self.launch(str(self.part(with_op())), "--touch")
         results = []
         for i, stroke in enumerate(load(self.RECORDING)):
-            finger = -abs(travel(stroke)[1])  # mirrored upwards: the editor goes up with it
+            on_title, _ = self.editor_scroll(stroke, lambda r: r.x + 40)
             on_number, _trace = self.editor_scroll(stroke, lambda r: r.x + r.w - 160)
-            results.append((i, round(finger), round(on_number)))
-            keypad = self.app.exists("✓", "button")
-            self.assertFalse(keypad, f"stroke {i} opened the keypad")
+            self.assertFalse(self.app.exists("✓", "button"), f"stroke {i} opened the keypad")
+            results.append((i, round(on_title), round(on_number)))
         self.snap("replayed")
-        # an editor at its top scrolls at most about 400 px here; a longer swipe stops at the end
-        bad = [r for r in results if abs(max(r[1], -400) - r[2]) > 16]
-        self.assertEqual(bad, [], f"(stroke, finger travel, editor moved from the number): {results}")
+        bad = [r for r in results if abs(r[1] - r[2]) > 40]
+        self.assertEqual(bad, [], f"(stroke, editor moved from the title, from the number): {results}")
+
+
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
+class WindowWidths(Bus):
+    """Eduard's photo 2026-10-19: in a window narrower than the layout needed, the operation editor ran past the right
+    edge (its −/+ and the main menu cut off). Between the narrow breakpoint (1000) and the full screen, with the
+    editor open by touch, nothing may stick out of the window, in English and in Ukrainian."""
+
+    def overflow(self, width: int, lang: str) -> list:
+        from .harness import GnomeSession
+
+        s = GnomeSession(width, 900).__enter__()
+        try:
+            self.s = s
+            path = s.root / "home" / "part.alcam"
+            two_ops().save(path)
+            self.app = s.launch_app(lang, args=(str(path), "--touch"))
+            time.sleep(1.2)
+            def finish_rows():
+                return [w for w in self.app.widgets()
+                        if w.css == "row" and w.w > 0 and w.text in ("Finish pass", "Чистовий прохід")]
+
+            if not finish_rows():  # the narrow layout opens on the drawing: the operations are behind the back button
+                back = [w for w in self.app.widgets() if w.css == "button" and w.w > 0 and w.x < 80 and w.y < 80][0]
+                s.tap(*self.app.center(acc=back))
+                time.sleep(0.8)
+            s.tap(*self.app.center(acc=finish_rows()[-1]))  # its editor opens
+            time.sleep(0.8)
+            s.screenshot(self.out / f"{lang}-{width}.png")
+            return sorted({f"{w.name} {w.text[:24]!r} to {w.x + w.w:.0f}" for w in self.app.widgets()
+                           if w.w > 0 and w.x + w.w > width + 1 and w.css in ("button", "row", "label", "menubutton")})[:6]
+        finally:
+            s.__exit__(None, None, None)
+
+    def setUp(self):  # each width gets its own session (overflow())
+        from .test_workflows import OUT
+
+        self.out = OUT / f"{self.__class__.__name__}-{self._testMethodName}"
+        self.out.mkdir(parents=True, exist_ok=True)
+        self.n = 0
+
+    def tearDown(self):
+        pass
+
+    def test_no_overflow_between_the_breakpoint_and_full_width(self):
+        found = {}
+        for lang in ("en", "uk"):
+            for width in (1020, 1140, 1260):
+                bad = self.overflow(width, lang)
+                if bad:
+                    found[f"{lang} {width}"] = bad
+        self.assertEqual(found, {}, "controls past the window's right edge")
+
+
+@unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
+class EditorTwoFingers(Bus):
+    """Eduard's photo 2026-10-19: a red focus frame and a text caret in an editor number. A second finger (or a
+    palm) on the number while another touches the editor must not give the number's text the keyboard."""
+
+    def test_second_finger_on_a_number_takes_no_focus(self):
+        self.launch(str(self.part(with_op())), "--touch")
+        self.tap(acc=self.app.labelled("Area clear", "list item"))
+        time.sleep(0.6)
+        sb = self.app.all("Offset X", "spinbutton")[0]
+        text = [w for w in self.app.widgets() if w.css == "text" and w.w > 0
+                and sb.x <= w.x + w.w / 2 <= sb.x + sb.w and sb.y <= w.y + w.h / 2 <= sb.y + sb.h][0]
+        row = self.app.all("Offset X", "row")[0]
+        x, y = self.app.center(acc=text)
+        self.s.input.touches([(row.x + 40, y), (x, y)], None, 10, 0.2)  # a finger on the title, one on the number
+        time.sleep(0.6)
+        self.snap("two-fingers")
+        focused = [f"{w.name} {w.text!r}" for w in self.app.widgets() if w.focus and w.css in ("text", "entry")]
+        self.assertEqual(focused, [], "a touch gave an editor number's text the keyboard (red frame, caret)")

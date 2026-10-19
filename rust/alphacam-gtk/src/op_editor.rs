@@ -89,7 +89,7 @@ pub fn fit_spin(row: &adw::SpinRow, lo: f64, hi: f64, digits: u32) {
     }
 }
 
-/// a finger that travels further than this is scrolling
+/// a finger or pen that travels further than this is not tapping
 const TAP_SLOP_PX: f64 = 12.0;
 
 #[derive(Clone, Copy, PartialEq)]
@@ -99,120 +99,93 @@ enum Touched {
     Number,
 }
 
-#[derive(Default)]
-struct Touch {
-    what: Option<Touched>,
-    moved: bool,
-    start: f64,
-    adj: Option<gtk::Adjustment>,
-    scroller: Option<gtk::ScrolledWindow>,
-    /// where the finger went down, in the scroller's coordinates
-    y0: f64,
-}
-
-/// The finger's height in the scroller's own coordinates. The drag's offsets are in the row's, and the row moves as
-/// the editor scrolls under the finger: scrolling by them fed back, so the editor followed the finger about half
-/// as far and in jumps (Eduard's video, 2026-10-19).
-fn finger_y(gesture: &gtk::GestureDrag, scroller: &gtk::ScrolledWindow) -> Option<f64> {
-    let row = gesture.widget()?;
-    let (x, y) = gesture.point(gesture.current_sequence().as_ref())?;
-    row.compute_point(scroller, &gtk::graphene::Point::new(x as f32, y as f32)).map(|p| p.y() as f64)
-}
-
 /// A finger on the number opens the AlphaLink keypad (TOUCH.md 6) instead of the system keyboard, which covers half
 /// the screen; a finger on − or + steps the value. Both only for a still tap, on release: a finger that moves scrolls
-/// the editor instead (Eduard 2026-10-16: swiping through the parameters kept opening the keypad and changing
-/// values). The touch is taken on press (no focus, so no system keyboard), so the scrolling is done here. The mouse
-/// and keyboard work as before. `row` is an adw::SpinRow or a gtk::SpinButton (POINTER_KEYBOARD.md 11: every number
-/// field a finger can reach); a second call on the same widget does nothing.
+/// the editor, with the ScrolledWindow's own drag and kinetic scrolling (Eduard 2026-10-16: swiping through the
+/// parameters kept opening the keypad and changing values). The row keeps every touch from the number and its
+/// buttons, so the number never takes the focus (the system keyboard, or a typing caret from a second finger) and a
+/// button never steps on the press. The mouse and keyboard work as before. `row` is an adw::SpinRow or a
+/// gtk::SpinButton (POINTER_KEYBOARD.md 11: every number field a finger can reach); a second call on the same widget
+/// does nothing.
 pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
     let row = row.upcast_ref::<gtk::Widget>();
     if row.has_css_class("keypad-on-touch") {
         return;
     }
     row.add_css_class("keypad-on-touch");
-    let drag = gtk::GestureDrag::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
-    let state = Rc::new(RefCell::new(Touch::default()));
-    let st = state.clone();
-    drag.connect_drag_begin(move |gesture, x, y| {
-        // a finger or the pen, which cannot type either (POINTER_KEYBOARD.md 10); the mouse works as before
-        let source = crate::input_mode::event_source(gesture);
-        if !matches!(source, Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen)) {
-            gesture.set_state(gtk::EventSequenceState::Denied);
-            return;
-        }
-        let Some(row) = gesture.widget() else { return };
-        let mut w = row.pick(x, y, gtk::PickFlags::DEFAULT);
-        let mut what = None;
-        while let Some(widget) = w.filter(|w| *w != row) {
-            if let Some(b) = widget.downcast_ref::<gtk::Button>() {
-                what = if b.has_css_class("up") {
-                    Some(Touched::Up)
-                } else if b.has_css_class("down") {
-                    Some(Touched::Down)
-                } else {
-                    None
-                };
-                break;
-            }
-            if widget.is::<gtk::Text>() {
-                what = Some(Touched::Number);
-                break;
-            }
-            w = widget.parent();
-        }
-        if what.is_none() {
-            return;
-        }
-        let scroller = row.ancestor(gtk::ScrolledWindow::static_type()).and_downcast::<gtk::ScrolledWindow>();
-        let adj = scroller.as_ref().map(|s| s.vadjustment());
-        let start = adj.as_ref().map_or(0.0, |a| a.value());
-        let y0 = scroller.as_ref().and_then(|s| finger_y(gesture, s)).unwrap_or(0.0);
-        *st.borrow_mut() = Touch { what, moved: false, start, adj, scroller, y0 };
-        gesture.set_state(gtk::EventSequenceState::Claimed);
+    // a finger or the pen, which cannot type either (POINTER_KEYBOARD.md 10); the mouse works as before
+    let by_hand = |ctl: &gtk::EventController| {
+        matches!(crate::input_mode::event_source(ctl), Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen))
+    };
+    // the tap: GTK's click gesture follows one finger and is cancelled when the ScrolledWindow takes the touch to
+    // scroll; a pen (which does not scroll it) that moved off is no tap either
+    let tap = gtk::GestureClick::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+    let what = Rc::new(Cell::new(None));
+    let w = what.clone();
+    tap.connect_pressed(move |g, _, x, y| {
+        let row = g.widget();
+        w.set(row.filter(|_| by_hand(g.upcast_ref())).and_then(|row| touched(&row, (x, y))).map(|t| (t, x, y)));
     });
-    let st = state.clone();
-    drag.connect_drag_update(move |gesture, dx, dy| {
-        let mut s = st.borrow_mut();
-        if s.what.is_none() {
-            return;
-        }
-        // before any scrolling the row has not moved, so its offsets measure the travel
-        if !s.moved && dx.abs() + dy.abs() > TAP_SLOP_PX {
-            s.moved = true;
-        }
-        let (Some(adj), Some(scroller)) = (&s.adj, &s.scroller) else { return };
-        if let (true, Some(y)) = (s.moved, finger_y(gesture, scroller)) {
-            let top = adj.upper() - adj.page_size();
-            adj.set_value((s.start + s.y0 - y).max(adj.lower()).min(top));
+    tap.connect_released(move |g, _, x, y| {
+        if let (Some((what, x0, y0)), Some(row)) = (what.take(), g.widget())
+            && (x - x0).abs() + (y - y0).abs() <= TAP_SLOP_PX
+        {
+            tapped(&row, what);
         }
     });
-    drag.connect_drag_end(move |gesture, _, _| {
-        let (what, moved) = {
-            let mut s = state.borrow_mut();
-            (s.what.take(), s.moved)
-        };
-        let Some(what) = what.filter(|_| !moved) else { return };
-        let Some(row) = gesture.widget() else { return };
-        let Some(spin) = spin_button(&row) else { return };
-        match what {
-            Touched::Up | Touched::Down => {
-                let step = spin.adjustment().step_increment();
-                spin.set_value(spin.value() + if what == Touched::Up { step } else { -step });
-            }
-            Touched::Number => {
-                let title = number_title(&row);
-                let value = format!("{:.*}", spin.digits() as usize, spin.value());
-                let weak = spin.downgrade();
-                crate::keypad::keypad(&row, Some(&title), &[("v", value)], &[("v", &title)], move |text| {
-                    if let (Some(spin), Ok(v)) = (weak.upgrade(), text.parse::<f64>()) {
-                        spin.set_value(v);
-                    }
-                });
-            }
-        }
+    // and the number and its buttons never see a finger
+    let keep = gtk::EventControllerLegacy::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+    keep.connect_event(move |ctl, event| {
+        use gdk::EventType::*;
+        let kind = event.event_type();
+        let hand = matches!(kind, TouchBegin | TouchUpdate | TouchEnd | TouchCancel)
+            || matches!(kind, ButtonPress | ButtonRelease | MotionNotify) && by_hand(ctl.upcast_ref());
+        if hand { glib::Propagation::Stop } else { glib::Propagation::Proceed }
     });
-    row.add_controller(drag);
+    row.add_controller(keep);
+    row.add_controller(tap);
+}
+
+/// The − or + button, or the number, under `at` in `row`.
+fn touched(row: &gtk::Widget, (x, y): (f64, f64)) -> Option<Touched> {
+    let mut w = row.pick(x, y, gtk::PickFlags::DEFAULT);
+    while let Some(widget) = w.filter(|w| w != row) {
+        if let Some(b) = widget.downcast_ref::<gtk::Button>() {
+            return if b.has_css_class("up") {
+                Some(Touched::Up)
+            } else if b.has_css_class("down") {
+                Some(Touched::Down)
+            } else {
+                None
+            };
+        }
+        if widget.is::<gtk::Text>() {
+            return Some(Touched::Number);
+        }
+        w = widget.parent();
+    }
+    None
+}
+
+/// A still tap on the number or its − or +.
+fn tapped(row: &gtk::Widget, what: Touched) {
+    let Some(spin) = spin_button(row) else { return };
+    match what {
+        Touched::Up | Touched::Down => {
+            let step = spin.adjustment().step_increment();
+            spin.set_value(spin.value() + if what == Touched::Up { step } else { -step });
+        }
+        Touched::Number => {
+            let title = number_title(row);
+            let value = format!("{:.*}", spin.digits() as usize, spin.value());
+            let weak = spin.downgrade();
+            crate::keypad::keypad(row, Some(&title), &[("v", value)], &[("v", &title)], move |text| {
+                if let (Some(spin), Ok(v)) = (weak.upgrade(), text.parse::<f64>()) {
+                    spin.set_value(v);
+                }
+            });
+        }
+    }
 }
 
 /// [`keypad_on_touch`] for every spin row, and every spin button outside one, under `root`.
