@@ -229,6 +229,8 @@ mod imp {
         pub refresh_id: RefCell<Option<glib::SourceId>>,
         pub select_guard: Cell<bool>,
         pub small: Cell<bool>,
+        /// the width the operations, the page and the editor need side by side, last measured while they were
+        pub side_by_side: Cell<i32>,
         pub editor_edit: Cell<bool>,
         pub switching: Cell<bool>,
         pub toast_count: Cell<u32>,
@@ -704,6 +706,24 @@ impl MainWindow {
     /// tools and the simulation on the Part page, the Sheet, Tools and Machine pages.
     fn build_main(&self) {
         let imp = self.imp();
+        // the editor takes the page when the window gets too narrow for it beside the drawing, and gives it back
+        // (the surface's layout comes with every new window size; it is there once the window is realized)
+        let on_resize = |w: &Self| {
+            if let Some(surface) = w.surface() {
+                let win = w.downgrade();
+                surface.connect_layout(move |_, _, _| {
+                    if let Some(w) = win.upgrade() {
+                        w.layout_editor();
+                    }
+                });
+            }
+        };
+        if self.is_realized() {
+            on_resize(self);
+        } else {
+            self.connect_realize(on_resize);
+        }
+        imp.split.connect_collapsed_notify(glib::clone!(#[weak(rename_to = w)] self, move |_| w.layout_editor()));
         for (label, kind) in op_menu() {
             let item = gio::MenuItem::new(Some(&label), None);
             item.set_action_and_target_value(Some("win.add-op"), Some(&kind.to_variant()));
@@ -1402,15 +1422,26 @@ impl MainWindow {
         self.imp().state.borrow().undos.iter().any(UndoStack::modified)
     }
 
-    /// The operation editor belongs to the Part and Program pages; in a small window it takes the whole page while
-    /// it is open (closing it, or picking a contour, brings the drawing back).
+    /// The operation editor belongs to the Part and Program pages; in a small window, or one too narrow for the
+    /// operations, the page and the editor side by side, it takes the whole page while it is open (closing it, or
+    /// picking a contour, brings the drawing back). Between the narrow breakpoint and that width (in touch mode
+    /// about 1280 px: Eduard's unmaximized Surface, 2026-10-19) the editor's − and + and the header's main menu were
+    /// cut off at the right edge.
     pub fn layout_editor(&self) {
         let imp = self.imp();
         let Some(parts) = imp.parts.get() else { return };
         let page = imp.stack.visible_child_name();
         let here = matches!(page.as_deref(), Some("part") | Some("program"));
         imp.editor_reveal.set_visible(here);
-        let alone = imp.small.get() && here && imp.editor_reveal.reveals_child() && parts.drawing.pick_op().is_none();
+        if imp.stack.is_visible() {
+            // the revealer's own size follows its animation; the editor's is the width it takes once open
+            let h = gtk::Orientation::Horizontal;
+            let need = imp.split.measure(h, -1).0 - imp.editor_reveal.measure(h, -1).0 + imp.editor.measure(h, -1).0;
+            imp.side_by_side.set(need);
+        }
+        let fits = self.width() == 0 || self.width() >= imp.side_by_side.get();
+        let open = here && imp.editor_reveal.reveals_child() && parts.drawing.pick_op().is_none();
+        let alone = open && (imp.small.get() || !fits);
         imp.stack.set_visible(!alone);
         imp.editor_reveal.set_hexpand(alone);
     }
