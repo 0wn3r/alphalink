@@ -700,10 +700,10 @@ impl MainWindow {
             imp.ops_section.append_item(&item);
         }
         self.fill_templates();
-        // the narrow window's way back to the operations: libadwaita's own back button has no accessible name, so
-        // this one says where it goes
+        // the narrow window's way to the operations, which slide in over the drawing (the HIG's utility pane toggle);
+        // it says what it shows
         let back = gtk::Button::builder()
-            .icon_name("go-previous-symbolic")
+            .icon_name("sidebar-show-symbolic")
             .tooltip_text(gettext("Operations"))
             .visible(false)
             .build();
