@@ -550,7 +550,7 @@ impl MachinePage {
         ));
         let memory_kb = settings().lathe_memory_kb;
         if data.len() as f64 > memory_kb * 1024.0 {
-            // ATSEND's "File too big for standard memory" warning: the lathe may have extra memory, so it only asks
+            // the Alphalink manual gives the standard control about 16 KB of CAM memory; some have more, so it only asks
             alert.set_heading(Some(&gettext("Program too big for the lathe?")));
             alert.set_body(&format!("{}\n\n{}", tr(
                 "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send \
