@@ -395,34 +395,21 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
   // Only the last matching breakpoint applies, so each repeats the setters of the wider ones. The widths are for the
   // touch layout (48–58 px buttons), the widest; the pointer layout folds a little earlier than it would need to.
 
-  // the operations, the page and the editor stay side by side as long as they fit (ALPHA-T's one screen): first the
-  // operations list narrows, so the header with its page tabs fits beside it (the touch layout's header needs about
-  // 1120; Eduard's maximized Surface is 1368 wide)
+  // the operations, the page and the editor stay side by side as long as they fit (ALPHA-T's one screen; Eduard's
+  // maximized Surface is 1368 wide): the Part page's drawing tools need about 660, the editor 340 (narrower, it breaks
+  // its labels into syllables) and the operations 260; below that the operations list slides in over the drawing from
+  // the sidebar button, like the editor from the other side
   Adw.Breakpoint {
-    condition ("max-width: 1400sp")
+    condition ("max-width: 1270sp")
 
     setters {
-      split.min-sidebar-width: 220;
-      split.max-sidebar-width: 240;
+      split.collapsed: true;
     }
   }
 
-  // then the page tabs go to the bottom (the Part page's drawing tools need about 660, the editor 340; a narrower
-  // editor breaks its labels into syllables)
+  // the header with the page tabs needs about 1130 in the touch layout: below that the tabs go to the bottom
   Adw.Breakpoint {
-    condition ("max-width: 1280sp")
-
-    setters {
-      split.min-sidebar-width: 220;
-      split.max-sidebar-width: 240;
-      switcher_bar.reveal: true;
-      header_switcher.visible: false;
-    }
-  }
-
-  // the operations list slides in over the drawing from the back button, like the editor from the other side
-  Adw.Breakpoint {
-    condition ("max-width: 1240sp")
+    condition ("max-width: 1150sp")
 
     setters {
       split.collapsed: true;
