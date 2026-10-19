@@ -171,7 +171,7 @@ mod imp {
         #[template_child]
         pub root: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub split: TemplateChild<adw::NavigationSplitView>,
+        pub split: TemplateChild<adw::OverlaySplitView>,
         #[template_child]
         pub content_header: TemplateChild<adw::HeaderBar>,
         #[template_child]
@@ -182,8 +182,6 @@ mod imp {
         pub add_op_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
         pub op_list: TemplateChild<gtk::ListBox>,
-        #[template_child]
-        pub content_page: TemplateChild<adw::NavigationPage>,
         #[template_child]
         pub lock_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
@@ -411,11 +409,10 @@ impl MainWindow {
     }
 
     fn split_collapsed(&self) {
-        // a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing
+        // a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing; a wide
+        // one shows the operations beside it
         let split = &self.imp().split;
-        if split.is_collapsed() && self.has_project() {
-            split.set_show_content(true);
-        }
+        split.set_show_sidebar(!split.is_collapsed() || !self.has_project());
     }
 
     fn page_changed(&self) {
@@ -473,7 +470,7 @@ impl MainWindow {
                 imp.editor.show_op(&project, i, &op_title(&project.operations[i]));
                 self.set_editor_open(true);
                 if imp.split.is_collapsed() {
-                    imp.split.set_show_content(true);
+                    imp.split.set_show_sidebar(false);
                 }
             }
             _ => self.set_editor_open(false),
@@ -711,14 +708,14 @@ impl MainWindow {
             .visible(false)
             .build();
         back.update_property(&[gtk::accessible::Property::Label(&gettext("Operations"))]);
-        back.connect_clicked(glib::clone!(#[weak(rename_to = split)] imp.split, move |_| split.set_show_content(false)));
+        back.connect_clicked(glib::clone!(#[weak(rename_to = split)] imp.split, move |_| split.set_show_sidebar(true)));
         imp.content_header.set_show_back_button(false);
         imp.content_header.pack_start(&back);
         if let Some(start) = imp.open_button.parent().and_downcast::<gtk::Box>() {
             start.reorder_child_after(&back, gtk::Widget::NONE);
         }
-        let show_back = glib::clone!(#[weak] back, move |split: &adw::NavigationSplitView| {
-            back.set_visible(split.is_collapsed() && split.shows_content())
+        let show_back = glib::clone!(#[weak] back, move |split: &adw::OverlaySplitView| {
+            back.set_visible(split.is_collapsed() && !split.shows_sidebar())
         });
         show_back(&imp.split);
         imp.split.connect_collapsed_notify(show_back.clone());
@@ -732,7 +729,7 @@ impl MainWindow {
             }
             win.page_changed();
         }));
-        imp.split.connect_show_content_notify(show_back);
+        imp.split.connect_show_sidebar_notify(show_back);
         // Undo and Redo in the main menu only while the narrow window hides the header's buttons
         // (both breakpoints hide them; the box's own visible notify is not emitted when a breakpoint unapplies)
         let sync_undo = |win: &Self| {
@@ -1340,7 +1337,7 @@ impl MainWindow {
         self.update_setups();
         self.activate_setup(0);
         if imp.split.is_collapsed() {
-            imp.split.set_show_content(true); // a narrow window opens on the drawing; Back shows the operations
+            imp.split.set_show_sidebar(false); // a narrow window opens on the drawing; Back shows the operations
         }
         let win = self.downgrade();
         glib::idle_add_local_once(move || {
@@ -1389,7 +1386,11 @@ impl MainWindow {
             switch.add(adw::Toggle::builder().label(tr("Setup {n}", &[("n", &(i + 1))])).build());
         }
         imp.switching.set(false);
-        imp.side_header.set_title_widget(if n > 1 { Some(switch) } else { None });
+        if n > 1 {
+            imp.side_header.set_title_widget(Some(switch));
+        } else {
+            imp.side_header.set_title_widget(Some(&adw::WindowTitle::new(&gettext("Operations"), "")));
+        }
     }
 
     fn setup_switched(&self, group: &adw::ToggleGroup) {
@@ -1479,7 +1480,6 @@ impl MainWindow {
         let name = self.display_name();
         let dirty = if self.modified() { "• " } else { "" };
         self.set_title(Some(&format!("{dirty}{name} – AlphaLink CAM")));
-        imp.content_page.set_title(&format!("{dirty}{name}"));
         self.fill_ops();
         self.fill_program();
         let parts = self.parts();
