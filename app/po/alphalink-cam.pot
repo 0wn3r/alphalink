@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 22:45+0000\n"
+"POT-Creation-Date: 2026-10-19 23:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1736,7 +1736,7 @@ msgstr ""
 msgid "Billet"
 msgstr ""
 
-#: alphacam_gtk/report.py:206 alphacam_gtk/ui/preferences.ui:100
+#: alphacam_gtk/report.py:206 alphacam_gtk/ui/preferences.ui:86
 msgid "Cycle time"
 msgstr ""
 
@@ -1915,7 +1915,7 @@ msgstr ""
 msgid "m/min, for the cycle time; 0 = a default for the type"
 msgstr ""
 
-#: alphacam_gtk/tools_page.py:124 alphacam_gtk/ui/preferences.ui:104
+#: alphacam_gtk/tools_page.py:124 alphacam_gtk/ui/preferences.ui:90
 msgid "Spindle limit"
 msgstr ""
 
@@ -2423,74 +2423,78 @@ msgstr ""
 msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:84
-msgid "Lathe memory"
-msgstr ""
-
-#: alphacam_gtk/ui/preferences.ui:85
-msgid "KB for CAM programs; Send asks before sending a bigger one"
-msgstr ""
-
-#: alphacam_gtk/ui/preferences.ui:101
+#: alphacam_gtk/ui/preferences.ui:87
 msgid ""
 "For the estimate on the setup sheet; the tools' surface speeds are on the "
 "Tools page"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:105
+#: alphacam_gtk/ui/preferences.ui:91
 msgid "rpm"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:118
+#: alphacam_gtk/ui/preferences.ui:104
 msgid "Rapid rate"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:119
+#: alphacam_gtk/ui/preferences.ui:105
 msgid "mm/min"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:132 alphacam_gtk/window.py:43
+#: alphacam_gtk/ui/preferences.ui:118 alphacam_gtk/window.py:43
 msgid "Tool change"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:133
+#: alphacam_gtk/ui/preferences.ui:119
 msgid "seconds for the operator to change a tool"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:148
+#: alphacam_gtk/ui/preferences.ui:134
 msgid "Input"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:151
+#: alphacam_gtk/ui/preferences.ui:137
 msgid "Input layout"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:152
+#: alphacam_gtk/ui/preferences.ui:138
 msgid "Automatic follows the last finger or mouse"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:156
+#: alphacam_gtk/ui/preferences.ui:142
 msgid "Automatic"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:157
+#: alphacam_gtk/ui/preferences.ui:143
 msgid "Pointer"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:158
+#: alphacam_gtk/ui/preferences.ui:144
 msgid "Touch"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:168 alphacam_gtk/ui/preferences.ui:172
+#: alphacam_gtk/ui/preferences.ui:154 alphacam_gtk/ui/preferences.ui:158
 msgid "Language"
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:169
+#: alphacam_gtk/ui/preferences.ui:155
 msgid "Takes effect after restarting the app."
 msgstr ""
 
-#: alphacam_gtk/ui/preferences.ui:176
+#: alphacam_gtk/ui/preferences.ui:162
 msgid "Same as the desktop"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:174
+msgid "Lathe"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:177
+msgid "Memory"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:178
+msgid "KB for CAM programs; Send asks before sending a bigger one"
 msgstr ""
 
 #: alphacam_gtk/ui/remove-setup.ui:11

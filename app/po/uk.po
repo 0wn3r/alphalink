@@ -1666,12 +1666,6 @@ msgstr "Також зберігати креслення ALPHA-T (.SDG)"
 msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
 
-msgid "Lathe memory"
-msgstr "Пам'ять верстата"
-
-msgid "KB for CAM programs; Send asks before sending a bigger one"
-msgstr "КБ для CAM-програм; перед надсиланням більшої програми з'явиться запитання"
-
 msgid "For the estimate on the setup sheet; the tools' surface speeds are on the Tools page"
 msgstr "Для оцінки в карті наладки; швидкості різання інструментів — на сторінці «Інструменти»"
 
@@ -1716,6 +1710,15 @@ msgstr "Діє після перезапуску застосунку."
 
 msgid "Same as the desktop"
 msgstr "Як у системі"
+
+msgid "Lathe"
+msgstr "Верстат"
+
+msgid "Memory"
+msgstr "Пам'ять"
+
+msgid "KB for CAM programs; Send asks before sending a bigger one"
+msgstr "КБ для CAM-програм; перед надсиланням більшої програми з'явиться запитання"
 
 msgid "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save."
 msgstr "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь."
