@@ -396,8 +396,9 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
   // narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane gets
   // narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7 in
   // portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e); the header
-  // must fit a narrow (touch: 48 px buttons) window, and its file and undo buttons are in the main menu too
-  Adw.Breakpoint {
+  // must fit a narrow (touch: 48 px buttons) window, and its file and undo buttons are in the main menu too; the Rust
+  // app widens it to where the header stops fitting (touch: about 1110 px)
+  Adw.Breakpoint narrow_breakpoint {
     condition ("max-width: 1000sp")
 
     setters {

@@ -175,6 +175,8 @@ mod imp {
         #[template_child]
         pub content_header: TemplateChild<adw::HeaderBar>,
         #[template_child]
+        pub narrow_breakpoint: TemplateChild<adw::Breakpoint>,
+        #[template_child]
         pub open_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub side_header: TemplateChild<adw::HeaderBar>,
@@ -231,6 +233,8 @@ mod imp {
         pub small: Cell<bool>,
         /// the width the operations, the page and the editor need side by side, last measured while they were
         pub side_by_side: Cell<i32>,
+        /// the width the header needs with its page tabs, last measured while it had them (0: not yet)
+        pub header_need: Cell<i32>,
         pub editor_edit: Cell<bool>,
         pub switching: Cell<bool>,
         pub toast_count: Cell<u32>,
@@ -643,6 +647,9 @@ impl MainWindow {
                 let pen = im.upgrade().is_some_and(|im| im.pen());
                 win.imp().zoom_box.set_visible(mode == Mode::Touch || pen);
                 win.parts().drawing.set_touch(mode == Mode::Touch, pen);
+                // the header's buttons change size: measure it again, with its tabs (once wide enough for them)
+                win.imp().header_need.set(0);
+                win.set_narrow_from(0);
             }
         };
         // the mode was already chosen (from the saved layout) before this handler existed
@@ -713,6 +720,7 @@ impl MainWindow {
                 let win = w.downgrade();
                 surface.connect_layout(move |_, _, _| {
                     if let Some(w) = win.upgrade() {
+                        w.fit_header();
                         w.layout_editor();
                     }
                 });
@@ -1436,14 +1444,55 @@ impl MainWindow {
         if imp.stack.is_visible() {
             // the revealer's own size follows its animation; the editor's is the width it takes once open
             let h = gtk::Orientation::Horizontal;
-            let need = imp.split.measure(h, -1).0 - imp.editor_reveal.measure(h, -1).0 + imp.editor.measure(h, -1).0;
-            imp.side_by_side.set(need);
+            let content = imp.split.measure(h, -1).0 - imp.split.min_sidebar_width() as i32
+                - imp.editor_reveal.measure(h, -1).0 + imp.editor.measure(h, -1).0;
+            imp.side_by_side.set(self.width_for_content(content));
         }
         let fits = self.width() == 0 || self.width() >= imp.side_by_side.get();
         let open = here && imp.editor_reveal.reveals_child() && parts.drawing.pick_op().is_none();
         let alone = open && (imp.small.get() || !fits);
         imp.stack.set_visible(!alone);
         imp.editor_reveal.set_hexpand(alone);
+    }
+
+    /// The narrowest window whose content pane, beside the operations, is `content` wide: the operations take a
+    /// share of the window between their least and most width.
+    fn width_for_content(&self, content: i32) -> i32 {
+        let split = &self.imp().split;
+        let (f, lo, hi) = (split.sidebar_width_fraction(), split.min_sidebar_width(), split.max_sidebar_width());
+        let c = content as f64;
+        let w = if c + lo <= lo / f {
+            c + lo
+        } else if c / (1.0 - f) <= hi / f {
+            c / (1.0 - f)
+        } else {
+            c + hi
+        };
+        w.ceil() as i32
+    }
+
+    /// The page tabs move from the header to the bottom where the header stops fitting, not at a fixed width: in
+    /// touch mode (58 px buttons) the header needs about 1110 px, and at 1020 the main menu and the close buttons were
+    /// past the right edge (the laptop's e2e, 2026-10-19). Measured while the tabs are in the header.
+    fn fit_header(&self) {
+        let imp = self.imp();
+        if self.current_breakpoint().is_some() || !imp.content_header.is_visible() || !imp.split.is_visible() {
+            return;
+        }
+        let need = self.width_for_content(imp.content_header.measure(gtk::Orientation::Horizontal, -1).0);
+        if need != imp.header_need.replace(need) {
+            glib::g_debug!("alphalink-cam", "the header needs a window {need} px wide");
+            self.set_narrow_from(need);
+        }
+    }
+
+    /// The narrow layout applies below 1000 sp, or below `need` px when that is wider.
+    fn set_narrow_from(&self, need: i32) {
+        let rule = if need > 0 { format!("max-width: 1000sp or max-width: {}px", need - 1) } else { "max-width: 1000sp".into() };
+        match adw::BreakpointCondition::parse(&rule) {
+            Ok(c) => self.imp().narrow_breakpoint.set_condition(Some(&c)),
+            Err(e) => glib::g_warning!("alphalink-cam", "breakpoint {rule}: {e}"),
+        }
     }
 
     /// The drawing takes the keyboard on the Part page, so ALPHA-T's cursor keys work without a click first.
