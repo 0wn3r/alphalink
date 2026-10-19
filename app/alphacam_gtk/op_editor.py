@@ -11,7 +11,7 @@ import gi
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
-from gi.repository import Adw, Gtk  # noqa: E402
+from gi.repository import Adw, Graphene, Gtk  # noqa: E402
 
 from alphacam.model.geometry import Arc, Point  # noqa: E402
 from alphacam.model.operations import Drill, Groove  # noqa: E402
@@ -90,7 +90,16 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
     from .keypad import Keypad
 
     drag = Gtk.GestureDrag(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
-    state = {"what": None, "moved": False, "start": 0.0, "adj": None}
+    state = {"what": None, "moved": False, "start": 0.0, "adj": None, "scroller": None, "y0": 0.0}
+
+    def finger_y(gesture, scroller):
+        """The finger's height in the scroller's coordinates: the drag's offsets are in the row's, and the row moves
+        as the editor scrolls under the finger, which fed back (half the finger's travel, in jumps)."""
+        ok, x, y = gesture.get_point(gesture.get_current_sequence())
+        if not ok:
+            return None
+        ok, p = row.compute_point(scroller, Graphene.Point().init(x, y))
+        return p.y if ok else None
 
     def begin(gesture, x, y):
         w = row.pick(x, y, Gtk.PickFlags.DEFAULT)
@@ -107,7 +116,9 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
             return
         scroller = row.get_ancestor(Gtk.ScrolledWindow)
         adj = scroller.get_vadjustment() if scroller is not None else None
-        state.update(what=what, moved=False, adj=adj, start=adj.get_value() if adj else 0.0)
+        y0 = finger_y(gesture, scroller) if scroller is not None else None
+        state.update(what=what, moved=False, adj=adj, start=adj.get_value() if adj else 0.0, scroller=scroller,
+                     y0=y0 or 0.0)
         gesture.set_state(Gtk.EventSequenceState.CLAIMED)
 
     def update(gesture, dx, dy):
@@ -115,10 +126,11 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
             return
         if not state["moved"] and abs(dx) + abs(dy) > TAP_SLOP_PX:
             state["moved"] = True
-        adj = state["adj"]
-        if state["moved"] and adj is not None:
+        adj, scroller = state["adj"], state["scroller"]
+        y = finger_y(gesture, scroller) if state["moved"] and scroller is not None else None
+        if y is not None:
             top = adj.get_upper() - adj.get_page_size()
-            adj.set_value(min(max(state["start"] - dy, adj.get_lower()), top))
+            adj.set_value(min(max(state["start"] + state["y0"] - y, adj.get_lower()), top))
 
     def end(gesture, dx, dy):
         what, state["what"] = state["what"], None
