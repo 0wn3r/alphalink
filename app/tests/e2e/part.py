@@ -174,6 +174,21 @@ def post(p: Project) -> bytes:
         return out.read_bytes()
 
 
+def has_sdg() -> bool:
+    """The command line tool converts ALPHA-T drawings (`alphacam sdg`)."""
+    try:
+        return subprocess.run([*cli(), "sdg", "--help"], capture_output=True).returncode == 0
+    except OSError:
+        return False
+
+
+def sdg(src: str | Path, out: str | Path) -> Path:
+    """`alphacam sdg`: .SDG to .alcam, .alcam to .SDG, or .SDG to .SDG through the app's own reader and writer (an
+    .SDG comes with its .SDT)."""
+    subprocess.run([*cli(), "sdg", str(src), "-o", str(out)], check=True, capture_output=True)
+    return Path(out)
+
+
 def manops_load_bytes(data: bytes) -> bytes:
     """What a Manual Ops restore sends (ALPHA-T's ATMANOP): even parity in bit 7, bytes above 0x7F become 0."""
     def even(b: int) -> int:
