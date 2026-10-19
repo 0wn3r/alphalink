@@ -193,12 +193,21 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
                 button-clicked => $_show_finding();
               }
 
-              // editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
-              // negative allocations during its slide animation here)
-              content: Box editor_split {
+              // editor pane on the right, beside the page; in a window too narrow for both it slides in over the
+              // page's right side (the breakpoints below)
+              content: Adw.OverlaySplitView editor_split {
+                sidebar-position: end;
+                show-sidebar: false;
+                // a swipe on the drawing pans it; a tap on the drawing the editor covers closes the editor
+                enable-show-gesture: false;
+                enable-hide-gesture: false;
+                min-sidebar-width: 340;
+                max-sidebar-width: 400;
+
+
                 // size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the
                 // width of the Part page with the editor open
-                Adw.ViewStack stack {
+                content: Adw.ViewStack stack {
                   hhomogeneous: false;
                   hexpand: true;
                   notify::visible-child-name => $_page_changed();
@@ -371,15 +380,9 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
                       }
                     };
                   }
-                }
+                };
 
-                Revealer editor_reveal {
-                  transition-type: slide_left;
-                  reveal-child: false;
-                  notify::reveal-child => $_page_changed();
-
-                  child: $AlphaLinkOpEditor editor {};
-                }
+                sidebar: $AlphaLinkOpEditor editor {};
               };
 
               [bottom]
@@ -393,15 +396,28 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
     };
   };
 
-  // narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane gets
-  // narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7 in
-  // portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e); the header
-  // must fit a narrow (touch: 48 px buttons) window, and its file and undo buttons are in the main menu too; the Rust
-  // app widens it to where the header stops fitting (touch: about 1110 px)
-  Adw.Breakpoint narrow_breakpoint {
-    condition ("max-width: 1000sp")
+  // Only the last matching breakpoint applies, so each repeats the setters of the wider ones. The widths are for the
+  // touch layout (48–58 px buttons), the widest; the pointer layout folds a little earlier than it would need to.
+
+  // the operations, the page and the editor side by side need about 1280 px in the touch layout (Eduard's
+  // unmaximized Surface cut off the editor's − and +, 2026-10-19): the editor slides in over the page instead
+  Adw.Breakpoint {
+    condition ("max-width: 1360sp")
 
     setters {
+      editor_split.collapsed: true;
+    }
+  }
+
+  // narrow (half a Surface screen, portrait): the operations list becomes its own page and the page tabs go to the
+  // bottom, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000; the touch layout's header
+  // needs about 1130: at 1020 its menu and close buttons were past the right edge, found by tests/e2e); its file and
+  // undo buttons are in the main menu too
+  Adw.Breakpoint {
+    condition ("max-width: 1150sp")
+
+    setters {
+      editor_split.collapsed: true;
       split.collapsed: true;
       editor.width-request: 280;
       switcher_bar.reveal: true;
@@ -412,14 +428,14 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
     }
   }
 
-  // below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it is
-  // open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
+  // below 700 the editor covers the whole page while it is open (picking a contour shows the drawing)
   Adw.Breakpoint {
     condition ("max-width: 700sp")
-    apply => $_small_applied();
-    unapply => $_small_unapplied();
 
     setters {
+      editor_split.collapsed: true;
+      editor_split.sidebar-width-fraction: 1;
+      editor_split.max-sidebar-width: 700;
       split.collapsed: true;
       editor.width-request: 280;
       switcher_bar.reveal: true;

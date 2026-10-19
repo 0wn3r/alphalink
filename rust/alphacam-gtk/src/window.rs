@@ -175,8 +175,6 @@ mod imp {
         #[template_child]
         pub content_header: TemplateChild<adw::HeaderBar>,
         #[template_child]
-        pub narrow_breakpoint: TemplateChild<adw::Breakpoint>,
-        #[template_child]
         pub open_button: TemplateChild<gtk::Button>,
         #[template_child]
         pub side_header: TemplateChild<adw::HeaderBar>,
@@ -215,7 +213,7 @@ mod imp {
         #[template_child]
         pub program_info: TemplateChild<gtk::Label>,
         #[template_child]
-        pub editor_reveal: TemplateChild<gtk::Revealer>,
+        pub editor_split: TemplateChild<adw::OverlaySplitView>,
         #[template_child]
         pub editor: TemplateChild<OpEditor>,
         #[template_child]
@@ -230,11 +228,8 @@ mod imp {
         pub parts: OnceCell<Parts>,
         pub refresh_id: RefCell<Option<glib::SourceId>>,
         pub select_guard: Cell<bool>,
-        pub small: Cell<bool>,
-        /// the width the operations, the page and the editor need side by side, last measured while they were
-        pub side_by_side: Cell<i32>,
-        /// the width the header needs with its page tabs, last measured while it had them (0: not yet)
-        pub header_need: Cell<i32>,
+        /// an operation is open in the editor (it shows on the Part and Program pages)
+        pub editor_open: Cell<bool>,
         pub editor_edit: Cell<bool>,
         pub switching: Cell<bool>,
         pub toast_count: Cell<u32>,
@@ -305,7 +300,7 @@ fn arg<T: for<'a> glib::value::FromValue<'a> + 'static>(values: &[glib::Value], 
 /// the window is the last value, the signal's own values come before it.
 fn bind_callbacks(klass: &mut <imp::MainWindow as ObjectSubclass>::Class) {
     type Handler = (&'static str, fn(&MainWindow, &[glib::Value]) -> Option<glib::Value>);
-    let handlers: [Handler; 14] = [
+    let handlers: [Handler; 12] = [
         ("_close_request", |w, _| Some(w.close_request_cb().to_value())),
         ("_split_collapsed", |w, _| {
             w.split_collapsed();
@@ -313,14 +308,6 @@ fn bind_callbacks(klass: &mut <imp::MainWindow as ObjectSubclass>::Class) {
         }),
         ("_page_changed", |w, _| {
             w.page_changed();
-            None
-        }),
-        ("_small_applied", |w, _| {
-            w.set_small(true);
-            None
-        }),
-        ("_small_unapplied", |w, _| {
-            w.set_small(false);
             None
         }),
         ("_program_search_changed", |w, v| {
@@ -436,8 +423,8 @@ impl MainWindow {
         self.focus_drawing();
     }
 
-    fn set_small(&self, small: bool) {
-        self.imp().small.set(small);
+    fn set_editor_open(&self, open: bool) {
+        self.imp().editor_open.set(open);
         self.layout_editor();
     }
 
@@ -484,12 +471,12 @@ impl MainWindow {
         match (index, self.project()) {
             (Some(i), Some(project)) if i < project.operations.len() => {
                 imp.editor.show_op(&project, i, &op_title(&project.operations[i]));
-                imp.editor_reveal.set_reveal_child(true);
+                self.set_editor_open(true);
                 if imp.split.is_collapsed() {
                     imp.split.set_show_content(true);
                 }
             }
-            _ => imp.editor_reveal.set_reveal_child(false),
+            _ => self.set_editor_open(false),
         }
     }
 
@@ -647,9 +634,6 @@ impl MainWindow {
                 let pen = im.upgrade().is_some_and(|im| im.pen());
                 win.imp().zoom_box.set_visible(mode == Mode::Touch || pen);
                 win.parts().drawing.set_touch(mode == Mode::Touch, pen);
-                // the header's buttons change size: measure it again, with its tabs (once wide enough for them)
-                win.imp().header_need.set(0);
-                win.set_narrow_from(0);
             }
         };
         // the mode was already chosen (from the saved layout) before this handler existed
@@ -713,25 +697,6 @@ impl MainWindow {
     /// tools and the simulation on the Part page, the Sheet, Tools and Machine pages.
     fn build_main(&self) {
         let imp = self.imp();
-        // the editor takes the page when the window gets too narrow for it beside the drawing, and gives it back
-        // (the surface's layout comes with every new window size; it is there once the window is realized)
-        let on_resize = |w: &Self| {
-            if let Some(surface) = w.surface() {
-                let win = w.downgrade();
-                surface.connect_layout(move |_, _, _| {
-                    if let Some(w) = win.upgrade() {
-                        w.fit_header();
-                        w.layout_editor();
-                    }
-                });
-            }
-        };
-        if self.is_realized() {
-            on_resize(self);
-        } else {
-            self.connect_realize(on_resize);
-        }
-        imp.split.connect_collapsed_notify(glib::clone!(#[weak(rename_to = w)] self, move |_| w.layout_editor()));
         for (label, kind) in op_menu() {
             let item = gio::MenuItem::new(Some(&label), None);
             item.set_action_and_target_value(Some("win.add-op"), Some(&kind.to_variant()));
@@ -757,6 +722,16 @@ impl MainWindow {
         });
         show_back(&imp.split);
         imp.split.connect_collapsed_notify(show_back.clone());
+        imp.editor_split.connect_collapsed_notify(glib::clone!(#[weak(rename_to = win)] self, move |_| win.layout_editor()));
+        imp.editor_split.connect_show_sidebar_notify(glib::clone!(#[weak(rename_to = win)] self, move |split| {
+            // a tap beside the editor that covers the page, or Escape, closes it like its own Close
+            let shown = win.imp().stack.visible_child_name().is_some_and(|p| p == "part" || p == "program");
+            let picking = win.imp().parts.get().is_some_and(|p| p.drawing.pick_op().is_some());
+            if !split.shows_sidebar() && split.is_collapsed() && win.imp().editor_open.get() && shown && !picking {
+                win.select_op(None);
+            }
+            win.page_changed();
+        }));
         imp.split.connect_show_content_notify(show_back);
         // Undo and Redo in the main menu only while the narrow window hides the header's buttons
         // (both breakpoints hide them; the box's own visible notify is not emitted when a breakpoint unapplies)
@@ -1388,7 +1363,7 @@ impl MainWindow {
         imp.state.borrow_mut().setup_index = index;
         self.sync_project();
         imp.readout.set_label(" "); // nothing selected
-        imp.editor_reveal.set_reveal_child(false);
+        self.set_editor_open(false);
         if let Some(p) = imp.parts.get() {
             // element ids repeat between setups: nothing carries over
             p.drawing.finish_chain();
@@ -1430,69 +1405,15 @@ impl MainWindow {
         self.imp().state.borrow().undos.iter().any(UndoStack::modified)
     }
 
-    /// The operation editor belongs to the Part and Program pages; in a small window, or one too narrow for the
-    /// operations, the page and the editor side by side, it takes the whole page while it is open (closing it, or
-    /// picking a contour, brings the drawing back). Between the narrow breakpoint and that width (in touch mode
-    /// about 1280 px: Eduard's unmaximized Surface, 2026-10-19) the editor's − and + and the header's main menu were
-    /// cut off at the right edge.
+    /// The operation editor belongs to the Part and Program pages. Where it covers the page (a narrow window,
+    /// ui/window.blp), picking a contour moves it aside until the pick ends.
     pub fn layout_editor(&self) {
         let imp = self.imp();
         let Some(parts) = imp.parts.get() else { return };
         let page = imp.stack.visible_child_name();
         let here = matches!(page.as_deref(), Some("part") | Some("program"));
-        imp.editor_reveal.set_visible(here);
-        if imp.stack.is_visible() {
-            // the revealer's own size follows its animation; the editor's is the width it takes once open
-            let h = gtk::Orientation::Horizontal;
-            let content = imp.split.measure(h, -1).0 - imp.split.min_sidebar_width() as i32
-                - imp.editor_reveal.measure(h, -1).0 + imp.editor.measure(h, -1).0;
-            imp.side_by_side.set(self.width_for_content(content));
-        }
-        let fits = self.width() == 0 || self.width() >= imp.side_by_side.get();
-        let open = here && imp.editor_reveal.reveals_child() && parts.drawing.pick_op().is_none();
-        let alone = open && (imp.small.get() || !fits);
-        imp.stack.set_visible(!alone);
-        imp.editor_reveal.set_hexpand(alone);
-    }
-
-    /// The narrowest window whose content pane, beside the operations, is `content` wide: the operations take a
-    /// share of the window between their least and most width.
-    fn width_for_content(&self, content: i32) -> i32 {
-        let split = &self.imp().split;
-        let (f, lo, hi) = (split.sidebar_width_fraction(), split.min_sidebar_width(), split.max_sidebar_width());
-        let c = content as f64;
-        let w = if c + lo <= lo / f {
-            c + lo
-        } else if c / (1.0 - f) <= hi / f {
-            c / (1.0 - f)
-        } else {
-            c + hi
-        };
-        w.ceil() as i32
-    }
-
-    /// The page tabs move from the header to the bottom where the header stops fitting, not at a fixed width: in
-    /// touch mode (58 px buttons) the header needs about 1110 px, and at 1020 the main menu and the close buttons were
-    /// past the right edge (the laptop's e2e, 2026-10-19). Measured while the tabs are in the header.
-    fn fit_header(&self) {
-        let imp = self.imp();
-        if self.current_breakpoint().is_some() || !imp.content_header.is_visible() || !imp.split.is_visible() {
-            return;
-        }
-        let need = self.width_for_content(imp.content_header.measure(gtk::Orientation::Horizontal, -1).0);
-        if need != imp.header_need.replace(need) {
-            glib::g_debug!("alphalink-cam", "the header needs a window {need} px wide");
-            self.set_narrow_from(need);
-        }
-    }
-
-    /// The narrow layout applies below 1000 sp, or below `need` px when that is wider.
-    fn set_narrow_from(&self, need: i32) {
-        let rule = if need > 0 { format!("max-width: 1000sp or max-width: {}px", need - 1) } else { "max-width: 1000sp".into() };
-        match adw::BreakpointCondition::parse(&rule) {
-            Ok(c) => self.imp().narrow_breakpoint.set_condition(Some(&c)),
-            Err(e) => glib::g_warning!("alphalink-cam", "breakpoint {rule}: {e}"),
-        }
+        let picking = imp.editor_split.is_collapsed() && parts.drawing.pick_op().is_some();
+        imp.editor_split.set_show_sidebar(here && imp.editor_open.get() && !picking);
     }
 
     /// The drawing takes the keyboard on the Part page, so ALPHA-T's cursor keys work without a click first.
@@ -2448,7 +2369,7 @@ impl MainWindow {
             if let Some(p) = imp.parts.get() {
                 p.sim.select_op(None);
             }
-            imp.editor_reveal.set_reveal_child(false);
+            self.set_editor_open(false);
             return;
         };
         let Some(row) = imp.op_list.row_at_index(index as i32) else { return };
