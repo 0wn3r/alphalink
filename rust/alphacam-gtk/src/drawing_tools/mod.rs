@@ -342,7 +342,7 @@ impl DrawingTools {
         this.edit_el.connect_clicked(weak!(this, move |_| this.edit_selected_element()));
         this.keypad_button.connect_clicked(weak!(this, move |_| this.open_keypad()));
 
-        // sections with headings, so 19 items read as four groups (HIG: menus)
+        // sections with headings, so the items read as groups (HIG: menus)
         let menu = gio::Menu::new();
         let construct = gio::Menu::new();
         for (label, kind, key) in CONSTRUCT_MENU {
@@ -362,8 +362,10 @@ impl DrawingTools {
             features.append_item(&item);
         }
         menu.append_section(Some(&gettext("Features")), &features);
-        // ALPHA-T's letter commands with dialogs, reachable without a keyboard (POINTER_KEYBOARD.md 4)
-        for (title, items) in [(n_!("Cursor and Measure"), LETTER_MENU), (n_!("Text"), TEXT_MENU)] {
+        // ALPHA-T's letter commands with dialogs, reachable without a keyboard (POINTER_KEYBOARD.md 4); the six cursor
+        // and measure ones in a submenu, so the menu fits above the drawing tools on a Surface in landscape (a finger
+        // does not scroll a popover menu, found by tests/e2e)
+        for (title, items, submenu) in [(n_!("Cursor and Measure"), LETTER_MENU, true), (n_!("Text"), TEXT_MENU, false)] {
             let section = gio::Menu::new();
             for (label, key) in items {
                 let item = gio::MenuItem::new(Some(&gettext(label)), None);
@@ -371,7 +373,13 @@ impl DrawingTools {
                 item.set_action_and_target_value(Some("win.hit-key"), Some(&key.to_string().to_variant()));
                 section.append_item(&item);
             }
-            menu.append_section(Some(&gettext(title)), &section);
+            if submenu {
+                let wrap = gio::Menu::new();
+                wrap.append_submenu(Some(&gettext(title)), &section);
+                menu.append_section(None, &wrap);
+            } else {
+                menu.append_section(Some(&gettext(title)), &section);
+            }
         }
         let hit_key = gio::SimpleAction::new("hit-key", Some(glib::VariantTy::STRING));
         hit_key.connect_activate(weak!(this, move |_, v| {

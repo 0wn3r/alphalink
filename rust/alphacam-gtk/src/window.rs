@@ -171,7 +171,7 @@ mod imp {
         #[template_child]
         pub root: TemplateChild<gtk::Stack>,
         #[template_child]
-        pub split: TemplateChild<adw::NavigationSplitView>,
+        pub split: TemplateChild<adw::OverlaySplitView>,
         #[template_child]
         pub content_header: TemplateChild<adw::HeaderBar>,
         #[template_child]
@@ -182,8 +182,6 @@ mod imp {
         pub add_op_button: TemplateChild<gtk::MenuButton>,
         #[template_child]
         pub op_list: TemplateChild<gtk::ListBox>,
-        #[template_child]
-        pub content_page: TemplateChild<adw::NavigationPage>,
         #[template_child]
         pub lock_button: TemplateChild<gtk::ToggleButton>,
         #[template_child]
@@ -213,7 +211,7 @@ mod imp {
         #[template_child]
         pub program_info: TemplateChild<gtk::Label>,
         #[template_child]
-        pub editor_reveal: TemplateChild<gtk::Revealer>,
+        pub editor_split: TemplateChild<adw::OverlaySplitView>,
         #[template_child]
         pub editor: TemplateChild<OpEditor>,
         #[template_child]
@@ -228,7 +226,8 @@ mod imp {
         pub parts: OnceCell<Parts>,
         pub refresh_id: RefCell<Option<glib::SourceId>>,
         pub select_guard: Cell<bool>,
-        pub small: Cell<bool>,
+        /// an operation is open in the editor (it shows on the Part and Program pages)
+        pub editor_open: Cell<bool>,
         pub editor_edit: Cell<bool>,
         pub switching: Cell<bool>,
         pub toast_count: Cell<u32>,
@@ -299,7 +298,7 @@ fn arg<T: for<'a> glib::value::FromValue<'a> + 'static>(values: &[glib::Value], 
 /// the window is the last value, the signal's own values come before it.
 fn bind_callbacks(klass: &mut <imp::MainWindow as ObjectSubclass>::Class) {
     type Handler = (&'static str, fn(&MainWindow, &[glib::Value]) -> Option<glib::Value>);
-    let handlers: [Handler; 14] = [
+    let handlers: [Handler; 12] = [
         ("_close_request", |w, _| Some(w.close_request_cb().to_value())),
         ("_split_collapsed", |w, _| {
             w.split_collapsed();
@@ -307,14 +306,6 @@ fn bind_callbacks(klass: &mut <imp::MainWindow as ObjectSubclass>::Class) {
         }),
         ("_page_changed", |w, _| {
             w.page_changed();
-            None
-        }),
-        ("_small_applied", |w, _| {
-            w.set_small(true);
-            None
-        }),
-        ("_small_unapplied", |w, _| {
-            w.set_small(false);
             None
         }),
         ("_program_search_changed", |w, v| {
@@ -418,11 +409,10 @@ impl MainWindow {
     }
 
     fn split_collapsed(&self) {
-        // a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing
+        // a window that becomes narrow (also at start, before the breakpoint first applies) shows the drawing; a wide
+        // one shows the operations beside it
         let split = &self.imp().split;
-        if split.is_collapsed() && self.has_project() {
-            split.set_show_content(true);
-        }
+        split.set_show_sidebar(!split.is_collapsed() || !self.has_project());
     }
 
     fn page_changed(&self) {
@@ -430,8 +420,8 @@ impl MainWindow {
         self.focus_drawing();
     }
 
-    fn set_small(&self, small: bool) {
-        self.imp().small.set(small);
+    fn set_editor_open(&self, open: bool) {
+        self.imp().editor_open.set(open);
         self.layout_editor();
     }
 
@@ -478,12 +468,12 @@ impl MainWindow {
         match (index, self.project()) {
             (Some(i), Some(project)) if i < project.operations.len() => {
                 imp.editor.show_op(&project, i, &op_title(&project.operations[i]));
-                imp.editor_reveal.set_reveal_child(true);
+                self.set_editor_open(true);
                 if imp.split.is_collapsed() {
-                    imp.split.set_show_content(true);
+                    imp.split.set_show_sidebar(false);
                 }
             }
-            _ => imp.editor_reveal.set_reveal_child(false),
+            _ => self.set_editor_open(false),
         }
     }
 
@@ -710,26 +700,36 @@ impl MainWindow {
             imp.ops_section.append_item(&item);
         }
         self.fill_templates();
-        // the narrow window's way back to the operations: libadwaita's own back button has no accessible name, so
-        // this one says where it goes
+        // the narrow window's way to the operations, which slide in over the drawing (the HIG's utility pane toggle);
+        // it says what it shows
         let back = gtk::Button::builder()
-            .icon_name("go-previous-symbolic")
+            .icon_name("sidebar-show-symbolic")
             .tooltip_text(gettext("Operations"))
             .visible(false)
             .build();
         back.update_property(&[gtk::accessible::Property::Label(&gettext("Operations"))]);
-        back.connect_clicked(glib::clone!(#[weak(rename_to = split)] imp.split, move |_| split.set_show_content(false)));
+        back.connect_clicked(glib::clone!(#[weak(rename_to = split)] imp.split, move |_| split.set_show_sidebar(true)));
         imp.content_header.set_show_back_button(false);
         imp.content_header.pack_start(&back);
         if let Some(start) = imp.open_button.parent().and_downcast::<gtk::Box>() {
             start.reorder_child_after(&back, gtk::Widget::NONE);
         }
-        let show_back = glib::clone!(#[weak] back, move |split: &adw::NavigationSplitView| {
-            back.set_visible(split.is_collapsed() && split.shows_content())
+        let show_back = glib::clone!(#[weak] back, move |split: &adw::OverlaySplitView| {
+            back.set_visible(split.is_collapsed() && !split.shows_sidebar())
         });
         show_back(&imp.split);
         imp.split.connect_collapsed_notify(show_back.clone());
-        imp.split.connect_show_content_notify(show_back);
+        imp.editor_split.connect_collapsed_notify(glib::clone!(#[weak(rename_to = win)] self, move |_| win.layout_editor()));
+        imp.editor_split.connect_show_sidebar_notify(glib::clone!(#[weak(rename_to = win)] self, move |split| {
+            // a tap beside the editor that covers the page, or Escape, closes it like its own Close
+            let shown = win.imp().stack.visible_child_name().is_some_and(|p| p == "part" || p == "program");
+            let picking = win.imp().parts.get().is_some_and(|p| p.drawing.pick_op().is_some());
+            if !split.shows_sidebar() && split.is_collapsed() && win.imp().editor_open.get() && shown && !picking {
+                win.select_op(None);
+            }
+            win.page_changed();
+        }));
+        imp.split.connect_show_sidebar_notify(show_back);
         // Undo and Redo in the main menu only while the narrow window hides the header's buttons
         // (both breakpoints hide them; the box's own visible notify is not emitted when a breakpoint unapplies)
         let sync_undo = |win: &Self| {
@@ -1337,7 +1337,7 @@ impl MainWindow {
         self.update_setups();
         self.activate_setup(0);
         if imp.split.is_collapsed() {
-            imp.split.set_show_content(true); // a narrow window opens on the drawing; Back shows the operations
+            imp.split.set_show_sidebar(false); // a narrow window opens on the drawing; Back shows the operations
         }
         let win = self.downgrade();
         glib::idle_add_local_once(move || {
@@ -1360,7 +1360,7 @@ impl MainWindow {
         imp.state.borrow_mut().setup_index = index;
         self.sync_project();
         imp.readout.set_label(" "); // nothing selected
-        imp.editor_reveal.set_reveal_child(false);
+        self.set_editor_open(false);
         if let Some(p) = imp.parts.get() {
             // element ids repeat between setups: nothing carries over
             p.drawing.finish_chain();
@@ -1386,7 +1386,11 @@ impl MainWindow {
             switch.add(adw::Toggle::builder().label(tr("Setup {n}", &[("n", &(i + 1))])).build());
         }
         imp.switching.set(false);
-        imp.side_header.set_title_widget(if n > 1 { Some(switch) } else { None });
+        if n > 1 {
+            imp.side_header.set_title_widget(Some(switch));
+        } else {
+            imp.side_header.set_title_widget(Some(&adw::WindowTitle::new(&gettext("Operations"), "")));
+        }
     }
 
     fn setup_switched(&self, group: &adw::ToggleGroup) {
@@ -1402,17 +1406,15 @@ impl MainWindow {
         self.imp().state.borrow().undos.iter().any(UndoStack::modified)
     }
 
-    /// The operation editor belongs to the Part and Program pages; in a small window it takes the whole page while
-    /// it is open (closing it, or picking a contour, brings the drawing back).
+    /// The operation editor belongs to the Part and Program pages. Where it covers the page (a narrow window,
+    /// ui/window.blp), picking a contour moves it aside until the pick ends.
     pub fn layout_editor(&self) {
         let imp = self.imp();
         let Some(parts) = imp.parts.get() else { return };
         let page = imp.stack.visible_child_name();
         let here = matches!(page.as_deref(), Some("part") | Some("program"));
-        imp.editor_reveal.set_visible(here);
-        let alone = imp.small.get() && here && imp.editor_reveal.reveals_child() && parts.drawing.pick_op().is_none();
-        imp.stack.set_visible(!alone);
-        imp.editor_reveal.set_hexpand(alone);
+        let picking = imp.editor_split.is_collapsed() && parts.drawing.pick_op().is_some();
+        imp.editor_split.set_show_sidebar(here && imp.editor_open.get() && !picking);
     }
 
     /// The drawing takes the keyboard on the Part page, so ALPHA-T's cursor keys work without a click first.
@@ -1478,7 +1480,6 @@ impl MainWindow {
         let name = self.display_name();
         let dirty = if self.modified() { "• " } else { "" };
         self.set_title(Some(&format!("{dirty}{name} – AlphaLink CAM")));
-        imp.content_page.set_title(&format!("{dirty}{name}"));
         self.fill_ops();
         self.fill_program();
         let parts = self.parts();
@@ -2368,7 +2369,7 @@ impl MainWindow {
             if let Some(p) = imp.parts.get() {
                 p.sim.select_op(None);
             }
-            imp.editor_reveal.set_reveal_child(false);
+            self.set_editor_open(false);
             return;
         };
         let Some(row) = imp.op_list.row_at_index(index as i32) else { return };

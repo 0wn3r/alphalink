@@ -84,325 +84,348 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
       StackPage {
         name: "main";
 
-        child: Adw.NavigationSplitView split {
+        child: Adw.OverlaySplitView split {
           min-sidebar-width: 260;
           max-sidebar-width: 340;
           notify::collapsed => $_split_collapsed();
 
-          sidebar: Adw.NavigationPage {
-            title: _("Operations");
+          sidebar: Adw.ToolbarView {
+            [top]
+            Adw.HeaderBar side_header {
+              title-widget: Adw.WindowTitle {
+                title: _("Operations");
+              };
 
-            child: Adw.ToolbarView {
-              [top]
-              Adw.HeaderBar side_header {
-                [start]
-                MenuButton add_op_button {
-                  icon-name: "list-add-symbolic";
-                  menu-model: add_menu;
-                  tooltip-text: _("Add Operation (C)");
-                }
+              [start]
+              MenuButton add_op_button {
+                icon-name: "list-add-symbolic";
+                menu-model: add_menu;
+                tooltip-text: _("Add Operation (C)");
               }
+            }
 
-              content: ScrolledWindow {
-                vexpand: true;
+            content: ScrolledWindow {
+              vexpand: true;
 
-                child: ListBox op_list {
-                  selection-mode: single;
-                  row-selected => $_row_selected();
+              child: ListBox op_list {
+                selection-mode: single;
+                row-selected => $_row_selected();
 
-                  styles [
-                    "navigation-sidebar",
-                    "op-list",
-                  ]
-                };
+                styles [
+                  "navigation-sidebar",
+                  "op-list",
+                ]
               };
             };
           };
 
-          content: Adw.NavigationPage content_page {
-            title: _("Part");
+          content: Adw.ToolbarView {
+            [top]
+            Adw.HeaderBar content_header {
+              // 5 pages: icon over label fits
+              title-widget: Adw.ViewSwitcher header_switcher {
+                stack: stack;
+                policy: narrow;
+              };
 
-            child: Adw.ToolbarView {
-              [top]
-              Adw.HeaderBar content_header {
-                // 5 pages: icon over label fits
-                title-widget: Adw.ViewSwitcher header_switcher {
-                  stack: stack;
-                  policy: narrow;
-                };
+              [start]
+              Button open_button {
+                icon-name: "document-open-symbolic";
+                action-name: "win.open";
+                tooltip-text: _("Open (Ctrl+O)");
+              }
 
-                [start]
-                Button open_button {
-                  icon-name: "document-open-symbolic";
-                  action-name: "win.open";
-                  tooltip-text: _("Open (Ctrl+O)");
-                }
+              [start]
+              Button save_button {
+                icon-name: "document-save-symbolic";
+                action-name: "win.save";
+                tooltip-text: _("Save (Ctrl+S)");
+              }
 
-                [start]
-                Button save_button {
-                  icon-name: "document-save-symbolic";
-                  action-name: "win.save";
-                  tooltip-text: _("Save (Ctrl+S)");
-                }
-
-                [start]
-                Box undo_box {
-                  Button {
-                    icon-name: "edit-undo-symbolic";
-                    action-name: "win.undo";
-                    tooltip-text: _("Undo (Ctrl+Z)");
-                  }
-
-                  Button {
-                    icon-name: "edit-redo-symbolic";
-                    action-name: "win.redo";
-                    tooltip-text: _("Redo (Ctrl+Shift+Z)");
-                  }
-                }
-
-                [end]
-                MenuButton {
-                  icon-name: "open-menu-symbolic";
-                  menu-model: main_menu;
-                  primary: true;
-                  tooltip-text: _("Main Menu");
-                }
-
-                // HIG header bars: icon and label, no suggested style
-                [end]
+              [start]
+              Box undo_box {
                 Button {
-                  action-name: "win.export";
-                  tooltip-text: _("Export ALPHA-T Program (Ctrl+E)");
+                  icon-name: "edit-undo-symbolic";
+                  action-name: "win.undo";
+                  tooltip-text: _("Undo (Ctrl+Z)");
+                }
 
-                  child: Adw.ButtonContent {
-                    icon-name: "document-send-symbolic";
-                    label: _("_Export PRG");
-                    use-underline: true;
+                Button {
+                  icon-name: "edit-redo-symbolic";
+                  action-name: "win.redo";
+                  tooltip-text: _("Redo (Ctrl+Shift+Z)");
+                }
+              }
+
+              [end]
+              MenuButton {
+                icon-name: "open-menu-symbolic";
+                menu-model: main_menu;
+                primary: true;
+                tooltip-text: _("Main Menu");
+              }
+
+              // HIG header bars: icon and label, no suggested style
+              [end]
+              Button {
+                action-name: "win.export";
+                tooltip-text: _("Export ALPHA-T Program (Ctrl+E)");
+
+                child: Adw.ButtonContent {
+                  icon-name: "document-send-symbolic";
+                  label: _("_Export PRG");
+                  use-underline: true;
+                };
+              }
+
+              [end]
+              ToggleButton lock_button {
+                icon-name: "changes-allow-symbolic";
+                tooltip-text: _("Touch Lock (Hold to Unlock by Touch)");
+              }
+            }
+
+            [top]
+            Adw.Banner banner {
+              button-clicked => $_show_finding();
+            }
+
+            // editor pane on the right, beside the page; in a window too narrow for both it slides in over the
+            // page's right side (the breakpoints below)
+            content: Adw.OverlaySplitView editor_split {
+              sidebar-position: end;
+              show-sidebar: false;
+              // a swipe on the drawing pans it; a tap on the drawing the editor covers closes the editor
+              enable-show-gesture: false;
+              enable-hide-gesture: false;
+              min-sidebar-width: 340;
+              max-sidebar-width: 400;
+
+
+              // size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the
+              // width of the Part page with the editor open
+              content: Adw.ViewStack stack {
+                hhomogeneous: false;
+                hexpand: true;
+                notify::visible-child-name => $_page_changed();
+
+                Adw.ViewStackPage {
+                  name: "part";
+                  title: _("Part");
+                  icon-name: "view-paged-symbolic";
+
+                  child: Box part_page {
+                    orientation: vertical;
+
+                    // Part page messages show over the drawing, above the simulation and tool bars, so they never
+                    // cover the tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
+                    Adw.ToastOverlay part_toasts {
+                      vexpand: true;
+
+                      child: Overlay part_overlay {
+                        child: $AlphaLinkLatheCanvas canvas {
+                          accessible-role: application;
+                          cursor-moved => $_cursor_moved();
+
+                          // screen readers, tests/e2e
+                          accessibility {
+                            label: _("Drawing");
+                          }
+                        };
+
+                        // shown in touch mode (T1)
+                        [overlay]
+                        Box zoom_box {
+                          orientation: vertical;
+                          spacing: 6;
+                          halign: end;
+                          valign: end;
+                          visible: false;
+
+                          styles [
+                            "canvas-zoom",
+                          ]
+
+                          Button {
+                            icon-name: "zoom-in-symbolic";
+                            action-name: "win.zoom-in";
+                            tooltip-text: _("Zoom In");
+
+                            styles [
+                              "osd",
+                              "circular",
+                            ]
+                          }
+
+                          Button {
+                            icon-name: "zoom-out-symbolic";
+                            action-name: "win.zoom-out";
+                            tooltip-text: _("Zoom Out");
+
+                            styles [
+                              "osd",
+                              "circular",
+                            ]
+                          }
+
+                          Button {
+                            icon-name: "zoom-fit-best-symbolic";
+                            action-name: "win.fit";
+                            tooltip-text: _("Fit Part");
+
+                            styles [
+                              "osd",
+                              "circular",
+                            ]
+                          }
+                        }
+                      };
+                    }
+
+                    // the simulation bar goes above this line, the drawing tools' bar below it
+                    Separator part_separator {}
+
+                    // the pointer's X and Z, or the active tool's guidance (it wraps in a narrow window)
+                    Label readout {
+                      xalign: 0;
+                      label: " ";
+                      wrap: true;
+                      wrap-mode: word_char;
+
+                      styles [
+                        "readout",
+                        "dim-label",
+                      ]
+                    }
                   };
                 }
 
-                [end]
-                ToggleButton lock_button {
-                  icon-name: "changes-allow-symbolic";
-                  tooltip-text: _("Touch Lock (Hold to Unlock by Touch)");
-                }
-              }
+                Adw.ViewStackPage {
+                  name: "program";
+                  title: _("Program");
+                  icon-name: "text-x-generic-symbolic";
 
-              [top]
-              Adw.Banner banner {
-                button-clicked => $_show_finding();
-              }
+                  child: Box {
+                    orientation: vertical;
 
-              // editor pane on the right; a Revealer instead of AdwOverlaySplitView (whose END sidebar warned about
-              // negative allocations during its slide animation here)
-              content: Box editor_split {
-                // size to the visible page only: a wide page (e.g. the Sheet's toolbar in Ukrainian) must not set the
-                // width of the Part page with the editor open
-                Adw.ViewStack stack {
-                  hhomogeneous: false;
-                  hexpand: true;
-                  notify::visible-child-name => $_page_changed();
+                    // search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
+                    SearchBar program_searchbar {
+                      show-close-button: true;
 
-                  Adw.ViewStackPage {
-                    name: "part";
-                    title: _("Part");
-                    icon-name: "view-paged-symbolic";
+                      child: SearchEntry program_search {
+                        placeholder-text: _("Search, or N10 to go to a block");
+                        hexpand: true;
+                        search-changed => $_program_search_changed();
+                        activate => $_program_search_next();
+                        next-match => $_program_search_next();
+                        previous-match => $_program_search_previous();
+                      };
+                    }
 
-                    child: Box part_page {
-                      orientation: vertical;
+                    ScrolledWindow {
+                      vexpand: true;
 
-                      // Part page messages show over the drawing, above the simulation and tool bars, so they never
-                      // cover the tool buttons or the coordinate entry (a window-wide toast sits on the bottom bar)
-                      Adw.ToastOverlay part_toasts {
-                        vexpand: true;
+                      child: TextView program_view {
+                        editable: false;
+                        // a caret to read by (arrows, PgUp / PgDn); Enter selects its operation (POINTER_KEYBOARD.md 8)
+                        cursor-visible: true;
+                        monospace: true;
+                        top-margin: 12;
+                        bottom-margin: 12;
+                        left-margin: 12;
+                        right-margin: 12;
 
-                        child: Overlay part_overlay {
-                          child: $AlphaLinkLatheCanvas canvas {
-                            accessible-role: application;
-                            cursor-moved => $_cursor_moved();
+                        styles [
+                          "program-text",
+                        ]
 
-                            // screen readers, tests/e2e
-                            accessibility {
-                              label: _("Drawing");
-                            }
-                          };
+                        GestureClick {
+                          released => $_program_tapped();
+                        }
 
-                          // shown in touch mode (T1)
-                          [overlay]
-                          Box zoom_box {
-                            orientation: vertical;
-                            spacing: 6;
-                            halign: end;
-                            valign: end;
-                            visible: false;
+                        GestureZoom {
+                          begin => $_pinch_begin();
+                          scale-changed => $_pinch_scaled();
+                        }
+                      };
+                    }
 
-                            styles [
-                              "canvas-zoom",
-                            ]
+                    Separator {}
 
-                            Button {
-                              icon-name: "zoom-in-symbolic";
-                              action-name: "win.zoom-in";
-                              tooltip-text: _("Zoom In");
-
-                              styles [
-                                "osd",
-                                "circular",
-                              ]
-                            }
-
-                            Button {
-                              icon-name: "zoom-out-symbolic";
-                              action-name: "win.zoom-out";
-                              tooltip-text: _("Zoom Out");
-
-                              styles [
-                                "osd",
-                                "circular",
-                              ]
-                            }
-
-                            Button {
-                              icon-name: "zoom-fit-best-symbolic";
-                              action-name: "win.fit";
-                              tooltip-text: _("Fit Part");
-
-                              styles [
-                                "osd",
-                                "circular",
-                              ]
-                            }
-                          }
-                        };
-                      }
-
-                      // the simulation bar goes above this line, the drawing tools' bar below it
-                      Separator part_separator {}
-
-                      // the pointer's X and Z, or the active tool's guidance (it wraps in a narrow window)
-                      Label readout {
+                    Box {
+                      // never widens the window
+                      Label program_info {
                         xalign: 0;
-                        label: " ";
-                        wrap: true;
-                        wrap-mode: word_char;
+                        ellipsize: end;
+                        hexpand: true;
 
                         styles [
                           "readout",
                           "dim-label",
                         ]
                       }
-                    };
-                  }
 
-                  Adw.ViewStackPage {
-                    name: "program";
-                    title: _("Program");
-                    icon-name: "text-x-generic-symbolic";
+                      ToggleButton {
+                        icon-name: "edit-find-symbolic";
+                        tooltip-text: _("Search (Ctrl+F)");
+                        active: bind program_searchbar.search-mode-enabled bidirectional;
 
-                    child: Box {
-                      orientation: vertical;
-
-                      // search, and Go to N-block (TOUCH.md 7.3): Ctrl+F, or the search button for a finger
-                      SearchBar program_searchbar {
-                        show-close-button: true;
-
-                        child: SearchEntry program_search {
-                          placeholder-text: _("Search, or N10 to go to a block");
-                          hexpand: true;
-                          search-changed => $_program_search_changed();
-                          activate => $_program_search_next();
-                          next-match => $_program_search_next();
-                          previous-match => $_program_search_previous();
-                        };
+                        styles [
+                          "flat",
+                        ]
                       }
-
-                      ScrolledWindow {
-                        vexpand: true;
-
-                        child: TextView program_view {
-                          editable: false;
-                          // a caret to read by (arrows, PgUp / PgDn); Enter selects its operation (POINTER_KEYBOARD.md 8)
-                          cursor-visible: true;
-                          monospace: true;
-                          top-margin: 12;
-                          bottom-margin: 12;
-                          left-margin: 12;
-                          right-margin: 12;
-
-                          styles [
-                            "program-text",
-                          ]
-
-                          GestureClick {
-                            released => $_program_tapped();
-                          }
-
-                          GestureZoom {
-                            begin => $_pinch_begin();
-                            scale-changed => $_pinch_scaled();
-                          }
-                        };
-                      }
-
-                      Separator {}
-
-                      Box {
-                        // never widens the window
-                        Label program_info {
-                          xalign: 0;
-                          ellipsize: end;
-                          hexpand: true;
-
-                          styles [
-                            "readout",
-                            "dim-label",
-                          ]
-                        }
-
-                        ToggleButton {
-                          icon-name: "edit-find-symbolic";
-                          tooltip-text: _("Search (Ctrl+F)");
-                          active: bind program_searchbar.search-mode-enabled bidirectional;
-
-                          styles [
-                            "flat",
-                          ]
-                        }
-                      }
-                    };
-                  }
-                }
-
-                Revealer editor_reveal {
-                  transition-type: slide_left;
-                  reveal-child: false;
-                  notify::reveal-child => $_page_changed();
-
-                  child: $AlphaLinkOpEditor editor {};
+                    }
+                  };
                 }
               };
 
-              [bottom]
-              Adw.ViewSwitcherBar switcher_bar {
-                stack: stack;
-              }
+              sidebar: $AlphaLinkOpEditor editor {};
             };
+
+            [bottom]
+            Adw.ViewSwitcherBar switcher_bar {
+              stack: stack;
+            }
           };
         };
       }
     };
   };
 
-  // narrow (half a Surface screen, portrait): the operations list becomes its own page, and the editor pane gets
-  // narrower, so nothing is cut off (sidebar 260 + the Part page and its tabs need about 1000: a Surface Pro 7 in
-  // portrait, 912 logical pixels wide, cut the page tabs to "Prog…" at the old 900, found by tests/e2e); the header
-  // must fit a narrow (touch: 48 px buttons) window, and its file and undo buttons are in the main menu too
+  // Only the last matching breakpoint applies, so each repeats the setters of the wider ones. The widths are for the
+  // touch layout (48–58 px buttons), the widest; the pointer layout folds a little earlier than it would need to.
+
+  // the operations, the page and the editor stay side by side as long as they fit (ALPHA-T's one screen; Eduard's
+  // maximized Surface is 1368 wide): the Part page's drawing tools need about 660, the editor 340 (narrower, it breaks
+  // its labels into syllables) and the operations 260; below that the operations list slides in over the drawing from
+  // the sidebar button, like the editor from the other side
   Adw.Breakpoint {
-    condition ("max-width: 1000sp")
+    condition ("max-width: 1270sp")
 
     setters {
       split.collapsed: true;
-      editor.width-request: 280;
+    }
+  }
+
+  // the header with the page tabs needs about 1130 in the touch layout: below that the tabs go to the bottom
+  Adw.Breakpoint {
+    condition ("max-width: 1150sp")
+
+    setters {
+      split.collapsed: true;
+      switcher_bar.reveal: true;
+      header_switcher.visible: false;
+    }
+  }
+
+  // narrow (half a Surface screen, portrait): the editor slides in over the drawing's right side too, and the file and
+  // undo buttons go to the main menu
+  Adw.Breakpoint {
+    condition ("max-width: 1010sp")
+
+    setters {
+      editor_split.collapsed: true;
+      split.collapsed: true;
       switcher_bar.reveal: true;
       header_switcher.visible: false;
       open_button.visible: false;
@@ -411,16 +434,15 @@ template $AlphaLinkMainWindow: Adw.ApplicationWindow {
     }
   }
 
-  // below 700 the editor pane and the drawing do not fit side by side: the editor takes the whole page while it is
-  // open (only the last matching breakpoint applies, so the small one repeats the narrow setters)
+  // below 700 the editor covers the whole page while it is open (picking a contour shows the drawing)
   Adw.Breakpoint {
     condition ("max-width: 700sp")
-    apply => $_small_applied();
-    unapply => $_small_unapplied();
 
     setters {
+      editor_split.collapsed: true;
+      editor_split.sidebar-width-fraction: 1;
+      editor_split.max-sidebar-width: 700;
       split.collapsed: true;
-      editor.width-request: 280;
       switcher_bar.reveal: true;
       header_switcher.visible: false;
       open_button.visible: false;

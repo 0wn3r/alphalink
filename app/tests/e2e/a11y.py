@@ -1,4 +1,4 @@
-"""Finding the app's widgets through the accessibility tree (AT-SPI), as a screen reader does."""
+"""The accessibility tree (AT-SPI), read only: the tests use it to wait for the file chooser portal (another process). The app itself is read through its test bus (testbus.py)."""
 
 from __future__ import annotations
 

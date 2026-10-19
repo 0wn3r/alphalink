@@ -194,29 +194,19 @@ class GnomeSession:
 
     def launch_app(self, lang: str = "en", args: tuple[str, ...] = (), maximize: bool = True,
                    env: dict[str, str] | None = None):
-        from .a11y import App
+        """The installed app, fullscreen with its test bus (ALPHALINK_TEST=1), read through that bus. The Flatpak
+        branch is $ALPHALINK_E2E_BRANCH (default: master, a normal install)."""
+        from .testbus import BusApp
 
         extra = [f"--env={k}={v}" for k, v in (env or {}).items()]
-        branch = os.environ.get("ALPHALINK_E2E_BRANCH")  # e.g. "rust": that build, read through its test bus
-        if branch:
-            from .testbus import BusApp
-
-            cmd = ["flatpak", "run", f"--env=ALPHALINK_LANG={lang}", "--env=ALPHALINK_TEST=1", *extra,
-                   f"{APP_ID}//{branch}", *args]
-            self._spawn(cmd, log=f"app-{lang}.log")
-            app = BusApp.wait(self, timeout=60)
-            app.touch = "--touch" in args
-            time.sleep(0.8)  # the fullscreen animation
-            self.top = 0
-            return app
-        cmd = ["flatpak", "run", f"--env=ALPHALINK_LANG={lang}", *extra, APP_ID, *args]
+        branch = os.environ.get("ALPHALINK_E2E_BRANCH") or "master"
+        cmd = ["flatpak", "run", f"--env=ALPHALINK_LANG={lang}", "--env=ALPHALINK_TEST=1", *extra,
+               f"{APP_ID}//{branch}", *args]
         self._spawn(cmd, log=f"app-{lang}.log")
-        app = App.wait(timeout=30)
-        if maximize:
-            self.key("super+Up")
-            time.sleep(0.8)
-        self.top = self._find_top()
-        app.origin = (0, self.top)
+        app = BusApp.wait(self, timeout=60)
+        app.touch = "--touch" in args
+        time.sleep(0.8)  # the fullscreen animation
+        self.top = 0
         return app
 
     def _find_top(self) -> int:

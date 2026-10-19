@@ -1,7 +1,7 @@
 """The app's widgets through its own test bus (the Rust app with ALPHALINK_TEST=1, see rust/alphacam-gtk/src/test_bus.rs):
 where every mapped widget is on the screen, in logical pixels (the window is fullscreen), with its text.
 
-`BusApp` offers the same calls as `a11y.App`, so the tests run against either, but it never activates anything
+`BusApp` is how every test sees the app; it never activates anything
 itself: `press` is a real click or tap through libei at the widget's centre. The bus is only read."""
 
 from __future__ import annotations
@@ -126,7 +126,7 @@ class BusApp:
         except GLib.Error:
             return False
 
-    # --- search (the a11y.App calls) ---------------------------------------------------------------------------------
+    # --- search ---------------------------------------------------------------------------------
 
     @staticmethod
     def _is(w: Widget, role: str) -> bool:
