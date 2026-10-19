@@ -166,6 +166,33 @@ class EI:
         _lib.ei_device_scroll_discrete(dev, 0, 120 * clicks)
         self._frame(dev)
 
+    def play(self, frames: list[tuple[float, dict[int, tuple[float, float] | None]]]) -> None:
+        """Touch frames at their times: (seconds, {slot: (x, y), or None when that finger lifts}). A slot seen
+        for the first time goes down; the rest move. For replaying a recorded finger (replay.py)."""
+        dev = self._device(CAP_TOUCH)
+        down: dict[int, object] = {}
+        t0 = time.monotonic()
+        for at, slots in frames:
+            delay = t0 + at - time.monotonic()
+            if delay > 0:
+                time.sleep(delay)
+            for slot, pos in slots.items():
+                if pos is None:
+                    if slot in down:
+                        t = down.pop(slot)
+                        _lib.ei_touch_up(t)
+                        _lib.ei_touch_unref(t)
+                elif slot in down:
+                    _lib.ei_touch_motion(down[slot], *pos)
+                else:
+                    down[slot] = _lib.ei_device_touch_new(dev)
+                    _lib.ei_touch_down(down[slot], *pos)
+            self._frame(dev, wait=0)
+        for t in down.values():
+            _lib.ei_touch_up(t)
+            _lib.ei_touch_unref(t)
+        self._frame(dev)
+
     def touches(self, start: list[tuple[float, float]], end: list[tuple[float, float]] | None = None,
                 steps: int = 10, hold: float = 0.06) -> None:
         """Fingers down at `start`, moved together to `end` in `steps` frames (a pinch or a drag), then up."""

@@ -29,7 +29,7 @@ jobs:
         with:
           bundle: AlphaLinkCAM-${{ matrix.app }}.flatpak
           manifest-path: ${{ matrix.manifest }}
-          cache-key: flatpak-builder-e2e-${{ matrix.app }}-${{ github.sha }}
+          cache-key: flatpak-builder-rust-${{ hashFiles('rust/build-aux/*.json', 'rust/Cargo.lock') }}  # shared with the Rust workflow's Flatpak job
           run-tests: false
 
   e2e:
@@ -94,7 +94,7 @@ jobs:
                 echo "low memory: stopping the tests"; ps -u e2e -o rss=,comm= | sort -rn | head -15; sudo pkill -KILL -u e2e; fi
             done ) > logs/watch.log 2>&1 &
           sudo -u e2e -H bash -c 'cd ~/app && ALPHALINK_E2E=1 ALPHALINK_E2E_LOGS=$HOME/logs/sessions \
-            ALPHALINK_E2E_BRANCH=${{ matrix.branch }} python3 -m tests.e2e.run -j 2' 2>&1 | tee logs/e2e.log
+            ALPHALINK_E2E_BRANCH=${{ matrix.branch }} python3 -m tests.e2e.run -j 4' 2>&1 | tee logs/e2e.log
           exit ${PIPESTATUS[0]}
       - name: Collect what the test user left
         if: always()
@@ -109,6 +109,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-screenshots-${{ matrix.app }}
+          retention-days: 7
           path: app/e2e-out
           if-no-files-found: ignore
       - name: Keep the logs
@@ -116,6 +117,7 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: e2e-logs-${{ matrix.app }}
+          retention-days: 7
           path: logs
           if-no-files-found: ignore
       - name: Show the end of the logs as annotations (readable without signing in)

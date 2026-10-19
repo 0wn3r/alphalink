@@ -21,6 +21,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: rustup toolchain install stable --profile minimal --component clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rust
       - run: cargo clippy --workspace --exclude alphacam-gtk --all-targets -- -D warnings
       - run: cargo clippy --workspace --exclude alphacam-gtk --all-targets --all-features -- -D warnings  # the bluez feature
       - run: cargo test --workspace --exclude alphacam-gtk
@@ -37,4 +40,4 @@ jobs:
         with:
           bundle: AlphaLinkCAM-rust.flatpak
           manifest-path: rust/build-aux/io.github._0wn3r.AlphaLinkCAM.json
-          cache-key: flatpak-builder-rust-${{ github.sha }}
+          cache-key: flatpak-builder-rust-${{ hashFiles('rust/build-aux/*.json', 'rust/Cargo.lock') }}  # one key per manifest + crates, so later commits reuse the downloads and unchanged modules
