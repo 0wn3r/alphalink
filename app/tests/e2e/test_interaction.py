@@ -12,6 +12,7 @@ import os
 import re
 import time
 import unittest
+from pathlib import Path
 
 from alphacam.model import Arc, Line, Point
 from alphacam.model.project import Billet, Project
@@ -1614,3 +1615,90 @@ class BigPart(Bus):
         self.assertLess(timings["pan ms"], 500, timings)
         self.assertLess(timings["program page ms"], 3000, timings)
         self.assertLess(timings["save s"], 5, timings)
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class EditorSwipes(Bus):
+    """Eduard's video 2026-10-19: a swipe that starts on an editor number scrolled the editor in jumps, about half as
+    far as the finger. The editor must follow the finger 1:1 wherever the swipe starts, without going back."""
+
+    def row_y(self, title: str):
+        rows = [w for w in self.app.widgets() if w.css == "row" and w.text == title and w.w > 0]
+        return rows[0].y if rows else None
+
+    def swipe_on(self, title: str, x_of, dy: float):
+        import threading
+
+        r = self.app.all(title, "row")[0]
+        x, y = x_of(r), r.y + r.h / 2
+        before, trace = self.row_y(title), []
+        t = threading.Thread(target=self.s.input.touches, args=([(x, y)], [(x, y + dy)], 15, 0.3))
+        t.start()
+        while t.is_alive():
+            trace.append(self.row_y(title))
+            time.sleep(0.03)
+        time.sleep(0.5)
+        return self.row_y(title) - before, trace
+
+    def check(self, x_of, where: str):
+        self.launch(str(self.part(with_op())), "--touch")
+        self.tap(acc=self.app.labelled("Area clear", "list item"))
+        time.sleep(0.6)
+        moved, trace = self.swipe_on("Feed", x_of, -200)
+        self.assertAlmostEqual(moved, -200, delta=16, msg=f"a 200 px swipe from {where} moved the editor {moved:.0f} px")
+        steps = [b - a for a, b in zip(trace, trace[1:])]
+        self.assertFalse([s for s in steps if s > 4], f"the editor went back during the swipe from {where}: {trace}")
+
+    def test_swipe_from_a_number_follows_the_finger(self):
+        self.check(lambda r: r.x + r.w - 160, "the number")
+
+    def test_swipe_from_a_title_follows_the_finger(self):
+        self.check(lambda r: r.x + 40, "the title")
+
+
+@unittest.skipUnless(ENABLED, "set ALPHALINK_E2E=1 and ALPHALINK_E2E_BRANCH (the app's test bus)")
+class SurfaceReplay(Bus):
+    """Eduard's own finger, recorded on the Surface (libinput record, 2026-10-19) and replayed through libei: each
+    swipe started on an editor number must scroll the editor as far as the same swipe started on a row's title, and
+    never backwards."""
+
+    RECORDING = Path(__file__).parent / "recordings/surface-editor-swipes-2026-10-19.yml"
+
+    def editor_scroll(self, stroke, x_of) -> tuple[float, list]:
+        import threading
+
+        from .replay import placed
+
+        self.tap(acc=self.app.labelled("Area clear", "list item"))  # fresh: the editor at its top
+        time.sleep(0.6)
+        self.s.key("Escape")
+        time.sleep(0.3)
+        self.tap(acc=self.app.labelled("Area clear", "list item"))
+        time.sleep(0.6)
+        r = self.app.all("Depth of cut", "row")[0]
+        y_of = lambda: next((w.y for w in self.app.widgets() if w.css == "row" and w.text == "Depth of cut"), None)
+        before, trace = y_of(), []
+        t = threading.Thread(target=self.s.input.play, args=(placed(stroke, (x_of(r), r.y + r.h / 2), upwards=True),))
+        t.start()
+        while t.is_alive():
+            trace.append(y_of())
+            time.sleep(0.03)
+        time.sleep(0.5)
+        return y_of() - before, trace
+
+    def test_recorded_swipes_on_numbers_follow_the_finger(self):
+        """From a number the editor follows Eduard's finger 1:1 (GTK's own scrolling, from a title, adds a fling)."""
+        from .replay import load, travel
+
+        self.launch(str(self.part(with_op())), "--touch")
+        results = []
+        for i, stroke in enumerate(load(self.RECORDING)):
+            finger = -abs(travel(stroke)[1])  # mirrored upwards: the editor goes up with it
+            on_number, _trace = self.editor_scroll(stroke, lambda r: r.x + r.w - 160)
+            results.append((i, round(finger), round(on_number)))
+            keypad = self.app.exists("✓", "button")
+            self.assertFalse(keypad, f"stroke {i} opened the keypad")
+        self.snap("replayed")
+        # an editor at its top scrolls at most about 400 px here; a longer swipe stops at the end
+        bad = [r for r in results if abs(max(r[1], -400) - r[2]) > 16]
+        self.assertEqual(bad, [], f"(stroke, finger travel, editor moved from the number): {results}")
