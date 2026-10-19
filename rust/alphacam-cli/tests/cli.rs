@@ -1,5 +1,5 @@
 //! The command line against the Python app's (`python -m alphacam`): the same exit status, stdout, stderr and
-//! written files for every case tools/export_rust_cli_fixtures.py recorded, run from the repository root.
+//! written files for every case the retired Python app's exporter recorded, run from the repository root.
 
 use std::path::{Path, PathBuf};
 use std::process::Command;

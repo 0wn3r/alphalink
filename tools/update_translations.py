@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Regenerate app/po/alphalink-cam.pot from the sources (the Python code, the compiled interface files, and the Rust
-app's gettext("…") / tr("…") / n_!("…") literals that the Python code does not have), rebuild app/po/uk.po from
-app/po/uk_translations.py, and
-compile the catalogs into app/alphacam_gtk/locale/<lang>/LC_MESSAGES/alphalink-cam.mo.
+"""Regenerate app/po/alphalink-cam.pot from the sources (the compiled interface files and the Rust app's strings),
+rebuild app/po/uk.po from app/po/uk_translations.py, and compile the catalogs into
+app/alphacam_gtk/locale/<lang>/LC_MESSAGES/alphalink-cam.mo.
 Needs xgettext and msgfmt (gettext). Run from anywhere: python3 tools/update_translations.py"""
 
 import re
@@ -20,34 +19,47 @@ def quote(s: str) -> str:
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"').replace("\n", "\\n") + '"'
 
 
-def rust_only(pot: str) -> str:
-    """POT entries for the Rust app's literal gettext("…"), tr("…") and n_!("…") strings that the POT does not have yet
-    (xgettext here has no Rust parser)."""
+def rust_strings(pot: str, table: dict) -> str:
+    """POT entries for the Rust app's strings that the POT does not have yet (xgettext here has no Rust parser): the
+    literal gettext("…"), tr("…"), n_!("…") and ngettext("…", "…") calls, and the translated strings that tables
+    pass to gettext later (operation names, field labels, month names): a Rust literal the translation table knows."""
     # each msgid in its escaped form, its continued lines joined (as the Rust literal is written)
     known = {"".join(re.findall(r'"(.*)"', b)) for b in re.findall(r'\nmsgid ((?:".*"\n)+)', pot)}
     out, seen = [], set()
     rust = APP.parent / "rust"
-    for path in sorted([*(rust / "alphacam-gtk" / "src").rglob("*.rs"), *(rust / "alphacam" / "src").rglob("*.rs")]):
-        text = re.sub(r"\\\n\s*", "", path.read_text())  # a string continued on the next line
-        for m in re.finditer(r'\b(?:gettext|tr|n_!)\(\s*"((?:[^"\\]|\\.)*)"', text):
-            raw = m.group(1)
-            if not raw or raw in known or raw in seen:
-                continue
+    paths = sorted([*(rust / "alphacam-gtk" / "src").rglob("*.rs"), *(rust / "alphacam" / "src").rglob("*.rs")])
+    texts = {path: re.sub(r"\\\n\s*", "", path.read_text()) for path in paths}  # a string continued on the next line
+
+    def add(path, raw, plural=None):
+        if raw and raw not in known and raw not in seen:
             seen.add(raw)
-            out.append(f"\n#: {path.relative_to(APP.parent)}\nmsgid \"{raw}\"\nmsgstr \"\"\n")
+            entry = f"\n#: {path.relative_to(APP.parent)}\nmsgid \"{raw}\"\n"
+            entry += f"msgid_plural \"{plural}\"\nmsgstr[0] \"\"\nmsgstr[1] \"\"\n" if plural else "msgstr \"\"\n"
+            out.append(entry)
+
+    for path, text in texts.items():
+        for m in re.finditer(r'\bngettext\(\s*"((?:[^"\\]|\\.)*)",\s*"((?:[^"\\]|\\.)*)"', text):
+            add(path, m.group(1), m.group(2))
+        for m in re.finditer(r'\b(?:gettext|tr|n_!)\(\s*"((?:[^"\\]|\\.)*)"', text):
+            add(path, m.group(1))
+    for key in table:
+        singular, plural = key if isinstance(key, tuple) else (key, None)
+        lit = [quote(k)[1:-1] for k in (singular, plural) if k is not None]
+        path = next((p for p, t in texts.items() if all(f'"{x}"' in t for x in lit)), None)
+        if path:
+            add(path, lit[0], lit[1] if plural is not None else None)
     return "".join(out)
 
 
 def main() -> int:
-    sources = sorted(str(p.relative_to(APP)) for d in ("alphacam", "alphacam_gtk") for p in (APP / d).rglob("*.py"))
-    sources += sorted(str(p.relative_to(APP)) for p in (APP / "alphacam_gtk" / "ui").glob("*.ui"))  # tools/build_ui.py
+    sources = sorted(str(p.relative_to(APP)) for p in (APP / "alphacam_gtk" / "ui").glob("*.ui"))  # tools/build_ui.py
     (PO / "POTFILES").write_text("\n".join(sources) + "\n")
     subprocess.run(["xgettext", "--from-code=UTF-8", "--keyword=_", "--keyword=N_",
                     "--keyword=ngettext:1,2", "--keyword=tr", "--add-comments=TRANSLATORS", "--package-name=alphalink-cam",
                     "--package-version=0.1.0", "--sort-by-file", "-f", "po/POTFILES", "-o", "po/alphalink-cam.pot"],
                    cwd=APP, check=True)
     pot = (PO / "alphalink-cam.pot").read_text()
-    pot += rust_only(pot)
+    pot += rust_strings(pot, runpy.run_path(str(PO / "uk_translations.py"))["UK"])
     (PO / "alphalink-cam.pot").write_text(pot)
     ids = re.findall(r'\nmsgid ((?:".*"\n)+)(?:msgid_plural ((?:".*"\n)+))?', pot)
 

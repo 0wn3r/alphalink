@@ -1,4 +1,4 @@
-//! The drawing commands against the Python app: every scripted edit tools/export_rust_core_fixtures.py recorded
+//! The drawing commands against the Python app: every scripted edit the retired Python app's exporter recorded
 //! (the cases of test_drawing.py, test_hit_keys.py and test_regressions.py, every corner of a few profiles filleted
 //! and chamfered, and random drawings for the intersections, tangents and blends) gives the same result or the
 //! same error, and leaves the same part.

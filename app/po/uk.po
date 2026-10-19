@@ -10,1334 +10,8 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-msgid "uses T{op} but T{cur} is in the turret: add a Tool Change"
-msgstr "використовує T{op}, а в револьверній голівці T{cur}: додайте зміну інструмента"
-
-msgid "T{n} is not a threading tool"
-msgstr "T{n} — не різьбовий інструмент"
-
-msgid "T{n} is not a grooving tool"
-msgstr "T{n} — не канавковий інструмент"
-
-msgid "tip width {w:g} differs from T{n}'s {tw:g}"
-msgstr "ширина {w:g} відрізняється від ширини T{n} ({tw:g})"
-
-msgid "T{n} is not a drill"
-msgstr "T{n} — не свердло"
-
-msgid "an internal operation with an external tool (T{n})"
-msgstr "внутрішня операція із зовнішнім інструментом (T{n})"
-
-msgid "an external operation with a boring tool (T{n})"
-msgstr "зовнішня операція з розточувальним інструментом (T{n})"
-
-msgid "a line needs two different points"
-msgstr "для лінії потрібні дві різні точки"
-
-msgid "no element {gid}"
-msgstr "немає елемента {gid}"
-
-msgid "an arc of radius {r} cannot join X{ax} Z{az} and X{bx} Z{bz}"
-msgstr "дуга радіуса {r} не може з’єднати X{ax} Z{az} і X{bx} Z{bz}"
-
-msgid "{gid} would have no length"
-msgstr "{gid} мав би нульову довжину"
-
-msgid "X{x} Z{z} is not a corner between two lines"
-msgstr "X{x} Z{z} — не кут між двома лініями"
-
-msgid "radius must be > 0"
-msgstr "радіус має бути > 0"
-
-msgid "the lines are parallel at this point"
-msgstr "у цій точці лінії паралельні"
-
-msgid "radius {radius} is too large for these lines"
-msgstr "радіус {radius} завеликий для цих ліній"
-
-msgid "chamfer size must be > 0"
-msgstr "розмір фаски має бути > 0"
-
-msgid "chamfer angle must be between 0 and 90 degrees"
-msgstr "кут фаски має бути між 0 і 90 градусами"
-
-msgid "a {angle} degree chamfer does not fit this corner"
-msgstr "фаска під {angle}° не вміщується в цей кут"
-
-msgid "chamfer {size} x {angle} deg is too large for these lines"
-msgstr "фаска {size} × {angle}° завелика для цих ліній"
-
-msgid "{id} does not connect to the picked contour"
-msgstr "{id} не з’єднується з вибраним контуром"
-
-msgid "the three points are on a line"
-msgstr "три точки лежать на одній прямій"
-
-msgid "pick two different lines"
-msgstr "виберіть дві різні лінії"
-
-msgid "the lines are parallel"
-msgstr "лінії паралельні"
-
-msgid "a line would shrink to a point"
-msgstr "лінія зменшилася б до точки"
-
-msgid "no text"
-msgstr "немає тексту"
-
-msgid "pick an arc"
-msgstr "виберіть дугу"
-
-msgid "pick a line"
-msgstr "виберіть лінію"
-
-msgid "the point is inside the arc"
-msgstr "точка всередині дуги"
-
-msgid "the arcs have the same centre"
-msgstr "дуги мають спільний центр"
-
-msgid "distance must be > 0"
-msgstr "відстань має бути > 0"
-
-msgid "the point is not inside the arc"
-msgstr "точка не лежить на дузі"
-
-msgid "nothing to mirror"
-msgstr "немає чого відображати"
-
-msgid "no blend arc touches this arc there"
-msgstr "дуга сполучення не торкається цієї дуги в цьому місці"
-
-msgid "choose a line along Z (a diameter) for the thread"
-msgstr "для різьби виберіть лінію вздовж Z (діаметр)"
-
-msgid "the line is too short for {name} and its relief groove"
-msgstr "лінія закоротка для {name} і її канавки для виходу різьби"
-
-msgid "not a readable DXF file ({error})"
-msgstr "файл DXF не вдається прочитати ({error})"
-
-msgid "the file has no drawing in it"
-msgstr "у файлі немає креслення"
-
-msgid "G71 E{e} (area clear option) is not supported yet"
-msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
-
-msgid "threading: the thread lines are not in the drawing"
-msgstr "різьба: ліній різьби немає на кресленні"
-
-msgid "SDG too short ({len_data} bytes)"
-msgstr "файл SDG закороткий ({len_data} байт)"
-
-msgid "the drawing has too many points for ALPHA-T ({n} > {max})"
-msgstr "у кресленні забагато точок для ALPHA-T ({n} > {max})"
-
-msgid "the drawing has too many elements for ALPHA-T ({n} > 255)"
-msgstr "у кресленні забагато елементів для ALPHA-T ({n} > 255)"
-
-msgid "the drawing has too many elements for ALPHA-T"
-msgstr "у кресленні забагато елементів для ALPHA-T"
-
-msgid "not a TL1 tool library ({len_data} bytes)"
-msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
-
-msgid "not a TL2 tool picture file ({len_data} bytes)"
-msgstr "це не файл зображень інструментів TL2 ({len_data} байт)"
-
-msgid "nothing received"
-msgstr "нічого не отримано"
-
-msgid "transfer stopped after {n} bytes (no second %)"
-msgstr "передача зупинилася після {n} байт (немає другого %)"
-
-msgid "contour references unknown geometry: {join_missing}"
-msgstr "контур посилається на невідомі елементи: {join_missing}"
-
-msgid "thread pitch must be > 0"
-msgstr "крок різьби має бути > 0"
-
-msgid "units must be one of {units}, not {units2}"
-msgstr "одиниці мають бути одним із {units}, а не {units2}"
-
-msgid "not an AlphaLink CAM part (format {fmt}, expected {expected})"
-msgstr "це не деталь AlphaLink CAM (формат {fmt}, очікувався {expected})"
-
-msgid "unknown element or operation type {type}"
-msgstr "невідомий тип елемента чи операції {type}"
-
-msgid "{what}: unknown keys {keys}"
-msgstr "{what}: невідомі ключі {keys}"
-
-msgid "unknown tool type {type}"
-msgstr "невідомий тип інструмента {type}"
-
-msgid "tool hand must be R, L or N, not {hand}"
-msgstr "виконання інструмента має бути R, L або N, а не {hand}"
-
-msgid "no tool {number}"
-msgstr "немає інструмента {number}"
-
-msgid "unsupported tool library format {get_format}"
-msgstr "непідтримуваний формат бібліотеки інструментів {get_format}"
-
-msgid "{value} moves are not supported by the post yet"
-msgstr "переміщення {value} постпроцесор поки не підтримує"
-
-msgid "{op}: no cuts with this contour (nothing between the tool start and the profile)"
-msgstr "{op}: з цим контуром немає проходів (між початковою точкою і профілем нічого немає)"
-
-msgid "area clear FACE with pre-finish (no sample)"
-msgstr "чорнова обробка по торцю з напівчистовим проходом (немає зразка ALPHA-T)"
-
-msgid "{type} is not supported by the post yet"
-msgstr "{type} постпроцесор поки не підтримує"
-
-msgid "move/dwell before the first tool change is not supported"
-msgstr "переміщення чи витримка до першої зміни інструмента не підтримуються"
-
-msgid "{type} is not supported by the SD1 writer yet"
-msgstr "{type} поки не записується у файл SD1"
-
-msgid "external"
-msgstr "зовнішнє"
-
-msgid "face clear"
-msgstr "обробка торця"
-
-msgid "internal"
-msgstr "внутрішнє"
-
-msgid "away from the chuck"
-msgstr "від патрона"
-
-msgid "towards the chuck"
-msgstr "до патрона"
-
-msgid "T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): ALPHA-T refuses it with Invalid tip angle"
-msgstr "Кути T{n} (передній {f:g}°, задній {r:g}°) не підходять для цього різання ({side}, {way}): ALPHA-T відхиляє його як «Invalid tip angle» (недопустимий кут вершини)"
-
-msgid "T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)"
-msgstr "T{n} не може пройти стінкою вниз до X{x:g} Z{z:g}: вона крутіша за задній кут {a:g}° інструмента, тож там лишається матеріал (як в ALPHA-T)"
-
-msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
-msgstr "заходить у кулачки патрона (Z{z:g}, за довжиною заготовки {l:g})"
-
-msgid "moves into the tailstock centre (X{x:g} Z{z:g})"
-msgstr "заходить у центр задньої бабки (X{x:g} Z{z:g})"
-
-msgid "a rapid move passes through the part at X{x:g} Z{z:g}"
-msgstr "швидке переміщення проходить крізь деталь у X{x:g} Z{z:g}"
-
-msgid "cuts into the part at X{x:g} Z{z:g}"
-msgstr "врізається в деталь у X{x:g} Z{z:g}"
-
-msgid "dives at {a:.0f}°, steeper than T{n} clears"
-msgstr "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n}"
-
-msgid "the part has no length to turn around"
-msgstr "деталь не має довжини, щоб її перевернути"
-
-msgid "area clear: no contour below X{x}"
-msgstr "чорнова обробка: немає контуру нижче X{x}"
-
-msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
-msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
-
-msgid "depth of cut must be > 0"
-msgstr "глибина різання має бути > 0"
-
-msgid "area clear"
-msgstr "чорнова обробка"
-
-msgid "empty contour"
-msgstr "порожній контур"
-
-msgid "contour is not connected at X{x} Z{z} ({id})"
-msgstr "контур розірваний у X{x} Z{z} ({id})"
-
-msgid "arc-to-arc corners are not supported yet"
-msgstr "кути між двома дугами поки не підтримуються"
-
-msgid "drill depth must be below the start Z"
-msgstr "дно отвору має бути нижче початкового Z"
-
-msgid "retract distance must be > 0"
-msgstr "відстань відведення має бути > 0"
-
-msgid "face clear: no profile at Z{z}"
-msgstr "обробка торця: немає профілю на Z{z}"
-
-msgid "face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app does not offer it; use TOWARDS"
-msgstr "обробка торця AWAY: сама ALPHA-T у цьому режимі пише лише один прохід на Z0, тому програма його не пропонує; використовуйте «До патрона»"
-
-msgid "grooving: no profile under Z{z0}..{z1}"
-msgstr "канавка: немає профілю під Z{z0}..{z1}"
-
-msgid "grooving finish offsets: only faces and diameters (no sample with slopes/arcs)"
-msgstr "чистовий припуск канавки: лише торці й діаметри (немає зразка з похилими лініями чи дугами)"
-
-msgid "grooving finish mode: only external, no finish offsets (no sample)"
-msgstr "чистовий режим канавки: лише зовнішня, без чистового припуску (немає зразка)"
-
-msgid "internal grooving with pecking (no sample)"
-msgstr "внутрішня канавка з врізанням кроками (немає зразка)"
-
-msgid "grooving"
-msgstr "точіння канавок"
-
-msgid "face grooving: no profile under X{x0}..{x1}"
-msgstr "торцеві канавки: немає профілю під X{x0}..{x1}"
-
-msgid "face grooving: only external, area mode, without pecks, X shift or finish offsets (no sample)"
-msgstr "торцеві канавки: лише зовнішні, режим area, без кроків врізання, зсуву X і чистових припусків (немає зразка)"
-
-msgid "face grooving"
-msgstr "торцеві канавки"
-
-msgid "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the app does not offer it; use TOWARDS"
-msgstr "різьба AWAY: сама ALPHA-T у цьому режимі починає кожен прохід усередині різьби, тому програма його не пропонує; використовуйте «До патрона»"
-
-msgid "thread lines must be parallel to Z"
-msgstr "лінії різьби мають бути паралельні Z"
-
-msgid "thread: outer diameter must be above the inner one, first cut > 0"
-msgstr "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0"
-
-msgid "threading: {n} cuts; make the first cut deeper or set fewer cuts (at most {max})"
-msgstr "різьба: {n} проходів; зробіть перший прохід глибшим або задайте менше проходів (не більше {max})"
-
-msgid "{what}: more than {max} passes; check the depth of cut / stepover"
-msgstr "{what}: понад {max} проходів; перевірте глибину різання / крок"
-
-msgid "Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs."
-msgstr "CAM для токарного верстата Harrison Alpha 400T, що створює програми ALPHA-T."
-
-msgid "translator-credits"
-msgstr "Claude (переклад), Eduard (перевірка)"
-
-msgid "Circle…"
-msgstr "Коло…"
-
-msgid "Tangent"
-msgstr "Дотична"
-
-msgid "Tangent at an Angle…"
-msgstr "Дотична під кутом…"
-
-msgid "Blend Arc…"
-msgstr "Дуга сполучення…"
-
-msgid "Parallel Line…"
-msgstr "Паралельна лінія…"
-
-msgid "Split Arc"
-msgstr "Розділити дугу"
-
-msgid "Mirror Image"
-msgstr "Дзеркальне відображення"
-
-msgid "Chamfer Outside Corners…"
-msgstr "Фаски на зовнішніх кутах…"
-
-msgid "Standard Thread…"
-msgstr "Стандартна різьба…"
-
-msgid "Round Outside Corners…"
-msgstr "Заокруглити зовнішні кути…"
-
-msgid "Arc"
-msgstr "Дуга"
-
-msgid "Fillet"
-msgstr "Скруглення"
-
-msgid "Line"
-msgstr "Лінія"
-
-msgid "Select"
-msgstr "Вибір"
-
-msgid "Chamfer"
-msgstr "Фаска"
-
-msgid "Corner"
-msgstr "Кут"
-
-msgid "Select an element or an operation. Press L or A to select the nearest line or arc"
-msgstr "Вибрати елемент або операцію. Натисніть L або A, щоб вибрати найближчу лінію або дугу"
-
-msgid "Draw lines. Press X to type X,Z, D to type length and angle, + to draw by taps, S to start at the cursor"
-msgstr "Креслити лінії. Натисніть X, щоб ввести X,Z; D, щоб ввести довжину й кут; +, щоб креслити дотиками; S, щоб почати від курсора"
-
-msgid "Draw Arc Through Three Points (W)"
-msgstr "Дуга через три точки (W)"
-
-msgid "Round a corner. Press F to round the corner nearest the cursor"
-msgstr "Скруглити кут. Натисніть F, щоб скруглити кут, найближчий до курсора"
-
-msgid "Chamfer Corner (B)"
-msgstr "Фаска на куті (B)"
-
-msgid "Trim or Extend Two Lines to Meet (K)"
-msgstr "Обрізати або подовжити дві лінії до перетину (K)"
-
-msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
-msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
-
-msgid "Arc: X,Z  or  @dX,dZ  then Enter: start, a point on the arc, end"
-msgstr "Дуга: X,Z  або  @dX,dZ  і Enter: початок, точка на дузі, кінець"
-
-msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
-msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
-
-msgid "Move the cursor to X,Z  then Enter"
-msgstr "Перемістити курсор у X,Z  і Enter"
-
-msgid "Move the cursor by dX,dZ  then Enter"
-msgstr "Перемістити курсор на dX,dZ  і Enter"
-
-msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
-msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
-
-msgid "Tap an element or an operation; L or A finds the nearest line or arc"
-msgstr "Торкніться елемента або операції; L чи A знаходить найближчу лінію чи дугу"
-
-msgid "Tap a corner, or move the cursor near it and press Enter"
-msgstr "Торкніться кута або поставте біля нього курсор і натисніть Enter"
-
-msgid "Tap two lines, or move the cursor to each and press Enter"
-msgstr "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter"
-
-msgid "Erase Drawing…"
-msgstr "Стерти креслення…"
-
-msgid "Tap a corner between two lines"
-msgstr "Торкніться кута між двома лініями"
-
-msgid "Command aborted"
-msgstr "Команду скасовано"
-
-msgid "No intersection to find"
-msgstr "Немає перетину, який можна знайти"
-
-msgid "No point to find"
-msgstr "Немає точки, яку можна знайти"
-
-msgid "No arc to find"
-msgstr "Немає дуги, яку можна знайти"
-
-msgid "No line to find"
-msgstr "Немає лінії, яку можна знайти"
-
-msgid "{what} found. Press Delete or minus to erase it"
-msgstr "Знайдено {what}. Натисніть Delete або мінус, щоб стерти"
-
-msgid "Select a line or arc first, or press L or A to find the nearest"
-msgstr "Спершу виберіть лінію чи дугу або натисніть L чи A, щоб знайти найближчу"
-
-msgid "No text to erase"
-msgstr "Немає тексту, який можна стерти"
-
-msgid "Erase text"
-msgstr "Стерти текст"
-
-msgid "Cursor step {step}"
-msgstr "Крок курсора {step}"
-
-msgid "No corner between two lines"
-msgstr "Немає кута між двома лініями"
-
-msgid "Measure: tap the 1st point, or move the cursor and press Enter"
-msgstr "Вимірювання: торкніться 1-ї точки або поставте курсор і натисніть Enter"
-
-msgid "Measure: now the 2nd point"
-msgstr "Вимірювання: тепер 2-га точка"
-
-msgid "At X{x} Z{z}"
-msgstr "У точці X{x} Z{z}"
-
-msgid "Text"
-msgstr "Текст"
-
-msgid "Erase drawing"
-msgstr "Стерти креслення"
-
-msgid "Draw line"
-msgstr "Накреслити лінію"
-
-msgid "Profile closed"
-msgstr "Профіль замкнено"
-
-msgid "Arc: now a point on the arc"
-msgstr "Дуга: тепер точка на дузі"
-
-msgid "Arc: now the end point"
-msgstr "Дуга: тепер кінцева точка"
-
-msgid "Draw arc"
-msgstr "Накреслити дугу"
-
-msgid "Corner: now tap the second line"
-msgstr "Кут: тепер торкніться другої лінії"
-
-msgid "Type X,Z (diameter, Z) or @dX,dZ"
-msgstr "Введіть X,Z (діаметр, Z) або @dX,dZ"
-
-msgid "@ needs a previous point"
-msgstr "Для @ потрібна попередня точка"
-
-msgid "Next Point"
-msgstr "Наступна точка"
-
-msgid "Start Point"
-msgstr "Початкова точка"
-
-msgid "Correct point"
-msgstr "Виправлення точки"
-
-msgid "Correct Point"
-msgstr "Виправити точку"
-
-msgid "Arc R{r}"
-msgstr "Дуга R{r}"
-
-msgid "Line Ø{x}"
-msgstr "Лінія Ø{x}"
-
-msgid "Line Z{z}"
-msgstr "Лінія Z{z}"
-
-msgid "Line X{x1} Z{z1} → X{x2} Z{z2}"
-msgstr "Лінія X{x1} Z{z1} → X{x2} Z{z2}"
-
-msgid "Edit Values…"
-msgstr "Змінити значення…"
-
-msgid "Delete"
-msgstr "Видалити"
-
-msgid "Zoom Here"
-msgstr "Збільшити тут"
-
-msgid "Fit Part"
-msgstr "Вписати деталь"
-
-msgid "Move point"
-msgstr "Переміщення точки"
-
-msgid "Delete {what}"
-msgstr "Видалити {what}"
-
-msgid "Deleted {what}"
-msgstr "Видалено: {what}"
-
-msgid "_Undo"
-msgstr "_Відмінити"
-
-msgid "Edit {what}"
-msgstr "Редагувати {what}"
-
-msgid "Chamfer at {point}"
-msgstr "Фаска в {point}"
-
-msgid "Radius at {point}"
-msgstr "Радіус у {point}"
-
-msgid "Angle"
-msgstr "Кут"
-
-msgid "Between the chamfer and the line along Z; the size is measured along that line"
-msgstr "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії"
-
-msgid "_Apply"
-msgstr "_Застосувати"
-
-msgid "Fillet R{size}"
-msgstr "Скруглення R{size}"
-
-msgid "Chamfer {size}"
-msgstr "Фаска {size}"
-
-msgid "{n} picked — tap again to remove, then Done"
-msgid_plural "{n} picked — tap again to remove, then Done"
-msgstr[0] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
-msgstr[1] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
-msgstr[2] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
-
-msgid "Pick contour"
-msgstr "Вибір контуру"
-
-msgid "Tap the contour elements in cutting order"
-msgstr "Торкніться елементів контуру в порядку обробки"
-
-msgid "Centre X (Ø)"
-msgstr "Центр X (Ø)"
-
-msgid "Centre Z"
-msgstr "Центр Z"
-
-msgid "Circle"
-msgstr "Коло"
-
-msgid "Radius"
-msgstr "Радіус"
-
-msgid "Tangent at an angle: tap the arc"
-msgstr "Дотична під кутом: торкніться дуги"
-
-msgid "Tangent: tap a point, or an arc"
-msgstr "Дотична: торкніться точки або дуги"
-
-msgid "Parallel line: tap the line"
-msgstr "Паралельна лінія: торкніться лінії"
-
-msgid "Split arc: tap the arc where to split it"
-msgstr "Розділити дугу: торкніться дуги там, де розділити"
-
-msgid "Blend arc: tap the 1st point, line or arc"
-msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
-
-msgid "Standard thread: tap the diameter line to thread"
-msgstr "Стандартна різьба: торкніться лінії діаметра для різьби"
-
-msgid "The profile has no outside corner between two lines"
-msgstr "Профіль не має зовнішнього кута між двома лініями"
-
-msgid "Chamfer Outside Corners"
-msgstr "Фаски на зовнішніх кутах"
-
-msgid "Size"
-msgstr "Розмір"
-
-msgid "Round Outside Corners"
-msgstr "Заокруглити зовнішні кути"
-
-msgid "{n} corner done"
-msgid_plural "{n} corners done"
-msgstr[0] "Оброблено {n} кут"
-msgstr[1] "Оброблено {n} кути"
-msgstr[2] "Оброблено {n} кутів"
-
-msgid "The lines at the corners are too short for that size"
-msgstr "Лінії біля кутів закороткі для такого розміру"
-
-msgid "{p} coarse"
-msgstr "{p} основний"
-
-msgid "{n} threads per inch"
-msgstr "{n} ниток на дюйм"
-
-msgid "Thread {name}"
-msgstr "Різьба {name}"
-
-msgid "{name}: minor Ø{minor:g}, depth {depth:g}"
-msgstr "{name}: внутрішній Ø{minor:g}, глибина {depth:g}"
-
-msgid "_No, Take It Back"
-msgstr "_Ні, повернути"
-
-msgid "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
-msgstr "Дзеркально відображено відносно осі шпинделя. Чи це правильно? Якщо так, просто працюйте далі."
-
-msgid "_Cancel"
-msgstr "_Скасувати"
-
-msgid "No solution for these elements"
-msgstr "Для цих елементів розв’язку немає"
-
-msgid "Tap the one you want (dashed)"
-msgstr "Торкніться потрібного варіанта (пунктир)"
-
-msgid "Tap a line along Z (a diameter)"
-msgstr "Торкніться лінії вздовж Z (діаметра)"
-
-msgid "Tap an arc"
-msgstr "Торкніться дуги"
-
-msgid "Split arc"
-msgstr "Розділити дугу"
-
-msgid "Tap a line"
-msgstr "Торкніться лінії"
-
-msgid "Distance"
-msgstr "Відстань"
-
-msgid "Parallel Line"
-msgstr "Паралельна лінія"
-
-msgid "Parallel line"
-msgstr "Паралельна лінія"
-
-msgid "Tangent at an Angle"
-msgstr "Дотична під кутом"
-
-msgid "Tap a point or an arc"
-msgstr "Торкніться точки або дуги"
-
-msgid "Tangent: now tap the arc"
-msgstr "Дотична: тепер торкніться дуги"
-
-msgid "Blend arc: now the 2nd point, line or arc"
-msgstr "Дуга сполучення: тепер 2-а точка, лінія або дуга"
-
-msgid "Blend arc"
-msgstr "Дуга сполучення"
-
-msgid "Blend Arc"
-msgstr "Дуга сполучення"
-
-msgid "Could not open the manual: {error}"
-msgstr "Не вдалося відкрити посібник: {error}"
-
-msgid "Hold to start"
-msgstr "Утримуйте, щоб почати"
-
-msgid "Point"
-msgstr "Точка"
-
-msgid "ABS"
-msgstr "ABS"
-
-msgid "INC"
-msgstr "INC"
-
-msgid "On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold “Send to the Lathe” here."
-msgstr "На верстаті: клавіша CAM, 4 «LOAD CAM FILE», потім торкніться стрілки ←. Тоді утримуйте тут «Надіслати на верстат»."
-
-msgid "Start the backup here first, then on the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the → arrow."
-msgstr "Спершу запустіть резервне копіювання тут, потім на верстаті: у Manual Ops торкніться значка файлу операцій, 1 «OP. SAVE/RESTORE», потім стрілки →."
-
-msgid "On the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the ← arrow. Only Manual Ops files saved from this lathe: programs not made for the Alpha-T can corrupt its macros (Alphalink-T manual)."
-msgstr "На верстаті: у Manual Ops торкніться значка файлу операцій, 1 «OP. SAVE/RESTORE», потім стрілки ←. Лише файли Manual Ops, збережені з цього верстата: програми, створені не для Alpha-T, можуть пошкодити його макроси (посібник Alphalink-T)."
-
-msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test."
-msgstr "Від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера, потім запустіть перевірку."
-
-msgid "Cancelling…"
-msgstr "Скасування…"
-
-msgid "_Close"
-msgstr "_Закрити"
-
-msgid "{size} bytes, about {secs} s"
-msgstr "{size} байт, приблизно {secs} с"
-
-msgid "No program"
-msgstr "Немає програми"
-
-msgid "Open a part that posts without errors"
-msgstr "Відкрийте деталь, для якої програма створюється без помилок"
-
-msgid "Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of its pause (DC3)"
-msgstr "Через Bluetooth ставте 5 мс або більше: верстат має зупинитися не пізніше 10 символів після паузи (DC3)"
-
-msgid "2 ms works on the 400T; 0 sends at full speed"
-msgstr "2 мс працює на 400T; 0 — надсилання на повній швидкості"
-
-msgid "(not present)"
-msgstr "(немає)"
-
-msgid "Cancelled"
-msgstr "Скасовано"
-
-msgid "not written ({error})"
-msgstr "не записано ({error})"
-
-msgid "Log: {path}"
-msgstr "Журнал: {path}"
-
-msgid "{done} / {total} bytes"
-msgstr "{done} / {total} байт"
-
-msgid "{done} bytes"
-msgstr "{done} байт"
-
-msgid "{info}\n{size} bytes to {port}.\n\n{steps}"
-msgstr "{info}\n{size} байт на {port}.\n\n{steps}"
-
-msgid "The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then press Send."
-msgstr "Верстат має бути в CAM, 4 «LOAD CAM FILE», зі стрілкою ← натиснутою. Потім натисніть «Надіслати»."
-
-msgid "Waiting for the lathe (DC1)…"
-msgstr "Очікування верстата (DC1)…"
-
-msgid "Sending…"
-msgstr "Надсилання…"
-
-msgid "Send CAM Program"
-msgstr "Надсилання програми CAM"
-
-msgid "Sent {n} bytes. Check the program list on the control."
-msgstr "Надіслано {n} байт. Перевірте список програм на ЧПК."
-
-msgid "Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”"
-msgstr "Очікування даних: на верстаті торкніться стрілки → у «OP. SAVE/RESTORE»"
-
-msgid "The lathe paused {s} s ago; waiting. Press Stop and Keep when it has finished."
-msgstr "Верстат зробив паузу {s} с тому; чекаємо. Коли він закінчить, натисніть «Зупинити й зберегти»."
-
-msgid "_Stop and Keep"
-msgstr "_Зупинити й зберегти"
-
-msgid "Receiving…"
-msgstr "Отримання…"
-
-msgid "Received {n} bytes."
-msgstr "Отримано {n} байт."
-
-msgid "Received {n} bytes without the end mark. If the lathe had finished, the backup is probably whole; it is saved marked PARTIAL. Keep the lathe's ops until a restore of it has been checked."
-msgstr "Отримано {n} байт без кінцевої позначки. Якщо верстат закінчив, копія, найімовірніше, повна; її збережено з позначкою PARTIAL. Не видаляйте операції на верстаті, доки відновлення з неї не перевірено."
-
-msgid "Save Manual Ops Backup"
-msgstr "Зберегти резервну копію ручних операцій"
-
-msgid "Could not save {path}: {error}"
-msgstr "Не вдалося зберегти {path}: {error}"
-
-msgid "Backup saved to {path}"
-msgstr "Резервну копію збережено: {path}"
-
-msgid "Back Up Manual Ops"
-msgstr "Резервне копіювання ручних операцій"
-
-msgid "Restore Manual Ops From"
-msgstr "Відновити ручні операції з файлу"
-
-msgid "Could not read the file: {error}"
-msgstr "Не вдалося прочитати файл: {error}"
-
-msgid "This is not a Manual Ops backup (it must start and end with %)."
-msgstr "Це не резервна копія ручних операцій (вона має починатися й закінчуватися знаком %)."
-
-msgid "{name}, {size} bytes.\n\n{steps}"
-msgstr "{name}, {size} байт.\n\n{steps}"
-
-msgid "Restore Manual Ops"
-msgstr "Відновити ручні операції"
-
-msgid "Sent {n} bytes."
-msgstr "Надіслано {n} байт."
-
-msgid "Loopback Test"
-msgstr "Петльова перевірка"
-
-msgid "Loopback OK: the adapter and cable work."
-msgstr "Петльова перевірка пройшла: адаптер і кабель працюють."
-
-msgid "Loopback failed: got {data}. Check the 2-3 bridge."
-msgstr "Петльова перевірка не пройшла: отримано {data}. Перевірте перемичку 2-3."
-
-msgid "Permission denied: add yourself to the dialout group (sudo usermod -aG dialout $USER), then log in again"
-msgstr "Доступ заборонено: додайте себе до групи dialout (sudo usermod -aG dialout $USER) і увійдіть знову"
-
-msgid "Port not found: is the USB adapter plugged in?"
-msgstr "Порт не знайдено: чи під’єднано USB-адаптер?"
-
-msgid "Tool"
-msgstr "Інструмент"
-
-msgid "Tool memory slot on the control"
-msgstr "Номер у пам’яті інструментів ЧПК"
-
-msgid "Feed"
-msgstr "Подача"
-
-msgid "Per revolution"
-msgstr "На оберт"
-
-msgid "Depth of cut"
-msgstr "Глибина різання"
-
-msgid "Per pass, radius"
-msgstr "За прохід, на радіус"
-
-msgid "Finish allowance, radius"
-msgstr "Припуск на чистову обробку, на радіус"
-
-msgid "Offset X"
-msgstr "Припуск X"
-
-msgid "Finish allowance"
-msgstr "Припуск на чистову обробку"
-
-msgid "Offset Z"
-msgstr "Припуск Z"
-
-msgid "Finish offset X"
-msgstr "Чистовий припуск X"
-
-msgid "Finish offset Z"
-msgstr "Чистовий припуск Z"
-
-msgid "0 = plunge in one go"
-msgstr "0 = врізання за один раз"
-
-msgid "Peck depth"
-msgstr "Глибина врізання за крок"
-
-msgid "Stepover"
-msgstr "Крок зміщення"
-
-msgid "Tip width"
-msgstr "Ширина різця"
-
-msgid "Z shift"
-msgstr "Зсув Z"
-
-msgid "Repeats"
-msgstr "Повтори"
-
-msgid "Dwell"
-msgstr "Витримка"
-
-msgid "Revolutions"
-msgstr "Оберти"
-
-msgid "Absolute"
-msgstr "Абсолютне"
-
-msgid "Hole bottom Z"
-msgstr "Дно отвору Z"
-
-msgid "0 = no pecking"
-msgstr "0 = без виведення свердла"
-
-msgid "Peck"
-msgstr "Крок свердління"
-
-msgid "Pitch"
-msgstr "Крок"
-
-msgid "First cut depth"
-msgstr "Глибина першого проходу"
-
-msgid "Radius; cut n goes to first × √n"
-msgstr "На радіус; прохід n — перший × √n"
-
-msgid "0 = from the first cut depth"
-msgstr "0 = за глибиною першого проходу"
-
-msgid "Number of cuts"
-msgstr "Кількість проходів"
-
-msgid "Lead in"
-msgstr "Вхід"
-
-msgid "Retract distance"
-msgstr "Відстань відведення"
-
-msgid "Lead out"
-msgstr "Вихід"
-
-msgid "Extra cuts at the final diameter"
-msgstr "Додаткові проходи на кінцевому діаметрі"
-
-msgid "Spring passes"
-msgstr "Зачисні проходи"
-
-msgid "Degrees; 0 = straight in"
-msgstr "Градуси; 0 = прямо"
-
-msgid "Infeed angle"
-msgstr "Кут урізання"
-
-msgid "External"
-msgstr "Зовнішня"
-
-msgid "Off = internal (boring)"
-msgstr "Вимкнено = внутрішня (розточування)"
-
-msgid "Towards the chuck"
-msgstr "До патрона"
-
-msgid "A finish pass after the roughing, pulling off by the retract distance"
-msgstr "Чистовий прохід після чорнової обробки з відведенням на відстань відведення"
-
-msgid "Pre-finish pass"
-msgstr "Напівчистовий прохід"
-
-msgid "Full retract"
-msgstr "Повне відведення"
-
-msgid "Front"
-msgstr "Спереду"
-
-msgid "Off = FACE: across the front face"
-msgstr "Вимкнено = FACE: упоперек торця"
-
-msgid "Each pass also cleans up the step it leaves"
-msgstr "Кожен прохід також зачищає залишений уступ"
-
-msgid "Follow contour"
-msgstr "Йти по контуру"
-
-msgid "Face"
-msgstr "Торець"
-
-msgid "Finish a face: pulls off towards the axis"
-msgstr "Чистовий прохід торця: відведення до осі"
-
-msgid "Off = feed move"
-msgstr "Вимкнено = переміщення з подачею"
-
-msgid "Rapid"
-msgstr "Прискорений хід"
-
-msgid "Datum"
-msgstr "Базова точка"
-
-msgid "Mode"
-msgstr "Режим"
-
-msgid "area"
-msgstr "чорновий"
-
-msgid "finish"
-msgstr "чистовий"
-
-msgid "left"
-msgstr "ліворуч"
-
-msgid "right"
-msgstr "праворуч"
-
-msgid "Move to"
-msgstr "Перемістити в"
-
-msgid "Tool change point"
-msgstr "Точка зміни інструмента"
-
-msgid "Tool start"
-msgstr "Початкова точка інструмента"
-
-msgid "Operation {n}"
-msgstr "Операція {n}"
-
-msgid "Inner diameter line"
-msgstr "Лінія внутрішнього діаметра"
-
-msgid "Outer diameter line"
-msgstr "Лінія зовнішнього діаметра"
-
-msgid "(no lines)"
-msgstr "(немає ліній)"
-
-msgid "Contour, in cutting order"
-msgstr "Контур, у порядку обробки"
-
-msgid "Element IDs, for example g0 g1 g2"
-msgstr "Ідентифікатори елементів, наприклад g0 g1 g2"
-
-msgid "Pick Contour on the Drawing"
-msgstr "Вибрати контур на кресленні"
-
-msgid "Face grooving: plunges along -Z, stepping outwards; the tool reference is the tip's corner nearest the axis."
-msgstr "Торцеві канавки: врізання вздовж -Z із кроком назовні; базова точка інструмента — кут різця, найближчий до осі."
-
-msgid "Grooving follows the drawn profile; the tool reference is the tip's -Z corner."
-msgstr "Точіння канавок іде за накресленим профілем; базова точка інструмента — кут різця з боку -Z."
-
-msgid "_Duplicate Operation"
-msgstr "_Дублювати операцію"
-
-msgid "Change {what}"
-msgstr "Змінити: {what}"
-
-msgid "Change contour"
-msgstr "Змінити контур"
-
-msgid "{n} element"
-msgid_plural "{n} elements"
-msgstr[0] "{n} елемент"
-msgstr[1] "{n} елементи"
-msgstr[2] "{n} елементів"
-
-msgid "From {a} to {b}"
-msgstr "Від {a} до {b}"
-
-msgid "{id} (missing)"
-msgstr "{id} (відсутній)"
-
-msgid "Area Clear"
-msgstr "Чорнова обробка"
-
-msgid "Face Clear"
-msgstr "Обробка торця"
-
-msgid "Finish Pass"
-msgstr "Чистовий прохід"
-
-msgid "Drilling"
-msgstr "Свердління"
-
-msgid "Grooving"
-msgstr "Точіння канавок"
-
-msgid "Threading"
-msgstr "Нарізання різьби"
-
-msgid "Tool Change"
-msgstr "Зміна інструмента"
-
-msgid "Move / Rapid"
-msgstr "Переміщення / прискорений хід"
-
-msgid "Apr"
-msgstr "кві"
-
-msgid "Aug"
-msgstr "сер"
-
-msgid "Feb"
-msgstr "лют"
-
-msgid "Jan"
-msgstr "січ"
-
-msgid "Jul"
-msgstr "лип"
-
-msgid "Jun"
-msgstr "чер"
-
-msgid "Mar"
-msgstr "бер"
-
-msgid "May"
-msgstr "тра"
-
-msgid "Oct"
-msgstr "жов"
-
-msgid "Sep"
-msgstr "вер"
-
-msgid "Dec"
-msgstr "гру"
-
-msgid "Nov"
-msgstr "лис"
-
-msgid "AREA CLEARANCE"
-msgstr "ЧОРНОВА ОБРОБКА"
-
-msgid "TOOL CHANGE"
-msgstr "ЗМІНА ІНСТРУМЕНТА"
-
-msgid "FACE CLEAR"
-msgstr "ОБРОБКА ТОРЦЯ"
-
-msgid "FINISH PASS"
-msgstr "ЧИСТОВИЙ ПРОХІД"
-
-msgid "GROOVING"
-msgstr "ТОЧІННЯ КАНАВОК"
-
-msgid "DRILLING"
-msgstr "СВЕРДЛІННЯ"
-
-msgid "PRE-FINISH PASS"
-msgstr "НАПІВЧИСТОВИЙ ПРОХІД"
-
-msgid "THREADING"
-msgstr "НАРІЗАННЯ РІЗЬБИ"
-
-msgid "About {total} ({cutting} cutting, {changes})"
-msgstr "Близько {total} ({cutting} різання, {changes})"
-
-msgid "{n} tool change"
-msgid_plural "{n} tool changes"
-msgstr[0] "{n} зміна інструмента"
-msgstr[1] "{n} зміни інструмента"
-msgstr[2] "{n} змін інструмента"
-
-msgid "  (no program)"
-msgstr "  (немає програми)"
-
-msgid "ARC CCW TO"
-msgstr "ДУГА ПРГС ДО"
-
-msgid "ARC CW TO"
-msgstr "ДУГА ГС ДО"
-
-msgid "Program"
-msgstr "Програма"
-
 msgid "Units"
 msgstr "Одиниці"
-
-msgid "Billet"
-msgstr "Заготовка"
-
-msgid "Cycle time"
-msgstr "Час циклу"
-
-msgid "Date"
-msgstr "Дата"
-
-msgid "UNTITLED"
-msgstr "БЕЗ НАЗВИ"
-
-msgid "SETUP {n}"
-msgstr "ВСТАНОВЛЕННЯ {n}"
-
-msgid "Notes"
-msgstr "Примітки"
-
-msgid "There is no program to print yet"
-msgstr "Ще немає програми для друку"
-
-msgid "Save Setup Sheet as PDF"
-msgstr "Зберегти карту наладки як PDF"
-
-msgid "Could not save {name}: {error}"
-msgstr "Не вдалося зберегти {name}: {error}"
-
-msgid "Saved {name}"
-msgstr "Збережено {name}"
-
-msgid "Save Setup Sheet"
-msgstr "Зберегти карту наладки"
-
-msgid "no moves"
-msgstr "немає переміщень"
-
-msgid "{n} move"
-msgid_plural "{n} moves"
-msgstr[0] "{n} переміщення"
-msgstr[1] "{n} переміщення"
-msgstr[2] "{n} переміщень"
-
-msgid "op {n}"
-msgstr "операція {n}"
-
-msgid "tool block"
-msgstr "блок інструмента"
-
-msgid "pass {n}"
-msgstr "прохід {n}"
-
-msgid "{i}/{total} · {op}{pass_} · line {line}"
-msgstr "{i}/{total} · {op}{pass_} · рядок {line}"
-
-msgid "not an AlphaLink CAM template"
-msgstr "це не шаблон AlphaLink CAM"
-
-msgid "Shaft: rough T1, finish T3"
-msgstr "Вал: чорнова T1, чистова T3"
-
-msgid "Bush: drill T25, bore rough and finish T12"
-msgstr "Втулка: свердло T25, розточування чорнове й чистове T12"
-
-msgid "Groove and thread: groove T16, thread T31"
-msgstr "Канавка й різьба: канавка T16, різьба T31"
-
-msgid "Grooving / parting"
-msgstr "Канавки / відрізання"
-
-msgid "Turning"
-msgstr "Точіння"
-
-msgid "Boring bar"
-msgstr "Розточний різець"
-
-msgid "Drill"
-msgstr "Свердло"
-
-msgid "Left hand"
-msgstr "Лівий"
-
-msgid "Neutral"
-msgstr "Нейтральний"
-
-msgid "Right hand"
-msgstr "Правий"
-
-msgid "Name"
-msgstr "Назва"
-
-msgid "Type"
-msgstr "Тип"
-
-msgid "Hand"
-msgstr "Виконання"
-
-msgid "Nose radius"
-msgstr "Радіус при вершині"
-
-msgid "mm; changes the toolpath"
-msgstr "мм; змінює траєкторію"
-
-msgid "Front clearance angle"
-msgstr "Передній кут у плані"
-
-msgid "degrees from Z; negative = internal"
-msgstr "градуси від Z; від’ємний = внутрішній"
-
-msgid "Rear clearance angle"
-msgstr "Задній кут у плані"
-
-msgid "degrees from Z"
-msgstr "градуси від Z"
-
-msgid "Width"
-msgstr "Ширина"
-
-msgid "grooving tip or drill diameter, mm"
-msgstr "ширина канавкового різця або діаметр свердла, мм"
-
-msgid "Default feed"
-msgstr "Подача за замовчуванням"
-
-msgid "per revolution, for new operations"
-msgstr "на оберт, для нових операцій"
-
-msgid "Surface speed"
-msgstr "Швидкість різання"
-
-msgid "m/min, for the cycle time; 0 = a default for the type"
-msgstr "м/хв, для часу циклу; 0 = типова для виду інструмента"
-
-msgid "Spindle limit"
-msgstr "Межа шпинделя"
-
-msgid "rpm for this tool; 0 = the machine's"
-msgstr "об/хв для цього інструмента; 0 = як у верстата"
-
-msgid "Description"
-msgstr "Опис"
-
-msgid "The tool library could not be saved: {error}"
-msgstr "Не вдалося зберегти бібліотеку інструментів: {error}"
-
-msgid "New tool"
-msgstr "Новий інструмент"
-
-msgid "Delete T{n}?"
-msgstr "Видалити T{n}?"
-
-msgid "{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard tool with that number."
-msgstr "{name} буде вилучено з вашої бібліотеки інструментів. Деталі, що його використовують, отримають стандартний інструмент ALPHA-T з тим самим номером."
-
-msgid "ALPHA-T tool library"
-msgstr "Бібліотека інструментів ALPHA-T"
-
-msgid "Import Tool Library"
-msgstr "Імпорт бібліотеки інструментів"
-
-msgid "Could not import {name}: {error}"
-msgstr "Не вдалося імпортувати {name}: {error}"
-
-msgid "Imported {n} tools and their pictures from {name}"
-msgstr "Імпортовано інструментів із зображеннями: {n} з {name}"
-
-msgid "Imported {n} tools from {name}"
-msgstr "Імпортовано інструментів: {n} з {name}"
-
-msgid "Tool library reset to ALPHA-T's 32 standard tools"
-msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"
 
 msgid "mm"
 msgstr "мм"
@@ -1369,8 +43,14 @@ msgstr "В отворі"
 msgid "Show tailstock"
 msgstr "Показувати задню бабку"
 
+msgid "Text"
+msgstr "Текст"
+
 msgid "Height"
 msgstr "Висота"
+
+msgid "_Cancel"
+msgstr "_Скасувати"
 
 msgid "_Add"
 msgstr "_Додати"
@@ -1399,11 +79,17 @@ msgstr "Кінець X"
 msgid "End Z"
 msgstr "Кінець Z"
 
+msgid "Radius"
+msgstr "Радіус"
+
 msgid "Move connected ends too"
 msgstr "Переміщати й з’єднані кінці"
 
 msgid "Keeps the profile joined"
 msgstr "Профіль залишається з’єднаним"
+
+msgid "_Apply"
+msgstr "_Застосувати"
 
 msgid "Standard Thread"
 msgstr "Стандартна різьба"
@@ -1419,6 +105,12 @@ msgstr "UNC (дюймова, основна)"
 
 msgid "UNF (inch, fine)"
 msgstr "UNF (дюймова, дрібна)"
+
+msgid "Size"
+msgstr "Розмір"
+
+msgid "Pitch"
+msgstr "Крок"
 
 msgid "Relief groove"
 msgstr "Канавка для виходу різьби"
@@ -1455,6 +147,9 @@ msgstr "Редагувати елемент (E)"
 
 msgid "Delete Element (Delete)"
 msgstr "Видалити елемент (Delete)"
+
+msgid "Tap the contour elements in cutting order"
+msgstr "Торкніться елементів контуру в порядку обробки"
 
 msgid "Correct the Last Point"
 msgstr "Виправити останню точку"
@@ -1561,6 +256,9 @@ msgstr "З кабелем за посібником (перемички 7-8 і 1
 msgid "Delay per character (ms)"
 msgstr "Затримка на символ (мс)"
 
+msgid "2 ms works on the 400T; 0 sends at full speed"
+msgstr "2 мс працює на 400T; 0 — надсилання на повній швидкості"
+
 msgid "Wait for the control (DC1)"
 msgstr "Чекати на сигнал ЧПК (DC1)"
 
@@ -1576,6 +274,9 @@ msgstr "Для адаптерів без 7-бітового кадру: нала
 msgid "Send CAM program"
 msgstr "Надіслати програму CAM"
 
+msgid "No program"
+msgstr "Немає програми"
+
 msgid "Open a part first"
 msgstr "Спершу відкрийте деталь"
 
@@ -1587,6 +288,9 @@ msgstr "Ручні операції (Manual Ops)"
 
 msgid "Back Up Manual Ops from the Lathe…"
 msgstr "Зберегти ручні операції з верстата…"
+
+msgid "Restore Manual Ops"
+msgstr "Відновити ручні операції"
 
 msgid "Restore to the Lathe…"
 msgstr "Відновити на верстаті…"
@@ -1621,8 +325,14 @@ msgstr "Закрити редактор"
 msgid "Part Settings"
 msgstr "Параметри деталі"
 
+msgid "Billet"
+msgstr "Заготовка"
+
 msgid "Billet, chuck jaws and tailstock only change the picture."
 msgstr "Заготовка, кулачки патрона й задня бабка змінюють лише зображення."
+
+msgid "Program"
+msgstr "Програма"
 
 msgid "Program number"
 msgstr "Номер програми"
@@ -1666,8 +376,14 @@ msgstr "Також зберігати креслення ALPHA-T (.SDG)"
 msgid "Next to the program, so DOS ALPHA-T can open the part"
 msgstr "Поруч із програмою, щоб DOS ALPHA-T міг відкрити деталь"
 
+msgid "Cycle time"
+msgstr "Час циклу"
+
 msgid "For the estimate on the setup sheet; the tools' surface speeds are on the Tools page"
 msgstr "Для оцінки в карті наладки; швидкості різання інструментів — на сторінці «Інструменти»"
+
+msgid "Spindle limit"
+msgstr "Межа шпинделя"
 
 msgid "rpm"
 msgstr "об/хв"
@@ -1743,6 +459,9 @@ msgstr "Зберегти операції як шаблон"
 
 msgid "The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to."
 msgstr "Операції з інструментами й параметрами, без креслення. Шаблон бере контури з деталі, до якої його застосовано."
+
+msgid "Name"
+msgstr "Назва"
 
 msgid "Tool moves"
 msgstr "Переміщення інструмента"
@@ -1891,6 +610,9 @@ msgstr "Збільшити"
 msgid "Zoom Out"
 msgstr "Зменшити"
 
+msgid "Fit Part"
+msgstr "Вписати деталь"
+
 msgid "Search the Program"
 msgstr "Пошук у програмі"
 
@@ -1957,8 +679,17 @@ msgstr "Лінія дотиками"
 msgid "Start at the Cursor"
 msgstr "Почати від курсора"
 
+msgid "Arc"
+msgstr "Дуга"
+
 msgid "Radius at the Nearest Corner"
 msgstr "Радіус у найближчому куті"
+
+msgid "Chamfer"
+msgstr "Фаска"
+
+msgid "Blend Arc"
+msgstr "Дуга сполучення"
 
 msgid "Trim Corner"
 msgstr "Обрізати кут"
@@ -2110,17 +841,944 @@ msgstr "Шаблони"
 msgid "Save Operations as Template…"
 msgstr "Зберегти операції як шаблон…"
 
-msgid "Area clear"
-msgstr "Чорнова обробка"
+msgid "uses T{op} but T{cur} is in the turret: add a Tool Change"
+msgstr "використовує T{op}, а в револьверній голівці T{cur}: додайте зміну інструмента"
 
-msgid "Face clear"
-msgstr "Обробка торця"
+msgid "T{n} is not a threading tool"
+msgstr "T{n} — не різьбовий інструмент"
 
-msgid "Finish pass"
-msgstr "Чистовий прохід"
+msgid "T{n} is not a grooving tool"
+msgstr "T{n} — не канавковий інструмент"
 
-msgid "Move / rapid"
-msgstr "Переміщення / прискорений хід"
+msgid "tip width {w:g} differs from T{n}'s {tw:g}"
+msgstr "ширина {w:g} відрізняється від ширини T{n} ({tw:g})"
+
+msgid "T{n} is not a drill"
+msgstr "T{n} — не свердло"
+
+msgid "an internal operation with an external tool (T{n})"
+msgstr "внутрішня операція із зовнішнім інструментом (T{n})"
+
+msgid "an external operation with a boring tool (T{n})"
+msgstr "зовнішня операція з розточувальним інструментом (T{n})"
+
+msgid "a line needs two different points"
+msgstr "для лінії потрібні дві різні точки"
+
+msgid "no element {gid}"
+msgstr "немає елемента {gid}"
+
+msgid "an arc of radius {r} cannot join X{ax} Z{az} and X{bx} Z{bz}"
+msgstr "дуга радіуса {r} не може з’єднати X{ax} Z{az} і X{bx} Z{bz}"
+
+msgid "{gid} would have no length"
+msgstr "{gid} мав би нульову довжину"
+
+msgid "X{x} Z{z} is not a corner between two lines"
+msgstr "X{x} Z{z} — не кут між двома лініями"
+
+msgid "radius must be > 0"
+msgstr "радіус має бути > 0"
+
+msgid "the lines are parallel at this point"
+msgstr "у цій точці лінії паралельні"
+
+msgid "radius {radius} is too large for these lines"
+msgstr "радіус {radius} завеликий для цих ліній"
+
+msgid "chamfer size must be > 0"
+msgstr "розмір фаски має бути > 0"
+
+msgid "chamfer angle must be between 0 and 90 degrees"
+msgstr "кут фаски має бути між 0 і 90 градусами"
+
+msgid "a {angle} degree chamfer does not fit this corner"
+msgstr "фаска під {angle}° не вміщується в цей кут"
+
+msgid "chamfer {size} x {angle} deg is too large for these lines"
+msgstr "фаска {size} × {angle}° завелика для цих ліній"
+
+msgid "{id} does not connect to the picked contour"
+msgstr "{id} не з’єднується з вибраним контуром"
+
+msgid "the three points are on a line"
+msgstr "три точки лежать на одній прямій"
+
+msgid "pick two different lines"
+msgstr "виберіть дві різні лінії"
+
+msgid "the lines are parallel"
+msgstr "лінії паралельні"
+
+msgid "a line would shrink to a point"
+msgstr "лінія зменшилася б до точки"
+
+msgid "no text"
+msgstr "немає тексту"
+
+msgid "pick an arc"
+msgstr "виберіть дугу"
+
+msgid "pick a line"
+msgstr "виберіть лінію"
+
+msgid "the point is inside the arc"
+msgstr "точка всередині дуги"
+
+msgid "the arcs have the same centre"
+msgstr "дуги мають спільний центр"
+
+msgid "distance must be > 0"
+msgstr "відстань має бути > 0"
+
+msgid "the point is not inside the arc"
+msgstr "точка не лежить на дузі"
+
+msgid "nothing to mirror"
+msgstr "немає чого відображати"
+
+msgid "no blend arc touches this arc there"
+msgstr "дуга сполучення не торкається цієї дуги в цьому місці"
+
+msgid "choose a line along Z (a diameter) for the thread"
+msgstr "для різьби виберіть лінію вздовж Z (діаметр)"
+
+msgid "the line is too short for {name} and its relief groove"
+msgstr "лінія закоротка для {name} і її канавки для виходу різьби"
+
+msgid "not a readable DXF file ({error})"
+msgstr "файл DXF не вдається прочитати ({error})"
+
+msgid "the file has no drawing in it"
+msgstr "у файлі немає креслення"
+
+msgid "G71 E{e} (area clear option) is not supported yet"
+msgstr "G71 E{e} (параметр чорнової обробки) поки не підтримується"
+
+msgid "threading: the thread lines are not in the drawing"
+msgstr "різьба: ліній різьби немає на кресленні"
+
+msgid "SDG too short ({len_data} bytes)"
+msgstr "файл SDG закороткий ({len_data} байт)"
+
+msgid "the drawing has too many points for ALPHA-T ({n} > {max})"
+msgstr "у кресленні забагато точок для ALPHA-T ({n} > {max})"
+
+msgid "the drawing has too many elements for ALPHA-T ({n} > 255)"
+msgstr "у кресленні забагато елементів для ALPHA-T ({n} > 255)"
+
+msgid "the drawing has too many elements for ALPHA-T"
+msgstr "у кресленні забагато елементів для ALPHA-T"
+
+msgid "not a TL1 tool library ({len_data} bytes)"
+msgstr "це не бібліотека інструментів TL1 ({len_data} байт)"
+
+msgid "not a TL2 tool picture file ({len_data} bytes)"
+msgstr "це не файл зображень інструментів TL2 ({len_data} байт)"
+
+msgid "nothing received"
+msgstr "нічого не отримано"
+
+msgid "transfer stopped after {n} bytes (no second %)"
+msgstr "передача зупинилася після {n} байт (немає другого %)"
+
+msgid "contour references unknown geometry: {join_missing}"
+msgstr "контур посилається на невідомі елементи: {join_missing}"
+
+msgid "units must be one of {units}, not {units2}"
+msgstr "одиниці мають бути одним із {units}, а не {units2}"
+
+msgid "thread pitch must be > 0"
+msgstr "крок різьби має бути > 0"
+
+msgid "not an AlphaLink CAM part (format {fmt}, expected {expected})"
+msgstr "це не деталь AlphaLink CAM (формат {fmt}, очікувався {expected})"
+
+msgid "unknown tool type {type}"
+msgstr "невідомий тип інструмента {type}"
+
+msgid "tool hand must be R, L or N, not {hand}"
+msgstr "виконання інструмента має бути R, L або N, а не {hand}"
+
+msgid "unsupported tool library format {get_format}"
+msgstr "непідтримуваний формат бібліотеки інструментів {get_format}"
+
+msgid "{value} moves are not supported by the post yet"
+msgstr "переміщення {value} постпроцесор поки не підтримує"
+
+msgid "no tool {number}"
+msgstr "немає інструмента {number}"
+
+msgid "{op}: no cuts with this contour (nothing between the tool start and the profile)"
+msgstr "{op}: з цим контуром немає проходів (між початковою точкою і профілем нічого немає)"
+
+msgid "area clear FACE with pre-finish (no sample)"
+msgstr "чорнова обробка по торцю з напівчистовим проходом (немає зразка ALPHA-T)"
+
+msgid "{type} is not supported by the post yet"
+msgstr "{type} постпроцесор поки не підтримує"
+
+msgid "move/dwell before the first tool change is not supported"
+msgstr "переміщення чи витримка до першої зміни інструмента не підтримуються"
+
+msgid "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs"
+msgstr "програма задовга для нумерації міток ALPHA-T: мітка N{label} повторилася б, і перезапуск міг би початися не з того місця; розділіть деталь на дві програми"
+
+msgid "T{n}'s angles (front {f:g}°, rear {r:g}°) don't suit this cut ({side}, {way}): ALPHA-T refuses it with Invalid tip angle"
+msgstr "Кути T{n} (передній {f:g}°, задній {r:g}°) не підходять для цього різання ({side}, {way}): ALPHA-T відхиляє його як «Invalid tip angle» (недопустимий кут вершини)"
+
+msgid "T{n} cannot follow the wall down to X{x:g} Z{z:g}: it is steeper than the tool's {a:g}° rear clearance, so material stays there (as in ALPHA-T)"
+msgstr "T{n} не може пройти стінкою вниз до X{x:g} Z{z:g}: вона крутіша за задній кут {a:g}° інструмента, тож там лишається матеріал (як в ALPHA-T)"
+
+msgid "moves into the chuck jaws (Z{z:g}, behind the billet length {l:g})"
+msgstr "заходить у кулачки патрона (Z{z:g}, за довжиною заготовки {l:g})"
+
+msgid "moves into the tailstock centre (X{x:g} Z{z:g})"
+msgstr "заходить у центр задньої бабки (X{x:g} Z{z:g})"
+
+msgid "a rapid move passes through the part at X{x:g} Z{z:g}"
+msgstr "швидке переміщення проходить крізь деталь у X{x:g} Z{z:g}"
+
+msgid "cuts into the part at X{x:g} Z{z:g}"
+msgstr "врізається в деталь у X{x:g} Z{z:g}"
+
+msgid "dives at {a:.0f}°, steeper than T{n} clears"
+msgstr "заглиблюється під {a:.0f}°, крутіше, ніж дозволяє T{n}"
+
+msgid "the part has no length to turn around"
+msgstr "деталь не має довжини, щоб її перевернути"
+
+msgid "area clear: no contour below X{x}"
+msgstr "чорнова обробка: немає контуру нижче X{x}"
+
+msgid "area clear AWAY: ALPHA-T itself cuts 1.6 mm past the shoulder for it, so the app does not offer it; use TOWARDS"
+msgstr "чорнова обробка AWAY: сама ALPHA-T у цьому режимі заходить на 1,6 мм за уступ, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "depth of cut must be > 0"
+msgstr "глибина різання має бути > 0"
+
+msgid "area clear"
+msgstr "чорнова обробка"
+
+msgid "empty contour"
+msgstr "порожній контур"
+
+msgid "contour is not connected at X{x} Z{z} ({id})"
+msgstr "контур розірваний у X{x} Z{z} ({id})"
+
+msgid "arc-to-arc corners are not supported yet"
+msgstr "кути між двома дугами поки не підтримуються"
+
+msgid "drill depth must be below the start Z"
+msgstr "дно отвору має бути нижче початкового Z"
+
+msgid "retract distance must be > 0"
+msgstr "відстань відведення має бути > 0"
+
+msgid "face clear: no profile at Z{z}"
+msgstr "обробка торця: немає профілю на Z{z}"
+
+msgid "face clear AWAY: ALPHA-T itself writes only one pass at Z0 for it, so the app does not offer it; use TOWARDS"
+msgstr "обробка торця AWAY: сама ALPHA-T у цьому режимі пише лише один прохід на Z0, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "face clear"
+msgstr "обробка торця"
+
+msgid "grooving: no profile under Z{z0}..{z1}"
+msgstr "канавка: немає профілю під Z{z0}..{z1}"
+
+msgid "grooving finish offsets: only faces and diameters (no sample with slopes/arcs)"
+msgstr "чистовий припуск канавки: лише торці й діаметри (немає зразка з похилими лініями чи дугами)"
+
+msgid "grooving finish mode: only external, no finish offsets (no sample)"
+msgstr "чистовий режим канавки: лише зовнішня, без чистового припуску (немає зразка)"
+
+msgid "internal grooving with pecking (no sample)"
+msgstr "внутрішня канавка з врізанням кроками (немає зразка)"
+
+msgid "grooving"
+msgstr "точіння канавок"
+
+msgid "face grooving: no profile under X{x0}..{x1}"
+msgstr "торцеві канавки: немає профілю під X{x0}..{x1}"
+
+msgid "face grooving: only external, area mode, without pecks, X shift or finish offsets (no sample)"
+msgstr "торцеві канавки: лише зовнішні, режим area, без кроків врізання, зсуву X і чистових припусків (немає зразка)"
+
+msgid "face grooving"
+msgstr "торцеві канавки"
+
+msgid "{what}: more than {max} passes; check the depth of cut / stepover"
+msgstr "{what}: понад {max} проходів; перевірте глибину різання / крок"
+
+msgid "threading AWAY: ALPHA-T itself starts every cut inside the thread for it, so the app does not offer it; use TOWARDS"
+msgstr "різьба AWAY: сама ALPHA-T у цьому режимі починає кожен прохід усередині різьби, тому програма його не пропонує; використовуйте «До патрона»"
+
+msgid "thread lines must be parallel to Z"
+msgstr "лінії різьби мають бути паралельні Z"
+
+msgid "thread: outer diameter must be above the inner one, first cut > 0"
+msgstr "різьба: зовнішній діаметр має бути більший за внутрішній, перший прохід > 0"
+
+msgid "threading: {n} cuts; make the first cut deeper or set fewer cuts (at most {max})"
+msgstr "різьба: {n} проходів; зробіть перший прохід глибшим або задайте менше проходів (не більше {max})"
+
+msgid "Lathe CAM for the Harrison Alpha 400T, writing ALPHA-T programs."
+msgstr "CAM для токарного верстата Harrison Alpha 400T, що створює програми ALPHA-T."
+
+msgid "translator-credits"
+msgstr "Claude (переклад), Eduard (перевірка)"
+
+msgid "{n} corner done"
+msgid_plural "{n} corners done"
+msgstr[0] "Оброблено {n} кут"
+msgstr[1] "Оброблено {n} кути"
+msgstr[2] "Оброблено {n} кутів"
+
+msgid "Circle"
+msgstr "Коло"
+
+msgid "Centre X (Ø)"
+msgstr "Центр X (Ø)"
+
+msgid "Centre Z"
+msgstr "Центр Z"
+
+msgid "The profile has no outside corner between two lines"
+msgstr "Профіль не має зовнішнього кута між двома лініями"
+
+msgid "Chamfer Outside Corners"
+msgstr "Фаски на зовнішніх кутах"
+
+msgid "Angle"
+msgstr "Кут"
+
+msgid "Round Outside Corners"
+msgstr "Заокруглити зовнішні кути"
+
+msgid "The lines at the corners are too short for that size"
+msgstr "Лінії біля кутів закороткі для такого розміру"
+
+msgid "{p} coarse"
+msgstr "{p} основний"
+
+msgid "{n} threads per inch"
+msgstr "{n} ниток на дюйм"
+
+msgid "Thread {name}"
+msgstr "Різьба {name}"
+
+msgid "{name}: minor Ø{minor:g}, depth {depth:g}"
+msgstr "{name}: внутрішній Ø{minor:g}, глибина {depth:g}"
+
+msgid "Mirror Image"
+msgstr "Дзеркальне відображення"
+
+msgid "_No, Take It Back"
+msgstr "_Ні, повернути"
+
+msgid "Mirrored about the spindle axis. Is this correct? If yes, just carry on."
+msgstr "Дзеркально відображено відносно осі шпинделя. Чи це правильно? Якщо так, просто працюйте далі."
+
+msgid "No solution for these elements"
+msgstr "Для цих елементів розв’язку немає"
+
+msgid "Tap the one you want (dashed)"
+msgstr "Торкніться потрібного варіанта (пунктир)"
+
+msgid "Tap a line along Z (a diameter)"
+msgstr "Торкніться лінії вздовж Z (діаметра)"
+
+msgid "Tap an arc"
+msgstr "Торкніться дуги"
+
+msgid "Split arc"
+msgstr "Розділити дугу"
+
+msgid "Tap a line"
+msgstr "Торкніться лінії"
+
+msgid "Parallel Line"
+msgstr "Паралельна лінія"
+
+msgid "Distance"
+msgstr "Відстань"
+
+msgid "Tangent at an Angle"
+msgstr "Дотична під кутом"
+
+msgid "Tap a point or an arc"
+msgstr "Торкніться точки або дуги"
+
+msgid "Tangent: now tap the arc"
+msgstr "Дотична: тепер торкніться дуги"
+
+msgid "Blend arc: now the 2nd point, line or arc"
+msgstr "Дуга сполучення: тепер 2-а точка, лінія або дуга"
+
+msgid "Blend arc"
+msgstr "Дуга сполучення"
+
+msgid "At X{x} Z{z}"
+msgstr "У точці X{x} Z{z}"
+
+msgid "Erase drawing"
+msgstr "Стерти креслення"
+
+msgid "Edit {what}"
+msgstr "Редагувати {what}"
+
+msgid "Between the chamfer and the line along Z; the size is measured along that line"
+msgstr "Між фаскою та лінією вздовж Z; розмір вимірюється вздовж цієї лінії"
+
+msgid "Edit Values…"
+msgstr "Змінити значення…"
+
+msgid "Delete"
+msgstr "Видалити"
+
+msgid "Zoom Here"
+msgstr "Збільшити тут"
+
+msgid "Move point"
+msgstr "Переміщення точки"
+
+msgid "Tap an element or an operation"
+msgstr "Торкніться елемента або операції"
+
+msgid "Tap a corner"
+msgstr "Торкніться кута"
+
+msgid "Tap two lines"
+msgstr "Торкніться двох ліній"
+
+msgid "Arc: X,Z or @dX,dZ, then Enter"
+msgstr "Дуга: X,Z або @dX,dZ, потім Enter"
+
+msgid "X,Z or @dX,dZ, then Enter"
+msgstr "X,Z або @dX,dZ, потім Enter"
+
+msgid "Construct"
+msgstr "Побудова"
+
+msgid "Features"
+msgstr "Елементи деталі"
+
+msgid "Cursor and Measure"
+msgstr "Курсор і вимірювання"
+
+msgid "Erase Drawing…"
+msgstr "Стерти креслення…"
+
+msgid "Tap a corner between two lines"
+msgstr "Торкніться кута між двома лініями"
+
+msgid "Command aborted"
+msgstr "Команду скасовано"
+
+msgid "{what} found. Press Delete or minus to erase it"
+msgstr "Знайдено {what}. Натисніть Delete або мінус, щоб стерти"
+
+msgid "Select a line or arc first, or press L or A to find the nearest"
+msgstr "Спершу виберіть лінію чи дугу або натисніть L чи A, щоб знайти найближчу"
+
+msgid "No text to erase"
+msgstr "Немає тексту, який можна стерти"
+
+msgid "Erase text"
+msgstr "Стерти текст"
+
+msgid "Cursor step {step}"
+msgstr "Крок курсора {step}"
+
+msgid "No corner between two lines"
+msgstr "Немає кута між двома лініями"
+
+msgid "No line to find"
+msgstr "Немає лінії, яку можна знайти"
+
+msgid "Measure: tap the 1st point, or move the cursor and press Enter"
+msgstr "Вимірювання: торкніться 1-ї точки або поставте курсор і натисніть Enter"
+
+msgid "Measure: now the 2nd point"
+msgstr "Вимірювання: тепер 2-га точка"
+
+msgid "Draw line"
+msgstr "Накреслити лінію"
+
+msgid "Profile closed"
+msgstr "Профіль замкнено"
+
+msgid "Draw arc"
+msgstr "Накреслити дугу"
+
+msgid "Corner"
+msgstr "Кут"
+
+msgid "Corner: now tap the second line"
+msgstr "Кут: тепер торкніться другої лінії"
+
+msgid "@ needs a previous point"
+msgstr "Для @ потрібна попередня точка"
+
+msgid "Correct point"
+msgstr "Виправлення точки"
+
+msgid "Correct Point"
+msgstr "Виправити точку"
+
+msgid "Arc R{r}"
+msgstr "Дуга R{r}"
+
+msgid "Line Ø{x}"
+msgstr "Лінія Ø{x}"
+
+msgid "Line Z{z}"
+msgstr "Лінія Z{z}"
+
+msgid "Line X{x1} Z{z1} → X{x2} Z{z2}"
+msgstr "Лінія X{x1} Z{z1} → X{x2} Z{z2}"
+
+msgid "Delete {what}"
+msgstr "Видалити {what}"
+
+msgid "Deleted {what}"
+msgstr "Видалено: {what}"
+
+msgid "_Undo"
+msgstr "_Відмінити"
+
+msgid "Fillet R{size}"
+msgstr "Скруглення R{size}"
+
+msgid "Chamfer {size}"
+msgstr "Фаска {size}"
+
+msgid "Pick contour"
+msgstr "Вибір контуру"
+
+msgid "Could not open the manual: {error}"
+msgstr "Не вдалося відкрити посібник: {error}"
+
+msgid "Hold to start"
+msgstr "Утримуйте, щоб почати"
+
+msgid "Point"
+msgstr "Точка"
+
+msgid "Cancelling…"
+msgstr "Скасування…"
+
+msgid "_Close"
+msgstr "_Закрити"
+
+msgid "{done} / {total} bytes"
+msgstr "{done} / {total} байт"
+
+msgid "{done} bytes"
+msgstr "{done} байт"
+
+msgid "{size} bytes, about {secs} s"
+msgstr "{size} байт, приблизно {secs} с"
+
+msgid "Open a part that posts without errors"
+msgstr "Відкрийте деталь, для якої програма створюється без помилок"
+
+msgid "Over Bluetooth use 5 ms or more: the lathe must stop within 10 characters of its pause (DC3)"
+msgstr "Через Bluetooth ставте 5 мс або більше: верстат має зупинитися не пізніше 10 символів після паузи (DC3)"
+
+msgid "(not present)"
+msgstr "(немає)"
+
+msgid "Cancelled"
+msgstr "Скасовано"
+
+msgid "not written ({error})"
+msgstr "не записано ({error})"
+
+msgid "Log: {path}"
+msgstr "Журнал: {path}"
+
+msgid "The lathe must be on CAM, 4 “LOAD CAM FILE”, with the ← arrow touched. Then press Send."
+msgstr "Верстат має бути в CAM, 4 «LOAD CAM FILE», зі стрілкою ← натиснутою. Потім натисніть «Надіслати»."
+
+msgid "{info}\n{size} bytes to {port}.\n\n{steps}"
+msgstr "{info}\n{size} байт на {port}.\n\n{steps}"
+
+msgid "Program too big for the lathe?"
+msgstr "Програма завелика для верстата?"
+
+msgid "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send it only if the lathe has more memory; otherwise split the part into two programs."
+msgstr "Верстат вміщує {memory} КБ CAM-програм (Параметри), а ця програма має {size} байт. Надсилайте її, лише якщо у верстата більше пам'яті; інакше розділіть деталь на дві програми."
+
+msgid "Waiting for the lathe (DC1)…"
+msgstr "Очікування верстата (DC1)…"
+
+msgid "Sending…"
+msgstr "Надсилання…"
+
+msgid "Send CAM Program"
+msgstr "Надсилання програми CAM"
+
+msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
+msgstr "Зв’язок обірвався після {done} з {total} байт. Програма на верстаті неповна: перевірте кабель і надішліть її знову."
+
+msgid "Sent {n} bytes. Check the program list on the control."
+msgstr "Надіслано {n} байт. Перевірте список програм на ЧПК."
+
+msgid "Waiting for data: on the lathe touch the → arrow under “OP. SAVE/RESTORE”"
+msgstr "Очікування даних: на верстаті торкніться стрілки → у «OP. SAVE/RESTORE»"
+
+msgid "The lathe paused {s} s ago; waiting. Press Stop and Keep when it has finished."
+msgstr "Верстат зробив паузу {s} с тому; чекаємо. Коли він закінчить, натисніть «Зупинити й зберегти»."
+
+msgid "_Stop and Keep"
+msgstr "_Зупинити й зберегти"
+
+msgid "Receiving…"
+msgstr "Отримання…"
+
+msgid "Back Up Manual Ops"
+msgstr "Резервне копіювання ручних операцій"
+
+msgid "Received {n} bytes."
+msgstr "Отримано {n} байт."
+
+msgid "Received {n} bytes without the end mark. If the lathe had finished, the backup is probably whole; it is saved marked PARTIAL. Keep the lathe's ops until a restore of it has been checked."
+msgstr "Отримано {n} байт без кінцевої позначки. Якщо верстат закінчив, копія, найімовірніше, повна; її збережено з позначкою PARTIAL. Не видаляйте операції на верстаті, доки відновлення з неї не перевірено."
+
+msgid "The connection was lost after {n} bytes. The backup is incomplete; it is saved marked PARTIAL. Check the cable and back up again."
+msgstr "Зв’язок обірвався після {n} байт. Копія неповна; її збережено з позначкою PARTIAL. Перевірте кабель і створіть копію знову."
+
+msgid "Save Manual Ops Backup"
+msgstr "Зберегти резервну копію ручних операцій"
+
+msgid "Could not save {path}: {error}"
+msgstr "Не вдалося зберегти {path}: {error}"
+
+msgid "Backup saved to {path}"
+msgstr "Резервну копію збережено: {path}"
+
+msgid "Restore Manual Ops From"
+msgstr "Відновити ручні операції з файлу"
+
+msgid "Could not read the file: {error}"
+msgstr "Не вдалося прочитати файл: {error}"
+
+msgid "This is not a Manual Ops backup (it must start and end with %)."
+msgstr "Це не резервна копія ручних операцій (вона має починатися й закінчуватися знаком %)."
+
+msgid "{name}, {size} bytes.\n\n{steps}"
+msgstr "{name}, {size} байт.\n\n{steps}"
+
+msgid "The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are incomplete: check the cable and restore them again."
+msgstr "Зв’язок обірвався після {done} з {total} байт. Ручні операції на верстаті неповні: перевірте кабель і відновіть їх знову."
+
+msgid "Sent {n} bytes."
+msgstr "Надіслано {n} байт."
+
+msgid "Loopback Test"
+msgstr "Петльова перевірка"
+
+msgid "Loopback OK: the adapter and cable work."
+msgstr "Петльова перевірка пройшла: адаптер і кабель працюють."
+
+msgid "Loopback failed: got {data}. Check the 2-3 bridge."
+msgstr "Петльова перевірка не пройшла: отримано {data}. Перевірте перемичку 2-3."
+
+msgid "Permission denied: add yourself to the dialout group (sudo usermod -aG dialout $USER), then log in again"
+msgstr "Доступ заборонено: додайте себе до групи dialout (sudo usermod -aG dialout $USER) і увійдіть знову"
+
+msgid "Port not found: is the USB adapter plugged in?"
+msgstr "Порт не знайдено: чи під’єднано USB-адаптер?"
+
+msgid "{n} element"
+msgid_plural "{n} elements"
+msgstr[0] "{n} елемент"
+msgstr[1] "{n} елементи"
+msgstr[2] "{n} елементів"
+
+msgid "Tool memory slot"
+msgstr "Номер у пам’яті ЧПК"
+
+msgid "Allowance, radius"
+msgstr "Припуск, на радіус"
+
+msgid "Allowance"
+msgstr "Припуск"
+
+msgid "0 = one plunge"
+msgstr "0 = одним врізанням"
+
+msgid "Radius; then × √n"
+msgstr "На радіус; далі × √n"
+
+msgid "0 = from the depth"
+msgstr "0 = за глибиною"
+
+msgid "At the final diameter"
+msgstr "На кінцевому діаметрі"
+
+msgid "0° = straight in"
+msgstr "0° = прямо"
+
+msgid "Off = boring"
+msgstr "Вимкнено = розточування"
+
+msgid "After the roughing"
+msgstr "Після чорнової обробки"
+
+msgid "Off = facing"
+msgstr "Вимкнено = торцювання"
+
+msgid "Cleans up each step"
+msgstr "Зачищає кожен уступ"
+
+msgid "Pulls off to the axis"
+msgstr "Відведення до осі"
+
+msgid "Operation {n}"
+msgstr "Операція {n}"
+
+msgid "Change {what}"
+msgstr "Змінити: {what}"
+
+msgid "(no lines)"
+msgstr "(немає ліній)"
+
+msgid "Contour, in cutting order"
+msgstr "Контур, у порядку обробки"
+
+msgid "Element IDs, for example g0 g1 g2"
+msgstr "Ідентифікатори елементів, наприклад g0 g1 g2"
+
+msgid "Change contour"
+msgstr "Змінити контур"
+
+msgid "Pick Contour on the Drawing"
+msgstr "Вибрати контур на кресленні"
+
+msgid "Face grooving: plunges along -Z, stepping outwards; the tool reference is the tip's corner nearest the axis."
+msgstr "Торцеві канавки: врізання вздовж -Z із кроком назовні; базова точка інструмента — кут різця, найближчий до осі."
+
+msgid "Grooving follows the drawn profile; the tool reference is the tip's -Z corner."
+msgstr "Точіння канавок іде за накресленим профілем; базова точка інструмента — кут різця з боку -Z."
+
+msgid "_Duplicate Operation"
+msgstr "_Дублювати операцію"
+
+msgid "From {a} to {b}"
+msgstr "Від {a} до {b}"
+
+msgid "{id} (missing)"
+msgstr "{id} (відсутній)"
+
+msgid "{n} tool change"
+msgid_plural "{n} tool changes"
+msgstr[0] "{n} зміна інструмента"
+msgstr[1] "{n} зміни інструмента"
+msgstr[2] "{n} змін інструмента"
+
+msgid "About {total} ({cutting} cutting, {changes})"
+msgstr "Близько {total} ({cutting} різання, {changes})"
+
+msgid "TITLE"
+msgstr "НАЗВА"
+
+msgid "DATE"
+msgstr "ДАТА"
+
+msgid "  (no program)"
+msgstr "  (немає програми)"
+
+msgid "Tool No."
+msgstr "Інстр. №"
+
+msgid "Feed"
+msgstr "Подача"
+
+msgid "Tool Start X"
+msgstr "Поч. точка X"
+
+msgid "Maximum X"
+msgstr "Межа X"
+
+msgid "Offset X"
+msgstr "Припуск X"
+
+msgid "Tool Start Z"
+msgstr "Поч. точка Z"
+
+msgid "Maximum Z"
+msgstr "Межа Z"
+
+msgid "Offset Z"
+msgstr "Припуск Z"
+
+msgid "Op. No."
+msgstr "Опер. №"
+
+msgid "Total Passes"
+msgstr "Проходів"
+
+msgid "Depth Of Cut"
+msgstr "Глибина різання"
+
+msgid "Time"
+msgstr "Час"
+
+msgid "one per pass"
+msgstr "по одному на прохід"
+
+msgid "Block"
+msgstr "Блок"
+
+msgid "Restart #140"
+msgstr "Перезапуск #140"
+
+msgid "Pass No."
+msgstr "Прохід №"
+
+msgid "RAPID TO"
+msgstr "ПРИСК. ДО"
+
+msgid "FEED  TO"
+msgstr "ПОДАЧА ДО"
+
+msgid "centre"
+msgstr "центр"
+
+msgid "THREAD TO"
+msgstr "РІЗЬБА ДО"
+
+msgid "DWELL"
+msgstr "ВИТРИМКА"
+
+msgid "revs"
+msgstr "об."
+
+msgid "bore"
+msgstr "отвір"
+
+msgid "Date"
+msgstr "Дата"
+
+msgid "Tools, in loading order"
+msgstr "Інструменти в порядку встановлення"
+
+msgid "Notes"
+msgstr "Примітки"
+
+msgid "UNTITLED"
+msgstr "БЕЗ НАЗВИ"
+
+msgid "SETUP {n}"
+msgstr "ВСТАНОВЛЕННЯ {n}"
+
+msgid "There is no program to print yet"
+msgstr "Ще немає програми для друку"
+
+msgid "Save Setup Sheet as PDF"
+msgstr "Зберегти карту наладки як PDF"
+
+msgid "Saved {name}"
+msgstr "Збережено {name}"
+
+msgid "Could not save {name}: {error}"
+msgstr "Не вдалося зберегти {name}: {error}"
+
+msgid "Save Setup Sheet"
+msgstr "Зберегти карту наладки"
+
+msgid "{n} move"
+msgid_plural "{n} moves"
+msgstr[0] "{n} переміщення"
+msgstr[1] "{n} переміщення"
+msgstr[2] "{n} переміщень"
+
+msgid "no moves"
+msgstr "немає переміщень"
+
+msgid "tool block"
+msgstr "блок інструмента"
+
+msgid "op {n}"
+msgstr "операція {n}"
+
+msgid "pass {n}"
+msgstr "прохід {n}"
+
+msgid "{i}/{total} · {op}{pass_} · line {line}"
+msgstr "{i}/{total} · {op}{pass_} · рядок {line}"
+
+msgid "not an AlphaLink CAM template"
+msgstr "це не шаблон AlphaLink CAM"
+
+msgid "Delete Tool"
+msgstr "Видалити інструмент"
+
+msgid "Type"
+msgstr "Тип"
+
+msgid "Hand"
+msgstr "Виконання"
+
+msgid "Description"
+msgstr "Опис"
+
+msgid "The tool library could not be saved: {error}"
+msgstr "Не вдалося зберегти бібліотеку інструментів: {error}"
+
+msgid "New tool"
+msgstr "Новий інструмент"
+
+msgid "Delete T{n}?"
+msgstr "Видалити T{n}?"
+
+msgid "{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard tool with that number."
+msgstr "{name} буде вилучено з вашої бібліотеки інструментів. Деталі, що його використовують, отримають стандартний інструмент ALPHA-T з тим самим номером."
+
+msgid "ALPHA-T tool library (ATOOLIB.TL1)"
+msgstr "Бібліотека інструментів ALPHA-T (ATOOLIB.TL1)"
+
+msgid "Import Tool Library"
+msgstr "Імпорт бібліотеки інструментів"
+
+msgid "Could not import {name}: {error}"
+msgstr "Не вдалося імпортувати {name}: {error}"
+
+msgid "Tool library reset to ALPHA-T's 32 standard tools"
+msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"
+
+msgid "{n} pass"
+msgid_plural "{n} passes"
+msgstr[0] "{n} прохід"
+msgstr[1] "{n} проходи"
+msgstr[2] "{n} проходів"
+
+msgid "Imported {n} element from {name}."
+msgid_plural "Imported {n} elements from {name}."
+msgstr[0] "Імпортовано {n} елемент з {name}."
+msgstr[1] "Імпортовано {n} елементи з {name}."
+msgstr[2] "Імпортовано {n} елементів з {name}."
+
+msgid "Rebuilt {n} operation from {name}."
+msgid_plural "Rebuilt {n} operations from {name}."
+msgstr[0] "Відновлено {n} операцію з {name}."
+msgstr[1] "Відновлено {n} операції з {name}."
+msgstr[2] "Відновлено {n} операцій з {name}."
+
+msgid "Safety check: {where}{what} (and {n} more)"
+msgid_plural "Safety check: {where}{what} (and {n} more)"
+msgstr[0] "Перевірка безпеки: {where}{what} (і ще {n})"
+msgstr[1] "Перевірка безпеки: {where}{what} (і ще {n})"
+msgstr[2] "Перевірка безпеки: {where}{what} (і ще {n})"
+
+msgid "Added {n} operation from {name}"
+msgid_plural "Added {n} operations from {name}"
+msgstr[0] "Додано {n} операцію з шаблону {name}"
+msgstr[1] "Додано {n} операції з шаблону {name}"
+msgstr[2] "Додано {n} операцій з шаблону {name}"
 
 msgid "{title} (internal)"
 msgstr "{title} (внутрішня)"
@@ -2137,44 +1795,23 @@ msgstr "{title} (у напрямку торця)"
 msgid "{revs} revs"
 msgstr "{revs} об."
 
-msgid "feed to {point}"
-msgstr "з подачею в {point}"
-
-msgid "rapid to {point}"
-msgstr "прискорено в {point}"
-
 msgid "pitch {pitch}"
 msgstr "крок {pitch}"
-
-msgid "{n} pass"
-msgid_plural "{n} passes"
-msgstr[0] "{n} прохід"
-msgstr[1] "{n} проходи"
-msgstr[2] "{n} проходів"
 
 msgid "Touch locked. Hold the lock button, or click it with the mouse, to unlock."
 msgstr "Сенсор заблоковано. Утримуйте кнопку замка або клацніть її мишею, щоб розблокувати."
 
-msgid "Parts and drawings"
-msgstr "Деталі та креслення"
-
 msgid "Open Part"
 msgstr "Відкрити деталь"
 
-msgid "the file is damaged or not this kind of file ({error})"
-msgstr "файл пошкоджено або це файл іншого типу ({error})"
+msgid "Parts and drawings"
+msgstr "Деталі та креслення"
 
 msgid "Could not open {name}: {error}"
 msgstr "Не вдалося відкрити {name}: {error}"
 
 msgid "{name}: the DXF X axis becomes Z. How is Y drawn?"
 msgstr "{name}: вісь X у DXF стає віссю Z. Як задано Y?"
-
-msgid "Imported {n} element from {name}."
-msgid_plural "Imported {n} elements from {name}."
-msgstr[0] "Імпортовано {n} елемент з {name}."
-msgstr[1] "Імпортовано {n} елементи з {name}."
-msgstr[2] "Імпортовано {n} елементів з {name}."
 
 msgid "Skipped: {what}."
 msgstr "Пропущено: {what}."
@@ -2185,29 +1822,17 @@ msgstr "{name}: лише креслення, поруч не знайдено .S
 msgid "_Choose .SD1…"
 msgstr "_Вибрати .SD1…"
 
-msgid "ALPHA-T program listing (.SD1)"
-msgstr "Лістинг програми ALPHA-T (.SD1)"
-
 msgid "Choose the .SD1 for {name}"
 msgstr "Виберіть .SD1 для {name}"
+
+msgid "ALPHA-T program listing (.SD1)"
+msgstr "Лістинг програми ALPHA-T (.SD1)"
 
 msgid "Operations not rebuilt from {name}: {error}"
 msgstr "Операції з {name} не відновлено: {error}"
 
 msgid "Operations from {name}"
 msgstr "Операції з {name}"
-
-msgid "Rebuilt {n} operation from {name}."
-msgid_plural "Rebuilt {n} operations from {name}."
-msgstr[0] "Відновлено {n} операцію з {name}."
-msgstr[1] "Відновлено {n} операції з {name}."
-msgstr[2] "Відновлено {n} операцій з {name}."
-
-msgid "The program matches ALPHA-T's {name} byte for byte."
-msgstr "Програма побайтово збігається з {name} від ALPHA-T."
-
-msgid "The program differs from ALPHA-T's {name}: check before sending."
-msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
 
 msgid "Setup {n}"
 msgstr "Встановлення {n}"
@@ -2221,12 +1846,6 @@ msgstr "Операція {n}: "
 msgid "{where}{error}. Export is disabled."
 msgstr "{where}{error}. Експорт вимкнено."
 
-msgid "Safety check: {where}{what} (and {n} more)"
-msgid_plural "Safety check: {where}{what} (and {n} more)"
-msgstr[0] "Перевірка безпеки: {where}{what} (і ще {n})"
-msgstr[1] "Перевірка безпеки: {where}{what} (і ще {n})"
-msgstr[2] "Перевірка безпеки: {where}{what} (і ще {n})"
-
 msgid "Safety check: {where}{what}"
 msgstr "Перевірка безпеки: {where}{what}"
 
@@ -2235,12 +1854,6 @@ msgstr "_Показати"
 
 msgid "Program {number} · {name} · tools {tools}"
 msgstr "Програма {number} · {name} · інструменти {tools}"
-
-msgid "Undid {action}"
-msgstr "Відмінено: «{action}»"
-
-msgid "Redid {action}"
-msgstr "Повторено: «{action}»"
 
 msgid "Add {what}"
 msgstr "Додати: {what}"
@@ -2260,12 +1873,6 @@ msgstr "Шаблону немає або його пошкоджено"
 msgid "Template {name}"
 msgstr "Шаблон {name}"
 
-msgid "Added {n} operation from {name}"
-msgid_plural "Added {n} operations from {name}"
-msgstr[0] "Додано {n} операцію з шаблону {name}"
-msgstr[1] "Додано {n} операції з шаблону {name}"
-msgstr[2] "Додано {n} операцій з шаблону {name}"
-
 msgid "Add operations first: a template keeps the operations, not the drawing"
 msgstr "Спершу додайте операції: шаблон зберігає операції, а не креслення"
 
@@ -2280,12 +1887,6 @@ msgstr "Встановлення 2 обробляє інший кінець: к�
 
 msgid "This replaces the current setup 2 and its operations."
 msgstr "Це замінить поточне встановлення 2 і його операції."
-
-msgid "_Replace Setup 2"
-msgstr "_Замінити встановлення 2"
-
-msgid "_Turn Around"
-msgstr "_Перевернути"
 
 msgid "Setup 2, program {n}: add its operations, then save the part."
 msgstr "Встановлення 2, програма {n}: додайте його операції, потім збережіть деталь."
@@ -2341,158 +1942,506 @@ msgstr "Програма {number} · {units} · рядків: {lines} · {size} 
 msgid "incomplete (see banner)"
 msgstr "неповна (див. повідомлення вгорі)"
 
-msgid "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs"
-msgstr "програма задовга для нумерації міток ALPHA-T: мітка N{label} повторилася б, і перезапуск міг би початися не з того місця; розділіть деталь на дві програми"
+msgid "Select"
+msgstr "Вибір"
 
-msgid "Tap an element or an operation"
-msgstr "Торкніться елемента або операції"
+msgid "Line"
+msgstr "Лінія"
 
-msgid "Tap a corner"
-msgstr "Торкніться кута"
+msgid "Fillet"
+msgstr "Скруглення"
 
-msgid "Tap two lines"
-msgstr "Торкніться двох ліній"
+msgid "X,Z  or  @dX,dZ  then Enter (line tool)"
+msgstr "X,Z  або  @dX,dZ  і Enter (інструмент «Лінія»)"
 
-msgid "Arc: X,Z or @dX,dZ, then Enter"
-msgstr "Дуга: X,Z або @dX,dZ, потім Enter"
+msgid "Draw line: length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Лінія: довжина,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
 
-msgid "X,Z or @dX,dZ, then Enter"
-msgstr "X,Z або @dX,dZ, потім Enter"
+msgid "Move the cursor to X,Z  then Enter"
+msgstr "Перемістити курсор у X,Z  і Enter"
 
-msgid "Construct"
-msgstr "Побудова"
+msgid "Move the cursor by dX,dZ  then Enter"
+msgstr "Перемістити курсор на dX,dZ  і Enter"
 
-msgid "Features"
-msgstr "Елементи деталі"
+msgid "Move the cursor by length,angle  then Enter (0° = towards -Z, 90° = +X)"
+msgstr "Перемістити курсор на довжину,кут  і Enter (0° — у бік -Z, 90° — у бік +X)"
 
-msgid "Cursor and Measure"
-msgstr "Курсор і вимірювання"
+msgid "No point to find"
+msgstr "Немає точки, яку можна знайти"
 
-msgid "Program too big for the lathe?"
-msgstr "Програма завелика для верстата?"
+msgid "No intersection to find"
+msgstr "Немає перетину, який можна знайти"
 
-msgid "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send it only if the lathe has more memory; otherwise split the part into two programs."
-msgstr "Верстат вміщує {memory} КБ CAM-програм (Параметри), а ця програма має {size} байт. Надсилайте її, лише якщо у верстата більше пам'яті; інакше розділіть деталь на дві програми."
+msgid "No arc to find"
+msgstr "Немає дуги, яку можна знайти"
 
-msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
-msgstr "Зв’язок обірвався після {done} з {total} байт. Програма на верстаті неповна: перевірте кабель і надішліть її знову."
+msgid "Type X,Z (diameter, Z) or @dX,dZ"
+msgstr "Введіть X,Z (діаметр, Z) або @dX,dZ"
 
-msgid "The connection was lost after {n} bytes. The backup is incomplete; it is saved marked PARTIAL. Check the cable and back up again."
-msgstr "Зв’язок обірвався після {n} байт. Копія неповна; її збережено з позначкою PARTIAL. Перевірте кабель і створіть копію знову."
+msgid "Next Point"
+msgstr "Наступна точка"
 
-msgid "The connection was lost after {done} of {total} bytes. The Manual Ops on the lathe are incomplete: check the cable and restore them again."
-msgstr "Зв’язок обірвався після {done} з {total} байт. Ручні операції на верстаті неповні: перевірте кабель і відновіть їх знову."
+msgid "Start Point"
+msgstr "Початкова точка"
 
-msgid "Tool memory slot"
-msgstr "Номер у пам’яті ЧПК"
+msgid "Radius at {point}"
+msgstr "Радіус у {point}"
 
-msgid "Allowance, radius"
-msgstr "Припуск, на радіус"
+msgid "Chamfer at {point}"
+msgstr "Фаска в {point}"
 
-msgid "Allowance"
-msgstr "Припуск"
+msgid "INC"
+msgstr "INC"
 
-msgid "0 = one plunge"
-msgstr "0 = одним врізанням"
+msgid "ABS"
+msgstr "ABS"
 
-msgid "Radius; then × √n"
-msgstr "На радіус; далі × √n"
+msgid "On the lathe: CAM key, 4 “LOAD CAM FILE”, then touch the ← arrow. Then hold “Send to the Lathe” here."
+msgstr "На верстаті: клавіша CAM, 4 «LOAD CAM FILE», потім торкніться стрілки ←. Тоді утримуйте тут «Надіслати на верстат»."
 
-msgid "0 = from the depth"
-msgstr "0 = за глибиною"
+msgid "Start the backup here first, then on the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the → arrow."
+msgstr "Спершу запустіть резервне копіювання тут, потім на верстаті: у Manual Ops торкніться значка файлу операцій, 1 «OP. SAVE/RESTORE», потім стрілки →."
 
-msgid "At the final diameter"
-msgstr "На кінцевому діаметрі"
+msgid "On the lathe: in Manual Ops touch the ops file icon, 1 “OP. SAVE/RESTORE”, then the ← arrow. Only Manual Ops files saved from this lathe: programs not made for the Alpha-T can corrupt its macros (Alphalink-T manual)."
+msgstr "На верстаті: у Manual Ops торкніться значка файлу операцій, 1 «OP. SAVE/RESTORE», потім стрілки ←. Лише файли Manual Ops, збережені з цього верстата: програми, створені не для Alpha-T, можуть пошкодити його макроси (посібник Alphalink-T)."
 
-msgid "0° = straight in"
-msgstr "0° = прямо"
+msgid "Unplug the cable from the lathe and bridge pins 2 and 3 of the adapter, then run the test."
+msgstr "Від’єднайте кабель від верстата й з’єднайте контакти 2 і 3 адаптера, потім запустіть перевірку."
 
-msgid "Off = boring"
-msgstr "Вимкнено = розточування"
+msgid "Tool"
+msgstr "Інструмент"
 
-msgid "After the roughing"
-msgstr "Після чорнової обробки"
+msgid "Per revolution"
+msgstr "На оберт"
 
-msgid "Off = facing"
-msgstr "Вимкнено = торцювання"
-
-msgid "Cleans up each step"
-msgstr "Зачищає кожен уступ"
-
-msgid "Pulls off to the axis"
-msgstr "Відведення до осі"
-
-msgid "TITLE"
-msgstr "НАЗВА"
-
-msgid "DATE"
-msgstr "ДАТА"
-
-msgid "Tool No."
-msgstr "Інстр. №"
-
-msgid "Tool Start X"
-msgstr "Поч. точка X"
-
-msgid "Maximum X"
-msgstr "Межа X"
-
-msgid "Tool Start Z"
-msgstr "Поч. точка Z"
-
-msgid "Maximum Z"
-msgstr "Межа Z"
-
-msgid "Op. No."
-msgstr "Опер. №"
-
-msgid "Total Passes"
-msgstr "Проходів"
-
-msgid "Depth Of Cut"
+msgid "Depth of cut"
 msgstr "Глибина різання"
 
-msgid "Time"
-msgstr "Час"
+msgid "Per pass, radius"
+msgstr "За прохід, на радіус"
 
-msgid "one per pass"
-msgstr "по одному на прохід"
+msgid "Finish offset X"
+msgstr "Чистовий припуск X"
 
-msgid "Block"
-msgstr "Блок"
+msgid "Finish offset Z"
+msgstr "Чистовий припуск Z"
 
-msgid "Restart #140"
-msgstr "Перезапуск #140"
+msgid "Peck depth"
+msgstr "Глибина врізання за крок"
 
-msgid "Pass No."
-msgstr "Прохід №"
+msgid "Stepover"
+msgstr "Крок зміщення"
 
-msgid "RAPID TO"
-msgstr "ПРИСК. ДО"
+msgid "Tip width"
+msgstr "Ширина різця"
 
-msgid "FEED  TO"
-msgstr "ПОДАЧА ДО"
+msgid "Z shift"
+msgstr "Зсув Z"
 
-msgid "centre"
-msgstr "центр"
+msgid "Repeats"
+msgstr "Повтори"
 
-msgid "THREAD TO"
-msgstr "РІЗЬБА ДО"
+msgid "Dwell"
+msgstr "Витримка"
 
-msgid "DWELL"
-msgstr "ВИТРИМКА"
+msgid "Revolutions"
+msgstr "Оберти"
 
-msgid "revs"
-msgstr "об."
+msgid "Hole bottom Z"
+msgstr "Дно отвору Z"
 
-msgid "bore"
-msgstr "отвір"
+msgid "Absolute"
+msgstr "Абсолютне"
 
-msgid "Tools, in loading order"
-msgstr "Інструменти в порядку встановлення"
+msgid "Peck"
+msgstr "Крок свердління"
 
-msgid "Delete Tool"
-msgstr "Видалити інструмент"
+msgid "0 = no pecking"
+msgstr "0 = без виведення свердла"
 
-msgid "ALPHA-T tool library (ATOOLIB.TL1)"
-msgstr "Бібліотека інструментів ALPHA-T (ATOOLIB.TL1)"
+msgid "First cut depth"
+msgstr "Глибина першого проходу"
+
+msgid "Lead in"
+msgstr "Вхід"
+
+msgid "Lead out"
+msgstr "Вихід"
+
+msgid "External"
+msgstr "Зовнішня"
+
+msgid "Towards the chuck"
+msgstr "До патрона"
+
+msgid "Pre-finish pass"
+msgstr "Напівчистовий прохід"
+
+msgid "Full retract"
+msgstr "Повне відведення"
+
+msgid "Front"
+msgstr "Спереду"
+
+msgid "Rapid"
+msgstr "Прискорений хід"
+
+msgid "Off = feed move"
+msgstr "Вимкнено = переміщення з подачею"
+
+msgid "Datum"
+msgstr "Базова точка"
+
+msgid "Mode"
+msgstr "Режим"
+
+msgid "left"
+msgstr "ліворуч"
+
+msgid "right"
+msgstr "праворуч"
+
+msgid "area"
+msgstr "чорновий"
+
+msgid "finish"
+msgstr "чистовий"
+
+msgid "Tool start"
+msgstr "Початкова точка інструмента"
+
+msgid "Tool change point"
+msgstr "Точка зміни інструмента"
+
+msgid "Move to"
+msgstr "Перемістити в"
+
+msgid "Outer diameter line"
+msgstr "Лінія зовнішнього діаметра"
+
+msgid "Inner diameter line"
+msgstr "Лінія внутрішнього діаметра"
+
+msgid "Area Clear"
+msgstr "Чорнова обробка"
+
+msgid "Finish Pass"
+msgstr "Чистовий прохід"
+
+msgid "Face Clear"
+msgstr "Обробка торця"
+
+msgid "Grooving"
+msgstr "Точіння канавок"
+
+msgid "Threading"
+msgstr "Нарізання різьби"
+
+msgid "Drilling"
+msgstr "Свердління"
+
+msgid "Tool Change"
+msgstr "Зміна інструмента"
+
+msgid "Move / Rapid"
+msgstr "Переміщення / прискорений хід"
+
+msgid "Area clear"
+msgstr "Чорнова обробка"
+
+msgid "Face clear"
+msgstr "Обробка торця"
+
+msgid "Finish pass"
+msgstr "Чистовий прохід"
+
+msgid "Move / rapid"
+msgstr "Переміщення / прискорений хід"
+
+msgid "rapid to {point}"
+msgstr "прискорено в {point}"
+
+msgid "feed to {point}"
+msgstr "з подачею в {point}"
+
+msgid "Arc: now a point on the arc"
+msgstr "Дуга: тепер точка на дузі"
+
+msgid "Arc: now the end point"
+msgstr "Дуга: тепер кінцева точка"
+
+msgid "Turning"
+msgstr "Точіння"
+
+msgid "Grooving / parting"
+msgstr "Канавки / відрізання"
+
+msgid "Drill"
+msgstr "Свердло"
+
+msgid "Boring bar"
+msgstr "Розточний різець"
+
+msgid "Right hand"
+msgstr "Правий"
+
+msgid "Left hand"
+msgstr "Лівий"
+
+msgid "Neutral"
+msgstr "Нейтральний"
+
+msgid "Nose radius"
+msgstr "Радіус при вершині"
+
+msgid "mm; changes the toolpath"
+msgstr "мм; змінює траєкторію"
+
+msgid "Front clearance angle"
+msgstr "Передній кут у плані"
+
+msgid "degrees from Z; negative = internal"
+msgstr "градуси від Z; від’ємний = внутрішній"
+
+msgid "Rear clearance angle"
+msgstr "Задній кут у плані"
+
+msgid "degrees from Z"
+msgstr "градуси від Z"
+
+msgid "Width"
+msgstr "Ширина"
+
+msgid "grooving tip or drill diameter, mm"
+msgstr "ширина канавкового різця або діаметр свердла, мм"
+
+msgid "Default feed"
+msgstr "Подача за замовчуванням"
+
+msgid "per revolution, for new operations"
+msgstr "на оберт, для нових операцій"
+
+msgid "Imported {n} tools from {name}"
+msgstr "Імпортовано інструментів: {n} з {name}"
+
+msgid "Imported {n} tools and their pictures from {name}"
+msgstr "Імпортовано інструментів із зображеннями: {n} з {name}"
+
+msgid "TOOL CHANGE"
+msgstr "ЗМІНА ІНСТРУМЕНТА"
+
+msgid "AREA CLEARANCE"
+msgstr "ЧОРНОВА ОБРОБКА"
+
+msgid "FACE CLEAR"
+msgstr "ОБРОБКА ТОРЦЯ"
+
+msgid "GROOVING"
+msgstr "ТОЧІННЯ КАНАВОК"
+
+msgid "FINISH PASS"
+msgstr "ЧИСТОВИЙ ПРОХІД"
+
+msgid "PRE-FINISH PASS"
+msgstr "НАПІВЧИСТОВИЙ ПРОХІД"
+
+msgid "DRILLING"
+msgstr "СВЕРДЛІННЯ"
+
+msgid "THREADING"
+msgstr "НАРІЗАННЯ РІЗЬБИ"
+
+msgid "ARC CW TO"
+msgstr "ДУГА ГС ДО"
+
+msgid "ARC CCW TO"
+msgstr "ДУГА ПРГС ДО"
+
+msgid "The program matches ALPHA-T's {name} byte for byte."
+msgstr "Програма побайтово збігається з {name} від ALPHA-T."
+
+msgid "The program differs from ALPHA-T's {name}: check before sending."
+msgstr "Програма відрізняється від {name} від ALPHA-T: перевірте перед надсиланням."
+
+msgid "Undid {action}"
+msgstr "Відмінено: «{action}»"
+
+msgid "Redid {action}"
+msgstr "Повторено: «{action}»"
+
+msgid "{n} picked — tap again to remove, then Done"
+msgid_plural "{n} picked — tap again to remove, then Done"
+msgstr[0] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+msgstr[1] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+msgstr[2] "Вибрано {n} — торкніться ще раз, щоб прибрати, потім «Готово»"
+
+msgid "Number of cuts"
+msgstr "Кількість проходів"
+
+msgid "Jan"
+msgstr "січ"
+
+msgid "Feb"
+msgstr "лют"
+
+msgid "Mar"
+msgstr "бер"
+
+msgid "Apr"
+msgstr "кві"
+
+msgid "May"
+msgstr "тра"
+
+msgid "Jun"
+msgstr "чер"
+
+msgid "Jul"
+msgstr "лип"
+
+msgid "Aug"
+msgstr "сер"
+
+msgid "Sep"
+msgstr "вер"
+
+msgid "Oct"
+msgstr "жов"
+
+msgid "Nov"
+msgstr "лис"
+
+msgid "Dec"
+msgstr "гру"
+
+msgid "Infeed angle"
+msgstr "Кут урізання"
+
+msgid "Circle…"
+msgstr "Коло…"
+
+msgid "Tangent"
+msgstr "Дотична"
+
+msgid "Tangent at an Angle…"
+msgstr "Дотична під кутом…"
+
+msgid "Parallel Line…"
+msgstr "Паралельна лінія…"
+
+msgid "Split Arc"
+msgstr "Розділити дугу"
+
+msgid "Tangent at an angle: tap the arc"
+msgstr "Дотична під кутом: торкніться дуги"
+
+msgid "Tangent: tap a point, or an arc"
+msgstr "Дотична: торкніться точки або дуги"
+
+msgid "Parallel line: tap the line"
+msgstr "Паралельна лінія: торкніться лінії"
+
+msgid "Split arc: tap the arc where to split it"
+msgstr "Розділити дугу: торкніться дуги там, де розділити"
+
+msgid "Blend arc: tap the 1st point, line or arc"
+msgstr "Дуга сполучення: торкніться 1-ї точки, лінії або дуги"
+
+msgid "Parallel line"
+msgstr "Паралельна лінія"
+
+msgid "Is this correct?"
+msgstr "Чи це правильно?"
+
+msgid "Retract distance"
+msgstr "Відстань відведення"
+
+msgid "Follow contour"
+msgstr "Йти по контуру"
+
+msgid "Face"
+msgstr "Торець"
+
+msgid "Spring passes"
+msgstr "Зачисні проходи"
+
+msgid "Arc: X,Z  or  @dX,dZ  then Enter: start, a point on the arc, end"
+msgstr "Дуга: X,Z  або  @dX,dZ  і Enter: початок, точка на дузі, кінець"
+
+msgid "Select an element or an operation. Press L or A to select the nearest line or arc"
+msgstr "Вибрати елемент або операцію. Натисніть L або A, щоб вибрати найближчу лінію або дугу"
+
+msgid "Draw lines. Press X to type X,Z, D to type length and angle, + to draw by taps, S to start at the cursor"
+msgstr "Креслити лінії. Натисніть X, щоб ввести X,Z; D, щоб ввести довжину й кут; +, щоб креслити дотиками; S, щоб почати від курсора"
+
+msgid "Round a corner. Press F to round the corner nearest the cursor"
+msgstr "Скруглити кут. Натисніть F, щоб скруглити кут, найближчий до курсора"
+
+msgid "Blend Arc…"
+msgstr "Дуга сполучення…"
+
+msgid "Draw Arc Through Three Points (W)"
+msgstr "Дуга через три точки (W)"
+
+msgid "Chamfer Corner (B)"
+msgstr "Фаска на куті (B)"
+
+msgid "Trim or Extend Two Lines to Meet (K)"
+msgstr "Обрізати або подовжити дві лінії до перетину (K)"
+
+msgid "Tap an element or an operation; L or A finds the nearest line or arc"
+msgstr "Торкніться елемента або операції; L чи A знаходить найближчу лінію чи дугу"
+
+msgid "Tap a corner, or move the cursor near it and press Enter"
+msgstr "Торкніться кута або поставте біля нього курсор і натисніть Enter"
+
+msgid "Tap two lines, or move the cursor to each and press Enter"
+msgstr "Торкніться двох ліній або поставте курсор на кожну й натисніть Enter"
+
+msgid "external"
+msgstr "зовнішнє"
+
+msgid "internal"
+msgstr "внутрішнє"
+
+msgid "towards the chuck"
+msgstr "до патрона"
+
+msgid "away from the chuck"
+msgstr "від патрона"
+
+msgid "Standard Thread…"
+msgstr "Стандартна різьба…"
+
+msgid "Chamfer Outside Corners…"
+msgstr "Фаски на зовнішніх кутах…"
+
+msgid "Round Outside Corners…"
+msgstr "Заокруглити зовнішні кути…"
+
+msgid "Standard thread: tap the diameter line to thread"
+msgstr "Стандартна різьба: торкніться лінії діаметра для різьби"
+
+msgid "Shaft: rough T1, finish T3"
+msgstr "Вал: чорнова T1, чистова T3"
+
+msgid "Bush: drill T25, bore rough and finish T12"
+msgstr "Втулка: свердло T25, розточування чорнове й чистове T12"
+
+msgid "Groove and thread: groove T16, thread T31"
+msgstr "Канавка й різьба: канавка T16, різьба T31"
+
+msgid "Surface speed"
+msgstr "Швидкість різання"
+
+msgid "m/min, for the cycle time; 0 = a default for the type"
+msgstr "м/хв, для часу циклу; 0 = типова для виду інструмента"
+
+msgid "rpm for this tool; 0 = the machine's"
+msgstr "об/хв для цього інструмента; 0 = як у верстата"
+
+msgid "_Turn Around"
+msgstr "_Перевернути"
+
+msgid "_Replace Setup 2"
+msgstr "_Замінити встановлення 2"

@@ -1,4 +1,4 @@
-//! The ALPHA-T post against the Python app: every case exported by tools/export_rust_fixtures.py (the golden
+//! The ALPHA-T post against the Python app: every case exported by the retired Python app's exporter (the golden
 //! samples, every ALPHA-T sample rebuilt from its .SD1, the examples) must give the same bytes or the same refusal.
 
 use std::path::{Path, PathBuf};

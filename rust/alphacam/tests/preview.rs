@@ -1,6 +1,6 @@
 //! The preview and what is built on it (the simulation's segments, the cycle time, the safety check, the tool
 //! checks) against the Python app, for every project of the post fixtures and the parts the Python tests build
-//! (tools/export_rust_core_fixtures.py): the posted program, its .SD1 listing and the program parsed back too.
+//! (the retired Python app's exporter): the posted program, its .SD1 listing and the program parsed back too.
 
 mod common;
 

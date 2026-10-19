@@ -1,4 +1,4 @@
-//! ALPHA-T's file formats against the Python app: every case exported by tools/export_rust_io_fixtures.py (every
+//! ALPHA-T's file formats against the Python app: every case exported by the retired Python app's exporter (every
 //! sample .SDG, .SD1 and .PRG, the .SD1 listing of every post case, the .SDG/.SDT written back, the tool library and
 //! DXF inputs the Python tests build) must give the same result or the same refusal.
 
@@ -182,7 +182,7 @@ fn list(v: &[i64]) -> String {
     format!("[{}]", v.iter().map(i64::to_string).collect::<Vec<_>>().join(", "))
 }
 
-/// The same text as prg_digest() in tools/export_rust_io_fixtures.py.
+/// The same text as prg_digest() in the retired Python app's exporter.
 fn digest(prog: &Program) -> String {
     let eol = if prog.eol == "\r\n" { "'\\r\\n'" } else { "'\\n'" };
     let mut lines = vec![format!("program {} {} {eol} {} {} {}", prog.o_number, prog.units, prog.header.len(),

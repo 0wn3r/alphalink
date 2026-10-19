@@ -2,7 +2,7 @@
 //!     alphacam dump FILE.PRG [--moves]
 //!     alphacam post PROJECT.alcam [-o FILE.PRG] [--sd1 FILE.SD1]
 //!
-//! (Python: `python -m alphacam`, app/alphacam/__main__.py.)
+//! (It replaces the retired Python app's `python -m alphacam`.)
 
 use std::io::Write;
 use std::path::{Path, PathBuf};

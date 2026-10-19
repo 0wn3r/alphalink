@@ -6,7 +6,8 @@ use gtk::{gdk, gio};
 use crate::i18n::gettext;
 
 pub const APP_ID: &str = "io.github._0wn3r.AlphaLinkCAM";
-pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// the commit the app is built from: the only version a user needs to say which build they run
+pub const VERSION: &str = env!("ALPHALINK_COMMIT");
 
 /// Debugging / screenshots: --select N (1-based operation), --page part|program, --touch.
 #[derive(Debug, Default, Clone)]

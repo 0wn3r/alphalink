@@ -25,6 +25,8 @@ regex.workspace = true
 [dev-dependencies]
 # the transfer test plays the control on a pty pair
 serialport.workspace = true
+# the interface files test: each .ui records the sha256 of the Blueprint source it was compiled from
+sha2.workspace = true
 
 [build-dependencies]
 glib-build-tools.workspace = true

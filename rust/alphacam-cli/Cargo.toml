@@ -16,5 +16,5 @@ alphacam = { path = "../alphacam", default-features = false }
 clap.workspace = true
 
 [dev-dependencies]
-# the expected output the Python CLI gave (tools/export_rust_cli_fixtures.py)
+# the expected output the Python CLI gave (recorded by the retired Python app)
 serde_json.workspace = true

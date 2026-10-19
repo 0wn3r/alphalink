@@ -1,14 +1,14 @@
-# The Rust port (rust/): build, clippy and tests (the post against every case the Python app exports with
-# tools/export_rust_fixtures.py). The GTK app (alphacam-gtk) needs GTK 4.18+, newer than the runner's, and
-# is built in the Flatpak job below (GNOME 51), which runs every test inside the build and keeps the bundle.
+# The app (rust/): build, clippy and tests (the post against every case the retired Python app exported, kept as
+# fixtures). The GTK app (alphacam-gtk) needs GTK 4.18+, newer than the runner's, and is built in the Flatpak job
+# below (GNOME 51), which runs every test inside the build and keeps the bundle (the app and the alphacam command).
 name: Rust
 
 on:
   push:
     branches: [main]
-    paths: ["rust/**", "samples/**", "app/alphacam_gtk/**", "app/data/**", ".github/workflows/rust.yml"]
+    paths: ["rust/**", "samples/**", "app/alphacam_gtk/**", "app/data/**", "app/examples/**", ".github/workflows/rust.yml"]
   pull_request:
-    paths: ["rust/**", "samples/**", "app/alphacam_gtk/**", "app/data/**", ".github/workflows/rust.yml"]
+    paths: ["rust/**", "samples/**", "app/alphacam_gtk/**", "app/data/**", "app/examples/**", ".github/workflows/rust.yml"]
   workflow_dispatch:
 
 jobs:
@@ -36,8 +36,10 @@ jobs:
       options: --privileged
     steps:
       - uses: actions/checkout@v7
+      - name: The commit for the About dialog (the Flatpak builds a copy of the tree without .git)
+        run: echo "${{ github.event.pull_request.head.sha || github.sha }}" | cut -c1-12 > rust/build-aux/commit
       - uses: flatpak/flatpak-github-actions/flatpak-builder@v6.8
         with:
-          bundle: AlphaLinkCAM-rust.flatpak
+          bundle: AlphaLinkCAM.flatpak
           manifest-path: rust/build-aux/io.github._0wn3r.AlphaLinkCAM.json
           cache-key: flatpak-builder-rust-${{ hashFiles('rust/build-aux/*.json', 'rust/Cargo.lock') }}  # one key per manifest + crates, so later commits reuse the downloads and unchanged modules
