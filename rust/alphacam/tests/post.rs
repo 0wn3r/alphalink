@@ -40,3 +40,29 @@ fn same_programs_as_the_python_app() {
     assert!(cases.len() >= 190, "{} cases", cases.len());
     assert!(failures.is_empty(), "{} of {} cases differ:\n{}", failures.len(), cases.len(), failures.join("\n"));
 }
+
+/// ALPHA-T's labels: operation blocks N10, N20..., restart points N502, N503... A long program would repeat one, and
+/// the control's restart (GOTO[#129*10], searching forward from the top) would start inside an earlier operation, so
+/// the post refuses it; the preview names the first operation that brings the repeat.
+#[test]
+fn a_program_that_would_repeat_a_label_is_refused() {
+    let dir = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/alcam");
+    let mut project = Project::load(dir.join("area_clear.alcam")).unwrap();
+    let ops = project.operations.clone();
+    while project.operations.len() < 60 {
+        project.operations.extend(ops.iter().cloned());
+    }
+    match post(&project, None, None) {
+        Err(Error::Value(m)) => assert!(m.contains("would be used twice"), "{m}"),
+        other => panic!("expected a refusal, got {:?}", other.map(|d| d.len())),
+    }
+    let p = alphacam::preview::preview(&project, None, None).unwrap();
+    let at = p.error_op.expect("the preview names the operation");
+    assert!(at > 0 && at < 60, "{at}");
+    assert!(p.error.unwrap().contains("would be used twice"));
+    project.operations.truncate(at);
+    let text = String::from_utf8(post(&project, None, None).unwrap()).unwrap();
+    let labels: Vec<&str> = text.lines().filter(|l| l.starts_with('N')).collect();
+    let unique: std::collections::HashSet<&&str> = labels.iter().collect();
+    assert_eq!(unique.len(), labels.len());
+}

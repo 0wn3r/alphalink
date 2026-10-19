@@ -435,6 +435,7 @@ UK = {
 "unknown tool type {type}": "невідомий тип інструмента {type}",
 "tool hand must be R, L or N, not {hand}": "виконання інструмента має бути R, L або N, а не {hand}",
 "no tool {number}": "немає інструмента {number}",
+"the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs": "програма задовга для нумерації міток ALPHA-T: мітка N{label} повторилася б, і перезапуск міг би початися не з того місця; розділіть деталь на дві програми",
 "unsupported tool library format {get_format}": "непідтримуваний формат бібліотеки інструментів {get_format}",
 "{value} moves are not supported by the post yet": "переміщення {value} постпроцесор поки не підтримує",
 "area clear FACE with pre-finish (no sample)": "чорнова обробка по торцю з напівчистовим проходом (немає зразка ALPHA-T)",

@@ -2401,6 +2401,9 @@ msgstr "Програма {number} · {units} · рядків: {lines} · {size} 
 msgid "incomplete (see banner)"
 msgstr "неповна (див. повідомлення вгорі)"
 
+msgid "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs"
+msgstr "програма задовга для нумерації міток ALPHA-T: мітка N{label} повторилася б, і перезапуск міг би початися не з того місця; розділіть деталь на дві програми"
+
 msgid "Tap an element or an operation"
 msgstr "Торкніться елемента або операції"
 
