@@ -284,6 +284,31 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
         }
     });
     row.add_controller(drag);
+    // one finger at a time on the row: a second one (a palm, or a finger landing mid-swipe) reached the number's own
+    // click gesture, which focused it for typing, red frame and caret but no keypad (Eduard's photo, 2026-10-19)
+    let first: RefCell<Option<gdk::EventSequence>> = RefCell::default();
+    let fingers = gtk::EventControllerLegacy::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+    fingers.connect_event(move |_, event| {
+        use gdk::EventType::*;
+        let kind = event.event_type();
+        if !matches!(kind, TouchBegin | TouchUpdate | TouchEnd | TouchCancel) {
+            return glib::Propagation::Proceed;
+        }
+        let sequence = Some(event.event_sequence());
+        let mut first = first.borrow_mut();
+        if kind == TouchBegin && first.is_none() {
+            *first = sequence;
+            return glib::Propagation::Proceed;
+        }
+        if *first != sequence {
+            return glib::Propagation::Stop;
+        }
+        if matches!(kind, TouchEnd | TouchCancel) {
+            *first = None;
+        }
+        glib::Propagation::Proceed
+    });
+    row.add_controller(fingers);
 }
 
 /// [`keypad_on_touch`] for every spin row, and every spin button outside one, under `root`.
