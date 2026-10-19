@@ -79,6 +79,56 @@ def fit_spin(row: Adw.SpinRow, lo: float, hi: float, digits: int) -> Adw.SpinRow
 
 
 TAP_SLOP_PX = 12  # a finger that travels further than this is scrolling
+_fling = {"scroller": None, "id": 0}  # the editor's fling after a swipe from a number
+
+
+def _stop_fling() -> None:
+    if _fling["id"]:
+        _fling["scroller"].remove_tick_callback(_fling["id"])
+    _fling.update(scroller=None, id=0)
+
+
+def _start_fling(scroller: Gtk.ScrolledWindow, speed: float) -> None:
+    """A swipe from a number goes on after the lift like one from a title, which GTK's ScrolledWindow flings: the
+    canvas's decay on the editor's scrolling (Eduard's recorded swipes, 2026-10-19). `speed` is px/s, down the
+    content."""
+    from .canvas.input import FLING_DECAY, FLING_MIN
+
+    _stop_fling()
+    if abs(speed) < FLING_MIN:
+        return
+    adj = scroller.get_vadjustment()
+    state = {"v": speed, "t": None, "mine": adj.get_value()}
+
+    def tick(widget, clock):
+        now = clock.get_frame_time()
+        if abs(adj.get_value() - state["mine"]) > 0.5:  # something else scrolled the editor
+            _fling.update(scroller=None, id=0)
+            return False
+        if state["t"] is not None:
+            dt = (now - state["t"]) / 1e6
+            top = adj.get_upper() - adj.get_page_size()
+            value = min(max(adj.get_value() + state["v"] * dt, adj.get_lower()), top)
+            adj.set_value(value)
+            state["mine"] = adj.get_value()
+            state["v"] *= FLING_DECAY ** (dt / 0.016)
+            if abs(state["v"]) < FLING_MIN or value <= adj.get_lower() or value >= top:
+                _fling.update(scroller=None, id=0)
+                return False
+        state["t"] = now
+        return True
+
+    _fling.update(scroller=scroller, id=scroller.add_tick_callback(tick))
+
+
+def _finger_speed(samples: list) -> float:
+    """px/s over the shortest stretch of at least 16 ms that ends at the last move, `samples` being (event time ms,
+    y) with the press first; the whole drag when it is shorter (as the canvas does in the Rust app)."""
+    if not samples:
+        return 0.0
+    t1, y1 = samples[-1]
+    t0, y0 = next((s for s in reversed(samples) if t1 - s[0] >= 16), samples[0])
+    return (y1 - y0) / ((t1 - t0) / 1000) if t1 > t0 else 0.0
 
 
 def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
@@ -90,7 +140,7 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
     from .keypad import Keypad
 
     drag = Gtk.GestureDrag(touch_only=True, propagation_phase=Gtk.PropagationPhase.CAPTURE)
-    state = {"what": None, "moved": False, "start": 0.0, "adj": None, "scroller": None, "y0": 0.0}
+    state = {"what": None, "moved": False, "start": 0.0, "adj": None, "scroller": None, "y0": 0.0, "samples": []}
 
     def finger_y(gesture, scroller):
         """The finger's height in the scroller's coordinates: the drag's offsets are in the row's, and the row moves
@@ -117,8 +167,9 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
         scroller = row.get_ancestor(Gtk.ScrolledWindow)
         adj = scroller.get_vadjustment() if scroller is not None else None
         y0 = finger_y(gesture, scroller) if scroller is not None else None
+        _stop_fling()  # a finger that lands on the editor holds it, as on a title
         state.update(what=what, moved=False, adj=adj, start=adj.get_value() if adj else 0.0, scroller=scroller,
-                     y0=y0 or 0.0)
+                     y0=y0 or 0.0, samples=[(gesture.get_current_event_time(), y0 or 0.0)])
         gesture.set_state(Gtk.EventSequenceState.CLAIMED)
 
     def update(gesture, dx, dy):
@@ -127,13 +178,20 @@ def keypad_on_touch(row: Adw.SpinRow) -> Adw.SpinRow:
         if not state["moved"] and abs(dx) + abs(dy) > TAP_SLOP_PX:
             state["moved"] = True
         adj, scroller = state["adj"], state["scroller"]
-        y = finger_y(gesture, scroller) if state["moved"] and scroller is not None else None
-        if y is not None:
+        y = finger_y(gesture, scroller) if scroller is not None else None
+        if y is None:
+            return
+        if state["moved"]:
             top = adj.get_upper() - adj.get_page_size()
             adj.set_value(min(max(state["start"] + state["y0"] - y, adj.get_lower()), top))
+        state["samples"] = (state["samples"][:1] + state["samples"][1:][-15:]) + [(gesture.get_current_event_time(), y)]
 
     def end(gesture, dx, dy):
         what, state["what"] = state["what"], None
+        if what is not None and state["moved"] and state["scroller"] is not None:
+            samples, t = state["samples"], gesture.get_current_event_time()
+            if not samples or t - samples[-1][0] <= 50:  # a finger that rested before the lift flings nothing
+                _start_fling(state["scroller"], -_finger_speed(samples))
         if what is None or state["moved"]:
             return
         if what in ("up", "down"):

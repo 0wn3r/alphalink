@@ -108,6 +108,58 @@ struct Touch {
     scroller: Option<gtk::ScrolledWindow>,
     /// where the finger went down, in the scroller's coordinates
     y0: f64,
+    /// the press and the last moves (event time ms, 0, finger y) for the fling at the lift
+    samples: std::collections::VecDeque<(u32, f64, f64)>,
+}
+
+thread_local! {
+    /// the tick of the editor's fling after a swipe from a number
+    static FLING: RefCell<Option<gtk::TickCallbackId>> = const { RefCell::new(None) };
+}
+
+fn stop_fling() {
+    if let Some(id) = FLING.with_borrow_mut(Option::take) {
+        id.remove();
+    }
+}
+
+/// A swipe from a number goes on after the lift like one from a title, which GTK's ScrolledWindow flings: the
+/// canvas's fling (its speed over the last moves, 0.92 per frame, none after a rest) on the editor's scrolling, so it
+/// no longer stopped dead at the lift (Eduard's recorded swipes, 2026-10-19). `speed` is px/s, down the content.
+fn fling(scroller: &gtk::ScrolledWindow, speed: f64) {
+    use crate::canvas::input::{FLING_DECAY, FLING_MIN};
+    stop_fling();
+    if speed.abs() < FLING_MIN {
+        return;
+    }
+    let adj = scroller.vadjustment();
+    let mine = Cell::new(adj.value());
+    let state = Cell::new((speed, None::<i64>));
+    let id = scroller.add_tick_callback(move |s, clock| {
+        let adj = s.vadjustment();
+        let (mut v, last) = state.get();
+        let now = clock.frame_time();
+        // anything else that scrolls the editor (GTK's own drag from a title, the keyboard) ends the fling
+        if (adj.value() - mine.get()).abs() > 0.5 {
+            FLING.with_borrow_mut(|f| f.take());
+            return glib::ControlFlow::Break;
+        }
+        if let Some(t) = last {
+            let dt = (now - t) as f64 / 1e6;
+            let top = adj.upper() - adj.page_size();
+            let value = (adj.value() + v * dt).max(adj.lower()).min(top);
+            adj.set_value(value);
+            mine.set(adj.value());
+            v *= FLING_DECAY.powf(dt / 0.016);
+            if v.abs() < FLING_MIN || value <= adj.lower() || value >= top {
+                FLING.with_borrow_mut(|f| f.take());
+                return glib::ControlFlow::Break;
+            }
+        }
+        state.set((v, Some(now)));
+        glib::ControlFlow::Continue
+    });
+    FLING.with_borrow_mut(|f| *f = Some(id));
 }
 
 /// The finger's height in the scroller's own coordinates. The drag's offsets are in the row's, and the row moves as
@@ -168,7 +220,9 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
         let adj = scroller.as_ref().map(|s| s.vadjustment());
         let start = adj.as_ref().map_or(0.0, |a| a.value());
         let y0 = scroller.as_ref().and_then(|s| finger_y(gesture, s)).unwrap_or(0.0);
-        *st.borrow_mut() = Touch { what, moved: false, start, adj, scroller, y0 };
+        stop_fling(); // a finger that lands on the editor holds it, as on a title
+        let samples = [(gesture.current_event_time(), 0.0, y0)].into();
+        *st.borrow_mut() = Touch { what, moved: false, start, adj, scroller, y0, samples };
         gesture.set_state(gtk::EventSequenceState::Claimed);
     });
     let st = state.clone();
@@ -182,15 +236,32 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
             s.moved = true;
         }
         let (Some(adj), Some(scroller)) = (&s.adj, &s.scroller) else { return };
-        if let (true, Some(y)) = (s.moved, finger_y(gesture, scroller)) {
+        let Some(y) = finger_y(gesture, scroller) else { return };
+        if s.moved {
             let top = adj.upper() - adj.page_size();
             adj.set_value((s.start + s.y0 - y).max(adj.lower()).min(top));
+        }
+        s.samples.push_back((gesture.current_event_time(), 0.0, y));
+        if s.samples.len() > crate::canvas::input::VELOCITY_MOVES + 1 {
+            s.samples.remove(1); // the press stays first
         }
     });
     drag.connect_drag_end(move |gesture, _, _| {
         let (what, moved) = {
             let mut s = state.borrow_mut();
-            (s.what.take(), s.moved)
+            let (what, moved) = (s.what.take(), s.moved);
+            if let (true, true, Some(scroller)) = (what.is_some(), moved, s.scroller.take()) {
+                let time = gesture.current_event_time();
+                let last = s.samples.back().map(|m| m.0);
+                let rested = last.is_some_and(|t| time > t && time - t > crate::canvas::input::REST_MS);
+                let (_, vy) = crate::canvas::input::velocity(s.samples.make_contiguous());
+                glib::g_debug!("alphalink-cam", "editor fling: {:.0} px/s{}", vy, if rested { ", rested: none" } else { "" });
+                if !rested {
+                    fling(&scroller, -vy);
+                }
+            }
+            s.samples.clear();
+            (what, moved)
         };
         let Some(what) = what.filter(|_| !moved) else { return };
         let Some(row) = gesture.widget() else { return };

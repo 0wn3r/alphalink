@@ -19,15 +19,15 @@ use super::hittest::Source;
 use super::widget::LatheCanvas;
 
 /// velocity factor per 16 ms frame
-const FLING_DECAY: f64 = 0.92;
+pub(crate) const FLING_DECAY: f64 = 0.92;
 /// px/s
-const FLING_MIN: f64 = 40.0;
+pub(crate) const FLING_MIN: f64 = 40.0;
 /// the finger's speed at the lift is measured over its last this many ms at least
-const VELOCITY_SPAN_MS: u32 = 16;
+pub(crate) const VELOCITY_SPAN_MS: u32 = 16;
 /// a finger that keeps still this long before it lifts flings nothing
-const REST_MS: u32 = 50;
+pub(crate) const REST_MS: u32 = 50;
 /// the drag keeps its press and this many last moves
-const VELOCITY_MOVES: usize = 16;
+pub(crate) const VELOCITY_MOVES: usize = 16;
 /// a pen that moves further than this before the long press time is drawing or dragging, not holding
 const PEN_SLOP_PX: f64 = 8.0;
 
@@ -353,7 +353,7 @@ fn fling(w: &LatheCanvas, r: &Rc<Router>, vx: f64, vy: f64) {
 /// (event time ms, dx, dy) with the press first: a finger that rested before the flick does not average the speed
 /// down, and moves that arrive in a burst with (nearly) equal times reach back to an earlier one. The whole drag when
 /// it is shorter than that.
-fn velocity(samples: &[(u32, f64, f64)]) -> (f64, f64) {
+pub(crate) fn velocity(samples: &[(u32, f64, f64)]) -> (f64, f64) {
     let Some(&(t1, x1, y1)) = samples.last() else { return (0.0, 0.0) };
     let Some(&(t0, x0, y0)) = samples.iter().rev().find(|(t, _, _)| t1.wrapping_sub(*t) >= VELOCITY_SPAN_MS)
         .or(samples.first()) else { return (0.0, 0.0) };
