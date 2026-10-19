@@ -105,6 +105,18 @@ struct Touch {
     moved: bool,
     start: f64,
     adj: Option<gtk::Adjustment>,
+    scroller: Option<gtk::ScrolledWindow>,
+    /// where the finger went down, in the scroller's coordinates
+    y0: f64,
+}
+
+/// The finger's height in the scroller's own coordinates. The drag's offsets are in the row's, and the row moves as
+/// the editor scrolls under the finger: scrolling by them fed back, so the editor followed the finger about half
+/// as far and in jumps (Eduard's video, 2026-10-19).
+fn finger_y(gesture: &gtk::GestureDrag, scroller: &gtk::ScrolledWindow) -> Option<f64> {
+    let row = gesture.widget()?;
+    let (x, y) = gesture.point(gesture.current_sequence().as_ref())?;
+    row.compute_point(scroller, &gtk::graphene::Point::new(x as f32, y as f32)).map(|p| p.y() as f64)
 }
 
 /// A finger on the number opens the AlphaLink keypad (TOUCH.md 6) instead of the system keyboard, which covers half
@@ -152,23 +164,27 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
         if what.is_none() {
             return;
         }
-        let adj = row.ancestor(gtk::ScrolledWindow::static_type()).and_downcast::<gtk::ScrolledWindow>().map(|s| s.vadjustment());
+        let scroller = row.ancestor(gtk::ScrolledWindow::static_type()).and_downcast::<gtk::ScrolledWindow>();
+        let adj = scroller.as_ref().map(|s| s.vadjustment());
         let start = adj.as_ref().map_or(0.0, |a| a.value());
-        *st.borrow_mut() = Touch { what, moved: false, start, adj };
+        let y0 = scroller.as_ref().and_then(|s| finger_y(gesture, s)).unwrap_or(0.0);
+        *st.borrow_mut() = Touch { what, moved: false, start, adj, scroller, y0 };
         gesture.set_state(gtk::EventSequenceState::Claimed);
     });
     let st = state.clone();
-    drag.connect_drag_update(move |_, dx, dy| {
+    drag.connect_drag_update(move |gesture, dx, dy| {
         let mut s = st.borrow_mut();
         if s.what.is_none() {
             return;
         }
+        // before any scrolling the row has not moved, so its offsets measure the travel
         if !s.moved && dx.abs() + dy.abs() > TAP_SLOP_PX {
             s.moved = true;
         }
-        if let (true, Some(adj)) = (s.moved, &s.adj) {
+        let (Some(adj), Some(scroller)) = (&s.adj, &s.scroller) else { return };
+        if let (true, Some(y)) = (s.moved, finger_y(gesture, scroller)) {
             let top = adj.upper() - adj.page_size();
-            adj.set_value((s.start - dy).max(adj.lower()).min(top));
+            adj.set_value((s.start + s.y0 - y).max(adj.lower()).min(top));
         }
     });
     drag.connect_drag_end(move |gesture, _, _| {
