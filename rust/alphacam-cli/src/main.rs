@@ -1,6 +1,7 @@
 //! CLI:
 //!     alphacam dump FILE.PRG [--moves]
 //!     alphacam post PROJECT.alcam [-o FILE.PRG] [--sd1 FILE.SD1]
+//!     alphacam sdg IN.SDG|IN.alcam -o OUT.SDG|OUT.alcam
 //!
 //! (It replaces the retired Python app's `python -m alphacam`.)
 
@@ -9,6 +10,8 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 use alphacam::io::prg_parse::parse;
+use alphacam::io::sdg::load_sdg;
+use alphacam::io::sdg_write::save_sdg;
 use alphacam::model::{MachineProfile, Project};
 use alphacam::post::alphat_prg::post;
 use alphacam::post::alphat_sd1::sd1;
@@ -51,6 +54,31 @@ enum Cmd {
         #[arg(long, default_value_t = 2.0)]
         f_scale: f64,
     },
+    /// convert between ALPHA-T's drawing (.SDG, with its .SDT) and an .alcam project, by the files' extensions
+    Sdg {
+        input: PathBuf,
+        #[arg(short, long)]
+        output: PathBuf,
+    },
+}
+
+fn is_sdg(path: &Path) -> bool {
+    path.extension().is_some_and(|e| e.eq_ignore_ascii_case("sdg"))
+}
+
+/// Read a drawing or a project and write it as the other (or the same) kind; prints the files written.
+fn sdg_command(input: &Path, output: &Path) -> Result<()> {
+    let project = if is_sdg(input) { load_sdg(input)? } else { Project::load(input)? };
+    let written = if is_sdg(output) {
+        save_sdg(&project, output)?
+    } else {
+        project.save(output)?;
+        vec![output.to_path_buf()]
+    };
+    for path in written {
+        println!("{}", path.display());
+    }
+    Ok(())
 }
 
 fn profile(z_scale: f64, f_scale: f64) -> MachineProfile {
@@ -173,6 +201,13 @@ fn run(cli: Cli) -> u8 {
                 }
             }
         }
+        Cmd::Sdg { input, output } => match sdg_command(&input, &output) {
+            Ok(()) => 0,
+            Err(e) => {
+                eprintln!("alphacam: {e}");
+                1
+            }
+        },
         Cmd::Dump { files, moves, z_scale, f_scale } => {
             let profile = profile(z_scale, f_scale);
             let mut status = 0;

@@ -31,6 +31,24 @@ fn post_to_stdout_and_file() {
 }
 
 #[test]
+fn sdg_round_trip_through_a_project() {
+    let own = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../samples/alphat_v12/AREA1_metric.SDG");
+    let dir = std::env::temp_dir().join(format!("alphacam-cli-sdg-{}", std::process::id()));
+    std::fs::create_dir_all(&dir).unwrap();
+    let (alcam, direct, via) = (dir.join("area1.alcam"), dir.join("DIRECT.SDG"), dir.join("VIA.SDG"));
+    for (input, output) in [(&own, &direct), (&own, &alcam), (&alcam, &via)] {
+        let out = alphacam().arg("sdg").arg(input).arg("-o").arg(output).output().unwrap();
+        assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+        assert!(String::from_utf8_lossy(&out.stdout).contains(&*output.to_string_lossy()));
+    }
+    let expected = alphacam::io::sdg_write::write_sdg(&alphacam::io::sdg::load_sdg(&own).unwrap()).unwrap();
+    assert_eq!(std::fs::read(&direct).unwrap(), expected);
+    assert_eq!(std::fs::read(&via).unwrap(), expected);
+    assert!(dir.join("DIRECT.SDT").exists());
+    std::fs::remove_dir_all(&dir).unwrap();
+}
+
+#[test]
 fn same_as_the_python_cli() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("tests/fixtures/cases.json");
