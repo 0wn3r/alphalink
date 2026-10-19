@@ -16,9 +16,7 @@ import unittest
 from pathlib import Path
 from shutil import which as shutil_which
 
-from alphacam.model import Arc, Line, Point
-from alphacam.model.project import Billet, Project
-from alphacam.post.alphat_prg import post
+from .part import Arc, Billet, Line, Point, Project, post
 
 ENABLED = os.environ.get("ALPHALINK_E2E") == "1"
 OUT = Path(os.environ.get("ALPHALINK_E2E_OUT", Path(__file__).resolve().parents[2] / "e2e-out"))
@@ -256,7 +254,7 @@ class SmallWindow(Surface):
     def test_editor_takes_the_page_and_gives_it_back(self):
         """Half a Surface screen: the part opens on the drawing; an operation's editor takes the page; × closes it."""
         p = shaft()
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         p.operations.append(default_op("area_clear", p, 0))
         self.launch(str(self.part(p)))
@@ -265,7 +263,8 @@ class SmallWindow(Surface):
         self.press("Operations", "button")  # the narrow layout's back button
         self.s.click(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
         self.app.find("Close Editor")
-        self.assertFalse(self.app.exists("Drawing"), "the editor should have the whole page")
+        row = self.app.all("Depth of cut", "row")[0]  # the editor covers the page (the drawing stays mapped under it)
+        self.assertLess(row.x, self.s.width * 0.2, "the editor should have the whole page")
         self.snap("editor")
         self.press("Close Editor")
         self.app.find("Drawing")
@@ -366,7 +365,7 @@ class SendOverVirtualPort(VirtualPort):
 
     def big_part(self) -> Project:
         p = shaft()
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         p.operations += [default_op("area_clear", p, 0), default_op("finish", p, 1)]
         return p
@@ -411,7 +410,7 @@ class SendOverVirtualPort(VirtualPort):
 
 def with_op(kind: str = "area_clear") -> Project:
     p = shaft()
-    from alphacam_gtk.op_factory import default_op
+    from .part import default_op
 
     p.operations.append(default_op(kind, p, 0))
     return p
@@ -566,7 +565,6 @@ class Rotation(Surface):
         self.assertTrue(self.app.exists("Operations", contains=True))
         self.s.rotate(1)
         time.sleep(1.0)
-        self.app.origin = (0, self.s._find_top())
         self.snap("portrait")
         self.app.find("Drawing")
         tabs = self.app.all("Machine", "page tab")
@@ -689,7 +687,16 @@ def green_pixels(im) -> set:
     return {(x - x0, y - y0) for x, y in pts}
 
 
-@unittest.skipUnless(ENABLED and ALPHAT.exists() and shutil_which("dosbox-x"), "needs ALPHA-T and dosbox-x")
+def _python_core() -> bool:  # the ALPHA-T comparison writes its drawing with the Python reference core
+    try:
+        import alphacam.io.sdg_write  # noqa: F401
+    except ImportError:
+        return False
+    return True
+
+
+@unittest.skipUnless(ENABLED and ALPHAT.exists() and shutil_which("dosbox-x") and _python_core(),
+                     "needs ALPHA-T, dosbox-x and the Python core")
 class AlphaTReads(Surface):
     """ALPHA-T itself opens what the app writes."""
 
@@ -902,7 +909,7 @@ class TouchMore2(Surface):
 
     def test_drag_handle_reorders_operations(self):
         p = with_op("area_clear")
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         p.operations.append(default_op("finish", p, 1))
         path = self.part(p)
@@ -963,7 +970,7 @@ class TouchScroll(Surface):
 
     def test_swipes_in_the_operations_list_select_nothing(self):
         p = with_op("area_clear")
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         for k in range(1, 60):
             p.operations.append(default_op("finish" if k % 2 else "area_clear", p, k))
@@ -1021,7 +1028,7 @@ class QuickWinsUI(Surface):
 
     def test_simulation_speed_and_start_of_operation(self):
         p = with_op("area_clear")
-        from alphacam_gtk.op_factory import default_op
+        from .part import default_op
 
         p.operations.append(default_op("finish", p, 1))
         self.launch(str(self.part(p)))
@@ -1040,10 +1047,11 @@ class SafetyCheck(Surface):
     def test_banner_marks_and_still_exports(self):
         """A finish pass with a negative allowance cuts into the part: the banner says where, Show goes there, the
         drawing marks it, the operation carries the warning, and Export PRG still works."""
-        from alphacam.model import FinishPass
+        from .part import default_op
 
         p = shaft()
-        p.operations.append(FinishPass(3, Point(120, 5), [g.id for g in p.geometry], offset_x=-1.0))
+        p.operations.append(default_op("finish", p))
+        p.operations[-1].offset_x = -1.0
         self.launch(str(self.part(p)))
         banner = self.app.find("Safety check:", contains=True, showing=False)
         self.assertIn("cuts into the part", banner.get_name())
@@ -1059,10 +1067,13 @@ class SafetyCheck(Surface):
 class StandardFeatures(Surface):
     """Workflow improvements step 3 (a standard thread, every outside corner at once) and the right-click menu."""
 
-    def more(self, kind: str) -> None:
-        from alphacam_gtk.drawing_tools import CONSTRUCT_MENU, FEATURE_MENU
+    MORE_ITEMS = {"thread": "Standard Thread", "corners-chamfer": "Chamfer Outside Corners",
+                  "corners-round": "Round Outside Corners"}
 
-        self.menu("More", len(CONSTRUCT_MENU) + [k for _l, k in FEATURE_MENU].index(kind))
+    def more(self, kind: str) -> None:
+        """The More menu's item for `kind`, found by its label."""
+        self.app.press("More Drawing Commands", "toggle button")
+        self.app.press(acc=[i for i in self.app.menu_items() if i.get_name().startswith(self.MORE_ITEMS[kind])][0])
 
     def test_right_click_opens_the_element_menu(self):
         from .harness import BTN_RIGHT
@@ -1202,7 +1213,7 @@ class WorkflowSteps456(Surface):
     """Workflow improvements 4-6 through the UI: a job template, the printable sheet, the second setup."""
 
     def test_template_from_the_add_menu(self):
-        from alphacam_gtk.op_factory import OP_MENU
+        from .part import OP_MENU
 
         p = shaft()
         path = self.part(p)
@@ -1214,10 +1225,10 @@ class WorkflowSteps456(Surface):
         self.assertEqual([type(o).__name__ for o in q.operations], ["ToolChange", "AreaClear", "ToolChange", "FinishPass"])
 
     def test_sheet_pdf_with_cycle_time(self):
-        from alphacam.model import AreaClear
+        from .part import default_op
 
         p = shaft()
-        p.operations.append(AreaClear(3, Point(120, 5), [g.id for g in p.geometry]))
+        p.operations.append(default_op("area_clear", p))
         self.launch(str(self.part(p)))
         self.press("Sheet", "page tab")
         self.app.find("About ", contains=True)  # the estimate in the bar

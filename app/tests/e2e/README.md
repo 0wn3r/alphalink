@@ -6,9 +6,9 @@ for half the screen.
 
 ```
 flatpak-builder --user --install ...                                # build and install the app first (docs/HANDOVER.md)
-ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run                # all ~125 tests, 3 at once (about 30 minutes)
-ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run Touch BigPart  # some classes or test names
-ALPHALINK_E2E_BRANCH=master python3 -m tests.e2e.run -j 1 FileDialogs
+python3 -m tests.e2e.run                # all ~125 tests, 3 at once (about 30 minutes)
+python3 -m tests.e2e.run Touch BigPart  # some classes or test names
+python3 -m tests.e2e.run -j 1 FileDialogs
 ```
 
 A failed test is run once more on its own; if it passes then, it counts as passed and is listed as flaky.
@@ -28,8 +28,10 @@ AT-SPI. Every press is a libei click or tap at the widget's centre; nothing is a
 Screenshots of every step go to `app/e2e-out/<test>/` (git-ignored). Set `ALPHALINK_E2E_CURSOR=1` to draw
 the pointer in them.
 
-Without `ALPHALINK_E2E_BRANCH` the workflow tests run the frozen Python app through AT-SPI and `test_interaction.py`
-is skipped.
+The tests need no Python app: `part.py` writes the test parts (.alcam JSON) and reads back what the app saved, and
+the programs the app must send come from the Rust command line tool (`alphacam post`; `cargo build --release -p
+alphacam-cli`, or `alphacam` on the PATH, or $ALPHALINK_CLI). `replay.py` plays fingers recorded on the Surface with
+`libinput record` (`recordings/`). AT-SPI is only used, read only, to wait for the file chooser portal.
 
 ## How it works
 
