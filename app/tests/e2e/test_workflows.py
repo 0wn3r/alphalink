@@ -493,7 +493,11 @@ class TouchMore(Surface):
         path = self.part(p)
         self.launch(str(path), "--touch")
         self.s.tap(*self.app.center(acc=self.app.labelled("Area clear", "list item")))
+        time.sleep(0.6)
         before = p.operations[0].towards
+        feed = self.app.all("Feed", "row")[0]  # the switch is below the fold: swipe the editor up from a title
+        self.s.input.touches([(feed.x + 40, feed.y + feed.h / 2)], [(feed.x + 40, feed.y + feed.h / 2 - 300)], 30, 0.3)
+        time.sleep(0.8)
         sw = [a for a in self.app.all("Towards the chuck", "switch")]
         self.s.tap(*self.app.center(acc=sw[-1]))
         self.snap("switched")
@@ -563,6 +567,7 @@ class Rotation(Surface):
         """Landscape → portrait while running: the page tabs move to the bottom, the drawing stays; and back."""
         self.launch(str(self.part(shaft())))
         self.assertTrue(self.app.exists("Operations", contains=True))
+        landscape_y = self.app.rect(self.app.all("Machine", "page tab")[0])[1]  # header, or the bottom bar at ≤1400
         self.s.rotate(1)
         time.sleep(1.0)
         self.snap("portrait")
@@ -574,7 +579,7 @@ class Rotation(Surface):
         time.sleep(1.0)
         self.snap("landscape")
         tabs = self.app.all("Machine", "page tab")
-        self.assertLess(self.app.rect(tabs[0])[1], 120, "the tabs should be back in the header")
+        self.assertAlmostEqual(self.app.rect(tabs[0])[1], landscape_y, delta=4, msg="the tabs should be back where they were")
 
 
 class FileDialogs(Surface):

@@ -235,7 +235,17 @@ class MenusByTouch(Bus):
         path = self.part(shaft())
         self.launch(str(path), "--touch")
         self.tap("More Drawing Commands", "toggle button")
-        self.tap(acc=[i for i in self.app.menu_items() if i.text == "Erase Drawing…"][0])
+        time.sleep(0.6)  # the popover slides in: its items move until it settles
+        # on the Surface the menu is taller than the room above the toolbar: a finger swipe must bring Erase
+        # Drawing, at its end, into sight (a press where it is clipped hits nothing)
+        top = self.app.find("Circle…", "menu item")
+        x = top.x + top.w / 2
+        self.s.input.touches([(x, top.y + 500)], [(x, top.y + 100)], 60, 0.3)
+        time.sleep(0.8)
+        self.snap("swiped")
+        erase = self.app.find("Erase Drawing…", "menu item")
+        self.assertGreater(top.y, self.app._now(top).y, "a finger swipe should scroll the More menu")
+        self.tap(acc=erase)
         self.app.find("Erase All of the Drawing?", contains=True)
         self.snap("asked")
         self.tap("Erase", "button")
@@ -657,7 +667,7 @@ class KeyboardAndMouse(Bus):
         self.assertEqual(len(handles), 2)
         hx, hy = self.app.center(acc=handles[1])
         tx, ty = self.app.center(acc=self.app.labelled("Area clear", "list item"))
-        self.s.input.touches([(hx, hy)], [(tx, ty - 10)], 25, 0.4)
+        self.s.input.touches([(hx, hy)], [(tx, ty - 10)], 60, 0.4)  # a slow drag, not a flick
         time.sleep(0.8)
         self.snap("reordered")
         self.assertEqual([type(o).__name__ for o in self.saved(path).operations], ["FinishPass", "AreaClear"])
