@@ -1,6 +1,10 @@
-# Handover: AlphaLink / Harrison Alpha 400T (2026-10-18)
+# Handover: AlphaLink / Harrison Alpha 400T (2026-10-20)
 
-Repo `github.com/0wn3r/alphalink`; work is pushed straight to `main` (the user allows it, no PRs).
+Repo `github.com/0wn3r/alphalink`. App changes land on `main` through PRs (#6-#15 so far); the laptop thread pushes
+end-to-end test changes to `main` directly. On 2026-10-20 `main`'s history was rewritten to one commit per PR (and one
+per run of direct pushes) with the Python app erased from every commit; the old history is in
+`alpha-work/history/main-before-rewrite-2026-10-20.bundle` in the project files. Older clones must
+`git fetch origin && git reset --hard origin/main`.
 
 ## Goal
 Get CAM programs from a PC into a Harrison Alpha 400T lathe (FANUC Power Mate 0, Harrison macros B703-0703), and
@@ -10,10 +14,10 @@ replace the DOS CAM (ALPHA-T / AlphaLink V1.2) with a GNOME app.
 | Track | Status |
 |---|---|
 | Lathe link | Works with the manual's cable and bridges. Programs load and run (Progress 29). Details in `docs/ALPHA-T_STATUS.md`. |
-| GNOME app | Since 2026-10-16 the app is the Rust build in `rust/` (PRs #6–#10): the same features, the same interface files (`app/alphacam_gtk/ui/`) and help, plus the mouse, keyboard and pen design (`app/POINTER_KEYBOARD.md`) and a decluttered UI. The Python app and core were removed on 2026-10-19; the fixtures they exported stay as the Rust tests' reference. Before that, `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Since 2026-10-14: touch work from `app/TOUCH.md`, the workflow improvements' quick wins, a safety check before export, standard threads (metric, UNC, UNF) and corners in one go, right-click menu. Status and design in `app/DESIGN.md`. |
+| GNOME app | Since 2026-10-16 the app is the Rust build in `rust/` (PRs #6-#15): the same features, the same interface files (`app/alphacam_gtk/ui/`) and help, plus the mouse, keyboard and pen design (`app/POINTER_KEYBOARD.md`) and a decluttered UI. Since then: operations, drawing and editor on one screen (#13), a refusal of programs that would repeat an ALPHA-T label and a configurable lathe memory limit, Preferences ▸ Lathe ▸ Memory, default 16 KB (#14). The Python app and core were removed on 2026-10-20 (#15); the fixtures they exported stay as the Rust tests' reference. Before that, `app/` (AlphaLink CAM): drawing (with ALPHA-T's construction commands and one-letter keys), all ALPHA-T operations, simulation, setup sheet, tool library, sending, Manual Ops backup/restore, program units, ALPHA-T .SDG save, Ukrainian translation, in-app help and PDF manuals, Flatpak. Since 2026-10-14: touch work from `app/TOUCH.md`, the workflow improvements' quick wins, a safety check before export, standard threads (metric, UNC, UNF) and corners in one go, right-click menu. Status and design in `app/DESIGN.md`. |
 | Manual Ops | First real backup works (25 ops, O1001, DC2 ... DC4, no %; RE_NOTES Progress 40). Restore of such a file not yet tried on the machine. |
 | Workflow plan | Claude Doc https://claude.ai/code/artifact/8b56ba44-0ceb-4639-bdd9-9030c2ce306a (steps 1-6 done 2026-10-15; left: stock-aware roughing, which needs a dry run on the machine first). |
-| Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample (`app/tests`) except the 7 refused AWAY samples and 3 that differ on purpose (chuck-end picks, GROOVE_back); sub-micron differences on FACE_slope/FACE_arcs and two inch samples. All listed in `app/tests/test_post.py`. |
+| Post | .PRG and .SD1 byte-identical to ALPHA-T on every metric sample except the 7 refused AWAY samples and 3 that differ on purpose (chuck-end picks, GROOVE_back); sub-micron differences on FACE_slope/FACE_arcs and two inch samples. Checked by `rust/alphacam/tests/post.rs`; reasons in `docs/RE_NOTES.md`. |
 | Options | Every ALPHA-T option is sampled. AWAY (area, face, thread) is refused on purpose (ALPHA-T's own output is unsafe); contours picked from the chuck end are cut as if picked from the front. |
 
 ## Rules (from the user)
