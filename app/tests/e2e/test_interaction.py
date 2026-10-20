@@ -380,6 +380,55 @@ class DrawingByTouch(Bus):
         g = self.saved(path).geometry
         self.assertEqual([(e.a, e.b) for e in g], [(Point(40, 0), Point(40, -25))])
 
+    def test_tap_a_point_then_type_the_next(self):
+        """Eduard 2026-10-20 (Surface, touch): tap the first point, then type the next one on the keypad: a line."""
+        path, to_screen = self.blank()
+        self.tap("Line", "radio button")
+        self.s.tap(*to_screen(0, 0))
+        time.sleep(0.4)
+        self.tap("Keypad", "button")
+        for k in ("4", "0", "→", "0", "✓"):  # X 40, Z 0
+            self.tap(k, "button")
+        time.sleep(0.4)
+        self.snap("typed")
+        self.tap("Done", "button")
+        g = self.saved(path).geometry
+        self.assertEqual([(e.a, e.b) for e in g], [(Point(0, 0), Point(40, 0))])
+
+    def test_tap_a_point_then_type_the_next_on_the_keyboard(self):
+        """The same with the Surface's type cover: tap the first point, type "40,0" and Enter."""
+        path, to_screen = self.blank()
+        self.tap("Line", "radio button")
+        self.s.tap(*to_screen(0, 0))
+        time.sleep(0.4)
+        self.s.type("40,0\n")
+        time.sleep(0.4)
+        self.snap("typed")
+        self.tap("Done", "button")
+        g = self.saved(path).geometry
+        self.assertEqual([(e.a, e.b) for e in g], [(Point(0, 0), Point(40, 0))])
+
+    def test_tap_a_point_then_tap_the_entry_and_type(self):
+        """The same, tapping the X,Z entry under the drawing first (where a finger goes to type)."""
+        path, to_screen = self.blank()
+        self.tap("Line", "radio button")
+        self.s.tap(*to_screen(0, 0))
+        time.sleep(0.4)
+        entry = [e for e in self.app.all(None, "entry") if e.y > self.s.height / 2][0]
+        self.tap(acc=entry)
+        time.sleep(0.6)
+        self.snap("entry-tapped")
+        if self.app.exists("✓", "button"):  # the keypad opened
+            for k in ("4", "0", "→", "0", "✓"):
+                self.tap(k, "button")
+        else:
+            self.s.type("40,0\n")
+        time.sleep(0.4)
+        self.snap("typed")
+        self.tap("Done", "button")
+        g = self.saved(path).geometry
+        self.assertEqual([(e.a, e.b) for e in g], [(Point(0, 0), Point(40, 0))])
+
     def chip(self):
         """The value chip: "Ø 40", "Z -25" or "X26 Z-38"."""
         end = time.time() + 5
