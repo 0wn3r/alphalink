@@ -28,7 +28,7 @@ AlphaLink CAM makes programs for the Harrison Alpha 400T lathe (FANUC Power Mate
 - **Tools**: the tool library (tool memory slots of the control, nose radius, type, default feed). Each tool can carry its surface speed (m/min) and a spindle limit for the cycle time.
 - **Machine**: sending programs, Manual Ops backup and restore, and the cable test.
 
-The operations list is on the left. Tap an operation to select it: its toolpath is highlighted and its editor opens.
+The operations list is on the left. Tap an operation to select it: its toolpath is highlighted and its editor opens on the right. On a narrower window the screen folds in steps: below 1270 px the operations list hides behind the **Operations** button at the top left, below 1150 px the page tabs move to the bottom, below 1010 px the editor slides in over the drawing and Open, Save and Undo move to the main menu, and below 700 px the editor fills the screen.
 
 ## Files
 
@@ -69,7 +69,7 @@ The tools are in the bar under the drawing.
   - **Mirror Image**: as in ALPHA-T, copies the whole drawing mirrored about the spindle axis (the lower half), then asks whether it is correct; No takes it back.
   - **Standard Thread…**: on the selected diameter line, or tap the line when asked. Pick the standard (ISO metric, or UNC / UNF inch threads, converted on a mm part), the size (M6 to M64, or 1/4" to 2") and the pitch (coarse first); the line goes to the nominal diameter, the minor-diameter line is drawn under it, a relief groove with DIN 76 proportions is cut at its back end (it can be switched off), and a Threading operation with its tool change is added.
   - **Chamfer Outside Corners…** / **Round Outside Corners…**: one size on every outside corner of the profile at once; change single corners afterwards with Chamfer or Fillet.
-  - **Draw Line by Length and Angle**, **Move Cursor**, **Measure**, **Add Text** and **Erase Text** do what ALPHA-T's letter keys do (see ALPHA-T keys), for a finger or a pen.
+  - **Draw Line by Length and Angle**, **Move Cursor** and **Measure** (in the **Cursor and Measure** submenu), **Add Text** and **Erase Text** do what ALPHA-T's letter keys do (see ALPHA-T keys), for a finger or a pen.
   - With the keyboard: Enter takes the element nearest the cursor, a number dialog takes the typed value with Enter, and where there are several answers Tab moves between the dashed ones and Enter takes it.
 
 ## Operations
@@ -106,7 +106,7 @@ New operations take the outer profile, not thread or construction lines; Groovin
 
 Keep **Towards the chuck** on. ALPHA-T's AWAY programs are unsafe (they cut past the shoulder, into the diameter or start inside the thread), so the app refuses them and says why. A contour picked from the chuck end is cut as if picked from the front: ALPHA-T's own programs for that only skim the face or make one cut.
 
-Use the arrows in the editor header to move an operation up or down; Duplicate Operation and Delete Operation are at the end of the editor (Undo brings a deleted one back). With the operations list or the editor focused, Alt+↑ / Alt+↓ move it, Ctrl+D duplicates it and Delete deletes it. If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed.
+Use the arrows in the editor header to move an operation up or down; Duplicate Operation and Delete Operation are at the end of the editor (Undo brings a deleted one back). With the operations list or the editor focused, Alt+↑ / Alt+↓ move it, Ctrl+D duplicates it and Delete deletes it. If an operation cannot be made into a program, a banner says which one and why, and Export is disabled until it is fixed. A program long enough that ALPHA-T's restart labels would repeat (from about 25 operations) is refused the same way: split the part into two programs.
 
 Drag a row by its handle to reorder the operations; **Duplicate Operation** at the end of the editor copies one.
 
