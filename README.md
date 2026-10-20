@@ -16,8 +16,8 @@ GNOME replacement for ALPHA-T; design and status in `app/DESIGN.md`).
 A GNOME app (Rust, GTK 4, libadwaita; `rust/`) that replaces the DOS ALPHA-T on a PC or a Surface next to the lathe: draw
 the part, add the operations, check them in the simulation, and send the program over RS232. It writes the same
 .PRG program and .SD1 listing as ALPHA-T, byte for byte, for the ALPHA-T samples in `samples/alphat_v12` and
-`samples/alphat_v12_inch` (67 metric and 11 inch sets). The exceptions are listed with their reasons in
-`app/tests/test_post.py`: two face clears and two inch samples within 0.001, and the AWAY, chuck-end-pick and
+`samples/alphat_v12_inch` (67 metric and 11 inch sets). The exceptions (reasons in `docs/RE_NOTES.md`, Progress 36-39; checked by
+`rust/alphacam/tests/post.rs`): two face clears and two inch samples within 0.001, and the AWAY, chuck-end-pick and
 GROOVE_back samples, where ALPHA-T's own output is unusable.
 So the lathe's Harrison macros treat the app's programs as ALPHA-T programs.
 

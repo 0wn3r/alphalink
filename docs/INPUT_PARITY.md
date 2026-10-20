@@ -1,6 +1,7 @@
 # Input-mode parity in the Rust app: touch, mouse/touchpad, keyboard, pen
 
-Read-only audit, 2026-10-16. The repository on main (PR #6 merged). Paths: Rs = `rust/alphacam-gtk/src/…`,
+Read-only audit, 2026-10-16. Since 2026-10-20 the Python app is gone and CI runs only the Rust app; the Python
+notes below are history. The repository on main (PR #6 merged). Paths: Rs = `rust/alphacam-gtk/src/…`,
 UI = `app/alphacam_gtk/ui/*.blp` (shared by both apps). This builds on the touch parity check of 2026-10-16 and does
 not repeat it: the Python and Rust touch code are line-for-line equal, so every cell here holds for Python too
 unless it says otherwise.

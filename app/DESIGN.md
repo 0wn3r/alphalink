@@ -1,11 +1,14 @@
 # AlphaLink CAM (GNOME): design
 
-Status (2026-10-14): **working app**; all milestones of section 10 are done. What exists:
+Status (2026-10-20): **working app**; all milestones of section 10 are done. Since 2026-10-16 the app is written in
+Rust (`rust/`: core `alphacam`, command line `alphacam-cli`, GTK app `alphacam-gtk`); the Python app below was its
+first version and was removed on 2026-10-20. The Rust crates keep the Python module names (`alphacam/post/alphat_prg.py`
+is now `rust/alphacam/src/post/alphat_prg.rs`, `alphacam_gtk/window.py` is `rust/alphacam-gtk/src/window.rs`). What exists:
 - Core (`alphacam/`, no GTK): model and `.alcam` JSON, SDG / SD1 / DXF / ATOOLIB.TL1 import, the .SDG/.SDT writer, program units (converted at output, `post/alphat_prg._Writer`), PRG parser, toolpaths for
   every ALPHA-T operation (area, face, finish, groove incl. finish mode, thread, drill, dwell, moves, tool changes) and
   their options with samples, the .PRG post and the .SD1 writer. Both are byte-identical to ALPHA-T on every metric
-  sample in `samples/alphat_v12` (tests `test_post`, `test_sd1_write`); known sub-micron differences: face clear ending
-  on slopes/arcs (0.001 on diameter) and two inch samples (0.0001-0.0002), listed in `tests/test_post.py`.
+  sample in `samples/alphat_v12` (`rust/alphacam/tests/post.rs`, `io.rs`); known sub-micron differences: face clear ending
+  on slopes/arcs (0.001 on diameter) and two inch samples (0.0001-0.0002).
   AWAY (area, face, thread) is refused with the reason: ALPHA-T's own output for it is unsafe (RE_NOTES Progress 36,
   38). Grooving with FRONT off is face grooving; contours picked from the chuck end are cut as if picked from the
   front (Progress 38).
@@ -18,24 +21,25 @@ Status (2026-10-14): **working app**; all milestones of section 10 are done. Wha
   (and the .SDG/.SDT when Preferences ▸ Also save the ALPHA-T drawing is on); Save as ALPHA-T Drawing writes the .SDG.
 - Serial link (`alphacam/link/serial_link.py`): 9600 7E2, wait for XON, XON/XOFF, per-char delay, receive to the 2nd
   `%`, Manual Ops load parity, loopback. Programs from the app have been loaded and run on the lathe.
-- Packaging: `pyproject.toml` (entry points `alphalink-cam`, `alphacam`), desktop file, metainfo, icon, Flatpak
-  manifest `build-aux/flatpak/` (GNOME 51 runtime, `--device=all` for the serial port, home and removable media).
-- Commands: `python3 -m alphacam_gtk [PART.alcam|DRAWING.SDG|DRAWING.DXF]`; `python3 -m alphacam dump FILE.PRG`;
-  `python3 -m alphacam post PART.alcam -o P.PRG [--sd1 P.SD1]`.
-- Tests: `cd app && python3 -m unittest discover -s tests -t .` (or `python3 -m pytest`); the GTK tests run on a private
-  Xvfb display when Xvfb is installed (`ALPHALINK_TEST_DISPLAY=1` shows them instead). Interface: after editing a
-  `alphacam_gtk/ui/*.blp` run `python3 tools/build_ui.py` (needs `blueprint-compiler`); a test fails if a .ui is stale.
-  Translations: after changing UI strings run `python3 tools/update_translations.py` (gettext 0.23 or newer: older
-  xgettext misses strings inside f-strings); a test fails if a string has no Ukrainian translation.
+- Packaging: Cargo workspace `rust/` (binaries `alphalink-cam`, `alphacam`), desktop file, metainfo, icon in `app/data/`,
+  Flatpak manifest `rust/build-aux/` (GNOME runtime, `--device=all` for the serial port, home and removable media).
+- Commands: `alphalink-cam [PART.alcam|DRAWING.SDG|DRAWING.DXF]`; `alphacam --help` (dump a .PRG, post a part,
+  `alphacam sdg IN -o OUT` converts between .SDG and .alcam); in the Flatpak:
+  `flatpak run --command=alphacam io.github._0wn3r.AlphaLinkCAM`.
+- Tests: `cd rust && cargo test --workspace` (the core against the ALPHA-T samples through fixtures the Python app
+  exported; the GTK crate checks that every .blp is compiled and every string translated). End-to-end tests on the
+  installed Flatpak: `app/tests/e2e/README.md`. Interface: after editing `alphacam_gtk/ui/*.blp` run
+  `python3 tools/build_ui.py` (needs `blueprint-compiler`). Translations: after changing UI strings run
+  `python3 tools/update_translations.py` (reads the .ui files and the Rust sources; Ukrainian in `app/po/uk_translations.py`).
   Flatpak: `flatpak-builder --user --install-deps-from=flathub --jobs=8 --install --force-clean BUILD-DIR
-  app/build-aux/flatpak/io.github._0wn3r.AlphaLinkCAM.json`.
+  rust/build-aux/io.github._0wn3r.AlphaLinkCAM.json`.
 
 The sections below are the original design; where the implementation differs, the code and the notes above win.
 
 Working name: *AlphaLink CAM*. App ID: `io.github._0wn3r.AlphaLinkCAM` (a GApplication id element may not start with a
 digit, so `0wn3r` becomes `_0wn3r`, as Flatpak does).
-Stack: Python 3.12+, PyGObject, GTK 4.16+, libadwaita 1.7+ (Adw.ToggleGroup), pyserial, ezdxf (DXF import). Target: a Microsoft Surface Pro tablet running
-**Ubuntu 26.04 LTS** (decided 2026-10-13; native: `sudo apt install python3-gi gir1.2-gtk-4.0 gir1.2-adw-1 python3-serial`) (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
+Stack (now): Rust, gtk4-rs, GTK 4.18+, libadwaita 1.8+, serialport, a DXF crate; first version: Python 3.12+, PyGObject, pyserial, ezdxf. Target: a Microsoft Surface Pro tablet running
+**Ubuntu 26.04 LTS** (decided 2026-10-13; installed as the Flatpak) (GNOME, Wayland), used with touch and pen as well as keyboard and mouse (touch design:
 `app/TOUCH.md`); packaged as a Flatpak.
 
 ## 1. Purpose and scope

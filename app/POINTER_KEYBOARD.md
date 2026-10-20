@@ -4,7 +4,7 @@ Status: **built** (design 2026-10-17, built in PR #8, decluttered in PR #10, 202
 interface). It covers the other three ways in: a mouse or touchpad, the keyboard (a workshop PC, or the Surface's
 Type Cover), and the Surface Pen. It closes the gaps found by the input-mode parity check of 2026-10-16: every
 feature should be reachable from every input, and nothing should need a second one. The Rust app (`rust/alphacam-gtk`)
-is the implementation; the Python app is frozen.
+is the implementation; the Python app was removed on 2026-10-20 (PR #15).
 
 ## Implementation status
 
