@@ -6,7 +6,6 @@ use serde::{Deserialize, Deserializer, Serialize, Serializer};
 
 use crate::error::{Result, value};
 use crate::i18n::tr;
-use crate::py;
 
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
 pub struct Point {
@@ -22,7 +21,7 @@ impl Point {
 
     /// X is a diameter, so the radial distance is half the X difference.
     pub fn distance(&self, other: &Point) -> f64 {
-        py::hypot((self.x - other.x) / 2.0, self.z - other.z)
+        f64::hypot((self.x - other.x) / 2.0, self.z - other.z)
     }
 }
 

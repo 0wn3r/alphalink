@@ -205,7 +205,7 @@ pub fn save_user_template(t: &Value) -> std::io::Result<PathBuf> {
     let folder = template_dir();
     std::fs::create_dir_all(&folder)?;
     let path = folder.join(format!("{}.json", file_stem(&name(t))));
-    std::fs::write(&path, dumps(t))?; // json.dumps(t, indent=1) + "\n", as the Python app writes it
+    gtk::glib::file_set_contents(&path, dumps(t).as_bytes()).map_err(std::io::Error::other)?; // indent 1, as always
     Ok(path)
 }
 

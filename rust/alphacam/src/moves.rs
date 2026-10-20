@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use std::f64::consts::PI;
 
 use crate::preview::Preview;
-use crate::py::hypot;
 use crate::toolpath::MoveKind;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -39,7 +38,7 @@ impl Segment {
         // work in (z, r) with r = X/2; G3 (ARC_CCW) is counter-clockwise with Z right and X up
         let a0 = (ax / 2.0 - cx / 2.0).atan2(az - cz);
         let a1 = (bx / 2.0 - cx / 2.0).atan2(bz - cz);
-        let rad = hypot(ax / 2.0 - cx / 2.0, az - cz);
+        let rad = f64::hypot(ax / 2.0 - cx / 2.0, az - cz);
         let ccw = self.kind == MoveKind::ArcCcw;
         let mut sweep = a1 - a0;
         if ccw && sweep < 0.0 {

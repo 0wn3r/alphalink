@@ -2137,9 +2137,9 @@ impl MainWindow {
 
     fn write(&self, path: &Path) -> bool {
         let Some(doc) = self.document() else { return false };
-        if let Err(e) = doc.save(path) {
-            // every setup, in one file
-            self.toast(&tr("Could not save: {error}", &[("error", &e)]));
+        // every setup, in one file; glib writes a temporary file and renames it, so a crash never leaves half a part
+        if let Err(e) = glib::file_set_contents(path, doc.dumps().as_bytes()) {
+            self.toast(&tr("Could not save: {error}", &[("error", &e.message())]));
             return false;
         }
         {
@@ -2191,9 +2191,10 @@ impl MainWindow {
         let ext = |e: &str| if lower { e.to_lowercase() } else { e.to_string() };
         let listing = pv.sd1.as_ref().map(|_| prg.with_extension(ext("SD1")));
         let result = (|| -> alphacam::error::Result<Vec<PathBuf>> {
-            std::fs::write(prg, data)?;
+            let write = |path: &Path, data: &[u8]| glib::file_set_contents(path, data).map_err(std::io::Error::other);
+            write(prg, data)?;
             if let (Some(listing), Some(sd1)) = (&listing, &pv.sd1) {
-                std::fs::write(listing, sd1)?;
+                write(listing, sd1.as_ref())?;
             }
             if settings().export_sdg {
                 // Preferences: also the drawing, as ALPHA-T saves it with the program

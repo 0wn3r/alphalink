@@ -11,7 +11,7 @@ use indexmap::IndexMap;
 use crate::error::{Error, Result, value};
 use crate::i18n::tr;
 use crate::model::{Arc, Element, Line, Operation, Point, Project, Text};
-use crate::py::{self, fmod_floor, fmt_g, hypot, round, round_int};
+use crate::py::{fmod_floor, fmt_g, round, round_int};
 use crate::toolpath::contour::chain;
 
 pub const SNAP_LOCK_DEG: f64 = 8.0;
@@ -66,7 +66,7 @@ pub fn snap(project: &Project, p: Point, tol: f64, grid: f64) -> (Point, &'stati
 /// Lock the segment prev -> p to Z, X or 45 degrees when it is within `deg` of them (radius/Z space).
 pub fn lock_direction(prev: Point, p: Point, deg: f64) -> Point {
     let (dr, dz) = ((p.x - prev.x) / 2.0, p.z - prev.z);
-    if hypot(dr, dz) == 0.0 {
+    if f64::hypot(dr, dz) == 0.0 {
         return p;
     }
     let ang = dr.atan2(dz).to_degrees();
@@ -164,7 +164,7 @@ fn py_max(a: f64, b: f64) -> f64 {
 fn refit_arc(arc: &Arc, a: Point, b: Point, radius: f64) -> Result<Point> {
     let ((ar, az), (br, bz)) = (rz(a), rz(b));
     let (dr, dz) = (br - ar, bz - az);
-    let d = hypot(dr, dz);
+    let d = f64::hypot(dr, dz);
     if d < 1e-9 || d > 2.0 * radius + 1e-9 {
         return value(tr("an arc of radius {r} cannot join X{ax} Z{az} and X{bx} Z{bz}",
                         &[("r", &fmt_g(radius)), ("ax", &fmt_g(a.x)), ("az", &fmt_g(a.z)), ("bx", &fmt_g(b.x)),
@@ -270,7 +270,7 @@ fn unit(q: Point, p: Point) -> Rz {
 }
 
 fn norm(v: Rz) -> Rz {
-    let n = hypot(v.0, v.1);
+    let n = f64::hypot(v.0, v.1);
     (v.0 / n, v.1 / n)
 }
 
@@ -346,7 +346,7 @@ pub fn chamfer(project: &mut Project, p: Point, size: f64, angle: f64) -> Result
     let (s1, s2) = if ref_first { (size, other) } else { (other, size) };
     for (i, s) in [(i1, s1), (i2, s2)] {
         let (a, b) = (project.geometry[i].a(), project.geometry[i].b());
-        if s > hypot((a.x - b.x) / 2.0, a.z - b.z) + 1e-9 {
+        if s > f64::hypot((a.x - b.x) / 2.0, a.z - b.z) + 1e-9 {
             return value(tr("chamfer {size} x {angle} deg is too large for these lines",
                             &[("size", &fmt_g(size)), ("angle", &fmt_g(angle))]));
         }
@@ -472,7 +472,7 @@ pub fn measure_xz(a: Point, b: Point) -> (f64, f64) {
 /// ALPHA-T N: length and angle from a to b, in the convention of polar().
 pub fn measure_la(a: Point, b: Point) -> (f64, f64) {
     let (dr, dz) = ((b.x - a.x) / 2.0, b.z - a.z);
-    (round(hypot(dr, dz), 6), round(fmod_floor(dr.atan2(-dz).to_degrees(), 360.0), 6))
+    (round(f64::hypot(dr, dz), 6), round(fmod_floor(dr.atan2(-dz).to_degrees(), 360.0), 6))
 }
 
 /// Points ALPHA-T's Find Point (P) locks onto: line and arc ends and arc centres.
@@ -532,7 +532,7 @@ pub fn distance_to(g: &Element, p: Point) -> f64 {
         Element::Arc(arc) => {
             let (cr, cz) = rz(arc.centre);
             let radius = arc.a.distance(&arc.centre);
-            let d = hypot(pr - cr, pz - cz);
+            let d = f64::hypot(pr - cr, pz - cz);
             if d > 1e-12 {
                 let q = pt((cr + (pr - cr) / d * radius, cz + (pz - cz) / d * radius));
                 if on_arc(arc, q) {
@@ -547,7 +547,7 @@ pub fn distance_to(g: &Element, p: Point) -> f64 {
             let (dr, dz) = (br - ar, bz - az);
             let l2 = dr * dr + dz * dz;
             let t = if l2 == 0.0 { 0.0 } else { clamp(((pr - ar) * dr + (pz - az) * dz) / l2, 0.0, 1.0) };
-            hypot(pr - (ar + t * dr), pz - (az + t * dz))
+            f64::hypot(pr - (ar + t * dr), pz - (az + t * dz))
         }
     }
 }
@@ -589,7 +589,7 @@ fn line_line(l1: &Line, l2: &Line) -> Vec<Rz> {
     if -eps <= t && t <= 1.0 + eps && -eps <= u && u <= 1.0 + eps { vec![(a1r + t * d1r, a1z + t * d1z)] } else { vec![] }
 }
 
-/// Where the segment a -> b meets the circle, in the order Python iterates `{t1, t2}`.
+/// Where the segment a -> b meets the circle, from a towards b (once where it only touches).
 fn line_circle(a: Point, b: Point, cr: f64, cz: f64, rad: f64) -> Vec<Rz> {
     let ((ar, az), (br, bz)) = (rz(a), rz(b));
     let (dr, dz) = (br - ar, bz - az);
@@ -602,17 +602,17 @@ fn line_circle(a: Point, b: Point, cr: f64, cz: f64, rad: f64) -> Vec<Rz> {
         return vec![];
     }
     let (t1, t2) = ((-qb - disc.sqrt()) / (2.0 * qa), (-qb + disc.sqrt()) / (2.0 * qa));
-    py::set_of_two(t1, py::hash_float(t1), t2, py::hash_float(t2))
-        .into_iter()
+    let ts = if t1 == t2 { vec![t1] } else { vec![t1, t2] };
+    ts.into_iter()
         .filter(|t| -1e-9 <= *t && *t <= 1.0 + 1e-9)
         .map(|t| (ar + t * dr, az + t * dz))
         .collect()
 }
 
-/// Where two circles (r, z, radius) meet, in the order Python iterates the set of the two points.
+/// Where two circles (r, z, radius) meet (once where they only touch).
 fn circle_circle(c1: (f64, f64, f64), c2: (f64, f64, f64)) -> Vec<Rz> {
     let ((r1, z1, a), (r2, z2, b)) = (c1, c2);
-    let d = hypot(r2 - r1, z2 - z1);
+    let d = f64::hypot(r2 - r1, z2 - z1);
     if d < 1e-12 || d > a + b + 1e-9 || d < (a - b).abs() - 1e-9 {
         return vec![];
     }
@@ -621,7 +621,7 @@ fn circle_circle(c1: (f64, f64, f64), c2: (f64, f64, f64)) -> Vec<Rz> {
     let (pr, pz) = (r1 + m * (r2 - r1) / d, z1 + m * (z2 - z1) / d);
     let p1 = (pr + h * (z2 - z1) / d, pz - h * (r2 - r1) / d);
     let p2 = (pr - h * (z2 - z1) / d, pz + h * (r2 - r1) / d);
-    py::set_of_two(p1, py::hash_pair(p1.0, p1.1), p2, py::hash_pair(p2.0, p2.1))
+    if p1 == p2 { vec![p1] } else { vec![p1, p2] }
 }
 
 /// Every point where two drawing elements cross or meet (ALPHA-T's Find Nearest Intersection, I).
@@ -715,7 +715,7 @@ fn line_of<'a>(project: &'a Project, gid: &str) -> Result<&'a Line> {
 pub fn tangents_point_arc(project: &Project, p: Point, arc_id: &str) -> Result<Vec<(Point, Point)>> {
     let (cr, cz, rad) = circle_of(project, arc_id)?;
     let (pr, pz) = rz(p);
-    let d = hypot(pr - cr, pz - cz);
+    let d = f64::hypot(pr - cr, pz - cz);
     if d <= rad + 1e-9 {
         return value(tr("the point is inside the arc", &[]));
     }
@@ -731,7 +731,7 @@ pub fn tangents_point_arc(project: &Project, p: Point, arc_id: &str) -> Result<V
 pub fn tangents_arc_arc(project: &Project, id1: &str, id2: &str) -> Result<Vec<(Point, Point)>> {
     let ((r1, z1, a), (r2, z2, b)) = (circle_of(project, id1)?, circle_of(project, id2)?);
     let (dz, dr) = (z2 - z1, r2 - r1);
-    let d = hypot(dz, dr);
+    let d = f64::hypot(dz, dr);
     if d < 1e-9 {
         return value(tr("the arcs have the same centre", &[]));
     }
@@ -780,7 +780,7 @@ pub fn parallels(project: &Project, line_id: &str, distance: f64) -> Result<Vec<
     }
     let g = line_of(project, line_id)?;
     let ((ar, az), (br, bz)) = (rz(g.a), rz(g.b));
-    let length = hypot(br - ar, bz - az);
+    let length = f64::hypot(br - ar, bz - az);
     let (ur, uz) = ((br - ar) / length, (bz - az) / length);
     let (mr, mz) = ((ar + br) / 2.0, (az + bz) / 2.0);
     let half = 0.75 * length;
@@ -863,7 +863,7 @@ fn ref_loci(project: &Project, r: &BlendRef, radius: f64) -> Result<Vec<Locus>> 
         BlendRef::Line(id) => {
             let g = line_of(project, id)?;
             let ((ar, az), (br, bz)) = (rz(g.a), rz(g.b));
-            let length = hypot(br - ar, bz - az);
+            let length = f64::hypot(br - ar, bz - az);
             let (nr, nz) = (-(bz - az) / length, (br - ar) / length);
             [1.0, -1.0]
                 .iter()
@@ -890,7 +890,7 @@ fn contact(project: &Project, r: &BlendRef, cr: f64, cz: f64) -> Result<Point> {
         }
         BlendRef::Arc(id, _) => {
             let (r0, z0, rad) = circle_of(project, id)?;
-            let d = hypot(cr - r0, cz - z0);
+            let d = f64::hypot(cr - r0, cz - z0);
             if d < 1e-9 {
                 // a blend centred on the arc's own centre (radius = the arc's): it touches nowhere in particular
                 return value(tr("no blend arc touches this arc there", &[]));
@@ -942,7 +942,7 @@ pub fn blends(project: &Project, ref1: &BlendRef, ref2: &BlendRef, radius: f64) 
 pub fn add_blend(project: &mut Project, start: Point, centre: Point, end: Point) -> Result<String> {
     let (cr, cz) = rz(centre);
     let ((ar, az), (br, bz)) = (rz(start), rz(end));
-    let rad = hypot(ar - cr, az - cz);
+    let rad = f64::hypot(ar - cr, az - cz);
     let (ta, tb) = ((ar - cr).atan2(az - cz), (br - cr).atan2(bz - cz));
     let d = fmod_floor(tb - ta + PI, 2.0 * PI) - PI; // signed shortest sweep
     let tm = ta + d / 2.0;
@@ -992,7 +992,7 @@ pub fn outer_profile(project: &Project) -> Vec<String> {
         let zs = group.iter().flat_map(|i| [element(i).a(), element(i).b()]).filter(|p| p.x.abs() < 1e-9).map(|p| p.z);
         zs.reduce(|m, z| if z > m { z } else { m }).unwrap_or(f64::NEG_INFINITY)
     };
-    let length = |group: &[String]| py::sum(group.iter().map(|i| element(i).a().distance(&element(i).b())));
+    let length = |group: &[String]| group.iter().map(|i| element(i).a().distance(&element(i).b())).sum::<f64>();
     let key = |group: &[String]| {
         let fa = front_axis(group);
         (fa > f64::NEG_INFINITY, fa, length(group))

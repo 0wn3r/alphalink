@@ -70,7 +70,8 @@ pub fn read_library_file(path: &Path) -> Result<ToolLibrary, String> {
     Ok(lib)
 }
 
-/// Write the library as the Python app does (indent 1, UTF-8 kept), through a temporary file.
+/// Write the library as tools.json has always been written (indent 1, UTF-8 kept), in one go (glib renames a
+/// temporary file into place).
 pub fn save_library(lib: &ToolLibrary, path: &Path) -> std::io::Result<()> {
     use serde::Serialize;
     if let Some(dir) = path.parent() {
@@ -81,9 +82,7 @@ pub fn save_library(lib: &ToolLibrary, path: &Path) -> std::io::Result<()> {
     let mut ser = serde_json::Serializer::with_formatter(&mut text, indent_1);
     lib.to_json().serialize(&mut ser).map_err(std::io::Error::other)?;
     text.push(b'\n');
-    let tmp = path.with_extension("tmp");
-    std::fs::write(&tmp, text)?;
-    std::fs::rename(&tmp, path)
+    glib::file_set_contents(path, &text).map_err(std::io::Error::other)
 }
 
 /// The number fields of the editor: (field, label, subtitle, lo, hi, step, digits).

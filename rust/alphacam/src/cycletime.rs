@@ -16,7 +16,7 @@ use crate::checks::tool;
 use crate::model::{Project, Tool, ToolLibrary};
 use crate::moves::Segment;
 use crate::preview::{Move, Preview};
-use crate::py::{self, hypot, round_int};
+use crate::py::round_int;
 use crate::toolpath::MoveKind;
 
 /// m/min when a tool has none of its own (carbide in steel, on the safe side)
@@ -49,7 +49,7 @@ pub struct Estimate {
 
 impl Estimate {
     pub fn cutting(&self) -> f64 {
-        py::sum(self.seconds.values().copied())
+        self.seconds.values().sum()
     }
 
     pub fn total(&self) -> f64 {
@@ -148,7 +148,7 @@ fn path_length(m: &Move, a: (f64, f64), b: (f64, f64)) -> f64 {
         }
         _ => vec![a, b],
     };
-    py::sum(pts.windows(2).map(|w| hypot((w[1].0 - w[0].0) / 2.0, w[1].1 - w[0].1)))
+    pts.windows(2).map(|w| f64::hypot((w[1].0 - w[0].0) / 2.0, w[1].1 - w[0].1)).sum()
 }
 
 /// h:mm:ss from an hour on, else m:ss.

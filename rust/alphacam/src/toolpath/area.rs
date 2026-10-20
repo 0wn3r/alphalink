@@ -29,7 +29,7 @@ use super::{MAX_PASSES, Move, Pass, Toolpath, too_many};
 use crate::error::{Result, not_implemented, value};
 use crate::i18n::tr;
 use crate::model::{AreaClear, Point, Tool};
-use crate::py::{fmt_g, hypot, round};
+use crate::py::{fmt_g, round};
 
 /// RETRACT DIST default.
 pub const RETRACT_MM: f64 = 1.0;
@@ -89,7 +89,7 @@ fn on(seg: &Seg, p: Point, tol: f64) -> bool {
     let ((ar, az), (br, bz), (pr, pz)) = ((seg.a.x / 2.0, seg.a.z), (seg.b.x / 2.0, seg.b.z), (p.x / 2.0, p.z));
     let cross = (br - ar) * (pz - az) - (bz - az) * (pr - ar);
     let dot = (pr - ar) * (br - ar) + (pz - az) * (bz - az);
-    let length = hypot(br - ar, bz - az);
+    let length = f64::hypot(br - ar, bz - az);
     cross.abs() < 1e-6f64.max(tol * length) && -tol * length <= dot && dot <= length * length + tol * length
 }
 

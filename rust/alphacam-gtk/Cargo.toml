@@ -21,6 +21,7 @@ gettext-rs.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 regex.workspace = true
+pulldown-cmark.workspace = true
 
 [dev-dependencies]
 # the transfer test plays the control on a pty pair

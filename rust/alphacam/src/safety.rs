@@ -27,7 +27,7 @@ use crate::moves::{Segment, segments};
 use crate::preview::Preview;
 // ALPHA-T's rules live with the area clear they guard
 pub use crate::toolpath::area::{collision_angle, tip_angle_ok};
-use crate::py::{fmod_floor, fmt_g, hypot, round};
+use crate::py::{fmod_floor, fmt_g, round};
 use crate::toolpath::MoveKind;
 use crate::toolpath::contour::chain;
 
@@ -118,7 +118,7 @@ fn distance(pieces: &[Piece], x: f64, z: f64) -> f64 {
         let (dz, dr) = (z1 - z0, r1 - r0);
         let l2 = dz * dz + dr * dr;
         let t = if l2 == 0.0 { 0.0 } else { py_max(0.0, py_min(1.0, ((z - z0) * dz + (r - r0) * dr) / l2)) };
-        best = py_min(best, hypot(z - (z0 + t * dz), r - (r0 + t * dr)));
+        best = py_min(best, f64::hypot(z - (z0 + t * dz), r - (r0 + t * dr)));
     }
     best
 }
@@ -128,7 +128,7 @@ fn samples(seg: &Segment, step: f64) -> Vec<(f64, f64)> {
     let mut out = vec![];
     for w in pts.windows(2) {
         let ((xa, za), (xb, zb)) = (w[0], w[1]);
-        let n = ((hypot((xb - xa) / 2.0, zb - za) / step) as i64).max(1);
+        let n = ((f64::hypot((xb - xa) / 2.0, zb - za) / step) as i64).max(1);
         for k in 1..=n {
             let t = k as f64 / n as f64;
             out.push((xa + t * (xb - xa), za + t * (zb - za)));
@@ -298,7 +298,7 @@ pub fn check(project: &Project, preview: &Preview, library: Option<&ToolLibrary>
         for w in pts.windows(2) {
             let ((xa, za), (xb, zb)) = (w[0], w[1]);
             let (dr, dz) = ((xb - xa) / 2.0, zb - za);
-            if hypot(dr, dz) < 0.05 {
+            if f64::hypot(dr, dz) < 0.05 {
                 continue;
             }
             if [(xa, za), (xb, zb), ((xa + xb) / 2.0, (za + zb) / 2.0)]

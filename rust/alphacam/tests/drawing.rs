@@ -7,7 +7,7 @@ mod common;
 
 use alphacam::drawing::{self, BlendRef, Kind};
 use alphacam::model::Project;
-use common::{check_step, f, p, pt, s, same};
+use common::{check_step, f, p, pt, s, same, unordered};
 use serde_json::{Value, json};
 
 fn ids(v: &Value) -> Vec<String> {
@@ -111,8 +111,14 @@ fn same_edits_as_the_python_app() {
         let mut expected = &case["project"];
         for (i, step) in case["steps"].as_array().unwrap().iter().enumerate() {
             steps += 1;
-            let got = call(&mut project, s(&step["call"]), step["args"].as_array().unwrap());
-            check_step(name, i, step, got, &mut failures);
+            let mut got = call(&mut project, s(&step["call"]), step["args"].as_array().unwrap());
+            let mut checked = step.clone();
+            if matches!(s(&step["call"]), "intersections" | "blends") {
+                // candidates the person picks from by tapping: any order
+                got = got.map(|v| unordered(&v));
+                checked["result"] = unordered(&step["result"]);
+            }
+            check_step(name, i, &checked, got, &mut failures);
             if let Some(after) = step.get("project") {
                 expected = after;
             }

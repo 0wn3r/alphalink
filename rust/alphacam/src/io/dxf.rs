@@ -20,7 +20,7 @@ use dxf::entities::{Entity, EntityType};
 use crate::error::{Error, Result, value};
 use crate::i18n::tr;
 use crate::model::{Billet, Element, Point, Project};
-use crate::py::{hypot, round};
+use crate::py::round;
 
 /// How to read the drawing (the import dialog's choices).
 #[derive(Debug, Clone, PartialEq)]
@@ -261,7 +261,7 @@ fn chain(prims: &mut Vec<Prim>, ocs: &Ocs, mut v: Vec<(Xy, f64)>, closed: bool) 
             line(prims, wa, wb);
             continue;
         }
-        let d = hypot(a.0 - b.0, a.1 - b.1);
+        let d = f64::hypot(a.0 - b.0, a.1 - b.1);
         if d == 0.0 {
             continue;
         }
