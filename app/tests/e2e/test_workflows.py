@@ -83,9 +83,20 @@ class Surface(unittest.TestCase):
         self.fail(f"timed out waiting for {what}")
 
     def calibrate(self):
-        """Screen → drawing coordinates from the pointer read-out at two spots (the view is linear). The pointer is
-        moved in small steps: GTK reads the first event over a widget as entering it, not as a motion."""
+        """Drawing → screen coordinates: from the app's own view (State: scale and origin in the drawing's pixels;
+        X is a diameter, drawn as a radius), else from the pointer read-out at two spots."""
         x, y, w, h = self.app.rect(self.app.find("Drawing"))
+        try:
+            v = self.app.state()["view"]
+        except Exception:  # noqa: BLE001 - an app without State
+            v = None
+        if v:
+            k, ox, oy = v["scale"], x + v["ox"], y + v["oy"]
+            self.mm_per_px = 1 / k
+            self.to_world = lambda sx, sy: (2 * (oy - sy) / k, (sx - ox) / k)
+            return lambda xd, z: (ox + z * k, oy - xd / 2 * k)
+        # the read-out: the pointer is moved in small steps (GTK reads the first event over a widget as entering it);
+        # it is not reliable while the app writes other text there (tool guides, a selected element)
         pts = []
         for fx, fy in ((0.2, 0.2), (0.8, 0.8)):
             sx, sy = x + w * fx, y + h * fy
