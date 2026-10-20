@@ -739,6 +739,9 @@ msgstr "Інші дії з інструментами"
 msgid "Tool numbers are the lathe's tool memory slots."
 msgstr "Номери інструментів — це комірки пам’яті інструментів верстата."
 
+msgid "Export Tool Library…"
+msgstr "Експорт бібліотеки інструментів…"
+
 msgid "Reset to ALPHA-T Tools"
 msgstr "Скинути до інструментів ALPHA-T"
 
@@ -1738,6 +1741,12 @@ msgstr "Видалити T{n}?"
 msgid "{name} is removed from your tool library. Parts that use it fall back to ALPHA-T's standard tool with that number."
 msgstr "{name} буде вилучено з вашої бібліотеки інструментів. Деталі, що його використовують, отримають стандартний інструмент ALPHA-T з тим самим номером."
 
+msgid "Tool libraries"
+msgstr "Бібліотеки інструментів"
+
+msgid "AlphaLink CAM tool library (.json)"
+msgstr "Бібліотека інструментів AlphaLink CAM (.json)"
+
 msgid "ALPHA-T tool library (ATOOLIB.TL1)"
 msgstr "Бібліотека інструментів ALPHA-T (ATOOLIB.TL1)"
 
@@ -1746,6 +1755,9 @@ msgstr "Імпорт бібліотеки інструментів"
 
 msgid "Could not import {name}: {error}"
 msgstr "Не вдалося імпортувати {name}: {error}"
+
+msgid "Export Tool Library"
+msgstr "Експорт бібліотеки інструментів"
 
 msgid "Tool library reset to ALPHA-T's 32 standard tools"
 msgstr "Бібліотеку скинуто до 32 стандартних інструментів ALPHA-T"

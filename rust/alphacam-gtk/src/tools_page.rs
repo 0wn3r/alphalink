@@ -51,6 +51,25 @@ pub fn load_library_from(path: &Path) -> ToolLibrary {
         .unwrap_or_else(|| standard_library().clone())
 }
 
+/// A library file to import: an exported AlphaLink CAM library (.json, as [`save_library`] writes it) or ALPHA-T's
+/// ATOOLIB.TL1 with the tool pictures from the .TL2 next to it. Unlike [`load_library_from`], a damaged file is an
+/// error, not ALPHA-T's standard tools.
+pub fn read_library_file(path: &Path) -> Result<ToolLibrary, String> {
+    let is_json = path.extension().is_some_and(|e| e.eq_ignore_ascii_case("json"));
+    if is_json {
+        let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+        let data: serde_json::Value = serde_json::from_str(&text).map_err(|e| e.to_string())?;
+        return ToolLibrary::from_json(&data).map_err(|e| e.to_string());
+    }
+    let mut lib = load_tl1(path).map_err(|e| e.to_string())?;
+    // ALPHA-T keeps the tool pictures next to the library
+    let pictures = sibling(path, ".TL2").and_then(|tl2| load_tl2(tl2).ok()).unwrap_or_default();
+    for tool in &mut lib.tools {
+        tool.outline = pictures.get(&tool.number).cloned().unwrap_or_default();
+    }
+    Ok(lib)
+}
+
 /// Write the library as the Python app does (indent 1, UTF-8 kept), through a temporary file.
 pub fn save_library(lib: &ToolLibrary, path: &Path) -> std::io::Result<()> {
     use serde::Serialize;
@@ -165,6 +184,10 @@ impl ToolsPage {
         let reset = gio::SimpleAction::new("reset", None);
         reset.connect_activate(glib::clone!(#[weak] page, move |_, _| page.reset()));
         actions.add_action(&reset);
+        // and Export Tool Library…: the library as a file, for another install (Import reads it back)
+        let export = gio::SimpleAction::new("export", None);
+        export.connect_activate(glib::clone!(#[weak] page, move |_, _| page.export_dialog()));
+        actions.add_action(&export);
         page.insert_action_group("tools", Some(&actions));
         page.fill(None);
         page
@@ -352,12 +375,23 @@ impl ToolsPage {
     fn import_dialog(&self) {
         let Some(w) = self.window() else { return };
         let filters = gio::ListStore::new::<gtk::FileFilter>();
-        let f = gtk::FileFilter::new();
-        f.set_name(Some(&gettext("ALPHA-T tool library (ATOOLIB.TL1)")));
-        for pat in ["*.TL1", "*.tl1"] {
-            f.add_pattern(pat);
+        let both = gtk::FileFilter::new();
+        both.set_name(Some(&gettext("Tool libraries")));
+        let json = gtk::FileFilter::new();
+        json.set_name(Some(&gettext("AlphaLink CAM tool library (.json)")));
+        let tl1 = gtk::FileFilter::new();
+        tl1.set_name(Some(&gettext("ALPHA-T tool library (ATOOLIB.TL1)")));
+        for pat in ["*.json", "*.JSON"] {
+            both.add_pattern(pat);
+            json.add_pattern(pat);
         }
-        filters.append(&f);
+        for pat in ["*.TL1", "*.tl1"] {
+            both.add_pattern(pat);
+            tl1.add_pattern(pat);
+        }
+        for f in [&both, &json, &tl1] {
+            filters.append(f);
+        }
         let dlg = gtk::FileDialog::builder().title(gettext("Import Tool Library")).filters(&filters).build();
         dlg.open(Some(&w), gio::Cancellable::NONE, glib::clone!(#[weak(rename_to = this)] self, move |res| {
             if let Some(path) = chosen(res) {
@@ -366,29 +400,57 @@ impl ToolsPage {
         }));
     }
 
+    /// Replace the library with the file's; the toast's Undo brings the one before back.
     fn import(&self, path: &Path) {
         let Some(w) = self.window() else { return };
         let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
-        let mut lib = match load_tl1(path) {
+        let lib = match read_library_file(path) {
             Ok(lib) => lib,
             Err(e) => {
                 w.toast(&tr("Could not import {name}: {error}", &[("name", &name), ("error", &e)]));
                 return;
             }
         };
-        // ALPHA-T keeps the tool pictures next to the library
-        let pictures = sibling(path, ".TL2").and_then(|tl2| load_tl2(tl2).ok()).unwrap_or_default();
-        for tool in &mut lib.tools {
-            tool.outline = pictures.get(&tool.number).cloned().unwrap_or_default();
-        }
+        let before = self.lib();
         let n = lib.tools.len();
+        let pictures = lib.tools.iter().any(|t| !t.outline.is_empty());
         self.changed(lib, None, true);
-        let msg = if pictures.is_empty() {
-            "Imported {n} tools from {name}"
-        } else {
+        let msg = if pictures {
             "Imported {n} tools and their pictures from {name}"
+        } else {
+            "Imported {n} tools from {name}"
         };
-        w.toast(&tr(msg, &[("n", &n), ("name", &name)]));
+        let toast = adw::Toast::builder()
+            .title(glib::markup_escape_text(&tr(msg, &[("n", &n), ("name", &name)])))
+            .button_label(gettext("_Undo"))
+            .timeout(8)
+            .build();
+        toast.connect_button_clicked(glib::clone!(#[weak(rename_to = this)] self, move |_| {
+            this.changed(before.clone(), None, true);
+        }));
+        w.add_toast(toast);
+    }
+
+    fn export_dialog(&self) {
+        let Some(w) = self.window() else { return };
+        let filters = gio::ListStore::new::<gtk::FileFilter>();
+        let json = gtk::FileFilter::new();
+        json.set_name(Some(&gettext("AlphaLink CAM tool library (.json)")));
+        json.add_pattern("*.json");
+        filters.append(&json);
+        let dlg = gtk::FileDialog::builder()
+            .title(gettext("Export Tool Library"))
+            .initial_name("alphalink-tools.json")
+            .filters(&filters)
+            .build();
+        dlg.save(Some(&w), gio::Cancellable::NONE, glib::clone!(#[weak(rename_to = this)] self, move |res| {
+            let (Some(path), Some(w)) = (chosen(res), this.window()) else { return };
+            let name = path.file_name().map(|n| n.to_string_lossy().into_owned()).unwrap_or_default();
+            match save_library(&this.lib(), &path) {
+                Ok(()) => w.toast(&tr("Saved {name}", &[("name", &name)])),
+                Err(e) => w.toast(&tr("Could not save {name}: {error}", &[("name", &name), ("error", &e)])),
+            }
+        }));
     }
 
     fn reset(&self) {
@@ -417,6 +479,25 @@ mod tests {
         assert_eq!(load_library_from(&path), lib);
         std::fs::write(&path, "not json").unwrap();
         assert_eq!(load_library_from(&path), *standard_library());
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    /// Export on one install, import on another (Eduard 2026-10-20): the same library comes back, and a damaged file is
+    /// refused instead of silently giving ALPHA-T's standard tools.
+    #[test]
+    fn exported_library_imports_on_another_install() {
+        let dir = std::env::temp_dir().join(format!("alphalink-tools-export-{}", std::process::id()));
+        let path = dir.join("my-tools.json");
+        let mut lib = standard_library().clone();
+        lib.tools[2].name = "Чистовий 0.2R".into();
+        lib.tools[2].nose_radius = 0.2;
+        lib.tools.retain(|t| t.number != 7);
+        save_library(&lib, &path).unwrap();
+        assert_eq!(read_library_file(&path).unwrap(), lib);
+        std::fs::write(&path, "{\"format\": \"alcam-tools/1\", \"tools\": [{\"number\": \"x\"}]}").unwrap();
+        assert!(read_library_file(&path).is_err());
+        std::fs::write(&path, "not json").unwrap();
+        assert!(read_library_file(&path).is_err());
         std::fs::remove_dir_all(&dir).unwrap();
     }
 }

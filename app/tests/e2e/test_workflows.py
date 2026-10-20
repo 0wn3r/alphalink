@@ -8,6 +8,7 @@ Skipped unless ALPHALINK_E2E=1: it needs GNOME Shell, PipeWire, socat and the Fl
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import threading
@@ -644,6 +645,57 @@ class FileDialogs(Surface):
         self.assertEqual(prg.read_bytes(), post(p))
         self.assertTrue((self.s.root / "home/SHAFT.SD1").exists())
         self.snap("exported")
+
+
+class ToolLibraryFiles(Surface):
+    """Eduard 2026-10-20: the tool table moves between installs. Export Tool Library… (Tools ▸ ⋮) writes it; Import Tool
+    Library… on another install reads it back, and the toast's Undo restores the table it replaced."""
+
+    chooser = FileDialogs.chooser
+
+    def live(self) -> Path:
+        found = list((self.s.root / "home").rglob("alphalink-cam/tools.json"))
+        return found[0] if found else Path("/nonexistent")
+
+    def tools(self, path: Path) -> list:
+        return [(t["number"], t["name"]) for t in json.loads(path.read_text())["tools"]]
+
+    def test_export_then_import_round_trips(self):
+        self.launch(str(self.part(with_op())))
+        self.press("Tools", "page tab")
+        time.sleep(0.5)
+        self.press("More Tool Actions", "menubutton")
+        self.app.press(acc=[i for i in self.app.menu_items() if i.text.startswith("Export Tool Library")][0])
+        FileDialogs.save_as(self, "alphalink-tools.json")
+        exported = self.s.root / "home/alphalink-tools.json"
+        self.wait_for(exported.exists, 10, "alphalink-tools.json")
+        before = self.tools(exported)
+        self.assertGreaterEqual(len(before), 32, "ALPHA-T's standard tools at least")
+        self.press(acc=self.app.all("Delete Tool", "button")[0])  # change the table: the first tool goes
+        self.press(acc=[w for w in self.app.all("Delete", "button") if w.text == "Delete"][-1])  # "Delete T1?"
+        self.wait_for(lambda: self.live().exists() and len(self.tools(self.live())) == len(before) - 1, 10,
+                      "the library without its first tool")
+        changed = self.tools(self.live())
+        self.press(acc=self.app.labelled("Import Tool Library…", "button"))
+        FileDialogs.choose(self, exported)
+        self.wait_for(lambda: self.tools(self.live()) == before, 10, "the imported library")
+        self.app.find("Imported", contains=True)
+        self.snap("imported")
+        undo = [w for w in self.app.all("Undo", "button") if w.text == "Undo"]
+        self.press(acc=undo[-1])  # the toast's
+        self.wait_for(lambda: self.tools(self.live()) == changed, 10, "Undo to restore the table before the import")
+
+    def test_a_damaged_file_leaves_the_library(self):
+        bad = self.s.root / "home/broken.json"
+        bad.write_text("{ not json")
+        self.launch(str(self.part(with_op())))
+        self.press("Tools", "page tab")
+        time.sleep(0.5)
+        self.press(acc=self.app.labelled("Import Tool Library…", "button"))
+        FileDialogs.choose(self, bad)
+        self.app.find("Could not import", contains=True, timeout=10)
+        self.snap("refused")
+        self.assertFalse(self.live().exists(), "a refused import must not write a library")
 
 
 ALPHAT = Path(os.environ.get("ALPHALINK_ALPHAT", Path.home() / "alpha-work/vendor/AlphaT"))
