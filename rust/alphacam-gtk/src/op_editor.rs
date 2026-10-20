@@ -146,6 +146,38 @@ pub fn keypad_on_touch(row: &impl IsA<gtk::Widget>) {
     row.add_controller(tap);
 }
 
+/// A text field for numbers (the X,Z command entry under the drawing): a still finger or pen tap calls `open` (the
+/// keypad) on release, and the field never sees a finger, so neither the system keyboard nor a typing caret comes up
+/// (Eduard 2026-10-20, Surface). A finger that moves is left alone; the mouse and keyboard work as before.
+pub fn on_tap_by_hand(field: &impl IsA<gtk::Widget>, open: impl Fn() + 'static) {
+    let field = field.upcast_ref::<gtk::Widget>();
+    let by_hand = |ctl: &gtk::EventController| {
+        matches!(crate::input_mode::event_source(ctl), Some(gdk::InputSource::Touchscreen | gdk::InputSource::Pen))
+    };
+    let tap = gtk::GestureClick::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+    let start = Rc::new(Cell::new(None));
+    let s = start.clone();
+    tap.connect_pressed(move |g, _, x, y| s.set(by_hand(g.upcast_ref()).then_some((x, y))));
+    tap.connect_released(move |_, _, x, y| {
+        if let Some((x0, y0)) = start.take()
+            && (x - x0).abs() + (y - y0).abs() <= TAP_SLOP_PX
+        {
+            open();
+        }
+    });
+    let keep = gtk::EventControllerLegacy::builder().propagation_phase(gtk::PropagationPhase::Capture).build();
+    keep.connect_event(move |ctl, event| {
+        use gdk::EventType::*;
+        let kind = event.event_type();
+        let hand = matches!(kind, TouchBegin | TouchUpdate | TouchEnd | TouchCancel)
+            || matches!(kind, ButtonPress | ButtonRelease | MotionNotify) && by_hand(ctl.upcast_ref());
+        if hand { glib::Propagation::Stop } else { glib::Propagation::Proceed }
+    });
+    // the legacy controller added first: the last-added controller runs first, and the tap must see the press
+    field.add_controller(keep);
+    field.add_controller(tap);
+}
+
 /// The − or + button, or the number, under `at` in `row`.
 fn touched(row: &gtk::Widget, (x, y): (f64, f64)) -> Option<Touched> {
     let mut w = row.pick(x, y, gtk::PickFlags::DEFAULT);

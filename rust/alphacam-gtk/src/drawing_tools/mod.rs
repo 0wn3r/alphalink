@@ -344,6 +344,8 @@ impl DrawingTools {
         this.delete_el.connect_clicked(weak!(this, move |_| this.delete_selected_element()));
         this.edit_el.connect_clicked(weak!(this, move |_| this.edit_selected_element()));
         this.keypad_button.connect_clicked(weak!(this, move |_| this.open_keypad()));
+        // a finger or the pen on the entry opens the keypad, as on every number field (POINTER_KEYBOARD.md 11)
+        crate::op_editor::on_tap_by_hand(&this.entry, weak!(this, move || this.open_keypad()));
 
         // sections with headings, so the items read as groups (HIG: menus)
         let menu = gio::Menu::new();
