@@ -202,9 +202,8 @@ mod tests {
         assert_eq!(round_int(2.5), 2);
         assert_eq!(round_int(3.5), 4);
         assert_eq!(hypot(3.0, 4.0), 5.0);
-        // a case where libm's hypot differs from Python's in the last bit
+        // a case where older glibc's hypot differed from Python's in the last bit (newer glibc rounds it right too)
         assert_eq!(hypot(-22.409529581998356, 22.335855757150796), 31.6398082878311);
-        assert_ne!((-22.409529581998356f64).hypot(22.335855757150796), 31.6398082878311);
         assert_eq!(fmod_floor(-1.0, 2.0 * std::f64::consts::PI), 2.0 * std::f64::consts::PI - 1.0);
         assert_eq!(fmt_g(100.0), "100");
         assert_eq!(fmt_g(-49.6), "-49.6");

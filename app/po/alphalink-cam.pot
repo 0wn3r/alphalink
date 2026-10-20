@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-17 21:36+0000\n"
+"POT-Creation-Date: 2026-10-19 23:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -537,7 +537,7 @@ msgid "Round Outside Corners…"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:30 alphacam_gtk/drawing_tools.py:900
-#: alphacam_gtk/op_editor.py:349 alphacam_gtk/op_editor.py:375
+#: alphacam_gtk/op_editor.py:361 alphacam_gtk/op_editor.py:387
 #: alphacam_gtk/ui/shortcuts.ui:445
 msgid "Arc"
 msgstr ""
@@ -547,7 +547,7 @@ msgid "Fillet"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:30 alphacam_gtk/drawing_tools.py:900
-#: alphacam_gtk/op_editor.py:349 alphacam_gtk/op_editor.py:375
+#: alphacam_gtk/op_editor.py:361 alphacam_gtk/op_editor.py:387
 msgid "Line"
 msgstr ""
 
@@ -783,7 +783,7 @@ msgid "Zoom Here"
 msgstr ""
 
 #: alphacam_gtk/drawing_tools.py:798 alphacam_gtk/ui/shortcuts.ui:309
-#: alphacam_gtk/ui/window.ui:280 alphacam_gtk/ui/window.ui:525
+#: alphacam_gtk/ui/window.ui:283 alphacam_gtk/ui/window.ui:533
 msgid "Fit Part"
 msgstr ""
 
@@ -1282,8 +1282,7 @@ msgstr ""
 msgid "Tool memory slot on the control"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:24 alphacam_gtk/report.py:93
-#: alphacam_gtk/report.py:112
+#: alphacam_gtk/op_editor.py:24
 msgid "Feed"
 msgstr ""
 
@@ -1303,7 +1302,7 @@ msgstr ""
 msgid "Finish allowance, radius"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:26 alphacam_gtk/report.py:104
+#: alphacam_gtk/op_editor.py:26
 msgid "Offset X"
 msgstr ""
 
@@ -1311,7 +1310,7 @@ msgstr ""
 msgid "Finish allowance"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:27 alphacam_gtk/report.py:105
+#: alphacam_gtk/op_editor.py:27
 msgid "Offset Z"
 msgstr ""
 
@@ -1372,8 +1371,7 @@ msgstr ""
 msgid "Peck"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:38 alphacam_gtk/report.py:110
-#: alphacam_gtk/ui/drawing-dialogs.ui:170
+#: alphacam_gtk/op_editor.py:38 alphacam_gtk/ui/drawing-dialogs.ui:170
 msgid "Pitch"
 msgstr ""
 
@@ -1513,76 +1511,76 @@ msgstr ""
 msgid "Tool start"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:188
+#: alphacam_gtk/op_editor.py:200
 #, python-brace-format
 msgid "Operation {n}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:238
+#: alphacam_gtk/op_editor.py:250
 msgid "Inner diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:238
+#: alphacam_gtk/op_editor.py:250
 msgid "Outer diameter line"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:239
+#: alphacam_gtk/op_editor.py:251
 msgid "(no lines)"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:244
+#: alphacam_gtk/op_editor.py:256
 msgid "Contour, in cutting order"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:245
+#: alphacam_gtk/op_editor.py:257
 msgid "Element IDs, for example g0 g1 g2"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:248
+#: alphacam_gtk/op_editor.py:260
 msgid "Pick Contour on the Drawing"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:253
+#: alphacam_gtk/op_editor.py:265
 msgid ""
 "Face grooving: plunges along -Z, stepping outwards; the tool reference is "
 "the tip's corner nearest the axis."
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:256
+#: alphacam_gtk/op_editor.py:268
 msgid ""
 "Grooving follows the drawn profile; the tool reference is the tip's -Z "
 "corner."
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:260
+#: alphacam_gtk/op_editor.py:272
 msgid "_Duplicate Operation"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:296 alphacam_gtk/op_editor.py:307
-#: alphacam_gtk/op_editor.py:313 alphacam_gtk/op_editor.py:317
-#: alphacam_gtk/op_editor.py:322
+#: alphacam_gtk/op_editor.py:308 alphacam_gtk/op_editor.py:319
+#: alphacam_gtk/op_editor.py:325 alphacam_gtk/op_editor.py:329
+#: alphacam_gtk/op_editor.py:334
 #, python-brace-format
 msgid "Change {what}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:326
+#: alphacam_gtk/op_editor.py:338
 msgid "Change contour"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:345
+#: alphacam_gtk/op_editor.py:357
 #, python-brace-format
 msgid "{n} element"
 msgid_plural "{n} elements"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/op_editor.py:347
+#: alphacam_gtk/op_editor.py:359
 #, python-brace-format
 msgid "From {a} to {b}"
 msgstr ""
 
-#: alphacam_gtk/op_editor.py:359 alphacam_gtk/op_editor.py:366
-#: alphacam_gtk/op_editor.py:377
+#: alphacam_gtk/op_editor.py:371 alphacam_gtk/op_editor.py:378
+#: alphacam_gtk/op_editor.py:389
 #, python-brace-format
 msgid "{id} (missing)"
 msgstr ""
@@ -1712,97 +1710,8 @@ msgid_plural "{n} tool changes"
 msgstr[0] ""
 msgstr[1] ""
 
-#: alphacam_gtk/report.py:69
-msgid "DATE"
-msgstr ""
-
-#: alphacam_gtk/report.py:69
-msgid "TITLE"
-msgstr ""
-
 #: alphacam_gtk/report.py:72
 msgid "  (no program)"
-msgstr ""
-
-#: alphacam_gtk/report.py:74 alphacam_gtk/report.py:206
-#: alphacam_gtk/ui/preferences.ui:86
-msgid "Cycle time"
-msgstr ""
-
-#: alphacam_gtk/report.py:74 alphacam_gtk/report.py:204
-#: alphacam_gtk/ui/part-settings.ui:48 alphacam_gtk/ui/shortcuts.ui:256
-#: alphacam_gtk/ui/window.ui:315
-msgid "Program"
-msgstr ""
-
-#: alphacam_gtk/report.py:91 alphacam_gtk/report.py:102
-#: alphacam_gtk/ui/op-editor.ui:23
-msgid "Operation"
-msgstr ""
-
-#: alphacam_gtk/report.py:91 alphacam_gtk/report.py:102
-msgid "Tool No."
-msgstr ""
-
-#: alphacam_gtk/report.py:93 alphacam_gtk/ui/preferences.ui:118
-#: alphacam_gtk/window.py:43
-msgid "Tool change"
-msgstr ""
-
-#: alphacam_gtk/report.py:104
-msgid "Maximum X"
-msgstr ""
-
-#: alphacam_gtk/report.py:104
-msgid "Tool Start X"
-msgstr ""
-
-#: alphacam_gtk/report.py:105
-msgid "Maximum Z"
-msgstr ""
-
-#: alphacam_gtk/report.py:105
-msgid "Tool Start Z"
-msgstr ""
-
-#: alphacam_gtk/report.py:106
-msgid "Op. No."
-msgstr ""
-
-#: alphacam_gtk/report.py:106
-msgid "Total Passes"
-msgstr ""
-
-#: alphacam_gtk/report.py:108
-msgid "Depth Of Cut"
-msgstr ""
-
-#: alphacam_gtk/report.py:115
-msgid "Time"
-msgstr ""
-
-#: alphacam_gtk/report.py:121
-msgid "Block"
-msgstr ""
-
-#: alphacam_gtk/report.py:121
-msgid "Restart #140"
-msgstr ""
-
-#: alphacam_gtk/report.py:122
-msgid "one per pass"
-msgstr ""
-
-#: alphacam_gtk/report.py:134
-msgid "Pass No."
-msgstr ""
-
-#: alphacam_gtk/report.py:140
-msgid "RAPID TO"
-msgstr ""
-
-#: alphacam_gtk/report.py:142
-msgid "FEED  TO"
 msgstr ""
 
 #: alphacam_gtk/report.py:144
@@ -1813,20 +1722,9 @@ msgstr ""
 msgid "ARC CW TO"
 msgstr ""
 
-#: alphacam_gtk/report.py:145
-msgid "centre"
-msgstr ""
-
-#: alphacam_gtk/report.py:147
-msgid "THREAD TO"
-msgstr ""
-
-#: alphacam_gtk/report.py:149
-msgid "DWELL"
-msgstr ""
-
-#: alphacam_gtk/report.py:149
-msgid "revs"
+#: alphacam_gtk/report.py:204 alphacam_gtk/ui/part-settings.ui:48
+#: alphacam_gtk/ui/shortcuts.ui:256 alphacam_gtk/ui/window.ui:318
+msgid "Program"
 msgstr ""
 
 #: alphacam_gtk/report.py:204 alphacam_gtk/ui/billet-group.ui:13
@@ -1838,20 +1736,12 @@ msgstr ""
 msgid "Billet"
 msgstr ""
 
-#: alphacam_gtk/report.py:205
-msgid "bore"
+#: alphacam_gtk/report.py:206 alphacam_gtk/ui/preferences.ui:86
+msgid "Cycle time"
 msgstr ""
 
 #: alphacam_gtk/report.py:206
 msgid "Date"
-msgstr ""
-
-#: alphacam_gtk/report.py:220
-msgid "Tools, in loading order"
-msgstr ""
-
-#: alphacam_gtk/report.py:225 alphacam_gtk/report.py:289
-msgid "Notes"
 msgstr ""
 
 #: alphacam_gtk/report.py:276
@@ -1861,6 +1751,10 @@ msgstr ""
 #: alphacam_gtk/report.py:278
 #, python-brace-format
 msgid "SETUP {n}"
+msgstr ""
+
+#: alphacam_gtk/report.py:289
+msgid "Notes"
 msgstr ""
 
 #: alphacam_gtk/report.py:295
@@ -2316,15 +2210,15 @@ msgid "_Import"
 msgstr ""
 
 #: alphacam_gtk/ui/help-dialog.ui:11 alphacam_gtk/ui/shortcuts.ui:34
-#: alphacam_gtk/ui/window.ui:490 alphacam_gtk/ui/window.ui:555
+#: alphacam_gtk/ui/window.ui:498 alphacam_gtk/ui/window.ui:563
 msgid "Help"
 msgstr ""
 
-#: alphacam_gtk/ui/help-dialog.ui:27 alphacam_gtk/ui/window.ui:472
+#: alphacam_gtk/ui/help-dialog.ui:27 alphacam_gtk/ui/window.ui:480
 msgid "Training Manual"
 msgstr ""
 
-#: alphacam_gtk/ui/help-dialog.ui:36 alphacam_gtk/ui/window.ui:476
+#: alphacam_gtk/ui/help-dialog.ui:36 alphacam_gtk/ui/window.ui:484
 msgid "Reference Manual"
 msgstr ""
 
@@ -2448,6 +2342,10 @@ msgstr ""
 msgid "_Create"
 msgstr ""
 
+#: alphacam_gtk/ui/op-editor.ui:23
+msgid "Operation"
+msgstr ""
+
 #: alphacam_gtk/ui/op-editor.ui:29 alphacam_gtk/ui/shortcuts.ui:157
 msgid "Move Up"
 msgstr ""
@@ -2460,7 +2358,7 @@ msgstr ""
 msgid "Close Editor"
 msgstr ""
 
-#: alphacam_gtk/ui/part-settings.ui:11 alphacam_gtk/ui/window.ui:533
+#: alphacam_gtk/ui/part-settings.ui:11 alphacam_gtk/ui/window.ui:541
 msgid "Part Settings"
 msgstr ""
 
@@ -2497,7 +2395,7 @@ msgid "As the drawing"
 msgstr ""
 
 #: alphacam_gtk/ui/preferences.ui:11 alphacam_gtk/ui/shortcuts.ui:22
-#: alphacam_gtk/ui/window.ui:482 alphacam_gtk/ui/window.ui:547
+#: alphacam_gtk/ui/window.ui:490 alphacam_gtk/ui/window.ui:555
 msgid "Preferences"
 msgstr ""
 
@@ -2543,6 +2441,10 @@ msgstr ""
 msgid "mm/min"
 msgstr ""
 
+#: alphacam_gtk/ui/preferences.ui:118 alphacam_gtk/window.py:43
+msgid "Tool change"
+msgstr ""
+
 #: alphacam_gtk/ui/preferences.ui:119
 msgid "seconds for the operator to change a tool"
 msgstr ""
@@ -2581,6 +2483,18 @@ msgstr ""
 
 #: alphacam_gtk/ui/preferences.ui:162
 msgid "Same as the desktop"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:174
+msgid "Lathe"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:177
+msgid "Memory"
+msgstr ""
+
+#: alphacam_gtk/ui/preferences.ui:178
+msgid "KB for CAM programs; Send asks before sending a bigger one"
 msgstr ""
 
 #: alphacam_gtk/ui/remove-setup.ui:11
@@ -2642,12 +2556,12 @@ msgid "Notes for the operator"
 msgstr ""
 
 #: alphacam_gtk/ui/shortcuts.ui:16 alphacam_gtk/ui/window.ui:32
-#: alphacam_gtk/ui/window.ui:186
+#: alphacam_gtk/ui/window.ui:183
 msgid "Main Menu"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:28 alphacam_gtk/ui/window.ui:486
-#: alphacam_gtk/ui/window.ui:551
+#: alphacam_gtk/ui/shortcuts.ui:28 alphacam_gtk/ui/window.ui:494
+#: alphacam_gtk/ui/window.ui:559
 msgid "Keyboard Shortcuts"
 msgstr ""
 
@@ -2667,7 +2581,7 @@ msgstr ""
 msgid "Open"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:69 alphacam_gtk/ui/window.ui:510
+#: alphacam_gtk/ui/shortcuts.ui:69 alphacam_gtk/ui/window.ui:518
 msgid "Save"
 msgstr ""
 
@@ -2783,8 +2697,7 @@ msgstr ""
 msgid "Pages"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:250 alphacam_gtk/ui/window.ui:138
-#: alphacam_gtk/ui/window.ui:225
+#: alphacam_gtk/ui/shortcuts.ui:250 alphacam_gtk/ui/window.ui:228
 msgid "Part"
 msgstr ""
 
@@ -2812,11 +2725,11 @@ msgstr ""
 msgid "View"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:297 alphacam_gtk/ui/window.ui:258
+#: alphacam_gtk/ui/shortcuts.ui:297 alphacam_gtk/ui/window.ui:261
 msgid "Zoom In"
 msgstr ""
 
-#: alphacam_gtk/ui/shortcuts.ui:303 alphacam_gtk/ui/window.ui:269
+#: alphacam_gtk/ui/shortcuts.ui:303 alphacam_gtk/ui/window.ui:272
 msgid "Zoom Out"
 msgstr ""
 
@@ -3020,95 +2933,95 @@ msgstr ""
 msgid "Open the _Training Manual"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:103
+#: alphacam_gtk/ui/window.ui:107
 msgid "Operations"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:112
+#: alphacam_gtk/ui/window.ui:114
 msgid "Add Operation (C)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:153
+#: alphacam_gtk/ui/window.ui:150
 msgid "Open (Ctrl+O)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:160
+#: alphacam_gtk/ui/window.ui:157
 msgid "Save (Ctrl+S)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:169
+#: alphacam_gtk/ui/window.ui:166
 msgid "Undo (Ctrl+Z)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:176
+#: alphacam_gtk/ui/window.ui:173
 msgid "Redo (Ctrl+Shift+Z)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:192
+#: alphacam_gtk/ui/window.ui:189
 msgid "Export ALPHA-T Program (Ctrl+E)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:196
+#: alphacam_gtk/ui/window.ui:193
 msgid "_Export PRG"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:205
+#: alphacam_gtk/ui/window.ui:202
 msgid "Touch Lock (Hold to Unlock by Touch)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:240
+#: alphacam_gtk/ui/window.ui:243
 msgid "Drawing"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:325
+#: alphacam_gtk/ui/window.ui:328
 msgid "Search, or N10 to go to a block"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:384
+#: alphacam_gtk/ui/window.ui:387
 msgid "Search (Ctrl+F)"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:458 alphacam_gtk/ui/window.ui:502
+#: alphacam_gtk/ui/window.ui:466 alphacam_gtk/ui/window.ui:510
 msgid "New Part…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:462 alphacam_gtk/ui/window.ui:506
+#: alphacam_gtk/ui/window.ui:470 alphacam_gtk/ui/window.ui:514
 msgid "Open…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:466
+#: alphacam_gtk/ui/window.ui:474
 msgid "Open Machine Page"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:494 alphacam_gtk/ui/window.ui:559
+#: alphacam_gtk/ui/window.ui:502 alphacam_gtk/ui/window.ui:567
 msgid "About AlphaLink CAM"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:514
+#: alphacam_gtk/ui/window.ui:522
 msgid "Save As…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:518
+#: alphacam_gtk/ui/window.ui:526
 msgid "Save as ALPHA-T Drawing…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:529
+#: alphacam_gtk/ui/window.ui:537
 msgid "Show Grid"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:537
+#: alphacam_gtk/ui/window.ui:545
 msgid "Turn Part Around…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:541
+#: alphacam_gtk/ui/window.ui:549
 msgid "Remove This Setup…"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:567
+#: alphacam_gtk/ui/window.ui:575
 msgid "Templates"
 msgstr ""
 
-#: alphacam_gtk/ui/window.ui:571
+#: alphacam_gtk/ui/window.ui:579
 msgid "Save Operations as Template…"
 msgstr ""
 
@@ -3459,6 +3372,10 @@ msgstr ""
 msgid "incomplete (see banner)"
 msgstr ""
 
+#: rust/alphacam/src/post/alphat_prg.rs
+msgid "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs"
+msgstr ""
+
 #: rust/alphacam-gtk/src/drawing_tools/mod.rs
 msgid "Tap an element or an operation"
 msgstr ""
@@ -3489,6 +3406,14 @@ msgstr ""
 
 #: rust/alphacam-gtk/src/drawing_tools/mod.rs
 msgid "Cursor and Measure"
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "Program too big for the lathe?"
+msgstr ""
+
+#: rust/alphacam-gtk/src/machine.rs
+msgid "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send it only if the lathe has more memory; otherwise split the part into two programs."
 msgstr ""
 
 #: rust/alphacam-gtk/src/machine.rs
@@ -3553,6 +3478,98 @@ msgstr ""
 
 #: rust/alphacam-gtk/src/op_editor.rs
 msgid "Pulls off to the axis"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "TITLE"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "DATE"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool Start X"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Maximum X"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tool Start Z"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Maximum Z"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Op. No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Total Passes"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Depth Of Cut"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Time"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "one per pass"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Block"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Restart #140"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Pass No."
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "RAPID TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "FEED  TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "centre"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "THREAD TO"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "DWELL"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "revs"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "bore"
+msgstr ""
+
+#: rust/alphacam-gtk/src/report.rs
+msgid "Tools, in loading order"
 msgstr ""
 
 #: rust/alphacam-gtk/src/tools_page.rs

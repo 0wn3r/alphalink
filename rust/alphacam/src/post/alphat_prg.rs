@@ -446,6 +446,16 @@ pub fn post(project: &Project, profile: Option<&MachineProfile>, library: Option
     }
     block += 1;
     w.emit([format!("N{}", block * 10), "M65".into(), "%".into()]);
+    if let Some(label) = repeated_label(&w.lines) {
+        // ALPHA-T numbers the operation blocks N10, N20... and the restart points N502, N503...: a long program
+        // repeats a label, and the control's restart (GOTO[#129*10] searches forward from the top) would start
+        // inside an earlier operation
+        return value(tr(
+            "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could \
+             start in the wrong place; split the part into two programs",
+            &[("label", &label)],
+        ));
+    }
     let mut out = String::new();
     for line in &w.lines {
         out.push_str(line);
@@ -454,3 +464,11 @@ pub fn post(project: &Project, profile: Option<&MachineProfile>, library: Option
     Ok(out.into_bytes())
 }
 
+/// The first label (`N<number>` on a line of its own) that the program uses twice.
+fn repeated_label(lines: &[String]) -> Option<u32> {
+    let mut seen = std::collections::HashSet::new();
+    lines
+        .iter()
+        .filter_map(|l| l.strip_prefix('N').and_then(|n| n.parse::<u32>().ok()))
+        .find(|&n| !seen.insert(n))
+}

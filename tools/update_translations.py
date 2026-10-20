@@ -26,7 +26,8 @@ def rust_only(pot: str) -> str:
     # each msgid in its escaped form, its continued lines joined (as the Rust literal is written)
     known = {"".join(re.findall(r'"(.*)"', b)) for b in re.findall(r'\nmsgid ((?:".*"\n)+)', pot)}
     out, seen = [], set()
-    for path in sorted((APP.parent / "rust" / "alphacam-gtk" / "src").rglob("*.rs")):
+    rust = APP.parent / "rust"
+    for path in sorted([*(rust / "alphacam-gtk" / "src").rglob("*.rs"), *(rust / "alphacam" / "src").rglob("*.rs")]):
         text = re.sub(r"\\\n\s*", "", path.read_text())  # a string continued on the next line
         for m in re.finditer(r'\b(?:gettext|tr|n_!)\(\s*"((?:[^"\\]|\\.)*)"', text):
             raw = m.group(1)

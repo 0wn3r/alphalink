@@ -1926,7 +1926,8 @@ impl MainWindow {
             update_settings(|s| s.export_sdg = on)
         });
         type Field = fn(&mut crate::settings::Settings) -> &mut f64;
-        let rows: [(&str, Field); 3] = [
+        let rows: [(&str, Field); 4] = [
+            ("pref_memory_row", |s| &mut s.lathe_memory_kb),
             ("pref_spindle_row", |s| &mut s.spindle_max),
             ("pref_rapid_row", |s| &mut s.rapid_rate),
             ("pref_tool_change_row", |s| &mut s.tool_change_s),

@@ -548,6 +548,17 @@ impl MachinePage {
                 ("steps", &steps),
             ],
         ));
+        let memory_kb = settings().lathe_memory_kb;
+        if data.len() as f64 > memory_kb * 1024.0 {
+            // the Alphalink manual gives the standard control about 16 KB of CAM memory; some have more, so it only asks
+            alert.set_heading(Some(&gettext("Program too big for the lathe?")));
+            alert.set_body(&format!("{}\n\n{}", tr(
+                "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send \
+                 it only if the lathe has more memory; otherwise split the part into two programs.",
+                &[("memory", &memory_kb), ("size", &data.len())],
+            ), alert.body()));
+            alert.set_response_appearance("send", adw::ResponseAppearance::Destructive);
+        }
         // exactly the program this dialog describes, even if the part changes meanwhile
         alert.connect_response(None, glib::clone!(#[weak(rename_to = this)] self, move |_, r| {
             if r == "send" {
