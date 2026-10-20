@@ -150,6 +150,9 @@ def default_op(kind: str, p: Project, index: int = 0) -> Op:
     return op({"type": kind, **shapes[kind]})
 
 
+APP_ID = "io.github._0wn3r.AlphaLinkCAM"
+
+
 def cli() -> list[str]:
     """The Rust command line tool (binary `alphacam`, crate alphacam-cli): $ALPHALINK_CLI, `alphacam` on the PATH, the
     repo's cargo build (built when missing), or the installed Flatpak's."""
@@ -158,11 +161,17 @@ def cli() -> list[str]:
         return [found]
     rust = Path(__file__).resolve().parents[3] / "rust"
     exe = rust / "target/release/alphacam"
-    if not exe.exists() and shutil.which("cargo"):
+    if not exe.exists() and (rust / "Cargo.toml").exists() and shutil.which("cargo"):
         subprocess.run(["cargo", "build", "--release", "-q", "-p", "alphacam-cli"], cwd=rust, check=True)
     if exe.exists():
         return [str(exe)]
-    return ["flatpak", "run", "--command=alphacam", "io.github._0wn3r.AlphaLinkCAM"]
+    # the installed Flatpak's binary, run on the host: it needs only libc, and `flatpak run` would not see the
+    # host's /tmp, where the tests keep their files
+    where = subprocess.run(["flatpak", "info", "--show-location", APP_ID], capture_output=True, text=True).stdout.strip()
+    exe = Path(where) / "files/bin/alphacam"
+    if where and subprocess.run([str(exe), "--help"], capture_output=True).returncode == 0:
+        return [str(exe)]
+    raise FileNotFoundError("no alphacam: set ALPHALINK_CLI, build rust/ with cargo or install the Flatpak")
 
 
 def post(p: Project) -> bytes:
