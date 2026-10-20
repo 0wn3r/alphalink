@@ -1140,6 +1140,29 @@ class NumbersEverywhere(Bus):
         self.app.find("✓", "button")
         self.snap("keypad")
 
+    def test_coordinate_entry_keypad_by_finger(self):
+        """Eduard 2026-10-20 (Surface): a finger on the X,Z entry under the drawing opens the app's keypad, and what
+        is typed there draws the line."""
+        path = self.part(Project(billet=Billet(100, 60), first_tool=3))
+        self.launch(str(path), "--touch")
+        self.tap("Line", "radio button")
+        entry = [e for e in self.app.all(None, "entry") if e.y > self.s.height / 2][0]
+        self.s.tap(*self.app.center(acc=entry))
+        time.sleep(0.6)
+        self.snap("entry-tapped")
+        self.app.find("✓", "button", timeout=3)
+        self.assertTrue(self.app.exists("⌫", "button"), "the keypad, not the system keyboard")
+        for k in ("0", "→", "0", "✓"):
+            self.tap(k, "button")
+        self.s.tap(*self.app.center(acc=[e for e in self.app.all(None, "entry") if e.y > self.s.height / 2][0]))
+        self.app.find("✓", "button", timeout=3)
+        for k in ("4", "0", "→", "0", "✓"):
+            self.tap(k, "button")
+        time.sleep(0.4)
+        self.tap("Done", "button")
+        g = self.saved(path).geometry
+        self.assertEqual([(e.a, e.b) for e in g], [(Point(0, 0), Point(40, 0))])
+
 
 @unittest.skipUnless(ENABLED, "end-to-end UI tests: set ALPHALINK_E2E=1")
 class ShortcutsWindow(Bus):
