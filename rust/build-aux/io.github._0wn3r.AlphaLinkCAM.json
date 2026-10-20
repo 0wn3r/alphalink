@@ -30,8 +30,8 @@
       "name": "alphalink-cam",
       "buildsystem": "simple",
       "build-commands": [
-        "cargo --offline build --release --manifest-path rust/Cargo.toml -p alphacam-gtk",
-        "install -Dm755 rust/target/release/alphalink-cam -t ${FLATPAK_DEST}/bin",
+        "cargo --offline build --release --manifest-path rust/Cargo.toml -p alphacam-gtk -p alphacam-cli",
+        "install -Dm755 rust/target/release/alphalink-cam rust/target/release/alphacam -t ${FLATPAK_DEST}/bin",
         "install -Dm644 app/alphacam_gtk/help/*.md -t ${FLATPAK_DEST}/share/alphalink-cam/help",
         "install -Dm644 app/alphacam_gtk/manuals/*.pdf -t ${FLATPAK_DEST}/share/alphalink-cam/manuals",
         "for mo in app/alphacam_gtk/locale/*/LC_MESSAGES/alphalink-cam.mo; do lang=$(basename $(dirname $(dirname $mo))); install -Dm644 $mo ${FLATPAK_DEST}/share/locale/$lang/LC_MESSAGES/alphalink-cam.mo; done",

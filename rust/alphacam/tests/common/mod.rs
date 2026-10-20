@@ -1,4 +1,4 @@
-//! Shared by the tests that replay what tools/export_rust_core_fixtures.py recorded from the Python app.
+//! Shared by the tests that replay what the retired Python app's exporter recorded from the Python app.
 
 #![allow(dead_code)]
 

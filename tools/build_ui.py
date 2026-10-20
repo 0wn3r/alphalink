@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Compile app/alphacam_gtk/ui/*.blp (Blueprint) to the .ui files next to them, which the app loads (alphacam_gtk/ui.py).
+"""Compile app/alphacam_gtk/ui/*.blp (Blueprint) to the .ui files next to them, which the app loads (built into it as a GResource).
 Run after editing a .blp, then tools/update_translations.py when strings changed; commit both files.
 
 Needs blueprint-compiler (`pip install blueprint-compiler`, or the distribution's package) and the GTK 4 and libadwaita
 introspection data of the GNOME runtime the app targets; BLUEPRINT_COMPILER names another command to run. Each .ui
-records the hash of its .blp, so tests/test_ui.py notices a .blp edited without recompiling, without the compiler.
+records the hash of its .blp, so the app's tests (rust/alphacam-gtk/src/ui.rs) notice a .blp edited without recompiling, without the compiler.
 
 Run from anywhere: python3 tools/build_ui.py"""
 

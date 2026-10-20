@@ -7,3 +7,4 @@ _to_delete/
 build/
 *.egg-info/
 app/e2e-out/
+rust/build-aux/commit
