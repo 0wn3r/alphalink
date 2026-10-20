@@ -141,5 +141,22 @@ Adw.PreferencesDialog preferences {
         };
       }
     }
+
+    // last, so the rows above stay where the e2e tests and people's habits expect them
+    Adw.PreferencesGroup {
+      title: _("Lathe");
+
+      Adw.SpinRow pref_memory_row {
+        title: _("Memory");
+        subtitle: _("KB for CAM programs; Send asks before sending a bigger one");
+
+        adjustment: Adjustment {
+          lower: 1;
+          upper: 1024;
+          step-increment: 1;
+          page-increment: 16;
+        };
+      }
+    }
   }
 }

@@ -1153,71 +1153,8 @@ msgstr[0] "{n} зміна інструмента"
 msgstr[1] "{n} зміни інструмента"
 msgstr[2] "{n} змін інструмента"
 
-msgid "DATE"
-msgstr "ДАТА"
-
-msgid "TITLE"
-msgstr "НАЗВА"
-
 msgid "  (no program)"
 msgstr "  (немає програми)"
-
-msgid "Cycle time"
-msgstr "Час циклу"
-
-msgid "Program"
-msgstr "Програма"
-
-msgid "Operation"
-msgstr "Операція"
-
-msgid "Tool No."
-msgstr "Інстр. №"
-
-msgid "Tool change"
-msgstr "Зміна інструмента"
-
-msgid "Maximum X"
-msgstr "Межа X"
-
-msgid "Tool Start X"
-msgstr "Поч. точка X"
-
-msgid "Maximum Z"
-msgstr "Межа Z"
-
-msgid "Tool Start Z"
-msgstr "Поч. точка Z"
-
-msgid "Op. No."
-msgstr "Опер. №"
-
-msgid "Total Passes"
-msgstr "Проходів"
-
-msgid "Depth Of Cut"
-msgstr "Глибина різання"
-
-msgid "Time"
-msgstr "Час"
-
-msgid "Block"
-msgstr "Блок"
-
-msgid "Restart #140"
-msgstr "Перезапуск #140"
-
-msgid "one per pass"
-msgstr "по одному на прохід"
-
-msgid "Pass No."
-msgstr "Прохід №"
-
-msgid "RAPID TO"
-msgstr "ПРИСК. ДО"
-
-msgid "FEED  TO"
-msgstr "ПОДАЧА ДО"
 
 msgid "ARC CCW TO"
 msgstr "ДУГА ПРГС ДО"
@@ -1225,17 +1162,8 @@ msgstr "ДУГА ПРГС ДО"
 msgid "ARC CW TO"
 msgstr "ДУГА ГС ДО"
 
-msgid "centre"
-msgstr "центр"
-
-msgid "THREAD TO"
-msgstr "РІЗЬБА ДО"
-
-msgid "DWELL"
-msgstr "ВИТРИМКА"
-
-msgid "revs"
-msgstr "об."
+msgid "Program"
+msgstr "Програма"
 
 msgid "Units"
 msgstr "Одиниці"
@@ -1243,23 +1171,20 @@ msgstr "Одиниці"
 msgid "Billet"
 msgstr "Заготовка"
 
-msgid "bore"
-msgstr "отвір"
+msgid "Cycle time"
+msgstr "Час циклу"
 
 msgid "Date"
 msgstr "Дата"
-
-msgid "Tools, in loading order"
-msgstr "Інструменти в порядку встановлення"
-
-msgid "Notes"
-msgstr "Примітки"
 
 msgid "UNTITLED"
 msgstr "БЕЗ НАЗВИ"
 
 msgid "SETUP {n}"
 msgstr "ВСТАНОВЛЕННЯ {n}"
+
+msgid "Notes"
+msgstr "Примітки"
 
 msgid "There is no program to print yet"
 msgstr "Ще немає програми для друку"
@@ -1681,6 +1606,9 @@ msgstr "Розмір заготовки й одиниці. Креслення с
 msgid "_Create"
 msgstr "_Створити"
 
+msgid "Operation"
+msgstr "Операція"
+
 msgid "Move Up"
 msgstr "Перемістити вгору"
 
@@ -1750,6 +1678,9 @@ msgstr "Швидкість прискореного переміщення"
 msgid "mm/min"
 msgstr "мм/хв"
 
+msgid "Tool change"
+msgstr "Зміна інструмента"
+
 msgid "seconds for the operator to change a tool"
 msgstr "секунд оператору на зміну інструмента"
 
@@ -1779,6 +1710,15 @@ msgstr "Діє після перезапуску застосунку."
 
 msgid "Same as the desktop"
 msgstr "Як у системі"
+
+msgid "Lathe"
+msgstr "Верстат"
+
+msgid "Memory"
+msgstr "Пам'ять"
+
+msgid "KB for CAM programs; Send asks before sending a bigger one"
+msgstr "КБ для CAM-програм; перед надсиланням більшої програми з'явиться запитання"
 
 msgid "Its drawing and operations are removed from the part. This cannot be undone, but the file on disk keeps it until you save."
 msgstr "Його креслення й операції буде видалено з деталі. Цього не можна скасувати, але файл на диску зберігає його, доки ви не збережете деталь."
@@ -2401,6 +2341,9 @@ msgstr "Програма {number} · {units} · рядків: {lines} · {size} 
 msgid "incomplete (see banner)"
 msgstr "неповна (див. повідомлення вгорі)"
 
+msgid "the program is too long for ALPHA-T's label numbers: N{label} would be used twice, so a restart could start in the wrong place; split the part into two programs"
+msgstr "програма задовга для нумерації міток ALPHA-T: мітка N{label} повторилася б, і перезапуск міг би початися не з того місця; розділіть деталь на дві програми"
+
 msgid "Tap an element or an operation"
 msgstr "Торкніться елемента або операції"
 
@@ -2424,6 +2367,12 @@ msgstr "Елементи деталі"
 
 msgid "Cursor and Measure"
 msgstr "Курсор і вимірювання"
+
+msgid "Program too big for the lathe?"
+msgstr "Програма завелика для верстата?"
+
+msgid "The lathe holds {memory} KB of CAM programs (Preferences) and this program is {size} bytes. Send it only if the lathe has more memory; otherwise split the part into two programs."
+msgstr "Верстат вміщує {memory} КБ CAM-програм (Параметри), а ця програма має {size} байт. Надсилайте її, лише якщо у верстата більше пам'яті; інакше розділіть деталь на дві програми."
 
 msgid "The connection was lost after {done} of {total} bytes. The program on the lathe is incomplete: check the cable and send it again."
 msgstr "Зв’язок обірвався після {done} з {total} байт. Програма на верстаті неповна: перевірте кабель і надішліть її знову."
@@ -2472,6 +2421,75 @@ msgstr "Зачищає кожен уступ"
 
 msgid "Pulls off to the axis"
 msgstr "Відведення до осі"
+
+msgid "TITLE"
+msgstr "НАЗВА"
+
+msgid "DATE"
+msgstr "ДАТА"
+
+msgid "Tool No."
+msgstr "Інстр. №"
+
+msgid "Tool Start X"
+msgstr "Поч. точка X"
+
+msgid "Maximum X"
+msgstr "Межа X"
+
+msgid "Tool Start Z"
+msgstr "Поч. точка Z"
+
+msgid "Maximum Z"
+msgstr "Межа Z"
+
+msgid "Op. No."
+msgstr "Опер. №"
+
+msgid "Total Passes"
+msgstr "Проходів"
+
+msgid "Depth Of Cut"
+msgstr "Глибина різання"
+
+msgid "Time"
+msgstr "Час"
+
+msgid "one per pass"
+msgstr "по одному на прохід"
+
+msgid "Block"
+msgstr "Блок"
+
+msgid "Restart #140"
+msgstr "Перезапуск #140"
+
+msgid "Pass No."
+msgstr "Прохід №"
+
+msgid "RAPID TO"
+msgstr "ПРИСК. ДО"
+
+msgid "FEED  TO"
+msgstr "ПОДАЧА ДО"
+
+msgid "centre"
+msgstr "центр"
+
+msgid "THREAD TO"
+msgstr "РІЗЬБА ДО"
+
+msgid "DWELL"
+msgstr "ВИТРИМКА"
+
+msgid "revs"
+msgstr "об."
+
+msgid "bore"
+msgstr "отвір"
+
+msgid "Tools, in loading order"
+msgstr "Інструменти в порядку встановлення"
 
 msgid "Delete Tool"
 msgstr "Видалити інструмент"
