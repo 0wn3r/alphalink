@@ -4,6 +4,8 @@ using Adw 1;
 // setup 2 of the part (workflow improvements, step 6), in the same file: the first setup's drawing turned end for end;
 // window.py adds the second response, Turn Around or Replace Setup 2
 Adw.AlertDialog turn_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("Turn Part Around");
   close-response: "cancel";
 

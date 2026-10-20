@@ -254,6 +254,8 @@ struct St {
     touch: bool,
     /// picking a contour by keys: the element Space adds or removes ([ ] l a move it)
     pick_at: Option<String>,
+    /// the end point last tapped with Select: a typed point draws a line from it (Eduard, 2026-10-20)
+    start_at: Option<Point>,
 }
 
 impl Default for St {
@@ -274,6 +276,7 @@ impl Default for St {
             ctx_at: (0.0, 0.0),
             mov: None,
             touch: false,
+            start_at: None,
             pick_at: None,
         }
     }
@@ -572,7 +575,11 @@ impl DrawingTools {
             return;
         }
         let p = Point::new(x, z);
-        self.s.borrow_mut().cursor = Some(p);
+        {
+            let mut s = self.s.borrow_mut();
+            s.cursor = Some(p);
+            s.start_at = None;
+        }
         self.c.state_mut().overlay.cursor = None;
         self.readout(&readout_xz(p)); // a tap shows where it landed, as the pointer does
         if self.s.borrow().construct.is_some() {
@@ -607,6 +614,11 @@ impl DrawingTools {
                 } else {
                     w.select_op(None);
                     self.select_element_(None);
+                }
+                let (pt, kind) = drawing::snap(&project, p, tol, grid(&project));
+                if kind == "end" {
+                    self.s.borrow_mut().start_at = Some(pt);
+                    self.c.overlay(|o| o.marker = Some((pt, MarkerKind::End)));
                 }
             }
             "line" => {
@@ -694,6 +706,7 @@ impl DrawingTools {
                 !s.points.is_empty() || !s.arc_pts.is_empty() || s.corner_first.is_some(),
             )
         };
+        self.s.borrow_mut().start_at = None;
         if construct {
             self.cancel_construct();
         } else if pick {
@@ -1275,6 +1288,11 @@ impl DrawingTools {
             return;
         }
         let arc = self.tool() == "arc";
+        let start = if arc || !self.s.borrow().points.is_empty() { None } else { self.s.borrow_mut().start_at.take() };
+        if let Some(start) = start {
+            self.line_tool();
+            self.s.borrow_mut().points.push(start);
+        }
         if rel {
             let last = {
                 let s = self.s.borrow();

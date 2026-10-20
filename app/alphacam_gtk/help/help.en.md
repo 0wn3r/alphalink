@@ -55,6 +55,7 @@ The tools are in the bar under the drawing.
   - Tapping the first point again closes the profile. With a finger, the chip on the last line shows its end; tap it to correct the point on the keypad.
   - **Done** or **Esc** finishes the line; the next tap starts a new one.
   - In touch mode the keypad button opens a big number pad for X and Z.
+  - With **Select**, tap an end point and type the next point: the line starts at that end.
 - **Arc**: three points: start, a point on the arc, end.
 - **Fillet**: tap a corner between two lines, then pick a radius or type one.
 - **Chamfer**: tap a corner, set the angle (30°, 45°, 60° or any), then pick a size or type one. The size is measured along the line that runs along Z, the angle is between the chamfer and that line: 2×30° on a shoulder is 2 mm along the diameter and 1.155 mm down the face.

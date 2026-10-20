@@ -3,6 +3,8 @@ using Adw 1;
 
 // ATDXF: a DXF becomes a new part. Lathe drawings usually give Y as a radius; units are the DXF's.
 Adw.AlertDialog dxf_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("Import DXF");
   default-response: "import";
   close-response: "cancel";
