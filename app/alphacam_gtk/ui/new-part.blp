@@ -3,6 +3,8 @@ using Adw 1;
 
 // New part: units and billet; the drawing starts empty (draw with the Line tool or type X,Z)
 Adw.AlertDialog new_part_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("New Part");
   body: _("Billet size and units. The drawing starts empty.");
   default-response: "create";

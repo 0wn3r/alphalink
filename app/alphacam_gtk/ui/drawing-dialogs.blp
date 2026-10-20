@@ -4,6 +4,8 @@ using Adw 1;
 // The drawing tools' dialogs (drawing_tools.py fills in the values and the texts that name the place or element).
 
 Adw.AlertDialog text_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("Text");
   default-response: "add";
   close-response: "cancel";
@@ -52,6 +54,8 @@ Adw.AlertDialog erase_alert {
 
 // Edit Element: the selected line's or arc's end points (and an arc's radius)
 Adw.AlertDialog edit_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   body: _("End points as X (diameter), Z.");
   default-response: "ok";
   close-response: "cancel";
@@ -128,6 +132,8 @@ Adw.AlertDialog edit_alert {
 
 // a standard thread on the selected diameter line (the size and pitch lists follow the standard)
 Adw.AlertDialog thread_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("Standard Thread");
   default-response: "add";
   close-response: "cancel";
@@ -173,6 +179,8 @@ Adw.AlertDialog thread_alert {
 
 // the numbers a drawing command asks for (drawing_tools.py adds a row per number)
 Adw.AlertDialog numbers_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   default-response: "ok";
   close-response: "cancel";
 

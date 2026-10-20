@@ -11,12 +11,12 @@ import subprocess
 import sys
 import unittest
 
-from . import test_interaction, test_workflows
+from . import test_interaction, test_surface_reports, test_workflows
 
 
 def ids(names: list[str]) -> list[str]:
     suite = unittest.TestSuite(unittest.defaultTestLoader.loadTestsFromModule(m)
-                               for m in (test_workflows, test_interaction))
+                               for m in (test_workflows, test_interaction, test_surface_reports))
     out = []
 
     def walk(s):

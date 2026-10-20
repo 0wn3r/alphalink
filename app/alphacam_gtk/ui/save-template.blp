@@ -3,6 +3,8 @@ using Adw 1;
 
 // job templates (workflow improvements, step 4)
 Adw.AlertDialog template_alert {
+  // wide: rows with − / + keep room for their titles (touch mode on the Surface)
+  prefer-wide-layout: true;
   heading: _("Save Operations as Template");
   body: _("The operations with their tools and settings, without the drawing. A template picks the contours from the part it is applied to.");
   default-response: "save";
