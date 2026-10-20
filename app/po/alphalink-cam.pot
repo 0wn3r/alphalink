@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: alphalink-cam 0.1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-19 23:10+0000\n"
+"POT-Creation-Date: 2026-10-20 12:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -1023,6 +1023,10 @@ msgid "Tool numbers are the lathe's tool memory slots."
 msgstr ""
 
 #: alphacam_gtk/ui/tools-page.ui:90
+msgid "Export Tool Library…"
+msgstr ""
+
+#: alphacam_gtk/ui/tools-page.ui:96
 msgid "Reset to ALPHA-T Tools"
 msgstr ""
 
@@ -2347,6 +2351,14 @@ msgid "{name} is removed from your tool library. Parts that use it fall back to 
 msgstr ""
 
 #: rust/alphacam-gtk/src/tools_page.rs
+msgid "Tool libraries"
+msgstr ""
+
+#: rust/alphacam-gtk/src/tools_page.rs
+msgid "AlphaLink CAM tool library (.json)"
+msgstr ""
+
+#: rust/alphacam-gtk/src/tools_page.rs
 msgid "ALPHA-T tool library (ATOOLIB.TL1)"
 msgstr ""
 
@@ -2356,6 +2368,10 @@ msgstr ""
 
 #: rust/alphacam-gtk/src/tools_page.rs
 msgid "Could not import {name}: {error}"
+msgstr ""
+
+#: rust/alphacam-gtk/src/tools_page.rs
+msgid "Export Tool Library"
 msgstr ""
 
 #: rust/alphacam-gtk/src/tools_page.rs
