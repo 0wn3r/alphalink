@@ -1597,8 +1597,11 @@ class KeyboardOnlyJob(VirtualPort, Bus):
         self.s.key("ctrl+n")
         time.sleep(0.8)
         self.s.key("Return")  # Create, with the default billet
-        time.sleep(0.8)
+        # typing before the dialog has gone loses the first point (a 3-line profile on a slow run)
+        self.wait_for(lambda: self.app.state()["project"], 10, "the new part")
+        time.sleep(0.3)
         self.s.type("x0,0\n40,0\n40,-25\n60,-25\n60,-50\n")
+        self.wait_for(lambda: self.app.state()["elements"] == 4, 10, "the 4 typed lines")
         self.s.key("Escape")
         time.sleep(0.3)
         self.assertEqual(self.app.state()["elements"], 4)
