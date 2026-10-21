@@ -536,6 +536,7 @@ impl MainWindow {
             "view": {"scale": view.scale, "ox": view.ox, "oy": view.oy},
             "tool": tool,
             "sim_index": sim,
+            "project": project.is_some(),
             "elements": project.as_ref().map_or(0, |p| p.geometry.len()),
             "operations": ops,
             "selected_op": self.selected_index(),
