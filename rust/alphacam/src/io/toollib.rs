@@ -19,7 +19,7 @@ use crate::error::{Result, value};
 use crate::i18n::tr;
 use crate::model::tools::{Polyline, tool_from_record};
 use crate::model::{Tool, ToolLibrary};
-use crate::py::{fmod_floor, hypot, round};
+use crate::py::{fmod_floor, round};
 
 pub const RECORD: usize = 256;
 
@@ -81,7 +81,7 @@ pub fn read_tl2(data: &[u8]) -> Result<BTreeMap<i32, Vec<Polyline>>> {
                 continue;
             }
             let (cz, cr) = pts[(c.abs() - 1) as usize];
-            let r = hypot(p.0 - cz, p.1 - cr);
+            let r = f64::hypot(p.0 - cz, p.1 - cr);
             let (a0, a1) = ((p.1 - cr).atan2(p.0 - cz), (q.1 - cr).atan2(q.0 - cz));
             let sweep = if c > 0 { fmod_floor(a1 - a0, 2.0 * PI) } else { -fmod_floor(a0 - a1, 2.0 * PI) };
             let steps = 4.max((sweep.abs() / (PI / 18.0)) as i64);

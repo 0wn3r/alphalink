@@ -29,6 +29,10 @@ zbus = { version = "5", default-features = false, features = ["blocking-api", "a
 # command line (alphacam-cli)
 clap = { version = "4", features = ["derive"] }
 dxf = "0.6"
+# the in-app help (alphacam-gtk help.rs): Markdown events, rendered as Pango markup
+# 2D polylines with arcs: the stock left by the simulation (alphacam stock.rs)
+cavalier_contours = "0.9"
+pulldown-cmark = { version = "0.13", default-features = false }
 sha2 = "0.10"
 indexmap = "2"
 libm = "0.2"

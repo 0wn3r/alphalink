@@ -22,7 +22,7 @@
 //! The contour of every profile operation is the drawing's chain. The rebuilt project can be checked by posting it
 //! and comparing with the .PRG ALPHA-T wrote (see verify()).
 
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::LazyLock;
 
 use regex::Regex;
@@ -395,12 +395,8 @@ pub fn load_sd1(path: impl AsRef<Path>, project: &Project) -> Result<Vec<Operati
     read_sd1(&ascii_replace(&read_file(path.as_ref())?), project)
 }
 
-/// NAME.SDG -> NAME.SD1 (upper case first, then lower case) when it exists.
-pub fn sibling(path: impl AsRef<Path>, suffix: &str) -> Option<PathBuf> {
-    let path = path.as_ref();
-    let ext = suffix.trim_start_matches('.');
-    [ext.to_uppercase(), ext.to_lowercase()].into_iter().map(|e| path.with_extension(e)).find(|c| c.exists())
-}
+/// NAME.SDG -> NAME.SD1 (or name.sd1, any case) when it exists: the same lookup as the tool library's.
+pub use super::toollib::sibling;
 
 /// True if posting the project gives exactly the bytes ALPHA-T wrote.
 pub fn verify(project: &Project, prg_path: impl AsRef<Path>) -> bool {

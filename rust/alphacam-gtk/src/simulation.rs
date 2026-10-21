@@ -157,10 +157,10 @@ impl SimulationBar {
         self.update_label();
     }
 
-    /// Show the first `index` moves done (None: everything).
+    /// Show the first `index` moves done (None: everything, without the stock; all `n` moves: the finished stock).
     pub fn goto(&self, index: Option<usize>) {
         let n = self.moves();
-        let sim = index.filter(|i| *i < n);
+        let sim = index.filter(|i| *i <= n);
         self.set_sim(sim);
         self.set_scale(sim.unwrap_or(n) as f64);
         self.update_label();
@@ -245,7 +245,7 @@ impl SimulationBar {
     fn tick(&self) -> glib::ControlFlow {
         let i = self.canvas().state().sim_index.unwrap_or(0) + 1;
         if i >= self.moves() {
-            self.goto(None);
+            self.goto(Some(self.moves())); // the end: the tool on the last point, the stock as the program leaves it
             let imp = self.imp();
             imp.play.replace(None); // returning Break removes the source
             imp.play_button.set_icon_name("media-playback-start-symbolic");
@@ -357,8 +357,8 @@ mod tests {
         bar.stop();
         assert!(bar.imp().play.borrow().is_none());
         bar.goto(Some(n - 1));
-        assert_eq!(bar.tick(), glib::ControlFlow::Break); // past the last move: everything shown
-        assert_eq!(canvas.state().sim_index, None);
+        assert_eq!(bar.tick(), glib::ControlFlow::Break); // the last move: the finished stock stays shown
+        assert_eq!(canvas.state().sim_index, Some(n));
         bar.select_op(Some(99));
         assert!(!bar.imp().to_op.is_sensitive());
     }

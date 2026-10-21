@@ -117,6 +117,8 @@ Before export the app checks every move. A cut into the part, a move into the ch
 
 The buttons under the drawing step through the toolpath: first move, previous pass, play / pause, next pass, show all. The label shows the move, the operation, the pass and the program line. Keys: F5 plays and pauses, Ctrl+[ and Ctrl+] go to the previous and next pass, Alt+Home to the first move and Alt+End shows all; on the slider PgUp and PgDn move a tenth. The 1× button changes the speed, the button next to it jumps to the start of the selected operation, and tapping a toolpath jumps there. The tool is drawn at its tip: a simple shape from its type and angles, or ALPHA-T's own picture of it once the library has been imported from ATOOLIB.TL1 (Tools page ▸ Import Tool Library…) with its ATOOLIB.TL2 in the same folder.
 
+While the simulation runs, the shaded area is the stock still left of the billet: every cutting move takes away what the tool's insert, with its nose radius, passes through. At the end of play the finished part stays shaded, so material the program leaves behind and any cut into the drawn profile show at a glance. Show all hides the stock again.
+
 ## Sending to the lathe
 
 Connect the serial cable, then on the Machine page:

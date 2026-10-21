@@ -83,11 +83,10 @@ impl Settings {
     /// Preferences are a convenience: never fail an action because they could not be saved.
     fn save(&self) {
         let path = path();
-        let tmp = path.with_extension("tmp");
         let text = serde_json::to_string_pretty(self).unwrap_or_default() + "\n";
-        let _ = std::fs::create_dir_all(path.parent().unwrap_or(&path))
-            .and_then(|_| std::fs::write(&tmp, text))
-            .and_then(|_| std::fs::rename(&tmp, &path));
+        if std::fs::create_dir_all(path.parent().unwrap_or(&path)).is_ok() {
+            let _ = gtk::glib::file_set_contents(&path, text.as_bytes());
+        }
     }
 }
 

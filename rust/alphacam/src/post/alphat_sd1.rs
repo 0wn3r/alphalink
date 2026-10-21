@@ -28,7 +28,7 @@ use crate::model::{
 };
 use crate::numfmt::format_number;
 use crate::post::alphat_prg::{PREFINISH_LEAD_OUT_MM, tool as find_tool};
-use crate::py::{hypot, round};
+use crate::py::round;
 use crate::toolpath::area::{self, area_clear, collision_angle, retract_mm};
 use crate::toolpath::contour::{Seg, centre_path, chain, cos45, front_first, limit_dives, limits, mm, points, translate};
 use crate::toolpath::drill::drill;
@@ -143,7 +143,7 @@ fn contour_cycle(out: &mut Listing, path: &[Seg], r: f64, units: &str, c: Cycle)
     if c.face_mode && r != 0.0 && !cp[0].is_arc() {
         let s = cp[0];
         let (dr, dz) = ((s.b.x - s.a.x) / 2.0, s.b.z - s.a.z);
-        let len = hypot(dr, dz);
+        let len = f64::hypot(dr, dz);
         cp[0] = Seg::new(Point::new((s.a.x - 2.0 * r * dr / len).max(0.0), s.a.z - r * dz / len), s.b, s.centre, s.ccw);
     }
     if let Some((ox, oz)) = c.offsets {

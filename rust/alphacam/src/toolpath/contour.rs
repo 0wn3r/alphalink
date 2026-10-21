@@ -13,7 +13,7 @@ use std::f64::consts::PI;
 use crate::error::{Result, not_implemented, value};
 use crate::i18n::tr;
 use crate::model::{Element, Point};
-use crate::py::{fmt_g, fmod_floor, hypot, round};
+use crate::py::{fmt_g, fmod_floor, round};
 
 pub const MM_PER_INCH: f64 = 25.4;
 pub const EPS: f64 = 1e-7;
@@ -119,7 +119,7 @@ fn tool_normal(seg: &Seg, at_start: bool, side: f64) -> (f64, f64) {
     } else {
         (br - ar, bz - az)
     };
-    let n = hypot(tr_, tz);
+    let n = f64::hypot(tr_, tz);
     (side * -tz / n, side * tr_ / n)
 }
 
@@ -130,7 +130,7 @@ fn offset(seg: &Seg, d: f64, side: f64) -> Seg {
         return Seg::line(pt(ar + d * nr, az + d * nz), pt(br + d * nr, bz + d * nz));
     };
     let (cr, cz) = rz(c);
-    let radius = hypot(ar - cr, az - cz);
+    let radius = f64::hypot(ar - cr, az - cz);
     let (nr, nz) = tool_normal(seg, true, side);
     let grow = if nr * (ar - cr) + nz * (az - cz) > 0.0 { 1.0 } else { -1.0 };
     let k = (radius + grow * d) / radius;
@@ -160,14 +160,14 @@ fn join(s1: &Seg, s2: &Seg, near: Point) -> Result<Point> {
     }
     let ((ar, az), (br, bz), (cr, cz)) = (rz(line.a), rz(line.b), rz(arc.c()));
     let (pr, pz) = rz(arc.a);
-    let radius = hypot(pr - cr, pz - cz);
+    let radius = f64::hypot(pr - cr, pz - cz);
     let (dr, dz) = (br - ar, bz - az);
     let (fr, fz) = (ar - cr, az - cz);
     let (qa, qb, qc) = (dr * dr + dz * dz, 2.0 * (fr * dr + fz * dz), fr * fr + fz * fz - radius * radius);
     let disc = (qb * qb - 4.0 * qa * qc).max(0.0);
     let cands = [1.0, -1.0].map(|sgn| (-qb + sgn * disc.sqrt()) / (2.0 * qa));
     let (nr, nz) = rz(near);
-    let dist = |t: f64| hypot(ar + t * dr - nr, az + t * dz - nz);
+    let dist = |t: f64| f64::hypot(ar + t * dr - nr, az + t * dz - nz);
     let best = if dist(cands[1]) < dist(cands[0]) { cands[1] } else { cands[0] }; // min() keeps the first on ties
     Ok(pt(ar + best * dr, az + best * dz))
 }
@@ -202,7 +202,7 @@ pub fn centre_path(path: &[Seg], nose_radius: f64, external: bool, extend_end: b
             if side > 0.0 { (nz, -nr) } else { (-nz, nr) }
         } else {
             let ((ar, az), (br, bz)) = (rz(last.a), rz(last.b));
-            let n = hypot(br - ar, bz - az);
+            let n = f64::hypot(br - ar, bz - az);
             ((br - ar) / n, (bz - az) / n)
         };
         let (er, ez) = rz(*corners.last().unwrap());
@@ -271,7 +271,7 @@ pub fn z_at(seg: &Seg, x: f64) -> f64 {
         return seg.a.z + t * (seg.b.z - seg.a.z);
     };
     let ((ar, az), (_, bz), (cr, cz)) = (rz(seg.a), rz(seg.b), rz(c));
-    let radius = hypot(ar - cr, az - cz);
+    let radius = f64::hypot(ar - cr, az - cz);
     let dz = (radius * radius - (x / 2.0 - cr).powi(2)).max(0.0).sqrt();
     // the arc's Z range picks the branch (fine for arcs up to a quarter circle, which is what corner radii are)
     let (lo, hi) = (az.min(bz), az.max(bz));
@@ -292,7 +292,7 @@ pub fn x_at(seg: &Seg, z: f64) -> Option<f64> {
         return Some(seg.a.x + (z - seg.a.z) / (seg.b.z - seg.a.z) * (seg.b.x - seg.a.x));
     };
     let ((ar, az), (cr, cz)) = (rz(seg.a), rz(c));
-    let radius = hypot(ar - cr, az - cz);
+    let radius = f64::hypot(ar - cr, az - cz);
     let dr = (radius * radius - (z - cz).powi(2)).max(0.0).sqrt();
     // the branch on the arc's own side of the centre (corner radii are at most a quarter circle)
     let (lo_r, hi_r) = (ar.min(seg.b.x / 2.0), ar.max(seg.b.x / 2.0));
@@ -337,7 +337,7 @@ fn cross(a: Point, e: Point, s: &Seg) -> Option<Point> {
     let (d1r, d1z) = (er - ar, ez - az);
     if let Some(c) = s.centre {
         let ((pr, pz), (qr, qz), (cr, cz)) = (rz(s.a), rz(s.b), rz(c));
-        let rad = hypot(pr - cr, pz - cz);
+        let rad = f64::hypot(pr - cr, pz - cz);
         let (fr, fz) = (ar - cr, az - cz);
         let qa = d1r * d1r + d1z * d1z;
         let qb = 2.0 * (fr * d1r + fz * d1z);
@@ -456,7 +456,7 @@ pub fn limit_dives(path: Vec<Seg>, angle: Option<f64>, side: f64) -> Vec<Seg> {
 /// is at that angle, its start if it is steeper from the outset, None if it never is.
 fn arc_turn(s: &Seg, angle: f64, side: f64) -> Option<Point> {
     let ((ar, az), (br, bz), (cr, cz)) = (rz(s.a), rz(s.b), rz(s.c()));
-    let rad = hypot(ar - cr, az - cz);
+    let rad = f64::hypot(ar - cr, az - cz);
     let a0 = (ar - cr).atan2(az - cz);
     let a1 = (br - cr).atan2(bz - cz);
     let sw = sweep(a0, a1, s.ccw);

@@ -18,6 +18,7 @@ pub mod preview;
 pub mod py;
 pub mod safety;
 pub mod setups;
+pub mod stock;
 pub mod tool_shapes;
 pub mod toolpath;
 

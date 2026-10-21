@@ -1,16 +1,14 @@
 //! In-app help (F1): help/help.<lang>.md shown in a dialog. The help is plain Markdown so it also reads well on
-//! GitHub; this renders the small subset it uses (# headings, paragraphs, "- " lists two levels deep, **bold**,
-//! `code`) as Pango markup, so it works offline without a browser.
+//! GitHub; pulldown-cmark reads it and the headings, paragraphs, lists (two levels deep), **bold** and `code` it
+//! uses become Pango markup in labels, so it works offline without a browser.
 //!
 //! The Training and Reference Manuals ship as PDFs (manuals/<kind>.<lang>.pdf) and open in the desktop's PDF viewer.
 
 use std::path::PathBuf;
-use std::sync::LazyLock;
 
 use adw::prelude::*;
 use adw::subclass::prelude::*;
 use gtk::{gio, glib};
-use regex::Regex;
 
 use crate::i18n::gettext;
 use crate::ui::data_dir;
@@ -47,41 +45,62 @@ pub fn open_manual(window: &crate::window::MainWindow, kind: &str) {
     });
 }
 
-/// Escape for Pango, then **bold** and `code`.
-pub fn inline(text: &str) -> String {
-    static BOLD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\*\*(.+?)\*\*").unwrap());
-    static CODE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"`(.+?)`").unwrap());
-    let s = glib::markup_escape_text(text).to_string();
-    let s = BOLD.replace_all(&s, "<b>$1</b>");
-    CODE.replace_all(&s, "<tt>$1</tt>").into_owned()
-}
-
-/// (kind, level, markup): kind is 'h' (level 1..3), 'p', or 'l' (level 0/1 = nesting).
+/// (kind, level, markup): kind is 'h' (level 1..3), 'p', or 'l' (level 0/1 = nesting). The Markdown is read by
+/// pulldown-cmark; its text is escaped for Pango, **bold** becomes <b>, *italic* <i> and `code` <tt>.
 pub fn blocks(md: &str) -> Vec<(char, usize, String)> {
-    static HEAD: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^(#{1,3}) (.*)").unwrap());
-    static ITEM: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^( *)- (.*)").unwrap());
+    use pulldown_cmark::{Event, Parser, Tag, TagEnd};
     let mut out = vec![];
-    let mut para: Vec<&str> = vec![];
-    let flush = |para: &mut Vec<&str>, out: &mut Vec<(char, usize, String)>| {
-        if !para.is_empty() {
-            out.push(('p', 0, inline(&para.join(" "))));
-            para.clear();
+    // the block being filled: kind, level and markup so far
+    let mut cur: Option<(char, usize, String)> = None;
+    let mut depth = 0usize;
+    let flush = |cur: &mut Option<(char, usize, String)>, out: &mut Vec<(char, usize, String)>| {
+        if let Some((kind, level, text)) = cur.take() {
+            let text = text.trim().to_string();
+            if !text.is_empty() {
+                out.push((kind, level, text));
+            }
         }
     };
-    for line in md.lines() {
-        if let Some(m) = HEAD.captures(line) {
-            flush(&mut para, &mut out);
-            out.push(('h', m[1].len(), inline(&m[2])));
-        } else if let Some(m) = ITEM.captures(line) {
-            flush(&mut para, &mut out);
-            out.push(('l', (m[1].len() / 2).min(1), inline(&m[2])));
-        } else if line.trim().is_empty() {
-            flush(&mut para, &mut out);
-        } else {
-            para.push(line.trim());
+    for event in Parser::new(md) {
+        match event {
+            Event::Start(Tag::Heading { level, .. }) => {
+                flush(&mut cur, &mut out);
+                cur = Some(('h', level as usize, String::new()));
+            }
+            Event::Start(Tag::Paragraph) if depth == 0 => {
+                flush(&mut cur, &mut out);
+                cur = Some(('p', 0, String::new()));
+            }
+            Event::Start(Tag::List(_)) => {
+                flush(&mut cur, &mut out);
+                depth += 1;
+            }
+            Event::End(TagEnd::List(_)) => {
+                flush(&mut cur, &mut out);
+                depth -= 1;
+            }
+            Event::Start(Tag::Item) => {
+                flush(&mut cur, &mut out);
+                cur = Some(('l', (depth - 1).min(1), String::new()));
+            }
+            Event::End(TagEnd::Heading(_) | TagEnd::Item) => flush(&mut cur, &mut out),
+            Event::End(TagEnd::Paragraph) if depth == 0 => flush(&mut cur, &mut out),
+            event => {
+                let piece = match event {
+                    Event::Text(t) => glib::markup_escape_text(&t).to_string(),
+                    Event::Code(t) => format!("<tt>{}</tt>", glib::markup_escape_text(&t)),
+                    Event::SoftBreak | Event::HardBreak => " ".into(),
+                    Event::Start(Tag::Strong) => "<b>".into(),
+                    Event::End(TagEnd::Strong) => "</b>".into(),
+                    Event::Start(Tag::Emphasis) => "<i>".into(),
+                    Event::End(TagEnd::Emphasis) => "</i>".into(),
+                    _ => continue,
+                };
+                cur.get_or_insert_with(|| ('p', 0, String::new())).2.push_str(&piece);
+            }
         }
     }
-    flush(&mut para, &mut out);
+    flush(&mut cur, &mut out);
     out
 }
 
