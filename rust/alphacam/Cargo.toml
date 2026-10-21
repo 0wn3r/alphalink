@@ -18,6 +18,7 @@ zbus = { workspace = true, optional = true }
 dxf.workspace = true
 indexmap.workspace = true
 libm.workspace = true
+cavalier_contours.workspace = true
 
 [dev-dependencies]
 # the link tests play the control on a pty pair and a socket pair

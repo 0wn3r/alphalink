@@ -2,6 +2,19 @@
     {
         "type": "archive",
         "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/ahash/ahash-0.8.12.crate",
+        "sha256": "5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75",
+        "dest": "cargo/vendor/ahash-0.8.12"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"5a15f179cd60c4584b8a8c596927aadc462e27f2ca70c04e0071964a73ba7a75\", \"files\": {}}",
+        "dest": "cargo/vendor/ahash-0.8.12",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
         "url": "https://static.crates.io/crates/aho-corasick/aho-corasick-1.1.5.crate",
         "sha256": "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba",
         "dest": "cargo/vendor/aho-corasick-1.1.5"
@@ -439,6 +452,19 @@
         "type": "inline",
         "contents": "{\"package\": \"ee548131103ad8f698c6725669647b9c757b3b66992dd6a026037596417bee21\", \"files\": {}}",
         "dest": "cargo/vendor/cairo-sys-rs-0.22.9",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/cavalier_contours/cavalier_contours-0.9.0.crate",
+        "sha256": "85e06038a969c5e4d93565f12b044814d3b1a48d50c4ef868d588e79956fea51",
+        "dest": "cargo/vendor/cavalier_contours-0.9.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"85e06038a969c5e4d93565f12b044814d3b1a48d50c4ef868d588e79956fea51\", \"files\": {}}",
+        "dest": "cargo/vendor/cavalier_contours-0.9.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {
@@ -2389,6 +2415,19 @@
         "type": "inline",
         "contents": "{\"package\": \"c3d1e2c7f27f8d4cb10542a02c49005dbd6e93095799d6f3be745fae9f8fedd4\", \"files\": {}}",
         "dest": "cargo/vendor/socket2-0.6.5",
+        "dest-filename": ".cargo-checksum.json"
+    },
+    {
+        "type": "archive",
+        "archive-type": "tar-gzip",
+        "url": "https://static.crates.io/crates/static_aabb2d_index/static_aabb2d_index-2.1.0.crate",
+        "sha256": "7a753368e4dd146a347d0ea692f0f8a37df18df7eee5659d36dd75eb287c6454",
+        "dest": "cargo/vendor/static_aabb2d_index-2.1.0"
+    },
+    {
+        "type": "inline",
+        "contents": "{\"package\": \"7a753368e4dd146a347d0ea692f0f8a37df18df7eee5659d36dd75eb287c6454\", \"files\": {}}",
+        "dest": "cargo/vendor/static_aabb2d_index-2.1.0",
         "dest-filename": ".cargo-checksum.json"
     },
     {

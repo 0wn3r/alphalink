@@ -13,6 +13,7 @@ use alphacam::model::{Element, Point, Project, ToolLibrary};
 use alphacam::moves::{Segment, segments};
 use alphacam::preview::Preview;
 use alphacam::py::fmt_g;
+use alphacam::stock::Simulation;
 use alphacam::tool_shapes::{Polyline, outline};
 use alphacam::toolpath::MoveKind;
 use gtk::glib::subclass::Signal;
@@ -117,6 +118,8 @@ pub struct State {
     pub pointer: (f64, f64),
     pub last_tap: Tap,
     shapes: HashMap<i64, Vec<Polyline>>,
+    /// the simulation's stock, for the preview and library it was made from (their addresses)
+    stock: Option<((usize, usize), Simulation)>,
     fit_pending: bool,
     before_fit: Option<ViewTransform>,
     /// keep the part fitted while the user has not panned or zoomed (e.g. when the editor pane opens)
@@ -142,6 +145,7 @@ impl Default for State {
             pointer: (0.0, 0.0),
             last_tap: Tap::default(),
             shapes: HashMap::new(),
+            stock: None,
             fit_pending: true,
             before_fit: None,
             auto_fit: true,
@@ -710,6 +714,9 @@ impl LatheCanvas {
         let sel = if s.print { None } else { s.selected };
         let sim = if s.print { None } else { s.sim_index };
         let v = s.view;
+        if let Some(n) = sim {
+            Self::stock(s, cr, n);
+        }
         for (i, seg) in s.segs.iter().enumerate() {
             let focus = sel.is_none() || seg.op_index == sel;
             let mut alpha = if focus { 1.0 } else { 0.15 };
@@ -753,6 +760,31 @@ impl LatheCanvas {
             cr.arc(sx, sy, 3.0, 0.0, 2.0 * PI);
             let _ = cr.fill();
         }
+    }
+
+    /// What is left of the billet after the first `n` moves, filled on both sides of the axis.
+    fn stock(s: &mut State, cr: &cairo::Context, n: usize) {
+        let (Some(project), Some(preview)) = (s.project.clone(), s.preview.clone()) else { return };
+        let key = (Rc::as_ptr(&preview) as usize, s.library.as_ref().map_or(0, |l| Rc::as_ptr(l) as usize));
+        if s.stock.as_ref().is_none_or(|(k, _)| *k != key) {
+            let program = preview.program.as_ref();
+            let tool = |label: i64| program?.blocks.iter().find(|b| b.label == label)?.tool();
+            s.stock = Some((key, Simulation::new(&project, &s.segs, tool, s.library.as_deref())));
+        }
+        let v = s.view;
+        let regions = s.stock.as_mut().unwrap().1.at(n).regions;
+        for mirror in [1.0, -1.0] {
+            for region in &regions {
+                let pts: Vec<(f64, f64)> = region.vertex_data.iter().map(|p| (2.0 * mirror * p.y, p.x)).collect();
+                Self::polyline(&v, cr, &pts);
+                cr.close_path();
+            }
+        }
+        Self::rgb(s, cr, "billet", 0.3);
+        let _ = cr.fill_preserve();
+        Self::rgb(s, cr, "billet", 0.9);
+        cr.set_line_width(1.0);
+        let _ = cr.stroke();
     }
 
     /// The tool picture of the PRG block with this label: (Z, radius) polylines in mm, cached per preview.
